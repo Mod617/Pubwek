@@ -577,7 +577,11 @@ login_manager = LoginManager()
 # FIX: En production, configurez RATELIMIT_STORAGE_URI=redis://localhost:6379
 # pour que les limites restent actives avec plusieurs workers/processus.
 # Exemple dans Config : RATELIMIT_STORAGE_URI = os.environ.get("RATELIMIT_STORAGE_URI", "memory://")
-limiter = Limiter(get_remote_address, default_limits=["200 per day", "50 per hour"])
+limiter = Limiter(
+    get_remote_address,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri=os.getenv("REDIS_URL", "memory://")
+)
 
 
 # =========================================================================

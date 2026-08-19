@@ -12,7 +12,11 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev_secret_key_change_me")
 
     # Base de données (SQLite par défaut, PostgreSQL conseillé en production)
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///pubwek.db")
+    _database_url = os.getenv("DATABASE_URL", "sqlite:///pubwek.db")
+    # Railway/Heroku fournissent parfois "postgres://", SQLAlchemy 2.x exige "postgresql://"
+    if _database_url.startswith("postgres://"):
+        _database_url = _database_url.replace("postgres://", "postgresql://", 1)
+    SQLALCHEMY_DATABASE_URI = _database_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # -------------------------
@@ -42,6 +46,7 @@ class Config:
 
     # Identifiants de messagerie
     MAIL_USERNAME = os.getenv("MAIL_USERNAME", "pubwek1@gmail.com")
+    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "")
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER", MAIL_USERNAME)
 
     # -------------------------

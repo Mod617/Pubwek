@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="mb-1 fw-bold">📊 Suivi de la campagne #{{ campaign.id }}</h2>
+            <p class="text-muted mb-0">{{ campaign.promotion_type | capitalize }} - {{ campaign.promotion_detail }}</p>
+        </div>
+        <a href="{{ url_for('admin_validate') }}" class="btn btn-outline-secondary fw-bold shadow-sm">
+            ⬅️ Retour au panneau d'administration
+        </a>
+    </div>
+
+    <!-- Progression jour par jour -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-calendar3 me-2"></i>Progression de la diffusion</h5>
+                {% if campaign.is_active and campaign.current_day_number %}
+                    <span class="badge bg-primary px-3 py-2">Jour {{ campaign.current_day_number }} / {{ campaign.duration_days }}</span>
+                {% elif campaign.status == "terminee" %}
+                    <span class="badge bg-success px-3 py-2">✅ Diffusion terminée</span>
+                {% else %}
+                    <span class="badge bg-secondary px-3 py-2">En attente de démarrage</span>
+                {% endif %}
+            </div>
+
+            <div class="row text-center">
+                <div class="col-6 col-md-3 mb-3">
+                    <div class="text-muted small">Durée totale</div>
+                    <div class="h5 fw-bold text-dark mb-0">{{ campaign.duration_days }} jour{{ 's' if campaign.duration_days > 1 else '' }}</div>
+                </div>
+                <div class="col-6 col-md-3 mb-3">
+                    <div class="text-muted small">Vues / jour prévues</div>
+                    <div class="h5 fw-bold text-dark mb-0">{{ campaign.views_per_day }}</div>
+                </div>
+                <div class="col-6 col-md-3 mb-3">
+                    <div class="text-muted small">Vues aujourd'hui</div>
+                    <div class="h5 fw-bold text-primary mb-0">{{ campaign.views_today or 0 }} / {{ campaign.views_per_day }}</div>
+                </div>
+                <div class="col-6 col-md-3 mb-3">
+                    <div class="text-muted small">Vues totales / objectif</div>
+                    <div class="h5 fw-bold text-success mb-0">{{ campaign.whatsapp_views or 0 }} / {{ campaign.target_whatsapp_views }}</div>
+                </div>
+            </div>
+
+            {% if campaign.daily_quota_paused %}
+                <div class="alert alert-warning small mb-0">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                    Le quota du jour est atteint. Les partageurs ont été notifiés qu'ils peuvent retirer leur statut ; aucune vue supplémentaire n'est comptabilisée aujourd'hui.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Résumé partageurs / vues / clics -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm text-center p-3 bg-light">
+                <div class="text-muted small">Nombre de partageurs</div>
+                <div class="h3 fw-bold text-dark mb-0">{{ partageurs | length }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm text-center p-3 bg-light">
+                <div class="text-muted small">Total de vues comptabilisées</div>
+                <div class="h3 fw-bold text-primary mb-0">{{ "{:,}".format(total_vues) }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm text-center p-3 bg-light">
+                <div class="text-muted small">Clics WhatsApp</div>
+                <div class="h3 fw-bold text-success mb-0">{{ "{:,}".format(total_clics_whatsapp) }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm text-center p-3 bg-light">
+                <div class="text-muted small">Clics Site web</div>
+                <div class="h3 fw-bold text-info mb-0">{{ "{:,}".format(total_clics_site) }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des partageurs -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            {% if partageurs %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Pseudo</th>
+                            <th>Email</th>
+                            <th>Vues générées</th>
+                            <th><i class="bi bi-whatsapp text-success me-1"></i>Clics WhatsApp</th>
+                            <th><i class="bi bi-globe text-info me-1"></i>Clics Site web</th>
+                            <th class="pe-3">A partagé le</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in partageurs %}
+                        <tr>
+                            <td class="ps-3 fw-bold">
+                                <i class="fas fa-user-circle text-secondary me-2"></i>{{ p.pseudo }}
+                            </td>
+                            <td class="text-muted small">{{ p.email }}</td>
+                            <td>
+                                <span class="badge bg-primary">{{ "{:,}".format(p.nb_vues) }} vue{{ 's' if p.nb_vues != 1 else '' }}</span>
+                            </td>
+                            <td>
+                                {% if p.clics_whatsapp %}
+                                <span class="badge bg-success">{{ "{:,}".format(p.clics_whatsapp) }} clic{{ 's' if p.clics_whatsapp != 1 else '' }}</span>
+                                {% else %}
+                                <span class="text-muted small">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if p.clics_site %}
+                                <span class="badge bg-info text-dark">{{ "{:,}".format(p.clics_site) }} clic{{ 's' if p.clics_site != 1 else '' }}</span>
+                                {% else %}
+                                <span class="text-muted small">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="pe-3 text-muted small">{{ p.partage_le or "—" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted text-center p-4 mb-0">Aucun partageur n'a encore pris cette campagne.</p>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+{% endblock %}

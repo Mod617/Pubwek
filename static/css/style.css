@@ -1,0 +1,160 @@
+/* Styles communs aux deux sections */
+.section-annonceurs, 
+.section-partageurs {
+    position: relative;
+    color: white;
+    padding: 80px 20px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    min-height: 350px; /* même hauteur minimum */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    background-size: cover;
+    background-position: center;
+}
+
+/* Superposition sombre pour améliorer la lisibilité du texte */
+.section-annonceurs::before, 
+.section-partageurs::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45); /* voile sombre */
+    border-radius: 12px;
+}
+
+/* Le contenu doit passer par-dessus le voile */
+.section-annonceurs h2, 
+.section-partageurs h2,
+.section-annonceurs p, 
+.section-partageurs p,
+.section-annonceurs a,
+.section-partageurs a {
+    position: relative;
+    z-index: 1;
+}
+
+/* Image de fond pour la section Annonceurs */
+.section-annonceurs {
+    background: url("../images/annonceur.png") no-repeat center center/cover;
+}
+
+/* Image de fond pour la section Partageurs */
+.section-partageurs {
+    background: url("../images/partageur.png") no-repeat center center/cover;
+}
+
+/* Boutons personnalisés */
+.section-annonceurs a {
+    background-color: #28a745; /* vert */
+    border: none;
+    color: #fff;
+}
+.section-annonceurs a:hover {
+    background-color: #218838;
+}
+
+.section-partageurs a {
+    background-color: #007bff; /* bleu */
+    border: none;
+    color: #fff;
+}
+.section-partageurs a:hover {
+    background-color: #0056b3;
+}
+
+/* =========================
+   Responsive design
+   ========================= */
+
+/* Tablettes */
+@media (max-width: 991px) {
+    .section-annonceurs,
+    .section-partageurs {
+        min-height: 280px;
+        padding: 60px 15px;
+    }
+}
+
+/* Mobiles */
+@media (max-width: 576px) {
+    .section-annonceurs,
+    .section-partageurs {
+        min-height: 220px;
+        padding: 40px 10px;
+    }
+
+    .section-annonceurs h2,
+    .section-partageurs h2 {
+        font-size: 1.4rem;
+    }
+
+    .section-annonceurs p,
+    .section-partageurs p {
+        font-size: 0.9rem;
+    }
+
+    .section-annonceurs a,
+    .section-partageurs a {
+        font-size: 0.85rem;
+        padding: 8px 16px;
+    }
+}
+
+/* ============================================
+   PAGE : dashboard_campagne.html
+   ============================================ */
+.option-card:hover { transform: translateY(-3px); transition: 0.3s; }
+.active-option-A { border: 3px solid #198754 !important; background-color: #f8fff9; }
+.active-option-B { border: 3px solid #0d6efd !important; background-color: #f8fbff; }
+
+/* Éléments du style Facebook & YouTube drag */
+.cover-photo-container {
+  overflow: hidden;
+}
+.user-select-none {
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.top-2 { top: 0.5rem; }
+.end-2 { right: 0.5rem; }
+
+.profile-logo-wrapper {
+  margin-top: -60px;
+  z-index: 5;
+}
+.profile-logo-container {
+  width: 130px; height: 130px;
+  display: inline-block;
+}
+.logo-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0; transition: opacity 0.2s;
+  cursor: pointer;
+}
+.profile-logo-container:hover .logo-overlay { opacity: 1; }
+
+.style-bio-text {
+  font-style: italic;
+  color: #6c757d;
+  max-width: 650px;
+}
+.btn-xs {
+  padding: .25rem .4rem;
+  font-size: .75rem;
+  line-height: 1;
+  border-radius: .2rem;
+}
+
+@media (min-width: 768px) {
+  .md-top-space { padding-top: 15px; padding-left: 10px; }
+  .profile-meta-block { padding-left: 20px; }
+}
+/* ============================================
+   FIN : dashboard_campagne.html
+   ============================================ */

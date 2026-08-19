@@ -1,0 +1,18 @@
+Flask==2.3.3
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+Flask-WTF==1.2.1
+Flask-Bcrypt==1.0.1
+Flask-Limiter==3.5.0
+Flask-Talisman==1.1.0
+Flask-Mail==0.9.1
+email-validator==2.1.0.post1
+python-dotenv==1.0.1
+requests==2.31.0
+geopy==2.4.1
+
+# Serveur web de production
+gunicorn==21.2.0
+
+# Connecteur PostgreSQL pour la base de données Railway
+psycopg2-binary==2.9.9

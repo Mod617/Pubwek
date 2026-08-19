@@ -1,0 +1,453 @@
+{% extends "base.html" %}
+{% block content %}
+
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+<div class="container mt-5">
+
+  <div class="card shadow-sm mb-4 bg-white border-0 rounded-4 overflow-hidden position-relative">
+    
+    <div class="cover-photo-container position-relative bg-dark" style="height: 250px; cursor: move;" id="coverContainer"
+         data-pos-x="{{ current_user.cover_position_x or 50 }}" data-pos-y="{{ current_user.cover_position_y or 50 }}">
+      {% if current_user.cover_photo %}
+        <img id="userCoverPreview" src="{{ url_for('serve_upload', filename=current_user.cover_photo) }}" alt="Couverture" class="w-100 h-100 object-fit-cover user-select-none dynamic-cover-pos" draggable="false" data-pos-x="{{ current_user.cover_position_x or 50 }}" data-pos-y="{{ current_user.cover_position_y or 50 }}">
+      {% else %}
+        <img id="userCoverPreview" src="{{ url_for('static', filename='uploads/default_cover.png') }}" alt="Couverture" class="w-100 h-100 object-fit-cover user-select-none" draggable="false">
+      {% endif %}
+      
+      <div class="cover-actions position-absolute top-2 end-2 d-flex gap-2" style="z-index: 10;">
+        <button type="button" class="btn btn-sm btn-light shadow-sm fw-bold" onclick="triggerCoverUpload()"><i class="fas fa-camera me-1"></i> Changer</button>
+        <button type="button" class="btn btn-sm btn-success shadow-sm fw-bold d-none" id="btnSaveCoverPosition" onclick="saveCoverPosition()"><i class="fas fa-save me-1"></i> Enregistrer la position</button>
+      </div>
+    </div>
+    <input type="file" id="ajaxCoverInput" accept="image/*" style="display: none;" onchange="uploadCoverViaAjax()">
+
+    <div class="p-4 pt-0 text-start position-relative">
+      <div class="row align-items-end profile-meta-block">
+        
+        <div class="col-md-auto text-center text-md-start position-relative profile-logo-wrapper">
+          <div class="profile-logo-container position-relative rounded-circle bg-white shadow-sm" id="logoContainer" style="cursor: move;"
+               data-pos-x="{{ current_user.logo_position_x or 50 }}" data-pos-y="{{ current_user.logo_position_y or 50 }}">
+            {% if current_user.logo %}
+              <img id="userLogoPreview" src="{{ url_for('serve_upload', filename=current_user.logo) }}" alt="Logo" class="rounded-circle border border-4 border-white object-fit-cover w-100 h-100 user-select-none dynamic-logo-pos" draggable="false" data-pos-x="{{ current_user.logo_position_x or 50 }}" data-pos-y="{{ current_user.logo_position_y or 50 }}">
+            {% else %}
+              <img id="userLogoPreview" src="{{ url_for('static', filename='uploads/logos/default_company.png') }}" alt="Logo" class="rounded-circle border border-4 border-white object-fit-cover w-100 h-100 user-select-none" draggable="false">
+            {% endif %}
+            <div class="logo-overlay rounded-circle d-flex align-items-center justify-content-center" onclick="triggerLogoUpload()">
+              <i class="fas fa-camera text-white fs-5"></i>
+            </div>
+            <button type="button" class="btn btn-xs btn-success position-absolute bottom-0 start-50 translate-middle-x shadow d-none" id="btnSaveLogoPosition" onclick="saveLogoPosition()" style="font-size: 10px; z-index:11;">Enregistrer</button>
+          </div>
+          <input type="file" id="ajaxLogoInput" accept="image/*" style="display: none;" onchange="uploadLogoViaAjax()">
+        </div>
+
+        <div class="col md-top-space mt-3 mt-md-0">
+          <div class="d-flex align-items-center flex-wrap gap-2 mb-2 justify-content-center justify-content-md-start">
+            <h3 id="companyNameText" class="fw-bold mb-0 text-dark" onclick="enableCompanyNameEdit()" style="cursor: pointer;" title="Modifier le nom">
+              {{ current_user.company_name or "Nom de votre Entreprise" }}
+            </h3>
+            <button type="button" id="btnEditName" class="btn btn-sm btn-light text-muted rounded-circle" onclick="enableCompanyNameEdit()">
+              <i class="fas fa-pen small"></i>
+            </button>
+            <input type="text" id="companyNameInput" class="form-control form-control-md fw-bold border-primary shadow-sm" value="{{ current_user.company_name or '' }}" style="display: none; max-width: 320px;" onblur="saveCompanyNameViaAjax()" onkeydown="handleNameKeydown(event)">
+            
+            <span class="badge bg-primary text-capitalize ms-2">{{ current_user.role }}</span>
+          </div>
+
+          <div class="profile-bio-box text-center text-md-start">
+            <p id="companyBioText" class="text-muted mb-0 style-bio-text" onclick="enableCompanyBioEdit()" style="cursor: pointer;" title="Modifier la description">
+              <i class="fas fa-quote-left me-1 opacity-50"></i>{{ current_user.bio or "Ajouter une description ou présentation de votre entreprise à côté de votre profil..." }}
+            </p>
+            <textarea id="companyBioInput" class="form-control form-control-sm mt-1 border-primary shadow-sm" rows="2" style="display: none; max-width: 500px;" onblur="saveCompanyBioViaAjax()" placeholder="Décrivez votre activité...">{{ current_user.bio or '' }}</textarea>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <h2 class="mb-4 text-center">📢 Lancer une Campagne Pubwek</h2>
+  
+  <div class="card p-4 shadow-sm mb-5">
+    <form id="campaignForm" method="POST" action="{{ url_for('nouvelle_campagne') }}" enctype="multipart/form-data"
+          data-cost-video="{{ config.cost_per_click_video | default(3.0, true) }}" 
+          data-cost-photo="{{ config.cost_per_click_photo | default(2.0, true) }}" 
+          data-cost-text="{{ config.cost_per_click_text | default(1.0, true) }}"
+          data-commission-rate="{{ config.commission_rate | default(10.0, true) }}">
+      
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="cached_media_files" id="cached_media_files" value="">
+
+      <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+          <label for="promotion_type" class="form-label fw-bold">Que voulez-vous promouvoir ?</label>
+          <select name="promotion_type" id="promotion_type" class="form-select" required>
+            <option value="produit">Produit</option>
+            <option value="service">Service</option>
+          </select>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="promotion_detail" class="form-label fw-bold">Nom du produit/service</label>
+          <input type="text" name="promotion_detail" id="promotion_detail" class="form-control" placeholder="Ex: Restaurant Chez Claire" required>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label for="description" class="form-label d-flex justify-content-between align-items-center fw-bold">
+          <span id="descriptionLabelText">📝 Description (Texte du statut)</span>
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-xs btn-outline-magic btn-sm fw-bold shadow-sm" onclick="generateAutoDescription()" style="background-color: #f3e8ff; color: #6b21a8; border: 1px solid #c084fc;">
+              ✨ M'aider à rédiger
+            </button>
+            <span id="charCount" class="badge bg-secondary">0 / 150</span>
+          </div>
+        </label>
+        <textarea name="description" id="description" class="form-control" rows="3" maxlength="150" placeholder="Décrivez succinctement votre offre pour le statut (150 car. max)..." required></textarea>
+      </div>
+
+      <label class="form-label fw-bold mb-3">💎 Choisissez votre style de diffusion</label>
+      <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+          <div class="card h-100 border-success option-card shadow-sm p-3 active-option-A" id="cardA" onclick="selectOption('A')" style="cursor:pointer; border: 2px solid #198754;">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="display_option" id="optionA" value="A" checked>
+              <label class="form-check-label fw-bold text-success" for="optionA">Option A : Vidéo Publicitaire</label>
+            </div>
+            <p class="small text-muted mt-2">Téléversez votre propre vidéo déjà montée (<strong>30 secondes maximum</strong>, idéale pour un statut WhatsApp).</p>
+            <span class="badge bg-dark mt-1 d-block" style="max-width: max-content;">Prix fixe : {{ config.cost_per_click_video | default(3, true) }} XOF / clic</span>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="card h-100 border-secondary option-card shadow-sm p-3" id="cardB" onclick="selectOption('B')" style="cursor:pointer;">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="display_option" id="optionB" value="B">
+              <label class="form-check-label fw-bold text-primary" for="optionB">Option B : Multi-Statuts</label>
+            </div>
+            <p class="small text-muted mt-2">Chaque photo est publiée comme un statut séparé. Attention : augmente la visibilité mais aussi le coût.</p>
+            <span class="badge bg-primary" id="badge_option_b">Prix : {{ config.cost_per_click_photo | default(1, true) }} XOF × Nombre d'images / clic</span>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="card h-100 border-secondary option-card shadow-sm p-3" id="cardC" onclick="selectOption('C')" style="cursor:pointer;">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="display_option" id="optionC" value="C">
+              <label class="form-check-label fw-bold text-dark" for="optionC">Option C : Texte Seul</label>
+            </div>
+            <p class="small text-muted mt-2">Pas de photo ni de vidéo : uniquement un texte publié directement en statut WhatsApp. Idéal pour une annonce rapide et sans montage.</p>
+            <span class="badge bg-secondary mt-1 d-block" style="max-width: max-content;">Prix : {{ config.cost_per_click_text | default(1, true) }} XOF / clic</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🎬 OPTION A : Upload direct de la vidéo (max 30s) -->
+      <div class="mb-4 bg-light p-3 rounded border" id="videoUploadGroup">
+        <label for="video_file" class="form-label fw-bold">🎬 Téléversez votre vidéo publicitaire</label>
+        <input type="file" name="video_file" id="video_file" class="form-control" accept="video/mp4,video/quicktime,video/webm">
+        <div class="form-text text-muted">
+          Formats acceptés : MP4, MOV, WEBM — <strong>durée maximale : 30 secondes</strong> — taille maximale : 40 Mo.
+          Votre fichier est vérifié automatiquement avant l'envoi ; une vidéo trop longue ou invalide sera refusée.
+        </div>
+        <div id="videoFileInfo" class="small mt-2 text-primary fw-bold"></div>
+        <video id="videoFilePreview" controls class="mt-2 rounded shadow-sm d-none" style="max-height: 320px;"></video>
+      </div>
+
+      <!-- 🖼️ OPTION B : Upload de plusieurs photos -->
+      <div class="mb-4 bg-light p-3 rounded d-none" id="uploadGroup">
+        <label for="media_files" class="form-label fw-bold">📸 Téléversez vos photos</label>
+        <input type="file" name="media_files" id="media_files" class="form-control" multiple accept="image/*">
+        
+        <div id="imagePreviewsContainer" class="d-flex flex-wrap gap-2 mt-2"></div>
+
+        <div class="form-text text-muted">
+          Maximum : 25 photos.
+        </div>
+        <div id="fileInfo" class="small mt-2 text-primary fw-bold"></div>
+      </div>
+
+      <!-- 🌍 ZONES DE DIFFUSION : Départements + communes (raffinement optionnel) -->
+      <div class="mb-4">
+        <label class="form-label fw-bold">🌍 Zones de diffusion</label>
+        <div class="form-text text-muted mb-2">
+          Cochez au moins un département. Vous pouvez ensuite cliquer sur "Préciser les communes" pour affiner votre ciblage (optionnel).
+        </div>
+
+        <div id="accordionZones">
+          {% for departement, communes in departements_communes.items() %}
+          <div class="border rounded mb-2">
+            <div class="d-flex align-items-center justify-content-between p-2 bg-light">
+              <div class="form-check mb-0">
+                <input class="form-check-input dept-checkbox" type="checkbox" name="provinces[]"
+                       value="{{ departement }}" id="dept_{{ departement }}"
+                       onchange="toggleCommunesBlock('{{ departement }}')">
+                <label class="form-check-label fw-semibold" for="dept_{{ departement }}">{{ departement }}</label>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-secondary d-none" id="btnToggle_{{ departement }}"
+                      onclick="toggleCommunesVisibility('{{ departement }}')">
+                Préciser les communes
+              </button>
+            </div>
+
+            <div class="p-2 d-none" id="communesBlock_{{ departement }}">
+              <div class="row">
+                {% for commune in communes %}
+                <div class="col-6 col-md-4 form-check">
+                  <input class="form-check-input commune-checkbox" type="checkbox" name="communes[]"
+                         value="{{ commune }}" data-departement="{{ departement }}" id="commune_{{ commune }}">
+                  <label class="form-check-label small" for="commune_{{ commune }}">{{ commune }}</label>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="row mb-4 bg-dark text-white p-3 rounded shadow">
+        <div class="col-md-4 mb-3">
+          <label class="form-label small">🚀 Objectif de clics</label>
+          <input type="number" name="whatsapp_views" id="whatsapp_views" class="form-control" min="100" step="50" value="100" required>
+        </div>
+        <div class="col-md-4 mb-3">
+          <label class="form-label small">⏳ Durée (Jours)</label>
+          <select name="duration_days" id="duration_days" class="form-select">
+            {% for jour in range(1, 31) %}
+              <option value="{{ jour }}" {% if jour == 7 %}selected{% endif %}>{{ jour }} jour{{ 's' if jour > 1 else '' }}</option>
+            {% endfor %}
+          </select>
+          <div class="form-text text-white-50 small mt-1">
+            <i class="fas fa-info-circle me-1"></i>Vos clics seront répartis automatiquement, jour par jour, sur la durée choisie.
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-bold text-warning">💰 Budget Total</label>
+          <div class="h4 mt-1" id="total_cost_display">0 XOF</div>
+          <input type="hidden" name="total_cost" id="total_cost_hidden" value="0">
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label for="whatsapp_number" class="form-label fw-bold">📲 Votre Numéro WhatsApp Business</label>
+        <input type="tel" name="whatsapp_number" id="whatsapp_number" class="form-control" placeholder="+229XXXXXXXX" required>
+      </div>
+
+      <div class="mb-4">
+        <label for="website_url" class="form-label fw-bold">
+          🌐 Site web ou application web <span class="text-muted fw-normal small">(optionnel)</span>
+        </label>
+        <input type="url" name="website_url" id="website_url" class="form-control" placeholder="https://votresite.com">
+        <div class="form-text text-muted">
+          Si votre structure possède un site ou une application web, indiquez le lien ici pour que vos clients intéressés puissent y accéder directement.
+        </div>
+      </div>
+
+      <div class="d-grid gap-2">
+        <button type="submit" id="btnSubmitCampaign" class="btn btn-success btn-lg shadow">
+          🚀 Valider ma Campagne
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Bootstrap pour l'agrandissement des photos -->
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content bg-transparent border-0">
+      <div class="modal-header border-0 pb-0">
+        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body text-center p-2">
+        <img id="previewModalImage" src="" class="img-fluid rounded shadow-lg" alt="Aperçu agrandi" style="max-height: 85vh; object-fit: contain;">
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Gestion des positions d'images de profil
+    const coverImg = document.querySelector('.dynamic-cover-pos');
+    if (coverImg) {
+      const posX = coverImg.getAttribute('data-pos-x') || '50';
+      const posY = coverImg.getAttribute('data-pos-y') || '50';
+      coverImg.style.objectPosition = posX + '% ' + posY + '%';
+    }
+
+    const logoImg = document.querySelector('.dynamic-logo-pos');
+    if (logoImg) {
+      const posX = logoImg.getAttribute('data-pos-x') || '50';
+      const posY = logoImg.getAttribute('data-pos-y') || '50';
+      logoImg.style.objectPosition = posX + '% ' + posY + '%';
+    }
+
+    // Mise à jour du compteur au chargement si un texte existe déjà
+    const descriptionField = document.getElementById('description');
+    if (descriptionField) {
+      document.getElementById('charCount').innerText = descriptionField.value.length + " / " + descriptionField.maxLength;
+      descriptionField.addEventListener('input', function() {
+        document.getElementById('charCount').innerText = this.value.length + " / " + this.maxLength;
+      });
+    }
+  });
+
+  // --- Bascule entre Option A (vidéo), B (photos) et C (texte seul) ---
+  function selectOption(option) {
+    const cardA = document.getElementById('cardA');
+    const cardB = document.getElementById('cardB');
+    const cardC = document.getElementById('cardC');
+    const videoGroup = document.getElementById('videoUploadGroup');
+    const photoGroup = document.getElementById('uploadGroup');
+    const radioA = document.getElementById('optionA');
+    const radioB = document.getElementById('optionB');
+    const radioC = document.getElementById('optionC');
+    const descriptionField = document.getElementById('description');
+    const descriptionLabel = document.getElementById('descriptionLabelText');
+    const charCount = document.getElementById('charCount');
+
+    cardA.style.border = '';
+    cardB.style.border = '';
+    cardC.style.border = '';
+    videoGroup.classList.add('d-none');
+    photoGroup.classList.add('d-none');
+
+    if (option === 'A') {
+      radioA.checked = true;
+      cardA.style.border = '2px solid #198754';
+      videoGroup.classList.remove('d-none');
+      descriptionField.maxLength = 150;
+      descriptionLabel.textContent = '📝 Description (Texte du statut)';
+    } else if (option === 'B') {
+      radioB.checked = true;
+      cardB.style.border = '2px solid #0d6efd';
+      photoGroup.classList.remove('d-none');
+      descriptionField.maxLength = 150;
+      descriptionLabel.textContent = '📝 Description (Texte du statut)';
+    } else {
+      radioC.checked = true;
+      cardC.style.border = '2px solid #6c757d';
+      descriptionField.maxLength = 500;
+      descriptionLabel.textContent = '📝 Texte de votre publicité (publié tel quel en statut)';
+    }
+
+    if (descriptionField.value.length > descriptionField.maxLength) {
+      descriptionField.value = descriptionField.value.substring(0, descriptionField.maxLength);
+    }
+    charCount.innerText = descriptionField.value.length + " / " + descriptionField.maxLength;
+
+    // Recalcule le budget total à chaque changement d'option (défini dans script.js)
+    if (typeof window.updateTotal === 'function') {
+      window.updateTotal();
+    }
+  }
+
+  // --- Aperçu simple de la vidéo sélectionnée avant envoi ---
+  const videoInput = document.getElementById('video_file');
+  if (videoInput) {
+    videoInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      const info = document.getElementById('videoFileInfo');
+      const preview = document.getElementById('videoFilePreview');
+
+      if (!file) {
+        info.textContent = '';
+        preview.classList.add('d-none');
+        return;
+      }
+
+      const tailleMo = (file.size / (1024 * 1024)).toFixed(1);
+      info.textContent = `Fichier sélectionné : ${file.name} (${tailleMo} Mo)`;
+
+      const url = URL.createObjectURL(file);
+      preview.src = url;
+      preview.classList.remove('d-none');
+
+      preview.onloadedmetadata = function() {
+        if (preview.duration > 30.5) {
+          info.innerHTML = `⚠️ Cette vidéo dure ${preview.duration.toFixed(1)}s — le maximum autorisé est 30 secondes. Veuillez la raccourcir.`;
+          info.classList.remove('text-primary');
+          info.classList.add('text-danger');
+        } else {
+          info.classList.remove('text-danger');
+          info.classList.add('text-primary');
+        }
+      };
+    });
+  }
+
+  // --- Bascule des blocs de communes selon le département coché ---
+  function toggleCommunesBlock(departement) {
+    const checkbox = document.getElementById('dept_' + departement);
+    const btnToggle = document.getElementById('btnToggle_' + departement);
+    const communesBlock = document.getElementById('communesBlock_' + departement);
+
+    if (checkbox.checked) {
+      btnToggle.classList.remove('d-none');
+    } else {
+      btnToggle.classList.add('d-none');
+      communesBlock.classList.add('d-none');
+      // Décoche toutes les communes de ce département si on décoche le département
+      communesBlock.querySelectorAll('.commune-checkbox').forEach(cb => cb.checked = false);
+    }
+  }
+
+  function toggleCommunesVisibility(departement) {
+    const communesBlock = document.getElementById('communesBlock_' + departement);
+    communesBlock.classList.toggle('d-none');
+  }
+
+  function generateAutoDescription() {
+    const promoType = document.getElementById('promotion_type').value;
+    const promoDetail = document.getElementById('promotion_detail').value.trim();
+    const descriptionField = document.getElementById('description');
+    const selectedOption = document.querySelector('input[name="display_option"]:checked').value;
+    
+    if (!promoDetail) {
+      alert("⚠️ S'il vous plaît, entrez d'abord le nom de votre " + promoType + " ci-dessus pour générer une description.");
+      document.getElementById('promotion_detail').focus();
+      return;
+    }
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    fetch('/generer-description-auto', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
+      },
+      body: JSON.stringify({
+        promotion_type: promoType,
+        promotion_detail: promoDetail,
+        slogan_video: "",
+        display_option: selectedOption
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        descriptionField.value = data.description;
+        document.getElementById('charCount').innerText = data.description.length + " / " + descriptionField.maxLength;
+        
+        descriptionField.style.transition = "background-color 0.3s ease";
+        descriptionField.style.backgroundColor = "#f3e8ff"; 
+        setTimeout(() => {
+          descriptionField.style.backgroundColor = "#fff";
+        }, 500);
+      } else {
+        alert("Erreur : " + data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Erreur lors de la génération :', error);
+      alert("Impossible de contacter le générateur pour le moment.");
+    });
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="mb-1 fw-bold">🧾 Registre des transactions</h2>
+            <p class="text-muted mb-0">Vue consolidée de tous les paiements d'annonceurs et retraits de partageurs.</p>
+        </div>
+        <a href="{{ url_for('admin_validate') }}" class="btn btn-outline-secondary fw-bold shadow-sm">
+            ⬅️ Retour au panneau d'administration
+        </a>
+    </div>
+
+    <!-- Résumé global -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm text-center p-3 bg-success bg-opacity-10 border-start border-success border-4">
+                <div class="text-muted small">Total encaissé (annonceurs, approuvé)</div>
+                <div class="h3 fw-bold text-success mb-0">{{ "{:,.0f}".format(total_paiements_approuves) }} FCFA</div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm text-center p-3 bg-warning bg-opacity-10 border-start border-warning border-4">
+                <div class="text-muted small">Total reversé (partageurs, payé)</div>
+                <div class="h3 fw-bold text-warning mb-0">{{ "{:,.0f}".format(total_retraits_payes) }} FCFA</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 💳 TABLEAU 1 : PAIEMENTS DES ANNONCEURS -->
+    <!-- ========================================== -->
+    <h4 class="fw-bold text-primary mb-3"><i class="bi bi-credit-card-2-front me-2"></i>Paiements des annonceurs</h4>
+
+    <form method="GET" class="row g-2 mb-3 align-items-end">
+        <input type="hidden" name="statut_retrait" value="{{ filtre_statut_retrait }}">
+        <input type="hidden" name="recherche_retrait" value="{{ recherche_retrait }}">
+        <div class="col-md-3">
+            <label class="form-label small fw-semibold">Statut</label>
+            <select name="statut_paiement" class="form-select form-select-sm">
+                <option value="" {% if not filtre_statut_paiement %}selected{% endif %}>Tous</option>
+                <option value="approved" {% if filtre_statut_paiement == "approved" %}selected{% endif %}>✅ Approuvée</option>
+                <option value="pending" {% if filtre_statut_paiement == "pending" %}selected{% endif %}>⏳ En attente</option>
+                <option value="declined" {% if filtre_statut_paiement == "declined" %}selected{% endif %}>❌ Déclinée</option>
+                <option value="canceled" {% if filtre_statut_paiement == "canceled" %}selected{% endif %}>🚫 Annulée</option>
+            </select>
+        </div>
+        <div class="col-md-5">
+            <label class="form-label small fw-semibold">Recherche (référence, ID FedaPay, email)</label>
+            <input type="text" name="recherche_paiement" class="form-control form-control-sm" value="{{ recherche_paiement }}" placeholder="Ex : CAMP-12-... ou email@exemple.com">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary btn-sm fw-bold w-100">🔍 Filtrer</button>
+        </div>
+        <div class="col-md-2">
+            <a href="{{ url_for('admin_transactions_globales') }}" class="btn btn-outline-secondary btn-sm w-100">Réinitialiser</a>
+        </div>
+    </form>
+
+    <div class="table-responsive mb-5">
+        <table class="table table-striped table-bordered align-middle shadow-sm">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>Référence</th>
+                    <th>Annonceur</th>
+                    <th>Campagne</th>
+                    <th>Montant</th>
+                    <th>Statut</th>
+                    <th>ID FedaPay</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transactions %}
+                <tr>
+                    <td class="small font-monospace text-center">{{ t.reference }}</td>
+                    <td>
+                        {% if t.demandeur %}
+                            <div class="fw-bold small">{{ t.demandeur.pseudo or "Sans pseudo" }}</div>
+                            <div class="text-muted small">{{ t.demandeur.email }}</div>
+                        {% else %}
+                            <span class="text-muted">Utilisateur supprimé</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center small">{{ "#" ~ t.campaign_id if t.campaign_id else "—" }}</td>
+                    <td class="text-center fw-bold">{{ "{:,.0f}".format(t.amount) }} {{ t.currency }}</td>
+                    <td class="text-center">
+                        {% if t.status == "approved" %}
+                            <span class="badge bg-success">✅ Approuvée</span>
+                        {% elif t.status == "pending" %}
+                            <span class="badge bg-warning text-dark">⏳ En attente</span>
+                        {% elif t.status == "declined" %}
+                            <span class="badge bg-danger">❌ Déclinée</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ t.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center small font-monospace">{{ t.fedapay_transaction_id or "—" }}</td>
+                    <td class="text-center small text-muted">{{ t.created_at.strftime("%d/%m/%Y %H:%M") if t.created_at else "-" }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-3">Aucune transaction trouvée pour ces critères.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 💰 TABLEAU 2 : RETRAITS DES PARTAGEURS -->
+    <!-- ========================================== -->
+    <h4 class="fw-bold text-warning mb-3"><i class="bi bi-cash-stack me-2"></i>Retraits des partageurs</h4>
+
+    <form method="GET" class="row g-2 mb-3 align-items-end">
+        <input type="hidden" name="statut_paiement" value="{{ filtre_statut_paiement }}">
+        <input type="hidden" name="recherche_paiement" value="{{ recherche_paiement }}">
+        <div class="col-md-3">
+            <label class="form-label small fw-semibold">Statut</label>
+            <select name="statut_retrait" class="form-select form-select-sm">
+                <option value="" {% if not filtre_statut_retrait %}selected{% endif %}>Tous</option>
+                <option value="pending" {% if filtre_statut_retrait == "pending" %}selected{% endif %}>⏳ En attente</option>
+                <option value="paid" {% if filtre_statut_retrait == "paid" %}selected{% endif %}>✅ Payé</option>
+                <option value="rejected" {% if filtre_statut_retrait == "rejected" %}selected{% endif %}>❌ Refusé</option>
+            </select>
+        </div>
+        <div class="col-md-5">
+            <label class="form-label small fw-semibold">Recherche (numéro, pseudo, email)</label>
+            <input type="text" name="recherche_retrait" class="form-control form-control-sm" value="{{ recherche_retrait }}" placeholder="Ex : +229... ou email@exemple.com">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-warning btn-sm fw-bold w-100">🔍 Filtrer</button>
+        </div>
+        <div class="col-md-2">
+            <a href="{{ url_for('admin_transactions_globales') }}" class="btn btn-outline-secondary btn-sm w-100">Réinitialiser</a>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered align-middle shadow-sm">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>ID</th>
+                    <th>Partageur</th>
+                    <th>Montant</th>
+                    <th>Moyen</th>
+                    <th>Statut</th>
+                    <th>Méthode</th>
+                    <th>Preuve</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in retraits %}
+                <tr>
+                    <td class="text-center fw-bold">#{{ d.id }}</td>
+                    <td>
+                        {% if d.demandeur %}
+                            <div class="fw-bold small">{{ d.demandeur.pseudo or "Sans pseudo" }}</div>
+                            <div class="text-muted small">{{ d.demandeur.email }}</div>
+                        {% else %}
+                            <span class="text-muted">Utilisateur supprimé</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center fw-bold">{{ "{:,.0f}".format(d.amount) }} FCFA</td>
+                    <td class="text-center small">{{ d.payout_channel }} <br> {{ d.payout_phone }}</td>
+                    <td class="text-center">
+                        {% if d.status == "pending" %}
+                            <span class="badge bg-warning text-dark">⏳ En attente</span>
+                        {% elif d.status == "paid" %}
+                            <span class="badge bg-success">✅ Payé</span>
+                        {% elif d.status == "rejected" %}
+                            <span class="badge bg-danger">❌ Refusé</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center text-capitalize small">{{ d.payment_method or "-" }}</td>
+                    <td class="text-center">
+                        {% if d.proof_file %}
+                            <a href="{{ url_for('serve_upload', filename=d.proof_file) }}" target="_blank" class="btn btn-xs btn-outline-primary" style="font-size: 0.75rem;">
+                                🖼️ Voir
+                            </a>
+                        {% else %}
+                            <span class="text-muted small">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center small text-muted">{{ d.requested_at.strftime("%d/%m/%Y %H:%M") if d.requested_at else "-" }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-3">Aucun retrait trouvé pour ces critères.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+{% endblock %}

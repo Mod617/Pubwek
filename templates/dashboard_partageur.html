@@ -1,0 +1,239 @@
+{% extends "base.html" %} 
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark">Tableau de bord - <span class="text-success">Partageur</span></h2>
+            <p class="text-muted mb-0">Bienvenue, {{ current_user.pseudo or current_user.email }} ! 👋</p>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <!-- 🆕 Cloche de notifications -->
+            <div class="dropdown">
+                <button class="btn btn-light position-relative shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-bell-fill fs-5"></i>
+                    {% if notifications_non_lues > 0 %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            {{ notifications_non_lues }}
+                        </span>
+                    {% endif %}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg p-2" style="width: 340px; max-height: 400px; overflow-y: auto;">
+                    <li><h6 class="dropdown-header">Notifications</h6></li>
+                    {% for notif in notifications %}
+                        <li>
+                            <a class="dropdown-item small py-2 {{ 'fw-bold' if not notif.is_read else 'text-muted' }}" href="{{ notif.link or '#' }}">
+                                <div class="d-flex align-items-start gap-2">
+                                    <span class="badge bg-{{ notif.category }} mt-1">&nbsp;</span>
+                                    <div>
+                                        <div>{{ notif.title }}</div>
+                                        <div class="text-muted" style="font-size: 0.75rem;">{{ notif.message }}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li><span class="dropdown-item-text text-muted small">Aucune notification pour le moment.</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <span class="badge bg-success px-3 py-2 fs-6">Statut : Actif</span>
+        </div>
+    </div>
+
+    <!-- 🆕 SOLDE DU PORTEFEUILLE — mis en avant en premier -->
+    <div class="card border-0 shadow-sm mb-4 bg-success bg-opacity-10 border-start border-success border-4">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h6 class="text-muted mb-1 fw-semibold"><i class="bi bi-wallet2 me-2"></i>Solde disponible de votre portefeuille</h6>
+                    <h2 class="fw-bold text-success mb-0">{{ "{:,.0f}".format(solde_portefeuille) }} FCFA</h2>
+                    <p class="text-muted small mb-0 mt-1">Alimenté par vos clics générés et vos gains de parrainage.</p>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <a href="{{ url_for('mes_retraits') }}" class="btn btn-success fw-bold px-4 py-2 shadow-sm">
+                        <i class="bi bi-cash-coin me-2"></i>Demander un retrait
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4 bg-light">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h5 class="fw-bold text-dark mb-2">📢 Boostez vos gains avec le Parrainage !</h5>
+                    <p class="text-muted mb-3 mb-md-0">
+                        Partagez votre lien unique ci-dessous. Vous toucherez une commission de <strong>3%</strong> sur le coût de la toute première campagne lancée par chacun de vos filleuls annonceurs.
+                    </p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <span class="badge bg-warning text-dark px-3 py-2 fw-semibold">Gagnez 3% par filleul</span>
+                </div>
+            </div>
+            
+            <div class="mt-3">
+                <label for="referralLink" class="form-label fw-semibold text-secondary">Votre lien d'affiliation unique :</label>
+                <div class="input-group mb-2">
+                    <input type="text" class="form-control bg-white" id="referralLink" value="{{ affiliate_link }}" readonly>
+                    <button class="btn btn-success" type="button" onclick="copyReferralLink()">
+                        <i class="bi bi-clipboard-check"></i> Copier le lien
+                    </button>
+                </div>
+                <small id="copyFeedback" class="text-success fw-semibold d-none">Lien copié avec succès ! 🎉</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-3 me-3">
+                            <i class="bi bi-people-fill fs-4"></i>
+                        </div>
+                        <h6 class="text-muted mb-0 fw-semibold">Filleuls inscrits</h6>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-1">{{ total_filleuls }}</h3>
+                    <p class="text-muted small mb-0">Annonceurs inscrits via votre lien</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 border-start border-success border-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-success bg-opacity-10 text-success rounded-circle p-3 me-3">
+                            <i class="bi bi-cash-coin fs-4"></i>
+                        </div>
+                        <h6 class="text-muted mb-0 fw-semibold">Gains de Parrainage (déjà crédités)</h6>
+                    </div>
+                    <h3 class="fw-bold text-success mb-1">{{ gains_valides | round(0) }} FCFA</h3>
+                    <p class="text-muted small mb-0">Déjà ajoutés à votre portefeuille</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 border-start border-warning border-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-warning bg-opacity-10 text-warning rounded-circle p-3 me-3">
+                            <i class="bi bi-hourglass-split fs-4"></i>
+                        </div>
+                        <h6 class="text-muted mb-0 fw-semibold">Gains en Attente</h6>
+                    </div>
+                    <h3 class="fw-bold text-warning mb-1">{{ gains_en_attente | round(0) }} FCFA</h3>
+                    <p class="text-muted small mb-0">En attente de paiement de leur campagne</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🆕 CAMPAGNES DISPONIBLES DANS LA ZONE DU PARTAGEUR -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h4 class="fw-bold text-dark mb-3">🔥 Campagnes disponibles dans votre zone</h4>
+            {% if campagnes_disponibles %}
+                <div class="row g-3">
+                    {% for item in campagnes_disponibles %}
+                        {% set camp = item.campaign %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 border shadow-sm {{ 'border-warning' if item.quota_atteint_aujourdhui else '' }}">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <span class="badge bg-secondary">
+                                            {% if camp.display_option == "A" %}🎬 Vidéo
+                                            {% elif camp.display_option == "B" %}📸 Multi-Statuts
+                                            {% else %}📝 Texte seul{% endif %}
+                                        </span>
+                                        <span class="badge bg-dark">{{ camp.target_whatsapp_views }} vues visées</span>
+                                    </div>
+                                    <h6 class="fw-bold">{{ camp.promotion_detail or "Campagne #" ~ camp.id }}</h6>
+                                    <p class="text-muted small mb-3" style="white-space: pre-line;">{{ camp.description or "" }}</p>
+
+                                    <!-- 🆕 Statut du quota journalier, affiché uniquement si déjà partagée -->
+                                    {% if item.deja_partagee %}
+                                        {% if item.quota_atteint_aujourdhui %}
+                                            <div class="alert alert-warning py-2 px-3 small mb-2">
+                                                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                                <strong>Quota du jour atteint !</strong> Vous pouvez retirer votre statut si vous le souhaitez — vous ne serez pas facturé au-delà. La diffusion reprend demain.
+                                            </div>
+                                        {% elif item.jour_actuel > 0 %}
+                                            <div class="alert alert-light border py-2 px-3 small mb-2 text-muted">
+                                                <i class="bi bi-calendar-check me-1"></i>
+                                                Jour {{ item.jour_actuel }} / {{ item.duree_totale }} — {{ item.vues_aujourdhui }} / {{ item.quota_du_jour }} vues aujourd'hui
+                                            </div>
+                                        {% endif %}
+
+                                        <a href="{{ url_for('instructions_partage', campaign_id=camp.id) }}" class="btn btn-outline-success w-100 btn-sm fw-semibold">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Déjà partagée — Voir les instructions
+                                        </a>
+                                    {% else %}
+                                        <form action="{{ url_for('partager_campagne_partageur', campaign_id=camp.id) }}" method="POST">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-success w-100 btn-sm fw-semibold">
+                                                <i class="bi bi-share-fill me-1"></i> Partager cette campagne
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted mb-0">Aucune campagne disponible dans votre zone pour le moment. Revenez bientôt ! 👀</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100 p-4">
+                <h4 class="fw-bold text-dark mb-3">📦 Produits à partager</h4>
+                <p class="text-muted">Explorez le catalogue de campagnes actives. Partagez les visuels sur vos réseaux sociaux (WhatsApp, TikTok, Facebook) et commencez à générer des clics pour être rémunéré.</p>
+                <div class="mt-auto pt-3">
+                    <a href="#" class="btn btn-success w-100 py-2 fw-semibold">
+                        <i class="bi bi-grid-fill me-2"></i>Voir les produits disponibles
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100 p-4">
+                <h4 class="fw-bold text-dark mb-3">💸 Mes gains & retraits</h4>
+                <p class="text-muted">Consultez le détail de vos gains (clics, parrainage), votre solde disponible et demandez vos retraits.</p>
+                <div class="mt-auto pt-3">
+                    <a href="{{ url_for('mes_retraits') }}" class="btn btn-outline-dark w-100 py-2 fw-semibold">
+                        <i class="bi bi-wallet2 me-2"></i>Consulter mon portefeuille
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyReferralLink() {
+    var copyText = document.getElementById("referralLink");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999); /* Pour les appareils mobiles */
+
+    navigator.clipboard.writeText(copyText.value).then(function() {
+        var feedback = document.getElementById("copyFeedback");
+        feedback.classList.remove("d-none");
+        setTimeout(function() {
+            feedback.classList.add("d-none");
+        }, 3000);
+    }).catch(function(err) {
+        console.error('Erreur lors de la copie : ', err);
+    });
+}
+</script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+{% endblock %}

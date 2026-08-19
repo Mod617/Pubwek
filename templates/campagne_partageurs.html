@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="mb-1 fw-bold">👥 Partageurs de la campagne</h2>
+            <p class="text-muted mb-0">{{ campaign.promotion_type | capitalize }} - {{ campaign.promotion_detail }}</p>
+        </div>
+        <a href="{{ url_for('mes_campagnes') }}" class="btn btn-outline-secondary fw-bold shadow-sm">
+            ⬅️ Retour à mes campagnes
+        </a>
+    </div>
+
+    <!-- Résumé rapide -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm text-center p-3 bg-light">
+                <div class="text-muted small">Nombre de partageurs</div>
+                <div class="h3 fw-bold text-dark mb-0">{{ partageurs | length }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm text-center p-3 bg-light">
+                <div class="text-muted small">Total de vues comptabilisées</div>
+                <div class="h3 fw-bold text-primary mb-0">{{ "{:,}".format(total_vues) }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm text-center p-3 bg-light">
+                <div class="text-muted small">Clics WhatsApp</div>
+                <div class="h3 fw-bold text-success mb-0">{{ "{:,}".format(total_clics_whatsapp) }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm text-center p-3 bg-light">
+                <div class="text-muted small">Clics Site web</div>
+                <div class="h3 fw-bold text-info mb-0">{{ "{:,}".format(total_clics_site) }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm text-center p-3 bg-white border">
+                <div class="text-muted small">Objectif de vues de la campagne</div>
+                <div class="h4 fw-bold text-dark mb-0">{{ "{:,}".format(campaign.target_whatsapp_views) }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des partageurs -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            {% if partageurs %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Pseudo</th>
+                            <th>Vues générées</th>
+                            <th><i class="bi bi-whatsapp text-success me-1"></i>Clics WhatsApp</th>
+                            <th><i class="bi bi-globe text-info me-1"></i>Clics Site web</th>
+                            <th class="pe-3">A partagé le</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in partageurs %}
+                        <tr>
+                            <td class="ps-3 fw-bold">
+                                <i class="fas fa-user-circle text-secondary me-2"></i>{{ p.pseudo }}
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">{{ "{:,}".format(p.nb_vues) }} vue{{ 's' if p.nb_vues != 1 else '' }}</span>
+                            </td>
+                            <td>
+                                {% if p.clics_whatsapp %}
+                                <span class="badge bg-success">{{ "{:,}".format(p.clics_whatsapp) }} clic{{ 's' if p.clics_whatsapp != 1 else '' }}</span>
+                                {% else %}
+                                <span class="text-muted small">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if p.clics_site %}
+                                <span class="badge bg-info text-dark">{{ "{:,}".format(p.clics_site) }} clic{{ 's' if p.clics_site != 1 else '' }}</span>
+                                {% else %}
+                                <span class="text-muted small">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="pe-3 text-muted small">{{ p.partage_le or "—" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted text-center p-4 mb-0">Aucun partageur n'a encore pris cette campagne.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <p class="text-muted small mt-3">
+        <i class="fas fa-shield-alt me-1"></i>
+        Pour la sécurité et la confidentialité des partageurs, seul leur pseudo est affiché.
+        Aucune information personnelle (numéro, email) n'est communiquée aux annonceurs.
+    </p>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+{% endblock %}

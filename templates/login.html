@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="container mt-5">
+    <h2 class="mb-4 text-center">Connexion</h2>
+
+    <form method="POST" action="">
+      {{ form.hidden_tag() }}
+
+      <!-- Email -->
+      <div class="mb-3">
+        {{ form.email.label(class="form-label") }}
+        {{ form.email(class="form-control") }}
+      </div>
+
+      <!-- Mot de passe -->
+      <div class="mb-3">
+        {{ form.password.label(class="form-label") }}
+        {{ form.password(class="form-control") }}
+      </div>
+
+      <!-- Se souvenir de moi -->
+      <div class="form-check mb-3">
+        {{ form.remember(class="form-check-input") }}
+        {{ form.remember.label(class="form-check-label") }}
+      </div>
+
+      <!-- Boutons -->
+      <div class="d-grid gap-2">
+        {{ form.submit(class="btn btn-primary btn-lg") }}
+        <a href="{{ url_for('index') }}" class="btn btn-secondary btn-lg">⬅ Retour à l’accueil</a>
+      </div>
+    </form>
+
+    <!-- Liens inscription -->
+    <div class="text-center mt-3">
+      <p>Pas encore de compte ?  
+        <a href="{{ url_for('register', role='partageur') }}">Inscription Partageur</a> | 
+        <a href="{{ url_for('register', role='annonceur') }}">Inscription Annonceur</a>
+      </p>
+    </div>
+  </div>
+{% endblock %}

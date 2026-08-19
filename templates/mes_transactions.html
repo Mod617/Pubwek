@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="mb-1 fw-bold">🧾 Mes Transactions</h2>
+            <p class="text-muted mb-0">Historique complet de vos paiements de campagnes publicitaires.</p>
+        </div>
+        <a href="{{ url_for('mes_campagnes') }}" class="btn btn-outline-secondary fw-bold shadow-sm">
+            ⬅️ Retour à mes campagnes
+        </a>
+    </div>
+
+    <div class="d-flex justify-content-end mb-3">
+        <a href="{{ url_for('mes_transactions_pdf') }}" class="btn btn-outline-dark fw-bold shadow-sm">
+            <i class="fas fa-file-pdf me-1"></i> 📄 Télécharger ma fiche en PDF
+        </a>
+    </div>
+
+    <!-- Résumé -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm text-center p-3 bg-success bg-opacity-10 border-start border-success border-4">
+                <div class="text-muted small">Total payé (transactions approuvées)</div>
+                <div class="h3 fw-bold text-success mb-0">{{ "{:,.0f}".format(total_paye) }} FCFA</div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm text-center p-3 bg-light">
+                <div class="text-muted small">Nombre de transactions</div>
+                <div class="h3 fw-bold text-dark mb-0">{{ transactions | length }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des transactions -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            {% if transactions %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Référence</th>
+                            <th>Campagne</th>
+                            <th>Type</th>
+                            <th>Montant</th>
+                            <th>Statut</th>
+                            <th class="pe-3">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in transactions %}
+                        <tr>
+                            <td class="ps-3 small font-monospace">{{ t.reference }}</td>
+                            <td>
+                                {% if t.campaign %}
+                                    <a href="{{ url_for('campagne_partageurs', campaign_id=t.campaign.id) }}" class="text-decoration-none">
+                                        #{{ t.campaign.id }} — {{ t.campaign.promotion_detail or t.campaign.promotion_type }}
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-capitalize small">
+                                {% if t.transaction_type == "campaign_payment" %}
+                                    📢 Paiement de campagne
+                                {% elif "subscription" in t.transaction_type %}
+                                    🎬 Abonnement vidéo
+                                {% else %}
+                                    {{ t.transaction_type }}
+                                {% endif %}
+                            </td>
+                            <td class="fw-bold">{{ "{:,.0f}".format(t.amount) }} {{ t.currency }}</td>
+                            <td>
+                                {% if t.status == "approved" %}
+                                    <span class="badge bg-success">✅ Approuvée</span>
+                                {% elif t.status == "pending" %}
+                                    <span class="badge bg-warning text-dark">⏳ En attente</span>
+                                {% elif t.status == "declined" %}
+                                    <span class="badge bg-danger">❌ Déclinée</span>
+                                {% elif t.status == "canceled" %}
+                                    <span class="badge bg-secondary">🚫 Annulée</span>
+                                {% else %}
+                                    <span class="badge bg-light text-dark">{{ t.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="pe-3 small text-muted">{{ t.created_at.strftime("%d/%m/%Y %H:%M") if t.created_at else "-" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted text-center p-4 mb-0">Aucune transaction pour le moment.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <p class="text-muted small mt-3">
+        <i class="fas fa-shield-alt me-1"></i>
+        Chaque transaction est identifiée par une référence unique et son statut réel confirmé par notre partenaire de paiement.
+        Ce document constitue votre preuve de paiement officielle.
+    </p>
+
+</div>
+{% endblock %}

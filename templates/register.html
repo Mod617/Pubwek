@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4 text-center">
+    Inscription {{ "Partageur" if role == "partageur" else "Annonceur" }}
+  </h2>
+
+  <form id="registerForm" method="POST" action="" enctype="multipart/form-data"
+        data-communes="{{ departements_communes | tojson | forceescape }}"
+        data-commune-initiale="{{ form.commune.data or '' }}">
+    {{ form.hidden_tag() }}
+
+    <input type="hidden" name="role" value="{{ role }}">
+
+    <div class="mb-3">
+      {{ form.email.label(class="form-label") }}
+      {{ form.email(class="form-control", id="email", placeholder="ex: utilisateur@gmail.com") }}
+      {% for error in form.email.errors %}
+        <div class="text-danger small">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.password.label(class="form-label") }}
+      {{ form.password(class="form-control", id="password", placeholder="••••••") }}
+      {% for error in form.password.errors %}
+        <div class="text-danger small">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.confirm_password.label(class="form-label") }}
+      {{ form.confirm_password(class="form-control", id="confirm_password", placeholder="••••••") }}
+      {% for error in form.confirm_password.errors %}
+        <div class="text-danger small">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    {% if role == "partageur" %}
+    <div class="mb-3">
+      {{ form.province.label(class="form-label") }}
+      {{ form.province(class="form-select", id="province") }}
+      {% for error in form.province.errors %}
+        <div class="text-danger small">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.commune.label(class="form-label") }}
+      {{ form.commune(class="form-select", id="commune") }}
+      {% for error in form.commune.errors %}
+        <div class="text-danger small">{{ error }}</div>
+      {% endfor %}
+      <small class="form-text text-muted">Sélectionnez d'abord votre province ci-dessus.</small>
+    </div>
+
+    <div class="mb-3">
+      {{ form.whatsapp_number.label(class="form-label") }}
+      {{ form.whatsapp_number(class="form-control", id="whatsapp_number", placeholder="+229XXXXXXXX") }}
+      {% for error in form.whatsapp_number.errors %}
+        <div class="text-danger small">{{ error }}</div>
+      {% endfor %}
+      <small class="form-text text-muted">Format obligatoire : +229 suivi de 8 chiffres.</small>
+    </div>
+    {% endif %}
+
+    {% if role == "annonceur" %}
+    <div class="mb-3">
+      {{ form.company_name.label(class="form-label") }}
+      {{ form.company_name(class="form-control", id="company_name", placeholder="Nom de votre entreprise") }}
+      {% for error in form.company_name.errors %}
+        <div class="text-danger small">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.logo_file.label(class="form-label") }}
+      {{ form.logo_file(class="form-control", id="logo_file", accept="image/*") }}
+      {% for error in form.logo_file.errors %}
+        <div class="text-danger small">{{ error }}</div>
+      {% endfor %}
+      <small class="form-text text-muted">Optionnel. Permet d'incruster votre logo de marque sur vos vidéos.</small>
+    </div>
+    {% endif %}
+
+    <div class="d-grid gap-2">
+      <button type="submit" class="btn btn-success btn-lg" id="submitBtn">
+        <span id="btnText">Créer mon compte</span>
+        <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+      </button>
+      <a href="{{ url_for('index') }}" class="btn btn-secondary btn-lg">⬅ Retour à l’accueil</a>
+    </div>
+  </form>
+
+  <div id="confirmationMessage" class="alert alert-info mt-4 text-center d-none">
+    </div>
+
+  <div class="text-center mt-3">
+    <p>Déjà inscrit ? <a href="{{ url_for('login') }}">Se connecter</a></p>
+  </div>
+</div>
+
+<script>
+// 🆕 Données département → communes, lues depuis les attributs data-* du formulaire
+// (évite tout mélange Jinja/JS dans le script, ce qui perturbait l'analyseur de l'éditeur)
+document.addEventListener("DOMContentLoaded", function() {
+  const registerForm = document.getElementById("registerForm");
+  const DEPARTEMENTS_COMMUNES = JSON.parse(registerForm.dataset.communes);
+  const COMMUNE_INITIALE = registerForm.dataset.communeInitiale || "";
+
+  function remplirCommunes(provinceSelectionnee, communeAChoisirParDefaut) {
+    const communeSelect = document.getElementById("commune");
+    if (!communeSelect) return;
+
+    communeSelect.innerHTML = "";
+
+    const communes = DEPARTEMENTS_COMMUNES[provinceSelectionnee] || [];
+
+    if (communes.length === 0) {
+      const option = document.createElement("option");
+      option.value = "";
+      option.textContent = "Sélectionnez d'abord une province";
+      communeSelect.appendChild(option);
+      return;
+    }
+
+    const optionVide = document.createElement("option");
+    optionVide.value = "";
+    optionVide.textContent = "Sélectionnez votre commune";
+    communeSelect.appendChild(optionVide);
+
+    communes.forEach(function(commune) {
+      const option = document.createElement("option");
+      option.value = commune;
+      option.textContent = commune;
+      if (commune === communeAChoisirParDefaut) {
+        option.selected = true;
+      }
+      communeSelect.appendChild(option);
+    });
+  }
+
+  const provinceSelect = document.getElementById("province");
+  if (provinceSelect) {
+    // Initialisation au chargement (utile si l'utilisateur revient après une erreur de formulaire)
+    remplirCommunes(provinceSelect.value, COMMUNE_INITIALE);
+
+    provinceSelect.addEventListener("change", function() {
+      remplirCommunes(this.value, "");
+    });
+  }
+});
+
+document.getElementById("registerForm").addEventListener("submit", function(event) {
+    const btnText = document.getElementById("btnText");
+    const btnSpinner = document.getElementById("btnSpinner");
+    const submitBtn = document.getElementById("submitBtn");
+    const confirmationDiv = document.getElementById("confirmationMessage");
+
+    // On change l'apparence du bouton pour montrer que ça travaille
+    btnText.innerText = "Envoi en cours...";
+    btnSpinner.classList.remove("d-none");
+    submitBtn.disabled = true;
+
+    // On affiche le message de patience
+    confirmationDiv.innerHTML = "Traitement de votre inscription... Veuillez patienter ⏳";
+    confirmationDiv.classList.remove("d-none");
+});
+</script>
+{% endblock %}

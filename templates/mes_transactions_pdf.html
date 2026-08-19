@@ -1,0 +1,174 @@
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+    @page {
+        size: A4;
+        margin: 2cm;
+    }
+    body {
+        font-family: Helvetica, Arial, sans-serif;
+        font-size: 11px;
+        color: #212529;
+    }
+    .header {
+        text-align: center;
+        border-bottom: 3px solid #0d6efd;
+        padding-bottom: 12px;
+        margin-bottom: 20px;
+    }
+    .header h1 {
+        color: #0d6efd;
+        font-size: 20px;
+        margin: 0 0 4px 0;
+    }
+    .header p {
+        color: #6c757d;
+        font-size: 10px;
+        margin: 0;
+    }
+    .info-block {
+        margin-bottom: 20px;
+    }
+    .info-block table {
+        width: 100%;
+    }
+    .info-block td {
+        padding: 4px 0;
+    }
+    .label {
+        color: #6c757d;
+        width: 40%;
+    }
+    .value {
+        font-weight: bold;
+    }
+    .solde-box {
+        background-color: #cfe2ff;
+        border: 1px solid #0d6efd;
+        padding: 12px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .solde-box .montant {
+        font-size: 22px;
+        font-weight: bold;
+        color: #0d6efd;
+    }
+    h2 {
+        font-size: 13px;
+        color: #212529;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 4px;
+        margin-top: 24px;
+        margin-bottom: 8px;
+    }
+    table.data {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 16px;
+    }
+    table.data th {
+        background-color: #212529;
+        color: white;
+        padding: 6px 4px;
+        text-align: left;
+        font-size: 9px;
+    }
+    table.data td {
+        padding: 5px 4px;
+        border-bottom: 1px solid #dee2e6;
+        font-size: 9px;
+    }
+    .badge {
+        padding: 2px 6px;
+        border-radius: 3px;
+        color: white;
+        font-size: 8px;
+    }
+    .badge-success { background-color: #198754; }
+    .badge-warning { background-color: #ffc107; color: #212529; }
+    .badge-danger { background-color: #dc3545; }
+    .badge-secondary { background-color: #6c757d; }
+    .footer {
+        margin-top: 30px;
+        padding-top: 10px;
+        border-top: 1px solid #dee2e6;
+        font-size: 8px;
+        color: #6c757d;
+        text-align: center;
+    }
+</style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>PUBWEK — Fiche de transactions</h1>
+        <p>Document généré le {{ date_generation }}</p>
+    </div>
+
+    <div class="info-block">
+        <table>
+            <tr>
+                <td class="label">Annonceur :</td>
+                <td class="value">{{ user.company_name or user.pseudo or "Non renseigné" }}</td>
+            </tr>
+            <tr>
+                <td class="label">Email :</td>
+                <td class="value">{{ user.email }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="solde-box">
+        <div>Total payé (transactions approuvées)</div>
+        <div class="montant">{{ "{:,.0f}".format(total_paye) }} FCFA</div>
+    </div>
+
+    <h2>Historique des transactions</h2>
+    {% if transactions %}
+    <table class="data">
+        <thead>
+            <tr>
+                <th>Référence</th>
+                <th>Campagne</th>
+                <th>Type</th>
+                <th>Montant</th>
+                <th>Statut</th>
+                <th>ID FedaPay</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in transactions %}
+            <tr>
+                <td>{{ t.reference }}</td>
+                <td>{{ "#" ~ t.campaign_id if t.campaign_id else "—" }}</td>
+                <td>
+                    {% if t.transaction_type == "campaign_payment" %}Paiement de campagne
+                    {% elif "subscription" in t.transaction_type %}Abonnement vidéo
+                    {% else %}{{ t.transaction_type }}{% endif %}
+                </td>
+                <td>{{ "{:,.0f}".format(t.amount) }} {{ t.currency }}</td>
+                <td>
+                    {% if t.status == "approved" %}<span class="badge badge-success">Approuvée</span>
+                    {% elif t.status == "pending" %}<span class="badge badge-warning">En attente</span>
+                    {% elif t.status == "declined" %}<span class="badge badge-danger">Déclinée</span>
+                    {% else %}<span class="badge badge-secondary">{{ t.status }}</span>{% endif %}
+                </td>
+                <td>{{ t.fedapay_transaction_id or "—" }}</td>
+                <td>{{ t.created_at.strftime("%d/%m/%Y %H:%M") if t.created_at else "-" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Aucune transaction enregistrée.</p>
+    {% endif %}
+
+    <div class="footer">
+        Document généré automatiquement par la plateforme Pubwek — Ce document constitue une preuve officielle de paiement pour les transactions listées ci-dessus.
+    </div>
+
+</body>
+</html>

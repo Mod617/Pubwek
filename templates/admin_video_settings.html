@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 800px;">
+    <!-- En-tête de la page -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <h2 class="mb-0 text-dark fw-bold">🎬 Configuration de l'Option Vidéo</h2>
+        <a href="{{ url_for('admin_validate') }}" class="btn btn-secondary fw-bold shadow-sm">
+            ⬅ Retour Admin
+        </a>
+    </div>
+
+    <!-- Messages Flash de succès ou erreur -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show shadow-sm" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body p-4">
+            <form method="POST" action="{{ url_for('admin_video_settings') }}">
+                
+                <!-- AJOUT DU JETON CSRF POUR ÉVITER L'ERREUR 400 -->
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <!-- SECTION 1 : MODE DE TARIFICATION -->
+                <h5 class="fw-bold text-primary mb-3"><i class="bi bi-wallet2 me-2"></i>Mode de tarification actuel</h5>
+                <div class="p-3 bg-light rounded border mb-4">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="pricing_mode" id="modeFree" value="free" 
+                               {% if config.pricing_mode == 'free' %}checked{% endif %} onclick="toggleSubscriptionFields()">
+                        <label class="form-check-label fw-bold text-success" for="modeFree">
+                            🎁 Entièrement Gratuit
+                        </label>
+                        <div class="form-text ms-4">La génération de vidéo à partir d'images sera accessible à tous les annonceurs sans frais. (Idéal pour le lancement !)</div>
+                    </div>
+                    <hr>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="pricing_mode" id="modeSubscription" value="subscription" 
+                               {% if config.pricing_mode == 'subscription' %}checked{% endif %} onclick="toggleSubscriptionFields()">
+                        <label class="form-check-label fw-bold text-dark" for="modeSubscription">
+                            💳 Accès par Abonnement Payant
+                        </label>
+                        <div class="form-text ms-4">Les utilisateurs devront souscrire à un forfait (mensuel ou annuel) pour utiliser cette fonctionnalité.</div>
+                    </div>
+                </div>
+
+                <!-- SECTION 2 : CONFIGURATION DES PRIX -->
+                <div id="subscriptionPricesSection">
+                    <h5 class="fw-bold text-primary mb-3"><i class="bi bi-currency-exchange me-2"></i>Tarifs de l'abonnement</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="monthly_price" class="form-label fw-bold text-secondary small">PRIX MENSUEL (XOF)</label>
+                            <div class="input-group shadow-sm">
+                                <input type="number" step="1" name="monthly_price" id="monthly_price" class="form-control" 
+                                       value="{{ config.monthly_price | int }}" required>
+                                <span class="input-group-text bg-dark text-white fw-bold">XOF</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="yearly_price" class="form-label fw-bold text-secondary small">PRIX ANNUEL (XOF)</label>
+                            <div class="input-group shadow-sm">
+                                <input type="number" step="1" name="yearly_price" id="yearly_price" class="form-control" 
+                                       value="{{ config.yearly_price | int }}" required>
+                                <span class="input-group-text bg-dark text-white fw-bold">XOF</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 3 : SYSTÈME DE PROMOTION -->
+                    <h5 class="fw-bold text-primary mb-3"><i class="bi bi-tag me-2"></i>Offre promotionnelle</h5>
+                    <div class="p-3 bg-light rounded border mb-4">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" name="promo_active" id="promo_active" value="y"
+                                   {% if config.promo_active %}checked{% endif %} onclick="togglePromoField()">
+                            <label class="form-check-label fw-bold text-danger" for="promo_active">Activer une promotion</label>
+                        </div>
+                        <div id="promoPercentageField" class="row">
+                            <div class="col-md-6">
+                                <label for="promo_percentage" class="form-label fw-bold text-secondary small">POURCENTAGE DE RÉDUCTION</label>
+                                <div class="input-group shadow-sm" style="max-width: 250px;">
+                                    <input type="number" step="1" min="0" max="100" name="promo_percentage" id="promo_percentage" 
+                                           class="form-control" value="{{ config.promo_percentage | int }}">
+                                    <span class="input-group-text bg-danger text-white fw-bold">%</span>
+                                </div>
+                                <div class="form-text text-muted">Ex: Entrez 20 pour appliquer 20% de remise immédiate.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOUTON D'ENREGISTREMENT -->
+                <div class="text-end pt-3 border-top">
+                    <button type="submit" class="btn btn-primary fw-bold shadow py-2 px-4">
+                        💾 Enregistrer les modifications
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleSubscriptionFields() {
+    const isSubscription = document.getElementById('modeSubscription').checked;
+    const pricesSection = document.getElementById('subscriptionPricesSection');
+    
+    if (isSubscription) {
+        pricesSection.style.transition = "opacity 0.3s ease";
+        pricesSection.style.opacity = "1";
+        pricesSection.querySelectorAll('input').forEach(input => input.disabled = false);
+    } else {
+        pricesSection.style.opacity = "0.5";
+    }
+}
+
+function togglePromoField() {
+    const promoActive = document.getElementById('promo_active').checked;
+    const promoInput = document.getElementById('promo_percentage');
+    if (promoActive) {
+        promoInput.disabled = false;
+    } else {
+        promoInput.disabled = true;
+    }
+}
+
+// Initialisation au chargement de la page
+document.addEventListener("DOMContentLoaded", function() {
+    toggleSubscriptionFields();
+    togglePromoField();
+});
+</script>
+{% endblock %}

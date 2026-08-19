@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="mb-1 fw-bold">💰 Demandes de retrait</h2>
+            <p class="text-muted mb-0">Traitez les demandes de retrait des partageurs.</p>
+        </div>
+        <a href="{{ url_for('admin_validate') }}" class="btn btn-outline-secondary fw-bold shadow-sm">
+            ⬅️ Retour au panneau d'administration
+        </a>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- ⏳ DEMANDES EN ATTENTE -->
+    <!-- ========================================== -->
+    <h4 class="fw-bold text-warning mb-3"><i class="bi bi-hourglass-split me-2"></i>En attente de traitement</h4>
+
+    {% if en_attente %}
+    <div class="table-responsive mb-5">
+        <table class="table table-striped table-bordered align-middle shadow-sm">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>ID</th>
+                    <th>Partageur</th>
+                    <th>Montant</th>
+                    <th>Moyen de réception</th>
+                    <th>Numéro</th>
+                    <th>Demandée le</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in en_attente %}
+                <tr>
+                    <td class="text-center fw-bold">#{{ d.id }}</td>
+                    <td>
+                        {% if d.demandeur %}
+                            <div class="fw-bold">{{ d.demandeur.pseudo or "Sans pseudo" }}</div>
+                            <div class="text-muted small">{{ d.demandeur.email }}</div>
+                        {% else %}
+                            <span class="text-muted">Utilisateur supprimé</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center fw-bold text-success">{{ "{:,.0f}".format(d.amount) }} FCFA</td>
+                    <td class="text-center">{{ d.payout_channel }}</td>
+                    <td class="text-center">
+                        <a href="https://wa.me/{{ d.payout_phone | replace(' ', '') }}" target="_blank" class="text-decoration-none">
+                            {{ d.payout_phone }} <i class="bi bi-whatsapp text-success"></i>
+                        </a>
+                    </td>
+                    <td class="text-center small text-muted">{{ d.requested_at.strftime("%d/%m/%Y %H:%M") if d.requested_at else "-" }}</td>
+                    <td class="text-center" style="min-width: 220px;">
+                        <div class="d-flex flex-column gap-2">
+                            <!-- Paiement manuel avec preuve -->
+                            <button type="button" class="btn btn-sm btn-success fw-bold" data-bs-toggle="modal" data-bs-target="#payerModal{{ d.id }}">
+                                💵 Marquer payé (manuel)
+                            </button>
+                            <!-- Refuser -->
+                            <button type="button" class="btn btn-sm btn-outline-danger fw-bold" data-bs-toggle="modal" data-bs-target="#refuserModal{{ d.id }}">
+                                ❌ Refuser
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- MODAL : Confirmer paiement manuel avec preuve -->
+                <div class="modal fade" id="payerModal{{ d.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <form action="{{ url_for('confirmer_retrait_manuel', withdrawal_id=d.id) }}" method="POST" enctype="multipart/form-data">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="modal-header bg-success text-white">
+                                    <h5 class="modal-title fw-bold">💵 Confirmer le paiement manuel #{{ d.id }}</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="mb-3">
+                                        Envoyez d'abord <strong>{{ "{:,.0f}".format(d.amount) }} FCFA</strong> à
+                                        <strong>{{ d.demandeur.pseudo if d.demandeur else "ce partageur" }}</strong>
+                                        via <strong>{{ d.payout_channel }}</strong> au <strong>{{ d.payout_phone }}</strong>,
+                                        puis téléversez la capture d'écran de la confirmation du virement.
+                                    </p>
+                                    <label class="form-label fw-bold">Preuve de paiement (capture d'écran) <span class="text-danger">*</span></label>
+                                    <input type="file" name="proof_file" class="form-control" accept="image/*" required>
+                                    <div class="form-text text-muted">Cette preuve sera conservée et consultable en cas de litige.</div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                    <button type="submit" class="btn btn-success fw-bold">✅ Confirmer le paiement</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODAL : Refuser la demande -->
+                <div class="modal fade" id="refuserModal{{ d.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <form action="{{ url_for('refuser_retrait', withdrawal_id=d.id) }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="modal-header bg-danger text-white">
+                                    <h5 class="modal-title fw-bold">❌ Refuser la demande #{{ d.id }}</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <label class="form-label fw-bold">Motif du refus <span class="text-danger">*</span></label>
+                                    <textarea name="admin_note" class="form-control" rows="3" required placeholder="Ex : numéro invalide, veuillez le corriger et refaire une demande."></textarea>
+                                    <div class="form-text text-muted">Le montant sera automatiquement recrédité sur le portefeuille du partageur.</div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                    <button type="submit" class="btn btn-danger fw-bold">Confirmer le refus</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted mb-5">Aucune demande de retrait en attente.</p>
+    {% endif %}
+
+    <!-- ========================================== -->
+    <!-- ✅ DEMANDES TRAITÉES -->
+    <!-- ========================================== -->
+    <h4 class="fw-bold text-secondary mb-3"><i class="bi bi-archive me-2"></i>Historique des demandes traitées</h4>
+
+    {% if traitees %}
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered align-middle shadow-sm">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>ID</th>
+                    <th>Partageur</th>
+                    <th>Montant</th>
+                    <th>Moyen</th>
+                    <th>Statut</th>
+                    <th>Méthode</th>
+                    <th>Preuve</th>
+                    <th>Traitée le</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in traitees %}
+                <tr>
+                    <td class="text-center fw-bold">#{{ d.id }}</td>
+                    <td>
+                        {% if d.demandeur %}
+                            <div class="fw-bold">{{ d.demandeur.pseudo or "Sans pseudo" }}</div>
+                            <div class="text-muted small">{{ d.demandeur.email }}</div>
+                        {% else %}
+                            <span class="text-muted">Utilisateur supprimé</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center fw-bold">{{ "{:,.0f}".format(d.amount) }} FCFA</td>
+                    <td class="text-center">{{ d.payout_channel }}</td>
+                    <td class="text-center">
+                        {% if d.status == "paid" %}
+                            <span class="badge bg-success">✅ Payé</span>
+                        {% elif d.status == "rejected" %}
+                            <span class="badge bg-danger">❌ Refusé</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ d.status }}</span>
+                        {% endif %}
+                        {% if d.status == "rejected" and d.admin_note %}
+                            <div class="text-muted small mt-1">{{ d.admin_note }}</div>
+                        {% endif %}
+                    </td>
+                    <td class="text-center text-capitalize">{{ d.payment_method or "-" }}</td>
+                    <td class="text-center">
+                        {% if d.proof_file %}
+                            <a href="{{ url_for('serve_upload', filename=d.proof_file) }}" target="_blank" class="btn btn-xs btn-outline-primary" style="font-size: 0.75rem;">
+                                🖼️ Voir la preuve
+                            </a>
+                        {% else %}
+                            <span class="text-muted small">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center small text-muted">{{ d.processed_at.strftime("%d/%m/%Y %H:%M") if d.processed_at else "-" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">Aucune demande traitée pour le moment.</p>
+    {% endif %}
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+{% endblock %}

@@ -1,0 +1,205 @@
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+    @page {
+        size: A4;
+        margin: 2cm;
+    }
+    body {
+        font-family: Helvetica, Arial, sans-serif;
+        font-size: 11px;
+        color: #212529;
+    }
+    .header {
+        text-align: center;
+        border-bottom: 3px solid #198754;
+        padding-bottom: 12px;
+        margin-bottom: 20px;
+    }
+    .header h1 {
+        color: #198754;
+        font-size: 20px;
+        margin: 0 0 4px 0;
+    }
+    .header p {
+        color: #6c757d;
+        font-size: 10px;
+        margin: 0;
+    }
+    .info-block {
+        margin-bottom: 20px;
+    }
+    .info-block table {
+        width: 100%;
+    }
+    .info-block td {
+        padding: 4px 0;
+    }
+    .label {
+        color: #6c757d;
+        width: 40%;
+    }
+    .value {
+        font-weight: bold;
+    }
+    .solde-box {
+        background-color: #d1e7dd;
+        border: 1px solid #198754;
+        padding: 12px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .solde-box .montant {
+        font-size: 22px;
+        font-weight: bold;
+        color: #198754;
+    }
+    h2 {
+        font-size: 13px;
+        color: #212529;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 4px;
+        margin-top: 24px;
+        margin-bottom: 8px;
+    }
+    table.data {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 16px;
+    }
+    table.data th {
+        background-color: #212529;
+        color: white;
+        padding: 6px 4px;
+        text-align: left;
+        font-size: 9px;
+    }
+    table.data td {
+        padding: 5px 4px;
+        border-bottom: 1px solid #dee2e6;
+        font-size: 9px;
+    }
+    .badge {
+        padding: 2px 6px;
+        border-radius: 3px;
+        color: white;
+        font-size: 8px;
+    }
+    .badge-success { background-color: #198754; }
+    .badge-warning { background-color: #ffc107; color: #212529; }
+    .badge-danger { background-color: #dc3545; }
+    .footer {
+        margin-top: 30px;
+        padding-top: 10px;
+        border-top: 1px solid #dee2e6;
+        font-size: 8px;
+        color: #6c757d;
+        text-align: center;
+    }
+</style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>PUBWEK — Fiche de retraits</h1>
+        <p>Document généré le {{ date_generation }}</p>
+    </div>
+
+    <div class="info-block">
+        <table>
+            <tr>
+                <td class="label">Partageur :</td>
+                <td class="value">{{ user.pseudo or "Sans pseudo" }}</td>
+            </tr>
+            <tr>
+                <td class="label">Email :</td>
+                <td class="value">{{ user.email }}</td>
+            </tr>
+            <tr>
+                <td class="label">Numéro WhatsApp :</td>
+                <td class="value">{{ user.whatsapp_number or "Non renseigné" }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="solde-box">
+        <div>Solde disponible au moment de l'édition</div>
+        <div class="montant">{{ "{:,.0f}".format(solde_actuel) }} FCFA</div>
+    </div>
+
+    <h2>Historique des demandes de retrait</h2>
+    {% if demandes %}
+    <table class="data">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Montant</th>
+                <th>Moyen</th>
+                <th>Statut</th>
+                <th>Détail</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in demandes %}
+            <tr>
+                <td>{{ d.requested_at.strftime("%d/%m/%Y %H:%M") if d.requested_at else "-" }}</td>
+                <td>{{ "{:,.0f}".format(d.amount) }} FCFA</td>
+                <td>{{ d.payout_channel }}</td>
+                <td>
+                    {% if d.status == "pending" %}<span class="badge badge-warning">En attente</span>
+                    {% elif d.status == "paid" %}<span class="badge badge-success">Payé</span>
+                    {% elif d.status == "rejected" %}<span class="badge badge-danger">Refusé</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if d.status == "rejected" and d.admin_note %}{{ d.admin_note }}
+                    {% elif d.status == "paid" and d.processed_at %}Payé le {{ d.processed_at.strftime("%d/%m/%Y") }}
+                    {% else %}—{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Aucune demande de retrait effectuée.</p>
+    {% endif %}
+
+    <h2>Détail des mouvements du portefeuille</h2>
+    {% if mouvements %}
+    <table class="data">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Montant</th>
+                <th>Détail</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for m in mouvements %}
+            <tr>
+                <td>{{ m.created_at.strftime("%d/%m/%Y %H:%M") if m.created_at else "-" }}</td>
+                <td>
+                    {% if m.transaction_type == "click_reward" %}Clic
+                    {% elif m.transaction_type == "referral_reward" %}Parrainage
+                    {% elif m.transaction_type == "withdrawal" %}Retrait
+                    {% elif m.transaction_type == "withdrawal_refund" %}Remboursement
+                    {% else %}{{ m.transaction_type }}{% endif %}
+                </td>
+                <td>{{ "+" if m.amount > 0 else "" }}{{ "{:,.0f}".format(m.amount) }} FCFA</td>
+                <td>{{ m.description or "-" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Aucun mouvement enregistré.</p>
+    {% endif %}
+
+    <div class="footer">
+        Document généré automatiquement par la plateforme Pubwek — Ce document fait foi des mouvements enregistrés sur le portefeuille de l'utilisateur.
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="text-center mb-5">
+    <h1>Bienvenue sur Pubwek</h1>
+    <p class="lead">
+      Pubwek est une plateforme qui connecte les <strong>entreprises</strong> du Bénin 
+      et les <strong>partageurs</strong> qui font la promotion des produits sur 
+      WhatsApp, TikTok et Facebook.
+    </p>
+  </div>
+
+  <div class="row">
+    <!-- Section Annonceurs -->
+    <div class="col-md-6">
+      <div class="section-annonceurs text-center p-4 border rounded shadow-sm">
+        <h2>Annonceurs</h2>
+        <p>Publiez vos produits et touchez plus de clients grâce aux partageurs.</p>
+        <a href="{{ url_for('register', role='annonceur') }}" class="btn btn-success">
+          Je suis un annonceur
+        </a>
+      </div>
+    </div>
+
+    <!-- Section Partageurs -->
+    <div class="col-md-6">
+      <div class="section-partageurs text-center p-4 border rounded shadow-sm">
+        <h2>Partageurs</h2>
+        <p>Partagez des produits et gagnez de l’argent selon les vues et clics obtenus.</p>
+        <a href="{{ url_for('register', role='partageur') }}" class="btn btn-primary">
+          Je suis un partageur
+        </a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

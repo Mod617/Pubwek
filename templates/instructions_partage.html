@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 700px;">
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <h3 class="fw-bold text-success mb-1">✅ Partage enregistré !</h3>
+            <p class="text-muted mb-4">Suivez les étapes ci-dessous pour publier cette campagne sur votre statut WhatsApp et commencer à générer des vues et des clics.</p>
+
+            <!-- ÉTAPE 1 : COPIER LE TEXTE (avec les liens de tracking inclus) -->
+            <div class="mb-4">
+                <h5 class="fw-bold">
+                    <span class="badge bg-primary rounded-circle me-2">1</span>
+                    Copiez le texte de l'annonce
+                </h5>
+                <div class="bg-light border rounded p-3 mt-2 position-relative">
+                    <p id="texteAnnonce" class="mb-0" style="white-space: pre-line;">{{ camp.description or camp.promotion_detail or "" }}{% if lien_whatsapp_tracking %}
+
+📲 Commander sur WhatsApp : {{ lien_whatsapp_tracking }}{% endif %}{% if lien_site_tracking %}
+
+🌐 Voir le site : {{ lien_site_tracking }}{% endif %}</p>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="copierTexte()">
+                    <i class="bi bi-clipboard"></i> Copier le texte complet
+                </button>
+                <small id="copieFeedback" class="text-success fw-semibold d-none ms-2">Copié ! ✅</small>
+            </div>
+
+            <!-- ÉTAPE 1bis : LIENS DE TRACKING INDIVIDUELS (au cas où le partageur préfère les insérer séparément) -->
+            {% if lien_whatsapp_tracking or lien_site_tracking %}
+            <div class="mb-4">
+                <h6 class="fw-bold text-muted mb-2">🔗 Vos liens personnels de suivi</h6>
+                <p class="small text-muted mb-2">
+                    Ces liens sont propres à votre partage : chaque clic dessus sera comptabilisé à votre nom pour cette campagne.
+                </p>
+
+                {% if lien_whatsapp_tracking %}
+                <div class="input-group mb-2">
+                    <span class="input-group-text bg-white"><i class="bi bi-whatsapp text-success"></i></span>
+                    <input type="text" class="form-control form-control-sm" id="lienWhatsappTracking" value="{{ lien_whatsapp_tracking }}" readonly>
+                    <button type="button" class="btn btn-outline-success btn-sm" onclick="copierLien('lienWhatsappTracking', 'feedbackWhatsapp')">Copier</button>
+                </div>
+                <small id="feedbackWhatsapp" class="text-success fw-semibold d-none">Lien WhatsApp copié ! ✅</small>
+                {% endif %}
+
+                {% if lien_site_tracking %}
+                <div class="input-group mt-2">
+                    <span class="input-group-text bg-white"><i class="bi bi-globe text-primary"></i></span>
+                    <input type="text" class="form-control form-control-sm" id="lienSiteTracking" value="{{ lien_site_tracking }}" readonly>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="copierLien('lienSiteTracking', 'feedbackSite')">Copier</button>
+                </div>
+                <small id="feedbackSite" class="text-primary fw-semibold d-none">Lien du site copié ! ✅</small>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- ÉTAPE 2 : MÉDIAS (si Option A ou B) -->
+            {% if media_urls %}
+            <div class="mb-4">
+                <h5 class="fw-bold">
+                    <span class="badge bg-primary rounded-circle me-2">2</span>
+                    Téléchargez {{ "la vidéo" if camp.display_option == "A" else "les photos" }}
+                </h5>
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    {% for url in media_urls %}
+                        {% if camp.display_option == "A" %}
+                            <video src="{{ url }}" controls class="rounded shadow-sm" style="max-width: 220px; max-height: 200px;"></video>
+                        {% else %}
+                            <img src="{{ url }}" class="rounded shadow-sm" style="max-width: 120px; max-height: 120px; object-fit: cover;">
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    {% for url in media_urls %}
+                        <a href="{{ url }}" download class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-download"></i> Télécharger {{ loop.index }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ÉTAPE FINALE : OUVRIR WHATSAPP -->
+            <div class="mb-2">
+                <h5 class="fw-bold">
+                    <span class="badge bg-primary rounded-circle me-2">{{ "3" if media_urls else "2" }}</span>
+                    Ouvrez WhatsApp et publiez votre statut
+                </h5>
+                <p class="text-muted small mb-2">
+                    Dans WhatsApp, allez dans l'onglet <strong>Statuts</strong> → <strong>Ajouter un statut</strong>,
+                    {% if media_urls %}ajoutez {{ "la vidéo" if camp.display_option == "A" else "les photos" }} téléchargée(s){% else %}collez le texte copié{% endif %}, puis publiez.
+                </p>
+                <a href="whatsapp://" class="btn btn-success btn-lg w-100 fw-semibold">
+                    <i class="bi bi-whatsapp me-2"></i> Ouvrir WhatsApp
+                </a>
+                <small class="text-muted d-block mt-2 text-center">
+                    Sur ordinateur, WhatsApp doit être installé pour que ce lien fonctionne. Sinon, ouvrez WhatsApp directement sur votre téléphone.
+                </small>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="{{ url_for('dashboard_partageur') }}" class="btn btn-link">⬅ Retour au tableau de bord</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copierTexte() {
+    const texte = document.getElementById("texteAnnonce").innerText;
+    navigator.clipboard.writeText(texte).then(function() {
+        const feedback = document.getElementById("copieFeedback");
+        feedback.classList.remove("d-none");
+        setTimeout(function() {
+            feedback.classList.add("d-none");
+        }, 3000);
+    }).catch(function(err) {
+        console.error("Erreur lors de la copie :", err);
+    });
+}
+
+function copierLien(inputId, feedbackId) {
+    const input = document.getElementById(inputId);
+    navigator.clipboard.writeText(input.value).then(function() {
+        const feedback = document.getElementById(feedbackId);
+        feedback.classList.remove("d-none");
+        setTimeout(function() {
+            feedback.classList.add("d-none");
+        }, 3000);
+    }).catch(function(err) {
+        console.error("Erreur lors de la copie :", err);
+    });
+}
+</script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+{% endblock %}

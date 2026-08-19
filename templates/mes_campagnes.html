@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h2 class="mb-0 fw-bold">📊 Mes Campagnes Publicitaires</h2>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('mes_transactions') }}" class="btn btn-outline-dark fw-bold shadow-sm">
+                🧾 Mes transactions
+            </a>
+            <a href="{{ url_for('dashboard_annonceur') }}" class="btn btn-primary fw-bold shadow-sm">
+                ➕ Lancer une nouvelle campagne
+            </a>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 🚨 SECTION 0 : CAMPAGNES REFUSÉES / À CORRIGER -->
+    <!-- ========================================== -->
+    {% if refusees %}
+    <div class="mb-5">
+        <h4 class="text-danger fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Campagnes Refusées ou à Corriger</h4>
+        <div class="row">
+            {% for campaign in refusees %}
+            {% set provinces_actuelles = campaign.provinces.split(',') if campaign.provinces and campaign.provinces != "Toutes" else [] %}
+            {% set communes_actuelles = campaign.communes.split(',') if campaign.communes else [] %}
+            <div class="col-md-6 mb-3">
+                <div class="card border-danger shadow-sm">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">Campagne #{{ campaign.id }}</span>
+                        <span class="badge bg-white text-danger">Refusée</span>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold text-dark">{{ campaign.promotion_type | capitalize }} - {{ campaign.promotion_detail }}</h5>
+                        <p class="card-text text-muted small">{{ campaign.description }}</p>
+
+                        <!-- Boîte d'Alerte Rouge avec le motif de refus -->
+                        <div class="alert alert-danger p-3 my-3 border-start border-4 border-danger rounded-3">
+                            <strong class="d-block"><i class="fas fa-info-circle me-1"></i> Motif du refus par l'administration :</strong>
+                            <p class="mb-0 mt-1 small">{{ campaign.rejection_reason or "Non spécifié par l'administrateur." }}</p>
+                        </div>
+
+                        <p class="mb-1"><strong>⏳ Durée prévue :</strong> {{ campaign.duration_days }} jour{{ 's' if campaign.duration_days > 1 else '' }}</p>
+
+                        {% if campaign.paid %}
+                            <p class="mb-1"><strong>💰 Montant payé :</strong> {{ "{:,.0f}".format(campaign.total_cost) }} XOF</p>
+                        {% else %}
+                            <p class="mb-1"><strong>💰 Coût de la campagne :</strong> {{ "{:,.0f}".format(campaign.total_cost) }} XOF <span class="badge bg-secondary">Non payée</span></p>
+                        {% endif %}
+
+                        <hr>
+
+                        <div class="d-flex flex-wrap gap-2 mt-3">
+                            <!-- Bouton pour ouvrir la modal de correction -->
+                            <button type="button" class="btn btn-sm btn-warning fw-bold flex-grow-1" data-bs-toggle="modal" data-bs-target="#editModal{{ campaign.id }}">
+                                ✏️ Corriger & Resoumettre
+                            </button>
+
+                            {% if campaign.can_claim_refund and campaign.paid %}
+                            <button type="button" class="btn btn-sm btn-outline-danger fw-bold flex-grow-1" data-bs-toggle="modal" data-bs-target="#refundModal{{ campaign.id }}">
+                                💰 Demander le remboursement (48h max)
+                            </button>
+                            {% elif not campaign.paid %}
+                            <span class="d-inline-block flex-grow-1" tabindex="0" data-bs-toggle="tooltip" title="Cette campagne n'a jamais été payée, aucun remboursement n'est applicable.">
+                                <button class="btn btn-sm btn-light text-muted fw-bold w-100" disabled>💰 Aucun paiement effectué</button>
+                            </span>
+                            {% else %}
+                            <span class="d-inline-block flex-grow-1" tabindex="0" data-bs-toggle="tooltip" title="Si les corrections ne conviennent pas, contactez le support pour activer l'option de remboursement.">
+                                <button class="btn btn-sm btn-light text-muted fw-bold w-100" disabled>💰 Remboursement non activé</button>
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL 1 : Resoumettre la campagne — TOUS LES CHAMPS -->
+            <div class="modal fade" id="editModal{{ campaign.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <form action="{{ url_for('resoumettre_campagne', campaign_id=campaign.id) }}" method="POST" enctype="multipart/form-data">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="modal-header bg-warning text-dark">
+                                <h5 class="modal-title fw-bold">✏️ Corriger la campagne #{{ campaign.id }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+
+                                <!-- Infos de base -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Nom du produit/service</label>
+                                    <input type="text" name="promotion_detail" class="form-control" value="{{ campaign.promotion_detail }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        Description / Texte du statut
+                                        <span class="text-muted fw-normal small">({{ 500 if campaign.display_option == "C" else 150 }} car. max)</span>
+                                    </label>
+                                    <textarea name="description" class="form-control" rows="3" maxlength="{{ 500 if campaign.display_option == 'C' else 150 }}" required>{{ campaign.description }}</textarea>
+                                </div>
+
+                                <!-- Médias selon l'option d'origine (figée, non modifiable) -->
+                                {% if campaign.display_option == "A" %}
+                                    <div class="mb-3 bg-light p-3 rounded border">
+                                        <label class="form-label fw-bold">🎬 Remplacer la vidéo publicitaire (optionnel)</label>
+                                        <input type="file" name="video_file" class="form-control" accept="video/mp4,video/quicktime,video/webm">
+                                        <div class="form-text text-muted">Laissez vide pour garder la vidéo actuelle. Max 30 secondes, 40 Mo.</div>
+                                        {% if campaign.media_files %}
+                                            <video src="{{ url_for('serve_upload', filename=campaign.media_files) }}" controls class="mt-2 rounded shadow-sm" style="max-height: 200px;"></video>
+                                        {% endif %}
+                                    </div>
+                                {% elif campaign.display_option == "B" %}
+                                    <div class="mb-3 bg-light p-3 rounded border">
+                                        <label class="form-label fw-bold">📸 Remplacer les photos (optionnel)</label>
+                                        <input type="file" name="media_files" class="form-control" multiple accept="image/*">
+                                        <div class="form-text text-muted">Laissez vide pour garder les photos actuelles. Maximum 25 photos.</div>
+                                        {% if campaign.media_files %}
+                                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                                {% for f in campaign.media_files.split(',') %}
+                                                    <img src="{{ url_for('serve_upload', filename=f) }}" class="rounded shadow-sm" style="width: 70px; height: 70px; object-fit: cover;">
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <div class="mb-3">
+                                        <span class="badge bg-secondary">📝 Option Texte seul — aucun média requis</span>
+                                    </div>
+                                {% endif %}
+
+                                <!-- Zones de diffusion -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">🌍 Zones de diffusion</label>
+                                    <div class="row px-2" style="max-height: 180px; overflow-y: auto;">
+                                        {% for departement, communes in departements_communes.items() %}
+                                        <div class="col-6 col-md-4 form-check">
+                                            <input class="form-check-input" type="checkbox" name="provinces[]" value="{{ departement }}"
+                                                   id="prov_{{ campaign.id }}_{{ departement }}"
+                                                   {% if departement in provinces_actuelles %}checked{% endif %}>
+                                            <label class="form-check-label small" for="prov_{{ campaign.id }}_{{ departement }}">{{ departement }}</label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="form-text text-muted">Décochez tout pour cibler toutes les zones.</div>
+                                </div>
+
+                                <!-- Objectif de vues / durée -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6 mb-2">
+                                        <label class="form-label fw-bold">🚀 Objectif de vues</label>
+                                        <input type="number" name="whatsapp_views" class="form-control" min="100" step="50" value="{{ campaign.target_whatsapp_views }}" required>
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <label class="form-label fw-bold">⏳ Durée (Jours)</label>
+                                        <select name="duration_days" class="form-select">
+                                            {% for jour in range(1, 31) %}
+                                                <option value="{{ jour }}" {% if campaign.duration_days == jour %}selected{% endif %}>{{ jour }} jour{{ 's' if jour > 1 else '' }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Contact -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">📲 Numéro WhatsApp de contact</label>
+                                    <input type="tel" name="whatsapp_number" class="form-control" value="{{ campaign.whatsapp_number or '' }}" placeholder="+229XXXXXXXX" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label fw-bold">🌐 Site web ou application <span class="text-muted fw-normal small">(optionnel)</span></label>
+                                    <input type="url" name="website_url" class="form-control" value="{{ campaign.website_url or '' }}" placeholder="https://votresite.com">
+                                </div>
+
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                <button type="submit" class="btn btn-warning fw-bold">🚀 Renvoyer pour validation</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL 2 : Réclamer un remboursement -->
+            {% if campaign.can_claim_refund and campaign.paid %}
+            <div class="modal fade" id="refundModal{{ campaign.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <form action="{{ url_for('reclamer_remboursement', campaign_id=campaign.id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title fw-bold">💰 Demande de Remboursement</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p class="small text-muted mb-3">
+                                    Le remboursement de <strong>{{ "{:,.0f}".format(campaign.total_cost) }} XOF</strong> sera traité et versé directement sur votre compte sous un délai maximal de <strong>48 heures</strong>.
+                                </p>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Moyen de réception</label>
+                                    <select name="refund_method" class="form-select" required>
+                                        <option value="MTN Mobile Money">MTN Mobile Money</option>
+                                        <option value="Moov Money">Moov Money</option>
+                                        <option value="Celtiis Cash">Celtiis Cash</option>
+                                        <option value="Wave">Wave</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Numéro de téléphone pour le virement</label>
+                                    <input type="tel" name="refund_phone" class="form-control" placeholder="+229XXXXXXXX" value="{{ current_user.whatsapp_number or '' }}" required>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                                <button type="submit" class="btn btn-danger fw-bold">Confirmer la demande</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% endfor %}
+        </div>
+    </div>
+    <hr>
+    {% endif %}
+
+    <!-- ========================================== -->
+    <!-- 💳 SECTION 1 : PAIEMENT NON FINALISÉ / ANNULÉ -->
+    <!-- ========================================== -->
+    {% if non_payees %}
+    <div class="mb-5">
+        <h4 class="text-warning fw-bold"><i class="fas fa-credit-card me-2"></i>Paiement en attente / Non finalisé</h4>
+        <div class="row">
+            {% for campaign in non_payees %}
+            <div class="col-md-6 mb-3">
+                <div class="card border-warning shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="card-title fw-bold mb-0">{{ campaign.promotion_type | capitalize }} - {{ campaign.promotion_detail }}</h5>
+                            <span class="badge bg-warning text-dark">Paiement Non Reçu</span>
+                        </div>
+                        <p class="card-text text-muted small">{{ campaign.description }}</p>
+                        <p class="mb-1"><strong>⏳ Durée prévue :</strong> {{ campaign.duration_days }} jour{{ 's' if campaign.duration_days > 1 else '' }}</p>
+                        <p class="mb-1"><strong>Coût total :</strong> {{ "{:,.0f}".format(campaign.total_cost) }} XOF</p>
+                        <p class="small text-muted mb-3">⚠️ Cette campagne ne sera envoyée aux modérateurs qu'une fois le paiement effectué.</p>
+                        
+                        <a href="{{ url_for('payer_campagne', campaign_id=campaign.id) }}" class="btn btn-success fw-bold w-100 shadow-sm">
+                            💳 Finaliser le Paiement Maintenent
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <hr>
+    {% endif %}
+
+    <!-- ========================================== -->
+    <!-- ⏳ SECTION 2 : CAMPAGNES EN ATTENTE DE VALIDATION -->
+    <!-- ========================================== -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold"><i class="fas fa-clock text-warning me-2"></i>En attente de validation Admin</h4>
+    </div>
+    {% if en_attente %}
+    <div class="row mb-4">
+        {% for campaign in en_attente %}
+        <div class="col-md-6 mb-3">
+            <div class="card border-warning shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">{{ campaign.promotion_type | capitalize }} - {{ campaign.promotion_detail }}</h5>
+                    <p class="card-text text-muted small">{{ campaign.description }}</p>
+                    <p class="mb-1"><strong>Provinces :</strong> {{ campaign.provinces }}</p>
+                    <p class="mb-1"><strong>⏳ Durée prévue :</strong> {{ campaign.duration_days }} jour{{ 's' if campaign.duration_days > 1 else '' }} (≈ {{ campaign.views_per_day }} vues/jour)</p>
+                    <p class="mb-2"><strong>Coût total :</strong> {{ "{:,.0f}".format(campaign.total_cost) }} XOF</p>
+                    <span class="badge bg-warning text-dark">⏳ En cours d'analyse par l'admin</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted mb-4">Aucune campagne en attente de validation administrative.</p>
+    {% endif %}
+
+    <hr>
+
+    <!-- ========================================== -->
+    <!-- 🚀 SECTION 3 : CAMPAGNES EN COURS -->
+    <!-- ========================================== -->
+    <h4 class="fw-bold"><i class="fas fa-rocket text-primary me-2"></i>En cours de diffusion</h4>
+    {% if en_cours %}
+    <div class="row mb-4">
+        {% for campaign in en_cours %}
+        <div class="col-md-6 mb-3">
+            <div class="card border-primary shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">{{ campaign.promotion_type | capitalize }} - {{ campaign.promotion_detail }}</h5>
+                    <p class="card-text text-muted small">{{ campaign.description }}</p>
+                    <p class="mb-1"><strong>Provinces :</strong> {{ campaign.provinces }}</p>
+                    <p class="mb-2"><strong>Coût total :</strong> {{ "{:,.0f}".format(campaign.total_cost) }} XOF</p>
+
+                    <!-- 🆕 Progression jour par jour -->
+                    <div class="bg-light border rounded p-2 mb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold small"><i class="bi bi-calendar3 me-1"></i>Jour {{ campaign.current_day_number or 1 }} / {{ campaign.duration_days }}</span>
+                            {% if campaign.daily_quota_paused %}
+                                <span class="badge bg-warning text-dark">⏸️ Quota atteint aujourd'hui</span>
+                            {% else %}
+                                <span class="badge bg-success">🟢 En diffusion</span>
+                            {% endif %}
+                        </div>
+                        <div class="text-muted small mt-1">
+                            {{ campaign.views_today or 0 }} / {{ campaign.views_per_day }} vues aujourd'hui
+                            — {{ campaign.whatsapp_views or 0 }} / {{ campaign.target_whatsapp_views }} vues au total
+                        </div>
+                    </div>
+
+                    <span class="badge bg-primary mb-2">🚀 Active / Diffusée</span>
+
+                    <!-- 🆕 Accès aux partageurs + statistiques de vues -->
+                    <a href="{{ url_for('campagne_partageurs', campaign_id=campaign.id) }}" class="btn btn-outline-primary btn-sm fw-bold w-100 mt-2">
+                        👥 Voir les partageurs & statistiques
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted mb-4">Aucune campagne actuellement en cours de diffusion.</p>
+    {% endif %}
+
+    <hr>
+
+    <!-- ========================================== -->
+    <!-- ✅ SECTION 4 : CAMPAGNES TERMINÉES -->
+    <!-- ========================================== -->
+    <h4 class="fw-bold"><i class="fas fa-check-circle text-success me-2"></i>Terminées</h4>
+    {% if terminees %}
+    <div class="row mb-4">
+        {% for campaign in terminees %}
+        <div class="col-md-6 mb-3">
+            <div class="card border-success shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">{{ campaign.promotion_type | capitalize }} - {{ campaign.promotion_detail }}</h5>
+                    <p class="card-text text-muted small">{{ campaign.description }}</p>
+                    <p class="mb-1"><strong>Provinces :</strong> {{ campaign.provinces }}</p>
+                    <p class="mb-1"><strong>⏳ Durée diffusée :</strong> {{ campaign.duration_days }} jour{{ 's' if campaign.duration_days > 1 else '' }}</p>
+                    <p class="mb-1"><strong>📊 Vues obtenues :</strong> {{ campaign.whatsapp_views or 0 }} / {{ campaign.target_whatsapp_views }}</p>
+                    <p class="mb-2"><strong>Coût total :</strong> {{ "{:,.0f}".format(campaign.total_cost) }} XOF</p>
+                    <span class="badge bg-success mb-2">✅ Terminée</span>
+
+                    <!-- 🆕 Accès aux partageurs + statistiques de vues -->
+                    <a href="{{ url_for('campagne_partageurs', campaign_id=campaign.id) }}" class="btn btn-outline-success btn-sm fw-bold w-100 mt-2">
+                        👥 Voir les partageurs & statistiques
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">Aucune campagne terminée.</p>
+    {% endif %}
+</div>
+{% endblock %}

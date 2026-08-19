@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() if csrf_token else '' }}">
+
+  <!-- ✅ Titre dynamique -->
+  {% if title %}
+    <title>{{ title }} - Pubwek</title>
+  {% else %}
+    <title>Pubwek - Partage sur Statut WhatsApp au Bénin</title>
+  {% endif %}
+
+  <!-- ✅ Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- ✅ Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+  <!-- ✅ Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+  <!-- ✅ CSS personnalisé -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+
+  <!-- ✅ Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container-fluid">
+      <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Pubwek" height="40" class="me-2">
+        <span>Pubwek</span>
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          {% if current_user.is_authenticated %}
+            <!-- Dashboard selon le rôle -->
+            {% if current_user.role == "annonceur" %}
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('dashboard_annonceur') }}">
+                  <i class="fa-solid fa-bullhorn me-1"></i>Dashboard Annonceur
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('mes_campagnes') }}">
+                  <i class="fa-solid fa-layer-group me-1"></i>Mes Campagnes
+                </a>
+              </li>
+            {% elif current_user.role == "partageur" %}
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('dashboard_partageur') }}">
+                  <i class="fa-solid fa-link me-1"></i>Dashboard Partageur
+                </a>
+              </li>
+            {% endif %}
+
+            <!-- Accès Admin -->
+            {% if current_user.role == "admin" %}
+              <li class="nav-item">
+                <a class="nav-link text-warning fw-bold" href="{{ url_for('admin_validate') }}">
+                  <i class="fa-solid fa-gear me-1"></i>Panneau Admin
+                </a>
+              </li>
+            {% endif %}
+
+            <!-- Bouton déconnexion -->
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('logout') }}">
+                <i class="fa-solid fa-right-from-bracket me-1"></i>Déconnexion
+              </a>
+            </li>
+
+          {% else %}
+            <!-- Liens publics -->
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('login') }}">Connexion</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('register', role='annonceur') }}">Inscription Annonceur</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('register', role='partageur') }}">Inscription Partageur</a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ✅ Zone de contenu principal -->
+  <main class="container flex-grow-1">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message|safe }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- 🔒 MODAL DE BLOCAGE : ACCEPTATION OBLIGATOIRE DES CGU / CGV ET POLITIQUE DE CONFIDENTIALITÉ -->
+  {% if current_user.is_authenticated and not current_user.has_accepted_terms %}
+  <div class="modal fade show" id="forceTermsModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" style="display: block; background: rgba(0,0,0,0.85);" aria-modal="true" role="dialog">
+    <div class="modal-dialog modal-dialog-scrollable modal-xl modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header bg-dark text-white border-0 py-3">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-file-contract me-2 text-warning"></i>Conditions Générales & Politique de Confidentialité — PUBWEK</h5>
+        </div>
+        <div class="modal-body p-4 text-start" style="max-height: 60vh; overflow-y: auto;">
+          <div class="alert alert-warning small mb-4">
+            <i class="fa-solid fa-triangle-exclamation me-1"></i> Veuillez lire et accepter l'ensemble des conditions d'utilisation et de la politique de protection des données régissant la plateforme PUBWEK en République du Bénin pour pouvoir continuer.
+          </div>
+
+          <!-- PARTE 1 : CGU / CGV -->
+          <h4 class="fw-bold text-primary border-bottom pb-2 mb-3">1. CONDITIONS GÉNÉRALES D'UTILISATION ET DE VENTE (CGU / CGV)</h4>
+          <p class="small text-muted fw-bold">Dernière mise à jour : Août 2026 | Plateforme : PUBWEK (pubwek1@gmail.com) | Portée géographique : République du Bénin</p>
+
+          <h6 class="fw-bold mt-3">Article 1 – Mentions Légales et Présentation</h6>
+          <p class="small">La plateforme web PUBWEK est un service d'intermédiation publicitaire en ligne opérant en République du Bénin.</p>
+          <ul class="small">
+            <li><strong>Éditeur :</strong> Projet édité à titre individuel (en cours d'immatriculation d'entreprise au Bénin).</li>
+            <li><strong>Contact Support / Officiel :</strong> pubwek1@gmail.com | WhatsApp/Tel : +229 01 57 57 78 82</li>
+            <li><strong>Activité :</strong> Mise en relation entre des Annonceurs (entreprises, commerçants, prestataires) souhaitant promouvoir leurs offres, et des Partageurs/Ambassadeurs (particuliers résidant au Bénin) publiant ces publicités sur leurs statuts WhatsApp personnels contre rémunération au clic.</li>
+          </ul>
+
+          <h6 class="fw-bold mt-3">Article 2 – Acceptation Explicite et Obligatoire</h6>
+          <p class="small">L'accès, la création de compte et l'utilisation de PUBWEK sont strictly conditionnés par l'acceptation des présentes CGU/CGV. Lors de sa première connexion, chaque utilisateur doit prendre connaissance des présentes conditions et cocher la case d'acceptation. Tout refus d'acceptation bloque immédiatement l'accès à la plateforme.</p>
+
+          <h6 class="fw-bold mt-3">Article 3 – Inscription et Numéro de Téléphone</h6>
+          <p class="small">L'accès est réservé aux personnes physiques âgées d'au moins 18 ans ou aux structures professionnelles exerçant au Bénin. L'utilisateur s'engage à fournir des informations exactes (Nom d'entreprise, bio, numéro WhatsApp valide au Bénin). Tout compte créant de fausses identités ou utilisant des numéros de téléphone non attribués sera suspendu.</p>
+
+          <h6 class="fw-bold mt-3">Article 4 – Modalités des Campagnes Publicitaires (Annonceurs)</h6>
+          <p class="small mb-1"><strong>4.1. Modèle de Facturation au Clic :</strong> Les campagnes sont facturées exclusivement sur la base des clics réels et uniques générés vers le lien de l'Annonceur (et non à la simple vue du statut). Les tarifs au clic sont différenciés selon le format du contenu (vidéo, image, texte) et sont directement configurables par l'administration de la plateforme.</p>
+          <p class="small mb-1"><strong>4.2. Formats de Campagne :</strong></p>
+          <ul class="small mb-2">
+            <li><strong>Option A – Pack Vidéo Pro :</strong> Assemblage dynamique des visuels de l'Annonceur en une vidéo publicitaire professionnelle avec son/musique et branding. Facturation au tarif clic spécifique aux vidéos.</li>
+            <li><strong>Option B – Multi-Statuts (Images / Textes) :</strong> Publication de visuels uniques ou multiples avec texte d'accompagnement. Facturation appliquée selon le tarif au clic propre au format choisi.</li>
+          </ul>
+          <p class="small mb-1"><strong>4.3. Validation du Rendu Vidéo :</strong> Pour l'Option A, l'Annonceur prévisualise le rendu vidéo. Une fois le bouton "✅ Valider la vidéo" cliqué, le rendu est considéré comme accepté et définitivement validé pour le lancement de la campagne.</p>
+          <p class="small mb-1"><strong>4.4. Répartition Journalière et Quotas de Campagne :</strong> L'objectif global de clics acheté par l'Annonceur est automatiquement réparti de manière homogène sur la durée de la campagne (de 1 à 30 jours). Un quota journalier de clics est ainsi défini.</p>
+          <p class="small"><strong>4.5. Cibles Géographiques au Bénin :</strong> Les campagnes sont diffusées de manière ciblée dans les 12 départements du Bénin (Alibori, Atacora, Atlantique, Borgou, Collines, Couffo, Donga, Littoral, Mono, Ouémé, Plateau, Zou).</p>
+
+          <h6 class="fw-bold mt-3">Article 5 – Tarifs, Paiements et Politiques de Remboursement</h6>
+          <p class="small mb-1"><strong>5.1. Traitement des Paiements :</strong> Tous les paiements sur la plateforme PUBWEK sont effectués en Francs CFA (XOF) via la passerelle de paiement sécurisée FedaPay (MTN Mobile Money Bénin, Moov Money Bénin, Celtiis Cash Bénin, Cartes VISA / Mastercard). PUBWEK ne collecte et ne stocke jamais directement vos données bancaires ou codes secrets Mobile Money.</p>
+          <p class="small"><strong>5.2. Absence de Droit de Rétractation / Non-Remboursement :</strong> Conformément au Code du Numérique du Bénin (Loi n° 2017-20) encadrant les services numériques exécutés immédiatement, aucun remboursement ne sera accordé une fois qu'une campagne a été créditée/lancée ou qu'un Pass Abonnement Vidéo a été souscrit.</p>
+
+          <h6 class="fw-bold mt-3">Article 6 – Portefeuille, Gains et Retraits des Partageurs (Ambassadeurs)</h6>
+          <p class="small mb-1"><strong>6.1. Rémunération et Portefeuille Interne :</strong> Chaque Partageur dispose d'un portefeuille virtuel interne sur la plateforme. Chaque clic valide généré via son lien de partage crédite automatiquement un montant fixe sur son portefeuille. De même, les commissions attribuées dans le cadre du programme de parrainage (prime sur la première campagne payée et validée d'un filleul) sont directement versées sur ce même portefeuille.</p>
+          <p class="small mb-1"><strong>6.2. Atteinte du Quota Journalier :</strong> Dès que le quota de clics alloué pour la journée à une campagne est atteint, les Partageurs participants reçoivent une notification d'arrêt. Dès réception de ce signalement, les Partageurs sont libres de retirer le visuel de leur statut WhatsApp sans que cela n'impacte ni ne réduise la rémunération déjà acquise dans leur portefeuille pour les clics générés.</p>
+          <p class="small mb-1"><strong>6.3. Seuil et Conditions de Retrait :</strong> Les retraits s'effectuent à la demande du Partageur dès qu'il atteint le seuil minimum configurable par l'administration (fixé par défaut à 500 FCFA). Un Partageur ne peut maintenir qu'une seule demande de retrait active à la fois.</p>
+          <p class="small mb-1"><strong>6.4. Traitement des Retraits et Preuve de Paiement :</strong> Les demandes de retrait sont exécutées soit via un prestataire de paiement automatisé, soit de manière manuelle par l'équipe administrative via transfert Mobile Money (MTN MoMo, Moov Money, Celtiis Cash). Dans le cadre d'un traitement manuel, une capture d'écran faisant office de preuve formelle de transfert est systématiquement enregistrée et conservée dans le système. En cas de rejet ou de refus motivé d'une demande de retrait, le montant correspondant est automatiquement recrédité sur le portefeuille du Partageur.</p>
+          <p class="small"><strong>6.5. Lutte contre la Triche et la Fraude :</strong> L'utilisation de bots, clics artificiels, fermes de clics, ou tout autre procédé frauduleux est strictement interdite. Tout comportement suspect entraîne le blocage immédiat du compte et la confiscation définitive du solde du portefeuille.</p>
+
+          <h6 class="fw-bold mt-3">Article 7 – Historiques et Téléchargements de Preuves</h6>
+          <p class="small">Afin de garantir une transparence totale et d'apporter des éléments probants en cas de contestation, l'ensemble des transactions (rechargements, gains de clics, commissions de parrainage, retraits) fait l'objet d'un suivi détaillé. Annonceurs et Partageurs peuvent à tout moment consulter et télécharger gratuitement leur historique financier au format PDF, servant de preuve opposable en cas de litige.</p>
+
+          <h6 class="fw-bold mt-3">Article 8 – Administration et Sous-Administrateurs</h6>
+          <p class="small">L'administration de la plateforme PUBWEK s'effectue via le compte Administrateur Principal ou via des comptes de Sous-Administrateurs secondaires. Ces sous-administrateurs disposent de privilèges d'accès restreints et personnalisés (ex: validation exclusive des inscriptions, modération des campagnes publicitaires, ou gestion des demandes de retraits). Les sous-administrateurs s'engagent à respecter la stricte confidentialité des données auxquelles ils ont accès dans la limite expresse de leurs habilitations.</p>
+
+          <h6 class="fw-bold mt-3">Article 9 – Droit Applicable et Juridiction</h6>
+          <p class="small mb-4">Les présentes conditions sont régies par la législation de la République du Bénin. En cas de litige non résolu à l'amiable via le support (pubwek1@gmail.com), les tribunaux de Cotonou seront seuls compétents.</p>
+
+          <!-- PARTIE 2 : POLITIQUE DE CONFIDENTIALITÉ -->
+          <h4 class="fw-bold text-success border-bottom pb-2 mb-3">2. POLITIQUE DE CONFIDENTIALITÉ ET DE PROTECTION DES DONNÉES</h4>
+          <p class="small text-muted fw-bold">Conforme au Code du Numérique de la République du Bénin (Loi n° 2017-20 du 20 avril 2018 - Protection des données à caractère personnel APDP).</p>
+
+          <h6 class="fw-bold mt-3">1. Données Personnelles Collectées</h6>
+          <ul class="small">
+            <li><strong>Informations de profil :</strong> Nom d'entreprise ou civilité, bio, logo, photo de couverture, slogan publicitaire, numéro WhatsApp (+229), liens de parrainage et relations filleuls.</li>
+            <li><strong>Fichiers médias et contenus :</strong> Images, vidéos, textes et pistes audio téléversés pour la création et la diffusion des campagnes.</li>
+            <li><strong>Données financières, cagnottes et preuves :</strong> Solde du portefeuille interne, historique des transactions et des clics, coordonnées de compte Mobile Money pour les retraits, et captures d'écran/reçus de confirmation de paiement conservés à titre de preuve.</li>
+            <li><strong>Données d'administration et de gestion :</strong> Niveaux d'habilitation et journaux d'actions des sous-administrateurs.</li>
+            <li><strong>Données de navigation et localisation :</strong> Départements de diffusion ciblés au Bénin, adresse IP et identifiants de session.</li>
+          </ul>
+
+          <h6 class="fw-bold mt-3">2. Finalités de la Collecte</h6>
+          <p class="small">Vos données sont traitées pour : assurer le ciblage et la comptabilisation précise des clics sur WhatsApp, procéder au calcul et au crédit automatique des gains et commissions de parrainage sur le portefeuille, exécuter les retraits de fonds (dès le seuil de 500 FCFA atteint) et en conserver les preuves de paiement, permettre la sous-administration sécurisée selon des rôles dédiés, mettre à disposition les historiques téléchargeables en PDF, et lutter efficacement contre la fraude conformément aux règles de l'APDP au Bénin.</p>
+
+          <h6 class="fw-bold mt-3">3. Partage des Données avec des Tiers</h6>
+          <p class="small">PUBWEK ne vend et ne loue aucune donnée personnelle à des entreprises tiers. Les seules transmises le sont à <strong>FedaPay / Prestataires de paiement</strong> (exécution sécurisée des rechargements et retraits), aux <strong>Sous-Administrateurs habilités</strong> (strictly restreints aux données nécessaires à leurs missions), et au <strong>Public/Partageurs</strong> (uniquement les visuels, accroches et liens commerciaux de la campagne).</p>
+
+          <h6 class="fw-bold mt-3">4. Vos Droits (Conformité APDP Bénin)</h6>
+          <p class="small">Conformément au Code du Numérique du Bénin, vous bénéficiez du droit d'accès, de rectification, de téléchargement de vos historiques sous format PDF, ainsi que du droit de suppression de votre compte sur simple demande adressée à pubwek1@gmail.com.</p>
+
+          <h6 class="fw-bold mt-3">5. Sécurité et Cookies</h6>
+          <p class="small mb-0">PUBWEK utilise le stockage local (localStorage / sessionStorage) et un jeton CSRF (csrf-token) pour sécuriser vos sessions. Aucune donnée financière sensible n'est conservée en clair dans votre navigateur.</p>
+        </div>
+        <div class="modal-footer bg-light border-0 d-flex flex-column align-items-stretch p-3">
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="chkAcceptTerms">
+            <label class="form-check-label small fw-bold text-dark" for="chkAcceptTerms">
+              J'ai lu et j'accepte l'intégralité des Conditions Générales d'Utilisation / de Vente (CGU/CGV) et la Politique de Confidentialité (APDP Bénin) de Pubwek.
+            </label>
+          </div>
+          <button type="button" class="btn btn-success fw-bold w-100 py-2 shadow-sm" id="btnConfirmTerms" disabled onclick="submitTermsAcceptance()">
+            🚀 Valider et continuer sur Pubwek
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- 📄 MODAL CONSULTATION CGU / CGV (Accessible via le Footer) -->
+  <div class="modal fade" id="modalCGU" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title fw-bold">Conditions Générales d'Utilisation et de Vente (CGU / CGV)</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4 text-start">
+          <p class="small text-muted fw-bold">Dernière mise à jour : Août 2026 | PUBWEK (pubwek1@gmail.com) | République du Bénin</p>
+
+          <h6 class="fw-bold">Article 1 – Mentions Légales et Présentation</h6>
+          <p class="small">Plateforme d'intermédiation publicitaire éditée à titre individuel (en cours d'immatriculation au Bénin). Contact : pubwek1@gmail.com | WhatsApp : +229 01 57 57 78 82.</p>
+
+          <h6 class="fw-bold">Article 2 – Acceptation Explicite</h6>
+          <p class="small">L'accès et l'utilisation nécessitent l'acceptation expresse des présentes conditions. Tout refus bloque l'accès au service.</p>
+
+          <h6 class="fw-bold">Article 3 – Inscription</h6>
+          <p class="small">Réservé aux personnes de 18 ans et plus ou entreprises au Bénin. Informations exactes et numéro WhatsApp valide obligatoires.</p>
+
+          <h6 class="fw-bold">Article 4 – Campagnes Publicitaires & Facturation au Clic</h6>
+          <p class="small">Facturation au clic généré avec tarifs différenciés par format (vidéo, image, texte) configurés par l'admin. Répartition automatique des clics sur la durée choisie (1 à 30 jours) avec quotas journaliers. Diffusion ciblée sur les 12 départements du Bénin.</p>
+
+          <h6 class="fw-bold">Article 5 – Tarifs & Paiements (FedaPay)</h6>
+          <p class="small">Paiements en FCFA via MTN MoMo, Moov Money, Celtiis et Cartes bancaires. Aucun remboursement après le lancement d'une campagne.</p>
+
+          <h6 class="fw-bold">Article 6 – Portefeuille, Gains & Retraits (Partageurs)</h6>
+          <p class="small">Crédit automatique sur le portefeuille interne pour chaque clic valide et commission de parrainage. Dès quota journalier atteint, liberté de retirer la publication du statut. Seuil de retrait fixé par défaut à 500 FCFA (une seule demande active). Traitement automatique ou manuel avec preuve enregistrée (capture) ; recrédit du portefeuille en cas de rejet.</p>
+
+          <h6 class="fw-bold">Article 7 – Historiques et Téléchargements PDF</h6>
+          <p class="small">Consultation et téléchargement d'historiques complets au format PDF pour partageurs et annonceurs à titre de preuve contractuelle.</p>
+
+          <h6 class="fw-bold">Article 8 – Administration & Sous-Administrateurs</h6>
+          <p class="small">Gestion par l'administrateur principal et des sous-administrateurs aux droits restreints et personnalisés (inscriptions, campagnes, retraits) limités à leur périmètre.</p>
+
+          <h6 class="fw-bold">Article 9 – Droit Applicable</h6>
+          <p class="small">Régit par la législation béninoise. Juridiction exclusive des tribunaux de Cotonou.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📄 MODAL CONSULTATION POLITIQUE DE CONFIDENTIALITÉ (Accessible via le Footer) -->
+  <div class="modal fade" id="modalPrivacy" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title fw-bold">Politique de Confidentialité (APDP Bénin)</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4 text-start">
+          <p class="small text-muted fw-bold">Conforme au Code du Numérique du Bénin (Loi n° 2017-20)</p>
+
+          <h6 class="fw-bold">1. Données Collectées</h6>
+          <p class="small">Profil (entreprise, bio, logo, WhatsApp, parrainage), médias de campagne, solde du portefeuille interne, historique des clics/retraits avec preuves enregistrées (captures), permissions des sous-administrateurs et ciblage départemental.</p>
+
+          <h6 class="fw-bold">2. Finalités de la Collecte</h6>
+          <p class="small">Suivi des clics, calcul des rémunérations et parrainages, traitement des retraits à partir du seuil de 500 FCFA, gestion des accès sous-admin, édition de reçus/historiques PDF et prévention de la fraude.</p>
+
+          <h6 class="fw-bold">3. Partage des Données</h6>
+          <p class="small">Aucune vente de données. Partage strictly limité à FedaPay/prestataires de paiement, aux sous-administrateurs autorisés selon leurs droits, et au public pour les visuels de campagne.</p>
+
+          <h6 class="fw-bold">4. Vos Droits</h6>
+          <p class="small">Droit d'accès, de rectification directe, de téléchargement d'historique PDF et de suppression sur demande à pubwek1@gmail.com.</p>
+
+          <h6 class="fw-bold">5. Sécurité</h6>
+          <p class="small">Protection des sessions par jeton CSRF et stockage sécurisé local.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ Footer -->
+  <footer class="bg-dark text-white mt-5 py-4">
+    <div class="container text-center">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo Pubwek" width="120" class="mb-3">
+      <p class="mb-1">© {{ current_year if current_year else 2026 }} Pubwek - Tous droits réservés</p>
+      <p class="small text-muted mb-3">Plateforme de partage publicitaire sur Statut WhatsApp au Bénin</p>
+
+      <!-- 🌐 RÉSEAUX SOCIAUX & CANAUX OFFICIELS -->
+      <div class="mb-3">
+        <p class="small fw-bold text-light mb-2">Rejoignez-nous et découvrez nos tutoriels & actualités :</p>
+        <div class="d-flex justify-content-center flex-wrap gap-2">
+          <a href="https://whatsapp.com/channel/0029Vb8lW6FDjiOm15Zv8I1x" target="_blank" class="btn btn-sm btn-success rounded-pill px-3">
+            <i class="fa-brands fa-whatsapp me-1"></i> WhatsApp
+          </a>
+          <a href="https://www.facebook.com/profile.php?id=61592672258762" target="_blank" class="btn btn-sm btn-primary rounded-pill px-3">
+            <i class="fa-brands fa-facebook me-1"></i> Facebook
+          </a>
+          <a href="https://www.youtube.com/channel/UCAYaKvK_5p7fsVaVRpIGF1g" target="_blank" class="btn btn-sm btn-danger rounded-pill px-3">
+            <i class="fa-brands fa-youtube me-1"></i> YouTube
+          </a>
+          <a href="https://www.tiktok.com/@pubwek0?_r=1&_t=ZP-98yTmhEzDBf" target="_blank" class="btn btn-sm btn-dark border-secondary rounded-pill px-3">
+            <i class="fa-brands fa-tiktok me-1"></i> TikTok
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <a href="#" class="text-white me-3 text-decoration-none small" data-bs-toggle="modal" data-bs-target="#modalCGU">Conditions d’utilisation</a>
+        <a href="#" class="text-white text-decoration-none small" data-bs-toggle="modal" data-bs-target="#modalPrivacy">Politique de confidentialité</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ✅ Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- ✅ Script pour la validation de la lecture/acceptation des CGU -->
+  {% if current_user.is_authenticated and not current_user.has_accepted_terms %}
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const chk = document.getElementById('chkAcceptTerms');
+    const btn = document.getElementById('btnConfirmTerms');
+    if (chk && btn) {
+      chk.addEventListener('change', function() {
+        btn.disabled = !this.checked;
+      });
+    }
+  });
+
+  function submitTermsAcceptance() {
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+    fetch('/accepter-cgu', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        window.location.reload();
+      } else {
+        alert("Erreur lors de la validation. Veuillez réessayer.");
+      }
+    })
+    .catch(error => {
+      console.error('Erreur:', error);
+      alert("Erreur de connexion au serveur.");
+    });
+  }
+  </script>
+  {% endif %}
+
+  <!-- ✅ Bloc réservé aux scripts spécifiques des pages filles -->
+  {% block scripts %}{% endblock %}
+</body>
+</html>

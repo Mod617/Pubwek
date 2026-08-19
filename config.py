@@ -42,7 +42,6 @@ class Config:
 
     # Identifiants de messagerie
     MAIL_USERNAME = os.getenv("MAIL_USERNAME", "pubwek1@gmail.com")
-    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "njkw rojx cxwp lcjz")  # mot de passe d'application Gmail
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER", MAIL_USERNAME)
 
     # -------------------------

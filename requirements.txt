@@ -15,4 +15,4 @@ geopy==2.4.1
 gunicorn==21.2.0
 
 # Connecteur PostgreSQL pour la base de données Railway
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.12

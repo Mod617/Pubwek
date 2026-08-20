@@ -19,6 +19,9 @@
       
       <div class="cover-actions position-absolute top-2 end-2 d-flex gap-2" style="z-index: 10;">
         <button type="button" class="btn btn-sm btn-light shadow-sm fw-bold" onclick="triggerCoverUpload()"><i class="fas fa-camera me-1"></i> Changer</button>
+        {% if current_user.cover_photo %}
+        <button type="button" class="btn btn-sm btn-danger shadow-sm fw-bold" id="btnDeleteCover" onclick="deleteCoverViaAjax()"><i class="fas fa-trash me-1"></i> Supprimer</button>
+        {% endif %}
         <button type="button" class="btn btn-sm btn-success shadow-sm fw-bold d-none" id="btnSaveCoverPosition" onclick="saveCoverPosition()"><i class="fas fa-save me-1"></i> Enregistrer la position</button>
       </div>
     </div>
@@ -38,6 +41,11 @@
             <div class="logo-overlay rounded-circle d-flex align-items-center justify-content-center" onclick="triggerLogoUpload()">
               <i class="fas fa-camera text-white fs-5"></i>
             </div>
+            {% if current_user.logo %}
+            <button type="button" class="btn btn-xs btn-danger position-absolute top-0 end-0 shadow rounded-circle" id="btnDeleteLogo" onclick="deleteLogoViaAjax()" style="width: 24px; height: 24px; padding: 0; font-size: 10px; z-index:11;" title="Supprimer la photo">
+              <i class="fas fa-times"></i>
+            </button>
+            {% endif %}
             <button type="button" class="btn btn-xs btn-success position-absolute bottom-0 start-50 translate-middle-x shadow d-none" id="btnSaveLogoPosition" onclick="saveLogoPosition()" style="font-size: 10px; z-index:11;">Enregistrer</button>
           </div>
           <input type="file" id="ajaxLogoInput" accept="image/*" style="display: none;" onchange="uploadLogoViaAjax()">
@@ -110,27 +118,27 @@
       <label class="form-label fw-bold mb-3">💎 Choisissez votre style de diffusion</label>
       <div class="row mb-4">
         <div class="col-md-4 mb-3">
-          <div class="card h-100 border-success option-card shadow-sm p-3 active-option-A" id="cardA" onclick="selectOption('A')" style="cursor:pointer; border: 2px solid #198754;">
+          <div class="card h-100 option-card shadow-sm p-3" id="cardA" onclick="selectOption('A')" style="cursor:pointer; border: 2px solid #dee2e6;">
             <div class="form-check">
               <input class="form-check-input" type="radio" name="display_option" id="optionA" value="A" checked>
-              <label class="form-check-label fw-bold text-success" for="optionA">Option A : Vidéo Publicitaire</label>
+              <label class="form-check-label fw-bold text-dark" for="optionA">Option A : Vidéo Publicitaire</label>
             </div>
             <p class="small text-muted mt-2">Téléversez votre propre vidéo déjà montée (<strong>30 secondes maximum</strong>, idéale pour un statut WhatsApp).</p>
             <span class="badge bg-dark mt-1 d-block" style="max-width: max-content;">Prix fixe : {{ config.cost_per_click_video | default(3, true) }} XOF / clic</span>
           </div>
         </div>
         <div class="col-md-4 mb-3">
-          <div class="card h-100 border-secondary option-card shadow-sm p-3" id="cardB" onclick="selectOption('B')" style="cursor:pointer;">
+          <div class="card h-100 option-card shadow-sm p-3" id="cardB" onclick="selectOption('B')" style="cursor:pointer; border: 2px solid #dee2e6;">
             <div class="form-check">
               <input class="form-check-input" type="radio" name="display_option" id="optionB" value="B">
-              <label class="form-check-label fw-bold text-primary" for="optionB">Option B : Multi-Statuts</label>
+              <label class="form-check-label fw-bold text-dark" for="optionB">Option B : Multi-Statuts</label>
             </div>
             <p class="small text-muted mt-2">Chaque photo est publiée comme un statut séparé. Attention : augmente la visibilité mais aussi le coût.</p>
             <span class="badge bg-primary" id="badge_option_b">Prix : {{ config.cost_per_click_photo | default(1, true) }} XOF × Nombre d'images / clic</span>
           </div>
         </div>
         <div class="col-md-4 mb-3">
-          <div class="card h-100 border-secondary option-card shadow-sm p-3" id="cardC" onclick="selectOption('C')" style="cursor:pointer;">
+          <div class="card h-100 option-card shadow-sm p-3" id="cardC" onclick="selectOption('C')" style="cursor:pointer; border: 2px solid #dee2e6;">
             <div class="form-check">
               <input class="form-check-input" type="radio" name="display_option" id="optionC" value="C">
               <label class="form-check-label fw-bold text-dark" for="optionC">Option C : Texte Seul</label>
@@ -295,6 +303,10 @@
         document.getElementById('charCount').innerText = this.value.length + " / " + this.maxLength;
       });
     }
+
+    // Applique la mise en surbrillance verte sur l'option sélectionnée par défaut (A)
+    const checkedOption = document.querySelector('input[name="display_option"]:checked');
+    selectOption(checkedOption ? checkedOption.value : 'A');
   });
 
   // --- Bascule entre Option A (vidéo), B (photos) et C (texte seul) ---
@@ -311,27 +323,32 @@
     const descriptionLabel = document.getElementById('descriptionLabelText');
     const charCount = document.getElementById('charCount');
 
-    cardA.style.border = '';
-    cardB.style.border = '';
-    cardC.style.border = '';
+    // Réinitialise les 3 cartes à un style neutre identique
+    [cardA, cardB, cardC].forEach(function(card) {
+      card.style.border = '2px solid #dee2e6';
+      card.style.backgroundColor = '';
+    });
     videoGroup.classList.add('d-none');
     photoGroup.classList.add('d-none');
 
     if (option === 'A') {
       radioA.checked = true;
       cardA.style.border = '2px solid #198754';
+      cardA.style.backgroundColor = '#f0fdf4';
       videoGroup.classList.remove('d-none');
       descriptionField.maxLength = 150;
       descriptionLabel.textContent = '📝 Description (Texte du statut)';
     } else if (option === 'B') {
       radioB.checked = true;
-      cardB.style.border = '2px solid #0d6efd';
+      cardB.style.border = '2px solid #198754';
+      cardB.style.backgroundColor = '#f0fdf4';
       photoGroup.classList.remove('d-none');
       descriptionField.maxLength = 150;
       descriptionLabel.textContent = '📝 Description (Texte du statut)';
     } else {
       radioC.checked = true;
-      cardC.style.border = '2px solid #6c757d';
+      cardC.style.border = '2px solid #198754';
+      cardC.style.backgroundColor = '#f0fdf4';
       descriptionField.maxLength = 500;
       descriptionLabel.textContent = '📝 Texte de votre publicité (publié tel quel en statut)';
     }
@@ -448,6 +465,52 @@
       console.error('Erreur lors de la génération :', error);
       alert("Impossible de contacter le générateur pour le moment.");
     });
+  }
+
+  // --- Suppression de la photo de profil (logo) ---
+  function deleteLogoViaAjax() {
+    if (!confirm("Supprimer votre photo de profil ?")) return;
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    fetch('/dashboard/annonceur/delete_logo_ajax', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrfToken }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('userLogoPreview').src = "{{ url_for('static', filename='uploads/logos/default_company.png') }}";
+        const btn = document.getElementById('btnDeleteLogo');
+        if (btn) btn.remove();
+      } else {
+        alert("Erreur : " + data.error);
+      }
+    })
+    .catch(() => alert("Impossible de supprimer l'image pour le moment."));
+  }
+
+  // --- Suppression de l'image de couverture ---
+  function deleteCoverViaAjax() {
+    if (!confirm("Supprimer votre image de couverture ?")) return;
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    fetch('/dashboard/annonceur/delete_cover_ajax', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrfToken }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('userCoverPreview').src = "{{ url_for('static', filename='uploads/default_cover.png') }}";
+        const btn = document.getElementById('btnDeleteCover');
+        if (btn) btn.remove();
+      } else {
+        alert("Erreur : " + data.error);
+      }
+    })
+    .catch(() => alert("Impossible de supprimer l'image pour le moment."));
   }
 </script>
 {% endblock %}

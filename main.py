@@ -3755,6 +3755,51 @@ def update_name_ajax():
     return jsonify({"success": True, "message": "Nom de l'entreprise mis à jour !", "company_name": new_name})
 
 
+function deleteLogoViaAjax() {
+  if (!confirm("Supprimer votre photo de profil ?")) return;
+
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+  fetch('/dashboard/annonceur/delete_logo_ajax', {
+    method: 'POST',
+    headers: { 'X-CSRFToken': csrfToken }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      document.getElementById('userLogoPreview').src = "{{ url_for('static', filename='uploads/logos/default_company.png') }}";
+      const btn = document.getElementById('btnDeleteLogo');
+      if (btn) btn.remove();
+    } else {
+      alert("Erreur : " + data.error);
+    }
+  })
+  .catch(() => alert("Impossible de supprimer l'image pour le moment."));
+}
+
+function deleteCoverViaAjax() {
+  if (!confirm("Supprimer votre image de couverture ?")) return;
+
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+  fetch('/dashboard/annonceur/delete_cover_ajax', {
+    method: 'POST',
+    headers: { 'X-CSRFToken': csrfToken }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      document.getElementById('userCoverPreview').src = "{{ url_for('static', filename='uploads/default_cover.png') }}";
+      const btn = document.getElementById('btnDeleteCover');
+      if (btn) btn.remove();
+    } else {
+      alert("Erreur : " + data.error);
+    }
+  })
+  .catch(() => alert("Impossible de supprimer l'image pour le moment."));
+}
+
+
 @app.route("/dashboard/annonceur/update_logo_ajax", methods=["POST"])
 @login_required
 @limiter.limit("10 per hour")

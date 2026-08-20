@@ -3755,50 +3755,51 @@ def update_name_ajax():
     return jsonify({"success": True, "message": "Nom de l'entreprise mis à jour !", "company_name": new_name})
 
 
-function deleteLogoViaAjax() {
-  if (!confirm("Supprimer votre photo de profil ?")) return;
+@app.route("/dashboard/annonceur/delete_logo_ajax", methods=["POST"])
+@login_required
+@limiter.limit("10 per hour")
+def delete_logo_ajax():
+    if current_user.role != "annonceur":
+        return jsonify({"error": "Accès refusé"}), 403
 
-  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    if not current_user.logo:
+        return jsonify({"success": False, "error": "Aucune image à supprimer."}), 400
 
-  fetch('/dashboard/annonceur/delete_logo_ajax', {
-    method: 'POST',
-    headers: { 'X-CSRFToken': csrfToken }
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      document.getElementById('userLogoPreview').src = "{{ url_for('static', filename='uploads/logos/default_company.png') }}";
-      const btn = document.getElementById('btnDeleteLogo');
-      if (btn) btn.remove();
-    } else {
-      alert("Erreur : " + data.error);
-    }
-  })
-  .catch(() => alert("Impossible de supprimer l'image pour le moment."));
-}
+    # Supprime le fichier physique s'il existe
+    filepath = os.path.join(current_app.config["UPLOAD_FOLDER"], current_user.logo)
+    if os.path.exists(filepath):
+        try:
+            os.remove(filepath)
+        except OSError as e:
+            logger.warning("Échec suppression fichier logo (user %s) : %s", current_user.id, e)
 
-function deleteCoverViaAjax() {
-  if (!confirm("Supprimer votre image de couverture ?")) return;
+    current_user.logo = None
+    db.session.commit()
 
-  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    return jsonify({"success": True, "message": "Photo de profil supprimée."})
 
-  fetch('/dashboard/annonceur/delete_cover_ajax', {
-    method: 'POST',
-    headers: { 'X-CSRFToken': csrfToken }
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      document.getElementById('userCoverPreview').src = "{{ url_for('static', filename='uploads/default_cover.png') }}";
-      const btn = document.getElementById('btnDeleteCover');
-      if (btn) btn.remove();
-    } else {
-      alert("Erreur : " + data.error);
-    }
-  })
-  .catch(() => alert("Impossible de supprimer l'image pour le moment."));
-}
 
+@app.route("/dashboard/annonceur/delete_cover_ajax", methods=["POST"])
+@login_required
+@limiter.limit("10 per hour")
+def delete_cover_ajax():
+    if current_user.role != "annonceur":
+        return jsonify({"error": "Accès refusé"}), 403
+
+    if not current_user.cover_photo:
+        return jsonify({"success": False, "error": "Aucune image à supprimer."}), 400
+
+    filepath = os.path.join(current_app.config["UPLOAD_FOLDER"], current_user.cover_photo)
+    if os.path.exists(filepath):
+        try:
+            os.remove(filepath)
+        except OSError as e:
+            logger.warning("Échec suppression fichier couverture (user %s) : %s", current_user.id, e)
+
+    current_user.cover_photo = None
+    db.session.commit()
+
+    return jsonify({"success": True, "message": "Image de couverture supprimée."})
 
 @app.route("/dashboard/annonceur/update_logo_ajax", methods=["POST"])
 @login_required

@@ -4739,6 +4739,82 @@ def supprimer_sous_admin(sous_admin_id):
     return redirect(url_for("admin_gestion_sous_admins"))
 
 
+# ==========================================
+# 🔑 MOT DE PASSE OUBLIÉ — DEMANDE DE RÉINITIALISATION
+# ==========================================
+@app.route("/mot-de-passe-oublie", methods=["GET", "POST"])
+@limiter.limit("5 per hour")
+def forgot_password():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        user = User.query.filter_by(email=email).first()
+
+        if user:
+            token = reset_serializer.dumps(user.email, salt="reset-password-salt")
+            reset_url = url_for("reset_password", token=token, _external=True)
+
+            try:
+                msg = Message(
+                    subject="Réinitialisation de votre mot de passe Pubwek",
+                    recipients=[user.email],
+                    body=(
+                        f"Bonjour,\n\n"
+                        f"Vous avez demandé la réinitialisation de votre mot de passe.\n"
+                        f"Cliquez sur ce lien pour en choisir un nouveau (valable 1 heure) :\n"
+                        f"{reset_url}\n\n"
+                        f"Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email."
+                    )
+                )
+                mail.send(msg)
+            except Exception as e:
+                logger.error("Échec envoi email de réinitialisation : %s", e)
+
+        # ⚠️ Message identique que l'email existe ou non (anti-énumération, même logique que register)
+        flash("Si un compte existe avec cet email, un lien de réinitialisation vient de vous être envoyé. 📧", "info")
+        return redirect(url_for("login"))
+
+    return render_template("forgot_password.html")
+
+
+# ==========================================
+# 🔑 MOT DE PASSE OUBLIÉ — DÉFINITION DU NOUVEAU MOT DE PASSE
+# ==========================================
+@app.route("/reinitialiser-mot-de-passe/<token>", methods=["GET", "POST"])
+@limiter.limit("10 per hour")
+def reset_password(token):
+    try:
+        email = reset_serializer.loads(token, salt="reset-password-salt", max_age=3600)
+    except Exception:
+        flash("Ce lien de réinitialisation est invalide ou a expiré. Veuillez en redemander un. ⚠️", "danger")
+        return redirect(url_for("forgot_password"))
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        flash("Compte introuvable. ⚠️", "danger")
+        return redirect(url_for("forgot_password"))
+
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        if len(password) < 6:
+            flash("Le mot de passe doit contenir au moins 6 caractères.", "danger")
+            return render_template("reset_password.html", token=token)
+
+        if password != confirm_password:
+            flash("Les mots de passe ne correspondent pas.", "danger")
+            return render_template("reset_password.html", token=token)
+
+        user.password_hash = bcrypt.generate_password_hash(password).decode("utf-8")
+        db.session.commit()
+
+        logger.info("Mot de passe réinitialisé pour l'utilisateur id=%s", user.id)
+        flash("Votre mot de passe a été réinitialisé avec succès ! Vous pouvez vous connecter. 🎉", "success")
+        return redirect(url_for("login"))
+
+    return render_template("reset_password.html", token=token)
+
+
 
 
 # ==========================================

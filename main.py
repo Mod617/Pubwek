@@ -4742,6 +4742,33 @@ def supprimer_sous_admin(sous_admin_id):
 # ==========================================
 # 🔑 MOT DE PASSE OUBLIÉ — DEMANDE DE RÉINITIALISATION
 # ==========================================
+# ==========================================
+# 🔑 MOT DE PASSE OUBLIÉ — ENVOI DE L'EMAIL EN ARRIÈRE-PLAN
+# ==========================================
+def envoyer_email_reset_async(app, destinataire, reset_url):
+    """Envoie l'email de réinitialisation dans un thread séparé pour ne pas bloquer la requête web."""
+    with app.app_context():
+        try:
+            msg = Message(
+                subject="Réinitialisation de votre mot de passe Pubwek",
+                recipients=[destinataire],
+                body=(
+                    f"Bonjour,\n\n"
+                    f"Vous avez demandé la réinitialisation de votre mot de passe.\n"
+                    f"Cliquez sur ce lien pour en choisir un nouveau (valable 1 heure) :\n"
+                    f"{reset_url}\n\n"
+                    f"Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email."
+                )
+            )
+            mail.send(msg)
+            logger.info("Email de réinitialisation envoyé à %s", destinataire)
+        except Exception as e:
+            logger.error("Échec envoi email de réinitialisation : %s", e)
+
+
+# ==========================================
+# 🔑 MOT DE PASSE OUBLIÉ — DEMANDE DE RÉINITIALISATION
+# ==========================================
 @app.route("/mot-de-passe-oublie", methods=["GET", "POST"])
 @limiter.limit("5 per hour")
 def forgot_password():
@@ -4753,21 +4780,13 @@ def forgot_password():
             token = reset_serializer.dumps(user.email, salt="reset-password-salt")
             reset_url = url_for("reset_password", token=token, _external=True)
 
-            try:
-                msg = Message(
-                    subject="Réinitialisation de votre mot de passe Pubwek",
-                    recipients=[user.email],
-                    body=(
-                        f"Bonjour,\n\n"
-                        f"Vous avez demandé la réinitialisation de votre mot de passe.\n"
-                        f"Cliquez sur ce lien pour en choisir un nouveau (valable 1 heure) :\n"
-                        f"{reset_url}\n\n"
-                        f"Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email."
-                    )
-                )
-                mail.send(msg)
-            except Exception as e:
-                logger.error("Échec envoi email de réinitialisation : %s", e)
+            # Envoi en arrière-plan : la page répond immédiatement, sans attendre Gmail
+            thread = threading.Thread(
+                target=envoyer_email_reset_async,
+                args=(current_app._get_current_object(), user.email, reset_url)
+            )
+            thread.daemon = True
+            thread.start()
 
         # ⚠️ Message identique que l'email existe ou non (anti-énumération, même logique que register)
         flash("Si un compte existe avec cet email, un lien de réinitialisation vient de vous être envoyé. 📧", "info")
@@ -4813,7 +4832,6 @@ def reset_password(token):
         return redirect(url_for("login"))
 
     return render_template("reset_password.html", token=token)
-
 
 
 

@@ -2623,10 +2623,15 @@ def register(role):
     ref_param = request.args.get("ref")
     if ref_param:
         # On cherche si le parrain existe (soit par son Pseudo, soit par son ID)
-        referrer = User.query.filter(
-            (User.pseudo == ref_param) | (User.id == ref_param)
-        ).first()
-        
+        # ⚠️ User.id est un entier : on ne le compare que si ref_param est numérique,
+        # sinon PostgreSQL lève une erreur de conversion et casse toute la requête.
+        if ref_param.isdigit():
+            referrer = User.query.filter(
+                (User.pseudo == ref_param) | (User.id == int(ref_param))
+            ).first()
+        else:
+            referrer = User.query.filter(User.pseudo == ref_param).first()
+
         if referrer:
             session["referrer_id"] = referrer.id
             logger.info("Parrain détecté et stocké en session : %s (ID: %s)", referrer.pseudo, referrer.id)

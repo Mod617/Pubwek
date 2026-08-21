@@ -133,7 +133,7 @@
     </div>
 
     <!-- 🆕 CAMPAGNES DISPONIBLES DANS LA ZONE DU PARTAGEUR -->
-    <div class="card border-0 shadow-sm mb-4">
+    <div class="card border-0 shadow-sm mb-4" id="produitsDisponibles">
         <div class="card-body p-4">
             <h4 class="fw-bold text-dark mb-3">🔥 Campagnes disponibles dans votre zone</h4>
             {% if campagnes_disponibles %}
@@ -185,7 +185,16 @@
                     {% endfor %}
                 </div>
             {% else %}
-                <p class="text-muted mb-0">Aucune campagne disponible dans votre zone pour le moment. Revenez bientôt ! 👀</p>
+                <div class="text-center py-5">
+                    <i class="bi bi-hourglass-split text-warning" style="font-size: 2.5rem;"></i>
+                    <h5 class="fw-bold text-dark mt-3 mb-2">Aucune opportunité disponible pour le moment</h5>
+                    <p class="text-muted mb-0" style="max-width: 480px; margin: 0 auto;">
+                        Il n'y a pas encore de campagne active pour votre commune ou votre département.
+                        Pas d'inquiétude : de nouvelles campagnes sont ajoutées régulièrement. Dès qu'une
+                        campagne ciblera votre zone, elle apparaîtra automatiquement ici et vous pourrez
+                        la partager immédiatement pour commencer à gagner. Revenez faire un tour bientôt ! 👀
+                    </p>
+                </div>
             {% endif %}
         </div>
     </div>
@@ -196,7 +205,7 @@
                 <h4 class="fw-bold text-dark mb-3">📦 Produits à partager</h4>
                 <p class="text-muted">Explorez le catalogue de campagnes actives. Partagez les visuels sur vos réseaux sociaux (WhatsApp, TikTok, Facebook) et commencez à générer des clics pour être rémunéré.</p>
                 <div class="mt-auto pt-3">
-                    <a href="#" class="btn btn-success w-100 py-2 fw-semibold">
+                    <a href="#produitsDisponibles" class="btn btn-success w-100 py-2 fw-semibold">
                         <i class="bi bi-grid-fill me-2"></i>Voir les produits disponibles
                     </a>
                 </div>

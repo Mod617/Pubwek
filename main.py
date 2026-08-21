@@ -4742,26 +4742,37 @@ def supprimer_sous_admin(sous_admin_id):
 # ==========================================
 # 🔑 MOT DE PASSE OUBLIÉ — DEMANDE DE RÉINITIALISATION
 # ==========================================
-# ==========================================
-# 🔑 MOT DE PASSE OUBLIÉ — ENVOI DE L'EMAIL EN ARRIÈRE-PLAN
-# ==========================================
+
+
 def envoyer_email_reset_async(app, destinataire, reset_url):
-    """Envoie l'email de réinitialisation dans un thread séparé pour ne pas bloquer la requête web."""
+    """Envoie l'email de réinitialisation via l'API Resend (HTTPS), pour contourner
+    le blocage du SMTP sortant sur Railway."""
     with app.app_context():
         try:
-            msg = Message(
-                subject="Réinitialisation de votre mot de passe Pubwek",
-                recipients=[destinataire],
-                body=(
-                    f"Bonjour,\n\n"
-                    f"Vous avez demandé la réinitialisation de votre mot de passe.\n"
-                    f"Cliquez sur ce lien pour en choisir un nouveau (valable 1 heure) :\n"
-                    f"{reset_url}\n\n"
-                    f"Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email."
-                )
+            response = requests.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {os.environ.get('RESEND_API_KEY')}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "from": "Pubwek <noreply@pubwek.com>",
+                    "to": [destinataire],
+                    "subject": "Réinitialisation de votre mot de passe Pubwek",
+                    "text": (
+                        f"Bonjour,\n\n"
+                        f"Vous avez demandé la réinitialisation de votre mot de passe.\n"
+                        f"Cliquez sur ce lien pour en choisir un nouveau (valable 1 heure) :\n"
+                        f"{reset_url}\n\n"
+                        f"Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email."
+                    ),
+                },
+                timeout=10,
             )
-            mail.send(msg)
-            logger.info("Email de réinitialisation envoyé à %s", destinataire)
+            if response.status_code >= 400:
+                logger.error("Échec envoi email de réinitialisation (Resend %s) : %s", response.status_code, response.text)
+            else:
+                logger.info("Email de réinitialisation envoyé à %s", destinataire)
         except Exception as e:
             logger.error("Échec envoi email de réinitialisation : %s", e)
 

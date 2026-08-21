@@ -809,6 +809,16 @@ def create_app():
         REMEMBER_COOKIE_SECURE=False,  # DEV : False en local (pas de HTTPS), True en production
     )
 
+    # 🆕 Configuration Gmail SMTP pour l'envoi d'emails (mot de passe oublié, etc.)
+    app.config.update(
+        MAIL_SERVER="smtp.gmail.com",
+        MAIL_PORT=587,
+        MAIL_USE_TLS=True,
+        MAIL_USERNAME=os.environ.get("MAIL_USERNAME"),
+        MAIL_PASSWORD=os.environ.get("MAIL_PASSWORD"),
+        MAIL_DEFAULT_SENDER=os.environ.get("MAIL_DEFAULT_SENDER"),
+    )
+
     db.init_app(app)
     bcrypt.init_app(app)
     csrf.init_app(app)
@@ -861,6 +871,10 @@ def create_app():
     return app
 
 app = create_app()
+
+# 🆕 Serializer pour signer/vérifier les tokens de réinitialisation de mot de passe
+from itsdangerous import URLSafeTimedSerializer
+reset_serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"])
 
 # URL publique de l'app (ngrok en dev, votre vrai domaine en prod)
 # Utilisée pour générer les liens que Creatomate (cloud) va utiliser pour

@@ -23,7 +23,12 @@
 
     <div class="mb-3">
       {{ form.password.label(class="form-label") }}
-      {{ form.password(class="form-control", id="password", placeholder="••••••") }}
+      <div class="input-group">
+        {{ form.password(class="form-control", id="password", placeholder="••••••") }}
+        <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('password', this)" tabindex="-1">
+          <i class="bi bi-eye"></i>
+        </button>
+      </div>
       {% for error in form.password.errors %}
         <div class="text-danger small">{{ error }}</div>
       {% endfor %}
@@ -31,7 +36,12 @@
 
     <div class="mb-3">
       {{ form.confirm_password.label(class="form-label") }}
-      {{ form.confirm_password(class="form-control", id="confirm_password", placeholder="••••••") }}
+      <div class="input-group">
+        {{ form.confirm_password(class="form-control", id="confirm_password", placeholder="••••••") }}
+        <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('confirm_password', this)" tabindex="-1">
+          <i class="bi bi-eye"></i>
+        </button>
+      </div>
       {% for error in form.confirm_password.errors %}
         <div class="text-danger small">{{ error }}</div>
       {% endfor %}
@@ -101,7 +111,25 @@
   </div>
 </div>
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
 <script>
+// 🆕 Bascule afficher/masquer un champ mot de passe (utilisé sur password et confirm_password)
+function togglePasswordVisibility(fieldId, btn) {
+  const field = document.getElementById(fieldId);
+  const icon = btn.querySelector("i");
+
+  if (field.type === "password") {
+    field.type = "text";
+    icon.classList.remove("bi-eye");
+    icon.classList.add("bi-eye-slash");
+  } else {
+    field.type = "password";
+    icon.classList.remove("bi-eye-slash");
+    icon.classList.add("bi-eye");
+  }
+}
+
 // 🆕 Données département → communes, lues depuis les attributs data-* du formulaire
 // (évite tout mélange Jinja/JS dans le script, ce qui perturbait l'analyseur de l'éditeur)
 document.addEventListener("DOMContentLoaded", function() {

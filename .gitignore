@@ -5,3 +5,9 @@ __pycache__/
 .env
 *.egg-info/
 .pytest_cache/
+
+# La base de donnees ne doit jamais revenir dans le depot : elle contient
+# les comptes et les empreintes de mots de passe. Retiree par le commit 7f0f02e,
+# mais recreee des qu'on lance l'application ou les tests en local.
+instance/
+*.db

@@ -23,8 +23,8 @@
         </div>
         <div class="col-md-3 mb-3">
             <div class="card border-0 shadow-sm text-center p-3 bg-light">
-                <div class="text-muted small">Total de vues comptabilisées</div>
-                <div class="h3 fw-bold text-primary mb-0">{{ "{:,}".format(total_vues) }}</div>
+                <div class="text-muted small">Total de clics comptabilisés</div>
+                <div class="h3 fw-bold text-primary mb-0">{{ "{:,}".format(total_clics) }}</div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
@@ -44,7 +44,7 @@
     <div class="row mb-4">
         <div class="col-md-4 mb-3">
             <div class="card border-0 shadow-sm text-center p-3 bg-white border">
-                <div class="text-muted small">Objectif de vues de la campagne</div>
+                <div class="text-muted small">Objectif de clics de la campagne</div>
                 <div class="h4 fw-bold text-dark mb-0">{{ "{:,}".format(campaign.target_whatsapp_views) }}</div>
             </div>
         </div>
@@ -59,8 +59,7 @@
                     <thead class="table-light">
                         <tr>
                             <th class="ps-3">Pseudo</th>
-                            <th>Vues générées</th>
-                            <th><i class="bi bi-whatsapp text-success me-1"></i>Clics WhatsApp</th>
+                                                        <th><i class="bi bi-whatsapp text-success me-1"></i>Clics WhatsApp</th>
                             <th><i class="bi bi-globe text-info me-1"></i>Clics Site web</th>
                             <th class="pe-3">A partagé le</th>
                         </tr>
@@ -70,9 +69,6 @@
                         <tr>
                             <td class="ps-3 fw-bold">
                                 <i class="fas fa-user-circle text-secondary me-2"></i>{{ p.pseudo }}
-                            </td>
-                            <td>
-                                <span class="badge bg-primary">{{ "{:,}".format(p.nb_vues) }} vue{{ 's' if p.nb_vues != 1 else '' }}</span>
                             </td>
                             <td>
                                 {% if p.clics_whatsapp %}

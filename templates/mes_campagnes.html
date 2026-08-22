@@ -144,10 +144,10 @@
                                     <div class="form-text text-muted">Décochez tout pour cibler toutes les zones.</div>
                                 </div>
 
-                                <!-- Objectif de vues / durée -->
+                                <!-- Objectif de clics / durée -->
                                 <div class="row mb-3">
                                     <div class="col-md-6 mb-2">
-                                        <label class="form-label fw-bold">🚀 Objectif de vues</label>
+                                        <label class="form-label fw-bold">🚀 Objectif de clics</label>
                                         <input type="number" name="whatsapp_views" class="form-control" min="100" step="50" value="{{ campaign.target_whatsapp_views }}" required>
                                     </div>
                                     <div class="col-md-6 mb-2">
@@ -272,7 +272,7 @@
                     <h5 class="card-title fw-bold">{{ campaign.promotion_type | capitalize }} - {{ campaign.promotion_detail }}</h5>
                     <p class="card-text text-muted small">{{ campaign.description }}</p>
                     <p class="mb-1"><strong>Provinces :</strong> {{ campaign.provinces }}</p>
-                    <p class="mb-1"><strong>⏳ Durée prévue :</strong> {{ campaign.duration_days }} jour{{ 's' if campaign.duration_days > 1 else '' }} (≈ {{ campaign.views_per_day }} vues/jour)</p>
+                    <p class="mb-1"><strong>⏳ Durée prévue :</strong> {{ campaign.duration_days }} jour{{ 's' if campaign.duration_days > 1 else '' }} (≈ {{ campaign.views_per_day }} clics/jour)</p>
                     <p class="mb-2"><strong>Coût total :</strong> {{ "{:,.0f}".format(campaign.total_cost) }} XOF</p>
                     <span class="badge bg-warning text-dark">⏳ En cours d'analyse par l'admin</span>
                 </div>
@@ -312,14 +312,14 @@
                             {% endif %}
                         </div>
                         <div class="text-muted small mt-1">
-                            {{ campaign.views_today or 0 }} / {{ campaign.views_per_day }} vues aujourd'hui
-                            — {{ campaign.whatsapp_views or 0 }} / {{ campaign.target_whatsapp_views }} vues au total
+                            {{ campaign.views_today or 0 }} / {{ campaign.views_per_day }} clics aujourd'hui
+                            — {{ campaign.whatsapp_views or 0 }} / {{ campaign.target_whatsapp_views }} clics au total
                         </div>
                     </div>
 
                     <span class="badge bg-primary mb-2">🚀 Active / Diffusée</span>
 
-                    <!-- 🆕 Accès aux partageurs + statistiques de vues -->
+                    <!-- 🆕 Accès aux partageurs + statistiques de clics -->
                     <a href="{{ url_for('campagne_partageurs', campaign_id=campaign.id) }}" class="btn btn-outline-primary btn-sm fw-bold w-100 mt-2">
                         👥 Voir les partageurs & statistiques
                     </a>
@@ -348,11 +348,11 @@
                     <p class="card-text text-muted small">{{ campaign.description }}</p>
                     <p class="mb-1"><strong>Provinces :</strong> {{ campaign.provinces }}</p>
                     <p class="mb-1"><strong>⏳ Durée diffusée :</strong> {{ campaign.duration_days }} jour{{ 's' if campaign.duration_days > 1 else '' }}</p>
-                    <p class="mb-1"><strong>📊 Vues obtenues :</strong> {{ campaign.whatsapp_views or 0 }} / {{ campaign.target_whatsapp_views }}</p>
+                    <p class="mb-1"><strong>📊 Clics obtenus :</strong> {{ campaign.whatsapp_views or 0 }} / {{ campaign.target_whatsapp_views }}</p>
                     <p class="mb-2"><strong>Coût total :</strong> {{ "{:,.0f}".format(campaign.total_cost) }} XOF</p>
                     <span class="badge bg-success mb-2">✅ Terminée</span>
 
-                    <!-- 🆕 Accès aux partageurs + statistiques de vues -->
+                    <!-- 🆕 Accès aux partageurs + statistiques de clics -->
                     <a href="{{ url_for('campagne_partageurs', campaign_id=campaign.id) }}" class="btn btn-outline-success btn-sm fw-bold w-100 mt-2">
                         👥 Voir les partageurs & statistiques
                     </a>

@@ -1,4 +1,7 @@
-from flask_sqlalchemy import SQLAlchemy 
+import hashlib
+import uuid
+
+from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime, timedelta
 from sqlalchemy import Index, UniqueConstraint, CheckConstraint
@@ -132,6 +135,10 @@ class User(UserMixin, db.Model):
     province = db.Column(db.String(100), nullable=False, default="Non spécifiée")
     commune = db.Column(db.String(100), nullable=True)  # 🆕 Ciblage fin des notifications de campagne (partageurs uniquement)
     is_confirmed = db.Column(db.Boolean, default=False)
+
+    # Derniere adresse IP utilisee en session authentifiee. Sert uniquement a
+    # reperer un partageur qui clique sur son propre lien de tracking.
+    last_seen_ip = db.Column(db.String(45), nullable=True)
     whatsapp_number = db.Column(db.String(20), unique=True, nullable=True)
     pseudo = db.Column(db.String(50), nullable=True)
 
@@ -185,6 +192,19 @@ class User(UserMixin, db.Model):
         foreign_keys=[contacted_by_id],
         lazy=True
     )
+
+    def empreinte_session(self):
+        """Empreinte courte du mot de passe actuel.
+
+        Intégrée à l'identifiant de session et aux jetons de réinitialisation :
+        elle change dès que le mot de passe change, ce qui invalide d'un coup
+        les sessions ouvertes et les liens de réinitialisation en circulation.
+        """
+        return hashlib.sha256((self.password_hash or "").encode("utf-8")).hexdigest()[:16]
+
+    def get_id(self):
+        """Identifiant stocké dans le cookie de session (Flask-Login)."""
+        return f"{self.id}|{self.empreinte_session()}"
 
     def __repr__(self):
         return f"<User {self.email} ({self.role})>"
@@ -376,6 +396,9 @@ class Campaign(db.Model):
     duration_days = db.Column(db.Integer, default=7) # Sera limité à un max de 30 jours dans le formulaire
     end_date = db.Column(db.DateTime, nullable=True) 
 
+    # ATTENTION au nom de ces colonnes : elles datent de la tarification à la
+    # vue et comptent désormais des CLICS rémunérés. Le nom est conservé pour
+    # éviter une migration risquée ; l'interface, elle, parle bien de clics.
     whatsapp_views = db.Column(db.Integer, default=0) 
     target_whatsapp_views = db.Column(db.Integer, default=0)
     
@@ -489,7 +512,7 @@ class CampaignShare(db.Model):
     )
 
     def __repr__(self):
-        return f"<CampaignShare campaign_id={self.campaign_id} sharer_id={self.sharer_id}>"    
+        return f"<CampaignShare campaign_id={self.campaign_id} sharer_id={self.sharer_id}>"
 
 
 class CampaignClick(db.Model):
@@ -503,14 +526,69 @@ class CampaignClick(db.Model):
     campaign_share_id = db.Column(db.Integer, db.ForeignKey("campaign_shares.id"), nullable=False, index=True)
 
     link_type = db.Column(db.String(20), nullable=False)  # "whatsapp" ou "website"
-    ip = db.Column(db.String(45), nullable=True)
+    ip = db.Column(db.String(45), nullable=True, index=True)
     user_agent = db.Column(db.String(255), nullable=True)
     clicked_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
+    # --- Decision anti-fraude ---
+    # Tous les clics sont enregistres ; seuls ceux marques is_paid ont donne
+    # lieu a une remuneration. rejection_reason garde la trace du motif, ce qui
+    # permet de justifier un solde aupres d'un partageur qui conteste.
+    is_paid = db.Column(db.Boolean, default=False, nullable=False, index=True)
+    rejection_reason = db.Column(db.String(40), nullable=True)
+
     __table_args__ = (
         Index("idx_share_type_clicked", "campaign_share_id", "link_type", "clicked_at"),
-    )        
+        # Sert la deduplication : "ce couple (partage, IP) a-t-il deja ete paye
+        # dans la fenetre ?" est la requete la plus frequente du dispositif.
+        Index("idx_share_ip_paid", "campaign_share_id", "ip", "is_paid", "clicked_at"),
+        Index("idx_ip_paid_date", "ip", "is_paid", "clicked_at"),
+    )
 
+# =========================================================================
+# 📎 PROPRIÉTÉ DES FICHIERS TÉLÉVERSÉS (PROTECTION IDOR)
+# =========================================================================
+
+class UploadedFile(db.Model):
+    """
+    Rattache chaque fichier de uploads_secure/ à son propriétaire.
+
+    Sans cette table, la route /uploads/<filename> ne peut pas savoir à qui
+    appartient un fichier : tout utilisateur connecté pouvait donc télécharger
+    les visuels, logos et vidéos de tous les autres.
+    """
+    __tablename__ = "uploaded_files"
+
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+
+    # "image", "video", "audio", "logo", "cover" — informatif, facilite le ménage
+    kind = db.Column(db.String(20), nullable=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    owner = db.relationship(
+        "User",
+        backref=db.backref("uploaded_files", lazy=True, cascade="all, delete-orphan")
+    )
+
+    @classmethod
+    def enregistrer(cls, filename, owner_id, kind=None):
+        """Déclare un fichier comme appartenant à un utilisateur.
+
+        Idempotent : si le nom existe déjà (collision d'UUID hautement
+        improbable, ou double appel), l'enregistrement existant est conservé.
+        """
+        existant = cls.query.filter_by(filename=filename).first()
+        if existant:
+            return existant
+        enreg = cls(filename=filename, owner_id=owner_id, kind=kind)
+        db.session.add(enreg)
+        return enreg
+
+    def __repr__(self):
+        return f"<UploadedFile {self.filename} owner_id={self.owner_id}>"
 
 
 # =========================================================================
@@ -819,6 +897,29 @@ class SystemConfig(db.Model):
     # 🆕 Seuil minimum de retrait pour les partageurs (portefeuille)
     minimum_withdrawal_amount = db.Column(db.Float, default=500.0)
 
+    # =========================================================================
+    # 🛡️ GARDE-FOUS ANTI-FRAUDE SUR LES CLICS
+    #
+    # Les liens de tracking sont publics et chaque clic paie le partageur : sans
+    # ces limites, il suffit d'ouvrir son propre lien en boucle pour se créditer.
+    # Réglables ici pour pouvoir être resserrés sans redéployer.
+    # =========================================================================
+
+    # Un même couple (partage, adresse IP) n'est payé qu'une fois par fenêtre.
+    # C'est la protection principale.
+    click_dedup_hours = db.Column(db.Integer, default=24)
+
+    # Plafond de clics payés par partage et par jour : borne ce qu'un partageur
+    # peut gagner sur une campagne même en changeant d'adresse IP.
+    max_paid_clicks_per_share_per_day = db.Column(db.Integer, default=50)
+
+    # Plafond de clics payés par adresse IP et par jour, toutes campagnes
+    # confondues : borne une machine qui ferait le tour des campagnes.
+    max_paid_clicks_per_ip_per_day = db.Column(db.Integer, default=20)
+
+    # Délai minimal entre deux clics payés sur un même partage (anti-rafale).
+    min_seconds_between_paid_clicks = db.Column(db.Integer, default=20)
+
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     @classmethod
@@ -835,7 +936,11 @@ class SystemConfig(db.Model):
                 reward_per_click_text=0.3,
                 commission_rate=10.0,
                 referral_reward_rate=3.0,
-                minimum_withdrawal_amount=500.0
+                minimum_withdrawal_amount=500.0,
+                click_dedup_hours=24,
+                max_paid_clicks_per_share_per_day=50,
+                max_paid_clicks_per_ip_per_day=20,
+                min_seconds_between_paid_clicks=20,
             )
             db.session.add(config)
             db.session.commit()

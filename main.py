@@ -1,8 +1,10 @@
 import os
 import re
 import io
+import hmac
+import hashlib
 import uuid
-import uuid as uuidlib  
+import uuid as uuidlib
 import random
 import logging
 import urllib.parse
@@ -26,38 +28,44 @@ from flask_bcrypt import Bcrypt
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_login import LoginManager, current_user, login_required, login_user, logout_user
-from flask_mail import Mail, Message
 from flask_sqlalchemy import SQLAlchemy
 from flask_talisman import Talisman
 from flask_wtf import CSRFProtect
+from markupsafe import Markup, escape
 from werkzeug.utils import secure_filename
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from benin_communes import DEPARTEMENTS_COMMUNES, toutes_les_communes, commune_appartient_a
 
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
-from creatomate_service import (
-    generer_url_asset_signee,
-    generer_url_asset_statique,
-    build_creatomate_source,
-    lancer_render_creatomate,
-    get_asset_serializer,
-    ASSET_LINK_MAX_AGE,
-)
-
-from video_status import set_progress, get_progress
-
 from config import Config
-from forms import LoginForm, RegisterForm
-from models import Campaign, User, db, VideoGenerationConfig, Transaction, UserSubscription, Notification, CampaignShare, RefundRequest
+from forms import (
+    LoginForm,
+    RegisterForm,
+    LONGUEUR_MIN_MOT_DE_PASSE,
+    MESSAGE_NUMERO_INVALIDE,
+    numero_whatsapp_valide,
+)
+from models import (
+    Campaign,
+    CampaignClick,
+    CampaignShare,
+    Notification,
+    RefundRequest,
+    SystemConfig,
+    Transaction,
+    UploadedFile,
+    User,
+    UserSubscription,
+    WalletTransaction,
+    WithdrawalRequest,
+    db,
+)
 
 from fedapay_client import creer_transaction, generer_lien_paiement, verifier_transaction
 
 import bleach
-import numpy as np
-from moviepy import AudioFileClip, ColorClip, CompositeVideoClip, ImageClip, VideoClip
-from moviepy.video.fx import CrossFadeIn, FadeIn, FadeOut
 from PIL import Image as PILImage
-from PIL import ImageDraw, ImageFont, ImageFilter
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -74,496 +82,33 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Initialisation de l'application Flask (ajuster selon votre configuration globale)
-app = Flask(__name__)
-app.config.from_object(Config)
-
 # =========================================================================
-# 🌐 GESTION DES EN-TÊTES GLOBAUX ET BYPASS TUNNEL (Cloudflare / Ngrok)
+# L'application Flask est construite par create_app() plus bas dans ce fichier.
+#
+# Une première instance était créée ici et recevait un @app.after_request ainsi
+# qu'une route /render-assets, puis la variable `app` était réaffectée par
+# create_app() : tout ce qui était enregistré ici était donc silencieusement
+# perdu. Ne rien enregistrer sur `app` avant sa création effective.
 # =========================================================================
-@app.after_request
-def add_security_and_tunnel_headers(response):
-    """
-    Injecte les en-têtes nécessaires pour contourner les avertissements des tunnels 
-    (Cloudflare/Ngrok) et autoriser l'accès aux assets distants via CORS.
-    """
-    response.headers["bypass-tunnel-reminder"] = "true"
-    response.headers["ngrok-skip-browser-warning"] = "true"
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    return response
-
-# =========================================================================
-# 🖼️ ROUTE DE DISTRIBUTION DES ASSETS SÉCURISÉS POUR CREATOMATE
-# =========================================================================
-@app.route("/render-assets/<token>")
-def serve_render_asset(token):
-    """
-    Sert un fichier à Creatomate (cloud) via un jeton signé temporaire.
-    Pas de @login_required : Creatomate n'a pas de session utilisateur.
-    Sécurité assurée par la signature + expiration du jeton (ASSET_LINK_MAX_AGE).
-    """
-    serializer = get_asset_serializer(app)
-    try:
-        filename = serializer.loads(token, max_age=ASSET_LINK_MAX_AGE)
-    except SignatureExpired:
-        abort(410)  # lien expiré
-    except BadSignature:
-        abort(403)  # jeton invalide/falsifié
-
-    safe_filename = os.path.basename(filename)
-    upload_folder = current_app.config["UPLOAD_FOLDER"]
-    filepath = os.path.join(upload_folder, safe_filename)
-
-    if not os.path.exists(filepath):
-        abort(404)
-
-    # 1. Génération de la réponse du fichier
-    response = make_response(send_from_directory(upload_folder, safe_filename))
-
-    # 2. Contournement explicite de la page d'interception Cloudflare / Ngrok
-    response.headers["bypass-tunnel-reminder"] = "true"
-    response.headers["ngrok-skip-browser-warning"] = "true"
-
-    # 3. En-têtes CORS & Cache pour la compatibilité avec Creatomate
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "*"
-    response.headers["Cache-Control"] = "public, max-age=3600"
-
-    return response
 
 # =========================================================================
 # 🎬 Génération vidéo
 # =========================================================================
 
-video_progress = {}
 
 # Verrou par utilisateur pour empêcher les générations simultanées
 video_locks = {}
 video_locks_mutex = threading.Lock()
 
-# Limite du nombre d'images par diaporama
-MAX_IMAGES_PAR_VIDEO = 15
+
+# Bornes du nombre de clics achetables pour une campagne
+MIN_CLICS_CAMPAGNE = 100
+MAX_CLICS_CAMPAGNE = 1_000_000
 
 # Taille maximale des images (pixels)
 MAX_IMAGE_DIMENSION = 8000
 
 
-def get_user_lock(user_id):
-    with video_locks_mutex:
-        if user_id not in video_locks:
-            video_locks[user_id] = threading.Lock()
-        return video_locks[user_id]
-
-
-from PIL import ImageFilter
-def generer_diaporama_pro(liste_images, output_path, brand_name="PUBWEK", slogan="", audio_path=None, logo_path=None, user_id=None):
-    # 📐 FORMAT VERTICAL 9:16 POUR STATUT WHATSAPP / SMARTPHONES
-    VIDEO_W, VIDEO_H   = 1080, 1920
-    GOLD               = (212, 175, 55)
-    NOIR               = (10, 10, 10)
-    PLATFORM_NAME       = "PubWek"
-    total_max_duration = 30.0
-    OUTRO_DURATION      = 2.5
-    num_images         = len(liste_images)
-    video_duration      = total_max_duration
-    content_duration    = max(video_duration - OUTRO_DURATION, 1.0)
-    duration_per_img    = content_duration / num_images if num_images > 0 else content_duration
-    overlap            = 0.8 if num_images > 1 else 0.0
-    FPS                = 24
-    BAR_H              = 160
-
-    PUNCH_DURATION  = 0.18
-    SHAKE_DURATION  = 0.15
-    GLITCH_DURATION = 0.15
-    FLASH_DURATION  = 0.12
-
-    slogan_text = slogan.strip() if slogan.strip() else "Découvrez nos offres exclusives"
-
-    logger.info("Création du diaporama vertical 9:16 (%d images, %dfps)", num_images, FPS)
-
-    if user_id and user_id in video_progress:
-        video_progress[user_id] = {"percentage": 30, "status": "Moteur Pubwek : Initialisation du canevas vertical..."}
-
-    ZONE_H = VIDEO_H - 2 * BAR_H
-    ZONE_W = VIDEO_W
-
-    try:
-        font_brand  = ImageFont.truetype("arial.ttf", 52)
-        font_slogan = ImageFont.truetype("arial.ttf", 36)
-        font_wm     = ImageFont.truetype("arial.ttf", 22)
-        font_outro_big   = ImageFont.truetype("arial.ttf", 68)
-        font_outro_small = ImageFont.truetype("arial.ttf", 30)
-    except Exception:
-        font_brand  = ImageFont.load_default()
-        font_slogan = ImageFont.load_default()
-        font_wm     = ImageFont.load_default()
-        font_outro_big   = ImageFont.load_default()
-        font_outro_small = ImageFont.load_default()
-
-    _tmp   = PILImage.new("RGB", (10, 10))
-    _draw  = ImageDraw.Draw(_tmp)
-    brand_text = brand_name.upper()
-    bbox_b     = _draw.textbbox((0, 0), brand_text, font=font_brand)
-    BRAND_W    = bbox_b[2] - bbox_b[0]
-    BRAND_H    = bbox_b[3] - bbox_b[1]
-    BRAND_Y    = (BAR_H - BRAND_H) // 2
-
-    SCROLL_DURATION = 8.0
-    SCROLL_TOTAL    = VIDEO_W + BRAND_W + 60
-
-    brand_img = PILImage.new("RGBA", (BRAND_W + 20, BRAND_H + 10), (0, 0, 0, 0))
-    bd        = ImageDraw.Draw(brand_img)
-    bd.text((0, 0), brand_text, fill=(*GOLD, 255), font=font_brand)
-    brand_arr = np.array(brand_img)
-
-    def build_vignette_mask():
-        vign = PILImage.new("L", (VIDEO_W, VIDEO_H), 0)
-        vd = ImageDraw.Draw(vign)
-        max_radius = int((VIDEO_W ** 2 + VIDEO_H ** 2) ** 0.5 / 2)
-        cx, cy = VIDEO_W // 2, VIDEO_H // 2
-        steps = 60
-        for i in range(steps):
-            r = max_radius * (1 - i / steps)
-            alpha = int(90 * (i / steps) ** 2)
-            vd.ellipse([cx - r, cy - r, cx + r, cy + r], fill=alpha)
-        return np.array(vign, dtype=np.float32) / 255.0
-
-    vignette_mask = build_vignette_mask()
-
-    def apply_vignette(canvas_arr):
-        darkened = canvas_arr.astype(np.float32) * (1 - vignette_mask[..., None] * 0.55)
-        return np.clip(darkened, 0, 255).astype(np.uint8)
-
-    def build_canvas_static(img_pil):
-        canvas = PILImage.new("RGB", (VIDEO_W, VIDEO_H), NOIR)
-        img_w, img_h = img_pil.size
-
-        ratio_cover = max(VIDEO_W / img_w, VIDEO_H / img_h)
-        bg_w, bg_h = int(img_w * ratio_cover), int(img_h * ratio_cover)
-        bg_img = img_pil.resize((bg_w, bg_h), PILImage.LANCZOS)
-
-        crop_x = (bg_w - VIDEO_W) // 2
-        crop_y = (bg_h - VIDEO_H) // 2
-        bg_img = bg_img.crop((crop_x, crop_y, crop_x + VIDEO_W, crop_y + VIDEO_H))
-        bg_img = bg_img.filter(ImageFilter.GaussianBlur(radius=25))
-
-        canvas.paste(bg_img, (0, 0))
-
-        ratio_zone  = ZONE_W / ZONE_H
-        ratio_image = img_w / img_h
-        if ratio_image > ratio_zone:
-            new_w = ZONE_W
-            new_h = int(img_h * (ZONE_W / img_w))
-        else:
-            new_h = ZONE_H
-            new_w = int(img_w * (ZONE_H / img_h))
-
-        img_resized = img_pil.resize((new_w, new_h), PILImage.LANCZOS)
-        paste_x = (VIDEO_W - new_w) // 2
-        paste_y = BAR_H + (ZONE_H - new_h) // 2
-        canvas.paste(img_resized, (paste_x, paste_y))
-
-        canvas_arr = apply_vignette(np.array(canvas))
-        canvas = PILImage.fromarray(canvas_arr)
-
-        draw = ImageDraw.Draw(canvas)
-        draw.rectangle([(0, 0),               (VIDEO_W, BAR_H)],           fill=(0, 0, 0))
-        draw.rectangle([(0, VIDEO_H - BAR_H), (VIDEO_W, VIDEO_H)],       fill=(0, 0, 0))
-        draw.rectangle([(0, BAR_H),           (VIDEO_W, BAR_H + 4)],       fill=GOLD)
-        draw.rectangle([(0, VIDEO_H - BAR_H - 4), (VIDEO_W, VIDEO_H - BAR_H)], fill=GOLD)
-
-        bbox3 = draw.textbbox((0, 0), "PROPULSÉ PAR PUBWEK", font=font_wm)
-        wm_w  = bbox3[2] - bbox3[0]
-        draw.text((VIDEO_W - wm_w - 30, VIDEO_H - 45), "PROPULSÉ PAR PUBWEK", fill=(150, 150, 150), font=font_wm)
-        return canvas
-
-    canvases = []
-    for img_path in liste_images:
-        try:
-            with PILImage.open(img_path) as opened_img:
-                w, h = opened_img.size
-                if w > MAX_IMAGE_DIMENSION or h > MAX_IMAGE_DIMENSION:
-                    logger.warning("Image ignorée (dimensions trop grandes) : %s", os.path.basename(img_path))
-                    canvases.append(None)
-                    continue
-                src = opened_img.convert("RGB")
-                canvases.append(build_canvas_static(src))
-            logger.info("Canvas construit : %s", os.path.basename(img_path))
-        except Exception as e:
-            logger.warning("Image ignorée (%s) : %s", os.path.basename(img_path), e)
-            canvases.append(None)
-
-    overlays = []
-    base_bg = ColorClip(size=(VIDEO_W, VIDEO_H), color=NOIR).with_duration(video_duration)
-    overlays.append(base_bg)
-
-    def apply_rgb_split(frame_arr, shift_px):
-        if shift_px <= 0:
-            return frame_arr
-        out = frame_arr.copy()
-        out[:, :, 0] = np.roll(frame_arr[:, :, 0], shift_px, axis=1)
-        out[:, :, 2] = np.roll(frame_arr[:, :, 2], -shift_px, axis=1)
-        return out
-
-    def make_impact_frame(t, canvas_arr, clip_dur, direction="in",
-                           zoom_start=1.0, zoom_end=1.12, seed=0):
-        h, w = canvas_arr.shape[:2]
-
-        if t < PUNCH_DURATION:
-            punch_progress = t / PUNCH_DURATION
-            eased_punch = 1 - (1 - punch_progress) ** 3
-            zoom = 1.16 - (1.16 - zoom_start) * eased_punch
-        else:
-            kb_progress = min((t - PUNCH_DURATION) / max(clip_dur - PUNCH_DURATION, 0.001), 1.0)
-            eased_kb = kb_progress * kb_progress * (3 - 2 * kb_progress)
-            if direction == "in":
-                zoom = zoom_start + (zoom_end - zoom_start) * eased_kb
-            else:
-                zoom = zoom_end - (zoom_end - zoom_start) * eased_kb
-
-        shake_x, shake_y = 0, 0
-        if t < SHAKE_DURATION:
-            shake_progress = 1 - (t / SHAKE_DURATION)
-            amplitude = 10 * shake_progress
-            phase = seed * 2.4
-            shake_x = int(amplitude * math.sin(t * 90 + phase))
-            shake_y = int(amplitude * math.cos(t * 70 + phase))
-
-        new_w, new_h = int(w / zoom), int(h / zoom)
-        x0 = min(max(0, (w - new_w) // 2 + shake_x), w - new_w)
-        y0 = min(max(0, (h - new_h) // 2 + shake_y), h - new_h)
-
-        cropped = canvas_arr[y0:y0 + new_h, x0:x0 + new_w]
-        frame = np.array(PILImage.fromarray(cropped).resize((w, h), PILImage.LANCZOS))
-
-        if t < GLITCH_DURATION:
-            glitch_progress = 1 - (t / GLITCH_DURATION)
-            shift_px = int(14 * glitch_progress)
-            frame = apply_rgb_split(frame, shift_px)
-
-        return frame
-
-    current_start_time = 0.0
-    for i, canvas in enumerate(canvases):
-        if canvas is None:
-            current_start_time += duration_per_img
-            continue
-
-        clip_dur = duration_per_img + overlap if i < len(canvases) - 1 else duration_per_img
-        if len(canvases) == 1:
-            clip_dur = content_duration
-
-        frame_array = np.array(canvas)
-        direction = "in" if i % 2 == 0 else "out"
-
-        def frame_fn(t, f=frame_array, d=clip_dur, dr=direction, s=i):
-            return make_impact_frame(t, f, d, direction=dr, seed=s)
-
-        clip = VideoClip(frame_fn, duration=clip_dur)
-
-        if i > 0 and overlap > 0:
-            clip = CrossFadeIn(overlap).apply(clip)
-
-        clip = clip.with_start(current_start_time)
-        overlays.append(clip)
-
-        if i > 0:
-            flash_clip = ColorClip(size=(VIDEO_W, VIDEO_H), color=(255, 255, 255)).with_duration(FLASH_DURATION)
-            flash_clip = FadeOut(FLASH_DURATION).apply(flash_clip)
-            flash_clip = flash_clip.with_start(max(current_start_time - 0.02, 0))
-            overlays.append(flash_clip)
-
-        slogan_img = PILImage.new("RGBA", (VIDEO_W, BAR_H), (0, 0, 0, 0))
-        slogan_draw = ImageDraw.Draw(slogan_img)
-        bbox_s = slogan_draw.textbbox((0, 0), slogan_text, font=font_slogan)
-        s_w = bbox_s[2] - bbox_s[0]
-        s_h = bbox_s[3] - bbox_s[1]
-        slogan_draw.text(((VIDEO_W - s_w) // 2, (BAR_H - s_h) // 2), slogan_text, fill=(240, 240, 240, 255), font=font_slogan)
-
-        slogan_arr = np.array(slogan_img)
-        slogan_clip = VideoClip(lambda t, s=slogan_arr: s[:, :, :3], duration=clip_dur)
-        slogan_mask = VideoClip(lambda t, s=slogan_arr: s[:, :, 3] / 255.0, duration=clip_dur, is_mask=True)
-        slogan_clip = slogan_clip.with_mask(slogan_mask)
-
-        if len(canvases) > 1:
-            slogan_clip = FadeIn(0.4).apply(slogan_clip)
-            slogan_clip = FadeOut(0.4).apply(slogan_clip)
-
-        slogan_clip = slogan_clip.with_position((0, VIDEO_H - BAR_H)).with_start(current_start_time)
-        overlays.append(slogan_clip)
-
-        current_start_time += duration_per_img
-
-    txt_h = brand_arr.shape[0]
-
-    CYCLE_FRAMES = max(1, round(SCROLL_DURATION * FPS))
-    _ticker_cache = {}
-
-    def make_ticker_frame(t):
-        frame_idx = int(round(t * FPS)) % CYCLE_FRAMES
-        cached = _ticker_cache.get(frame_idx)
-        if cached is not None:
-            return cached
-
-        band = np.zeros((BAR_H, VIDEO_W, 3), dtype=np.uint8)
-        progress = (t % SCROLL_DURATION) / SCROLL_DURATION
-        x = int(-BRAND_W + progress * SCROLL_TOTAL)
-        src_x = 0
-        dst_x = x
-        if dst_x < 0:
-            src_x = -dst_x
-            dst_x = 0
-        src_w   = brand_arr.shape[1] - src_x
-        dst_end = dst_x + src_w
-        if dst_end > VIDEO_W:
-            src_w   = VIDEO_W - dst_x
-            dst_end = VIDEO_W
-        if src_w > 0 and 0 <= dst_x < VIDEO_W:
-            y_top = BRAND_Y
-            y_bot = min(y_top + txt_h, BAR_H)
-            rows  = y_bot - y_top
-            alpha = brand_arr[:rows, src_x:src_x + src_w, 3:4] / 255.0
-            rgb   = brand_arr[:rows, src_x:src_x + src_w, :3]
-            band[y_top:y_bot, dst_x:dst_end] = (
-                band[y_top:y_bot, dst_x:dst_end] * (1 - alpha) + rgb * alpha
-            ).astype(np.uint8)
-
-        _ticker_cache[frame_idx] = band
-        return band
-
-    ticker_clip = VideoClip(make_ticker_frame, duration=content_duration).with_position((0, 0)).with_start(0)
-    overlays.append(ticker_clip)
-
-    if logo_path and os.path.exists(logo_path):
-        try:
-            with PILImage.open(logo_path) as lp:
-                logo_pil = lp.convert("RGBA")
-                max_logo_h = 90
-                logo_w, logo_h = logo_pil.size
-                new_logo_w = int(logo_w * (max_logo_h / logo_h))
-                logo_resized = logo_pil.resize((new_logo_w, max_logo_h), PILImage.LANCZOS)
-                logo_arr = np.array(logo_resized)
-                logo_clip = VideoClip(lambda t: logo_arr[:, :, :3], duration=content_duration)
-                logo_mask = VideoClip(lambda t: logo_arr[:, :, 3] / 255.0, duration=content_duration, is_mask=True)
-                logo_clip = logo_clip.with_mask(logo_mask)
-                logo_x = VIDEO_W - new_logo_w - 30
-                logo_y = (BAR_H - max_logo_h) // 2
-                logo_clip = logo_clip.with_position((logo_x, logo_y)).with_start(0)
-                overlays.append(logo_clip)
-                logger.info("Logo incrusté.")
-        except Exception as logo_err:
-            logger.warning("Échec logo : %s", logo_err)
-
-    def build_outro_card():
-        canvas = PILImage.new("RGB", (VIDEO_W, VIDEO_H), NOIR)
-        draw = ImageDraw.Draw(canvas)
-
-        y_cursor = VIDEO_H // 2 - 130
-
-        tag_text = "PROPULSÉ PAR"
-        bbox_tag = draw.textbbox((0, 0), tag_text, font=font_outro_small)
-        draw.text(((VIDEO_W - (bbox_tag[2] - bbox_tag[0])) // 2, y_cursor), tag_text, fill=(160, 160, 160), font=font_outro_small)
-        y_cursor += (bbox_tag[3] - bbox_tag[1]) + 25
-
-        bbox = draw.textbbox((0, 0), PLATFORM_NAME, font=font_outro_big)
-        draw.text(((VIDEO_W - (bbox[2] - bbox[0])) // 2, y_cursor), PLATFORM_NAME, fill=GOLD, font=font_outro_big)
-        y_cursor += (bbox[3] - bbox[1]) + 30
-
-        draw.line([(VIDEO_W // 2 - 60, y_cursor), (VIDEO_W // 2 + 60, y_cursor)], fill=GOLD, width=3)
-        y_cursor += 30
-
-        sub_text = brand_name.strip() if brand_name.strip() else "Créez vos publicités en quelques clics"
-        bbox2 = draw.textbbox((0, 0), sub_text, font=font_outro_small)
-        draw.text(((VIDEO_W - (bbox2[2] - bbox2[0])) // 2, y_cursor), sub_text, fill=(220, 220, 220), font=font_outro_small)
-
-        return np.array(canvas)
-
-    outro_arr = build_outro_card()
-
-    def make_outro_frame(t, o=outro_arr):
-        punch_dur = 0.35
-        if t < punch_dur:
-            progress = t / punch_dur
-            eased = 1 - (1 - progress) ** 3
-            zoom = 1.10 - 0.10 * eased
-            h, w = o.shape[:2]
-            new_w, new_h = int(w / zoom), int(h / zoom)
-            x0 = (w - new_w) // 2
-            y0 = (h - new_h) // 2
-            cropped = o[y0:y0 + new_h, x0:x0 + new_w]
-            frame = np.array(PILImage.fromarray(cropped).resize((w, h), PILImage.LANCZOS))
-        else:
-            frame = o
-        return frame
-
-    outro_clip = VideoClip(make_outro_frame, duration=OUTRO_DURATION)
-    outro_clip = FadeIn(0.25).apply(outro_clip)
-    outro_clip = outro_clip.with_start(content_duration)
-    overlays.append(outro_clip)
-
-    outro_flash = ColorClip(size=(VIDEO_W, VIDEO_H), color=(255, 255, 255)).with_duration(FLASH_DURATION)
-    outro_flash = FadeOut(FLASH_DURATION).apply(outro_flash)
-    outro_flash = outro_flash.with_start(max(content_duration - 0.02, 0))
-    overlays.append(outro_flash)
-
-    fade_in_clip = ColorClip(size=(VIDEO_W, VIDEO_H), color=(0, 0, 0)).with_duration(1.0).with_start(0)
-    fade_in_clip = FadeOut(1.0).apply(fade_in_clip)
-    overlays.append(fade_in_clip)
-
-    fade_out_clip = ColorClip(size=(VIDEO_W, VIDEO_H), color=(0, 0, 0)).with_duration(1.5).with_start(video_duration - 1.5)
-    fade_out_clip = FadeIn(1.5).apply(fade_out_clip)
-    overlays.append(fade_out_clip)
-
-    video_finale = CompositeVideoClip(overlays, size=(VIDEO_W, VIDEO_H)).with_duration(video_duration)
-
-    if audio_path and os.path.exists(audio_path):
-        try:
-            audio_clip = AudioFileClip(audio_path)
-            if audio_clip.duration > video_duration:
-                audio_clip = audio_clip.subclipped(0, video_duration)
-            else:
-                audio_clip = audio_clip.with_duration(video_duration)
-            video_finale = video_finale.with_audio(audio_clip)
-            logger.info("Piste audio intégrée.")
-        except Exception as audio_err:
-            logger.warning("Audio ignoré : %s", audio_err)
-
-    logger.info("Export vidéo 9:16 → %s", output_path)
-
-    stop_progress = threading.Event()
-
-    def update_progress_loop():
-        pourcent = 40
-        while not stop_progress.is_set():
-            if user_id and user_id in video_progress:
-                pourcent = min(pourcent + 1, 90)
-                video_progress[user_id] = {
-                    "percentage": pourcent,
-                    "status": "Compilation Pubwek : Encodage vidéo vertical..."
-                }
-            time.sleep(1)
-
-    progress_thread = threading.Thread(target=update_progress_loop, daemon=True)
-    progress_thread.start()
-
-    try:
-        video_finale.write_videofile(
-            output_path,
-            fps=FPS,
-            codec="libx264",
-            audio_codec="aac",
-            audio=(video_finale.audio is not None),
-            threads=os.cpu_count() or 4,
-            preset="fast",
-            ffmpeg_params=["-crf", "20"],
-            logger="bar"
-        )
-    finally:
-        stop_progress.set()
-        video_finale.close()
-
-    logger.info("Vidéo Pubwek 9:16 générée avec succès !")
 
 # =========================================================================
 # ⚙️ Configuration
@@ -571,16 +116,21 @@ def generer_diaporama_pro(liste_images, output_path, brand_name="PUBWEK", slogan
 
 bcrypt = Bcrypt()
 csrf = CSRFProtect()
-mail = Mail()
 login_manager = LoginManager()
 
-# FIX: En production, configurez RATELIMIT_STORAGE_URI=redis://localhost:6379
-# pour que les limites restent actives avec plusieurs workers/processus.
-# Exemple dans Config : RATELIMIT_STORAGE_URI = os.environ.get("RATELIMIT_STORAGE_URI", "memory://")
+# Les compteurs vont dans Redis quand REDIS_URL est defini : en memoire, ils
+# repartent a zero a chaque redemarrage et chaque worker a les siens, ce qui
+# rend la limite inoperante des qu'il y a plus d'un processus.
 limiter = Limiter(
     get_remote_address,
     default_limits=["200 per day", "50 per hour"],
-    storage_uri=os.getenv("REDIS_URL", "memory://")
+    storage_uri=os.getenv("REDIS_URL", "memory://"),
+    strategy="fixed-window",
+    # Si Redis devient indisponible, on bascule sur un comptage en memoire au
+    # lieu de laisser remonter l'erreur : sans cela, une panne Redis
+    # transformerait chaque page du site en erreur 500.
+    in_memory_fallback_enabled=True,
+    swallow_errors=True,
 )
 
 
@@ -591,27 +141,72 @@ limiter = Limiter(
 FICHIERS_MAX_AGE_SECONDES = 7 * 24 * 3600  # 7 jours
 
 
-def nettoyer_fichiers_anciens(upload_folder, max_age_secondes=FICHIERS_MAX_AGE_SECONDES):
-    """Supprime les fichiers plus anciens que max_age_secondes dans upload_folder."""
+def fichiers_encore_utilises():
+    """Noms de fichiers référencés par un profil ou une campagne.
+
+    Doit être appelé dans un contexte d'application.
+    """
+    utilises = set()
+
+    for utilisateur in User.query.all():
+        for nom in (utilisateur.logo, utilisateur.cover_photo, utilisateur.profile_picture):
+            if nom:
+                utilises.add(os.path.basename(nom.strip()))
+
+    for campagne in Campaign.query.all():
+        for nom in (campagne.media_files or "").split(","):
+            if nom.strip():
+                utilises.add(os.path.basename(nom.strip()))
+        if campagne.generated_video:
+            utilises.add(os.path.basename(campagne.generated_video.strip()))
+
+    return utilises
+
+
+def nettoyer_fichiers_anciens(application, upload_folder, max_age_secondes=FICHIERS_MAX_AGE_SECONDES):
+    """Supprime les fichiers anciens ET devenus inutiles.
+
+    L'ancienne version supprimait tout fichier de plus de 7 jours, sans
+    vérifier s'il servait encore : les visuels d'une campagne de 30 jours
+    disparaissaient donc en pleine diffusion. On épargne désormais tout
+    fichier référencé par un profil ou une campagne, quel que soit son âge.
+    """
     now = time.time()
+    supprimes = 0
+
     try:
-        for nom in os.listdir(upload_folder):
-            chemin = os.path.join(upload_folder, nom)
-            if os.path.isfile(chemin):
-                age = now - os.path.getmtime(chemin)
-                if age > max_age_secondes:
-                    os.remove(chemin)
-                    logger.info("Fichier temporaire supprimé : %s", nom)
+        with application.app_context():
+            proteges = fichiers_encore_utilises()
+
+            for nom in os.listdir(upload_folder):
+                chemin = os.path.join(upload_folder, nom)
+                if not os.path.isfile(chemin):
+                    continue
+                if nom in proteges:
+                    continue
+                if now - os.path.getmtime(chemin) <= max_age_secondes:
+                    continue
+
+                os.remove(chemin)
+                UploadedFile.query.filter_by(filename=nom).delete()
+                supprimes += 1
+                logger.info("Fichier temporaire supprimé : %s", nom)
+
+            if supprimes:
+                db.session.commit()
+                logger.info("Nettoyage : %d fichier(s) supprimé(s).", supprimes)
     except Exception as e:
         logger.warning("Erreur nettoyage fichiers : %s", e)
 
+    return supprimes
 
-def lancer_nettoyage_periodique(upload_folder, intervalle_secondes=3600):
+
+def lancer_nettoyage_periodique(application, upload_folder, intervalle_secondes=3600):
     """Lance un thread de nettoyage automatique toutes les intervalle_secondes."""
     def _boucle():
         while True:
             time.sleep(intervalle_secondes)
-            nettoyer_fichiers_anciens(upload_folder)
+            nettoyer_fichiers_anciens(application, upload_folder)
     t = threading.Thread(target=_boucle, daemon=True)
     t.start()
 
@@ -620,9 +215,7 @@ def lancer_nettoyage_periodique(upload_folder, intervalle_secondes=3600):
 # =========================================================================
 
 ALLOWED_IMAGE_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.webp', '.avif', '.bmp', '.tiff', '.gif', '.jfif'}
-ALLOWED_AUDIO_EXTENSIONS = {'.mp3', '.wav', '.ogg', '.aac', '.m4a'}
 ALLOWED_IMAGE_MIMES = {'image/png', 'image/jpeg', 'image/webp', 'image/avif', 'image/bmp', 'image/tiff', 'image/gif'}
-ALLOWED_AUDIO_MIMES = {'audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/aac', 'audio/mp4', 'audio/x-m4a'}
 
 # Taille max globale des uploads : 50 Mo
 MAX_UPLOAD_SIZE = 50 * 1024 * 1024
@@ -647,39 +240,6 @@ def valider_image(file_storage):
     return True, None
 
 
-def valider_audio(file_storage):
-    """Vérifie extension, MIME et contenu réel du fichier audio via mutagen.
-    La taille est contrôlée avant tout read() pour éviter une consommation RAM excessive.
-    """
-    ext = os.path.splitext(file_storage.filename)[1].lower()
-    if ext not in ALLOWED_AUDIO_EXTENSIONS:
-        return False, "Extension audio non autorisée."
-    mime = file_storage.mimetype or ""
-    if mime and mime not in ALLOWED_AUDIO_MIMES:
-        return False, "Type MIME audio non autorisé."
-
-    # FIX: Vérification de la taille avant read() pour éviter la saturation RAM
-    MAX_AUDIO_SIZE = 20 * 1024 * 1024  # 20 Mo max pour un fichier audio
-    file_storage.stream.seek(0, 2)     # seek fin
-    taille = file_storage.stream.tell()
-    file_storage.stream.seek(0)
-    if taille > MAX_AUDIO_SIZE:
-        return False, f"Fichier audio trop volumineux (max {MAX_AUDIO_SIZE // (1024*1024)} Mo)."
-
-    # FIX: Vérification du contenu réel avec mutagen
-    try:
-        import mutagen
-        import io as _io
-        data = file_storage.stream.read()
-        file_storage.stream.seek(0)
-        result = mutagen.File(_io.BytesIO(data))
-        if result is None:
-            return False, "Contenu du fichier invalide (non audio reconnu)."
-    except ImportError:
-        logger.warning("mutagen non installé, validation audio limitée à l'extension et au MIME.")
-    except Exception:
-        return False, "Contenu du fichier audio invalide."
-    return True, None
 
 
 # =========================================================================
@@ -800,14 +360,14 @@ def create_app():
     # FIX: Limite globale de taille des uploads (50 Mo)
     app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_SIZE
 
-    # FIX: Cookies de session sécurisés
-    app.config.update(
-        SESSION_COOKIE_HTTPONLY=True,
-        SESSION_COOKIE_SECURE=False,   # DEV : False en local (pas de HTTPS), True en production
-        SESSION_COOKIE_SAMESITE="Lax",
-        REMEMBER_COOKIE_HTTPONLY=True,
-        REMEMBER_COOKIE_SECURE=False,  # DEV : False en local (pas de HTTPS), True en production
-    )
+    # Les drapeaux SESSION_COOKIE_SECURE / REMEMBER_COOKIE_SECURE sont définis
+    # dans Config et suivent ENV : actifs en production, inactifs en local.
+
+    # L'application tourne derrière un tunnel (Cloudflare / ngrok) ou un reverse
+    # proxy. Sans ProxyFix, request.remote_addr renvoie l'adresse du proxy —
+    # identique pour tous les visiteurs — ce qui rend la limitation de débit
+    # globale (5 échecs bloquent tout le monde) et les IP journalisées inutiles.
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
     # 🆕 Configuration Gmail SMTP pour l'envoi d'emails (mot de passe oublié, etc.)
     app.config.update(
@@ -822,42 +382,36 @@ def create_app():
     db.init_app(app)
     bcrypt.init_app(app)
     csrf.init_app(app)
-    mail.init_app(app)
     limiter.init_app(app)
 
     login_manager.init_app(app)
     login_manager.login_view = "login"
 
     # =========================================================================
-    # 🚧 MODE DÉVELOPPEMENT — CSP et sécurité Talisman désactivées
-    # À réactiver avant mise en production (voir bloc commenté ci-dessous)
+    # 🔒 En-têtes de sécurité HTTP
+    #
+    # Le niveau suit ENV plutôt qu'un bloc à décommenter à la main : un bloc
+    # commenté finit toujours par être oublié le jour du déploiement.
     # =========================================================================
+    csp = {
+        "default-src": ["'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+        "style-src":   ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+        "script-src":  ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+        "img-src":     ["'self'", "data:", "blob:", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+        "media-src":   ["'self'", "blob:", "data:"],
+        "font-src":    ["'self'", "data:", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+    }
+
     Talisman(
         app,
-        content_security_policy=False,        # CSP entièrement désactivée
-        force_https=False,                     # Pas de redirection HTTPS forcée
-        strict_transport_security=False,       # Pas de HSTS
-        content_security_policy_nonce_in=[],   # Nonce désactivé
+        content_security_policy=csp,
+        # Nonce désactivé : la CSP ci-dessus s'appuie sur 'unsafe-inline', que
+        # l'ajout d'un nonce annulerait.
+        content_security_policy_nonce_in=[],
+        force_https=Config.IS_PRODUCTION,
+        strict_transport_security=Config.IS_PRODUCTION,
+        strict_transport_security_max_age=31536000,
     )
-
-    # =========================================================================
-    # 🔒 BLOC PRODUCTION — décommenter et remplacer le bloc ci-dessus au déploiement
-    # =========================================================================
-    # csp = {
-    #     "default-src": ["'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
-    #     "style-src":   ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
-    #     "script-src":  ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
-    #     "img-src":     ["'self'", "data:", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
-    #     "media-src":   ["'self'", "blob:", "data:"]
-    # }
-    # Talisman(
-    #     app,
-    #     content_security_policy=csp,
-    #     content_security_policy_nonce_in=[],  # désactive le nonce → 'unsafe-inline' reste effectif
-    #     force_https=True,
-    #     strict_transport_security=True,
-    #     strict_transport_security_max_age=31536000,
-    # )
 
     # FIX: Dossier d'upload hors de static/ pour éviter l'accès public direct
     UPLOAD_FOLDER = os.path.join(os.getcwd(), "uploads_secure")
@@ -865,20 +419,103 @@ def create_app():
     app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
     @login_manager.user_loader
-    def load_user(user_id):
-        return db.session.get(User, int(user_id))
+    def load_user(identifiant):
+        """Recharge l'utilisateur d'une session.
+
+        L'identifiant de session vaut "<id>|<empreinte du mot de passe>" (voir
+        User.get_id). Si l'empreinte ne correspond plus, c'est que le mot de
+        passe a changé depuis l'ouverture de la session : on refuse, ce qui
+        déconnecte partout après une réinitialisation.
+
+        Les sessions au format ancien (identifiant numérique seul) sont
+        également refusées : elles ne portent aucune empreinte.
+        """
+        if not identifiant or "|" not in str(identifiant):
+            return None
+
+        brut_id, _, empreinte = str(identifiant).partition("|")
+        try:
+            user = db.session.get(User, int(brut_id))
+        except (TypeError, ValueError):
+            return None
+
+        if user is None or empreinte != user.empreinte_session():
+            return None
+        return user
 
     return app
 
 app = create_app()
 
+
+@app.before_request
+def memoriser_ip_partageur():
+    """Mémorise l'adresse IP de session des partageurs.
+
+    Sert uniquement à repérer le partageur qui clique sur son propre lien de
+    tracking (voir evaluer_clic). Limité à ce rôle pour éviter une écriture
+    inutile à chaque requête des autres utilisateurs, et l'écriture n'a lieu
+    que si l'adresse a réellement changé.
+    """
+    if not current_user.is_authenticated or current_user.role != "partageur":
+        return
+
+    ip = ip_client()
+    if ip and current_user.last_seen_ip != ip:
+        current_user.last_seen_ip = ip
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+
 # 🆕 Serializer pour signer/vérifier les tokens de réinitialisation de mot de passe
 from itsdangerous import URLSafeTimedSerializer
 reset_serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"])
 
-# URL publique de l'app (ngrok en dev, votre vrai domaine en prod)
-# Utilisée pour générer les liens que Creatomate (cloud) va utiliser pour
-# récupérer vos images/logo/audio et renvoyer le résultat via webhook.
+# Durée de validité d'un lien de réinitialisation
+DUREE_LIEN_RESET_SECONDES = 3600
+
+
+def empreinte_mot_de_passe(user):
+    """Empreinte du mot de passe actuel (implémentée sur le modèle User)."""
+    return user.empreinte_session()
+
+
+def creer_jeton_reset(user):
+    return reset_serializer.dumps(
+        {"email": user.email, "e": empreinte_mot_de_passe(user)},
+        salt="reset-password-salt",
+    )
+
+
+def lire_jeton_reset(token):
+    """Retourne l'utilisateur visé par le jeton, ou None s'il n'est plus valable."""
+    try:
+        donnees = reset_serializer.loads(
+            token, salt="reset-password-salt", max_age=DUREE_LIEN_RESET_SECONDES
+        )
+    except Exception:
+        return None
+
+    # Ancien format (simple chaîne e-mail) : refusé, il ne portait pas
+    # d'empreinte et restait donc utilisable après changement du mot de passe.
+    if not isinstance(donnees, dict):
+        return None
+
+    user = User.query.filter_by(email=donnees.get("email")).first()
+    if not user:
+        return None
+
+    if donnees.get("e") != empreinte_mot_de_passe(user):
+        # Le mot de passe a changé depuis l'émission : le lien est périmé.
+        return None
+
+    return user
+
+# URL publique de l'application (tunnel en développement, domaine réel en
+# production). Sert à construire les liens de tracking absolus insérés par les
+# partageurs dans leur statut WhatsApp.
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://127.0.0.1:5000")
 
 with app.app_context():
@@ -908,9 +545,18 @@ with app.app_context():
     else:
         logger.info("Administrateur déjà existant.")
 
+# L'envoi d'e-mails conditionne la réinitialisation de mot de passe : sans clé
+# Resend, un utilisateur qui perd son mot de passe ne peut plus rien faire seul.
+if not app.config.get("RESEND_API_KEY"):
+    logger.warning(
+        "RESEND_API_KEY absente : la réinitialisation de mot de passe est "
+        "désactivée. Les mots de passe devront être changés à la main avec "
+        "changer_mot_de_passe.py."
+    )
+
 # Lancement du nettoyage automatique des fichiers anciens
 with app.app_context():
-    lancer_nettoyage_periodique(app.config["UPLOAD_FOLDER"])
+    lancer_nettoyage_periodique(app, app.config["UPLOAD_FOLDER"])
 
 
 
@@ -1106,29 +752,98 @@ def generer_description_auto():
 
 
 
-# 🔒 Route sécurisée pour servir les fichiers uploadés
+# =========================================================================
+# 🔒 Propriété des fichiers téléversés et route de distribution
+# =========================================================================
+
+
+def campagne_cible_utilisateur(camp, user):
+    """La campagne cible-t-elle la zone géographique de ce partageur ?
+
+    Source unique de vérité pour le ciblage : utilisée à l'affichage du tableau
+    de bord, à la confirmation de partage et au contrôle d'accès aux médias.
+    Une commune précise l'emporte sur le département ; sans l'un ni l'autre, la
+    campagne est ouverte à tous.
+    """
+    communes_ciblees = [c.strip() for c in camp.communes.split(",") if c.strip()] if camp.communes else []
+    provinces_ciblees = (
+        [p.strip() for p in camp.provinces.split(",") if p.strip()]
+        if camp.provinces and camp.provinces != "Toutes" else []
+    )
+
+    if communes_ciblees:
+        return user.commune in communes_ciblees
+    if provinces_ciblees:
+        return user.province in provinces_ciblees
+    return True
+
+
+def enregistrer_upload(filename, owner_id, kind=None):
+    """Déclare un fichier comme appartenant à un utilisateur.
+
+    À appeler systématiquement après chaque écriture dans UPLOAD_FOLDER :
+    sans cet enregistrement, serve_upload() refusera l'accès au fichier.
+    Le commit est laissé à l'appelant, pour rester dans sa transaction.
+    """
+    return UploadedFile.enregistrer(filename, owner_id, kind=kind)
+
+
+def _campagnes_utilisant(safe_filename):
+    """Campagnes dont le fichier fait partie des médias (recherche large puis exacte)."""
+    candidates = Campaign.query.filter(
+        db.or_(
+            Campaign.media_files.contains(safe_filename),
+            Campaign.generated_video == safe_filename,
+        )
+    ).all()
+
+    resultat = []
+    for camp in candidates:
+        noms = [n.strip() for n in (camp.media_files or "").split(",") if n.strip()]
+        if safe_filename in noms or camp.generated_video == safe_filename:
+            resultat.append(camp)
+    return resultat
+
+
+def peut_acceder_au_fichier(user, safe_filename):
+    """Détermine si `user` a le droit de télécharger `safe_filename`.
+
+    Règles, de la plus large à la plus restrictive :
+      1. L'administrateur accède à tout (modération des campagnes).
+      2. Le propriétaire déclaré du fichier y accède.
+      3. Un partageur accède aux médias d'une campagne qu'il a acceptée de
+         diffuser, ou d'une campagne active qui cible sa zone.
+      4. Tout le reste est refusé.
+    """
+    if user.role == "admin":
+        return True
+
+    enreg = UploadedFile.query.filter_by(filename=safe_filename).first()
+    if enreg and enreg.owner_id == user.id:
+        return True
+
+    if user.role == "partageur":
+        for camp in _campagnes_utilisant(safe_filename):
+            partage = CampaignShare.query.filter_by(
+                campaign_id=camp.id, sharer_id=user.id
+            ).first()
+            if partage:
+                return True
+            if camp.validated and camp.shared_to_partageurs and camp.is_active:
+                if campagne_cible_utilisateur(camp, user):
+                    return True
+
+    return False
 
 
 @app.route("/uploads/<path:filename>")
 @login_required
 def serve_upload(filename):
-    """Sert les fichiers uploadés de façon sécurisée.
+    """Sert un fichier téléversé, après vérification du droit d'accès.
 
-    PROTECTION IDOR :
-    La protection complète contre l'IDOR nécessite un modèle UploadedFile en base
-    (champs : id, filename, owner_id, created_at) et la vérification ci-dessous :
-
-        record = UploadedFile.query.filter_by(filename=safe_filename).first()
-        if not record:
-            abort(404)
-        if record.owner_id != current_user.id and current_user.role != "admin":
-            logger.warning("[SECURITE] Accès refusé fichier %s par user id=%d", safe_filename, current_user.id)
-            abort(403)
-
-    En attendant l'ajout de ce modèle dans models.py, la stratégie défensive appliquée
-    ici est : un utilisateur ne peut accéder qu'à ses propres fichiers (ceux dont le nom
-    contient son id) OU à des ressources partagées (vidéos, logos publics).
-    Les admins ont accès à tout.
+    Auparavant, tout utilisateur connecté pouvait télécharger n'importe quel
+    fichier du dossier : il suffisait d'en connaître le nom. La propriété est
+    désormais tracée par le modèle UploadedFile.
     """
     safe_filename = os.path.basename(filename)
     upload_folder = current_app.config["UPLOAD_FOLDER"]
@@ -1137,15 +852,13 @@ def serve_upload(filename):
     if not os.path.exists(filepath):
         abort(404)
 
-    # Contrôle d'accès provisoire : l'admin voit tout ;
-    # les autres utilisateurs ne peuvent accéder qu'aux fichiers liés à leur id
-    # (noms générés par generer_nom_unique → UUID sans id, mais les previews/videos/logos
-    # contiennent current_user.id dans leur préfixe pour les fichiers nominatifs)
-    if current_user.role != "admin":
-        # Les fichiers purement UUID (uploads d'images pour diaporama) sont accessibles
-        # à tout utilisateur connecté. Dès que UploadedFile est en base, remplacer par
-        # la vérification owner_id ci-dessus.
-        pass
+    if not peut_acceder_au_fichier(current_user, safe_filename):
+        logger.warning(
+            "[SECURITE] Accès refusé au fichier %s pour l'utilisateur id=%s (role=%s)",
+            safe_filename, current_user.id, current_user.role
+        )
+        # 404 plutôt que 403 : ne pas confirmer l'existence du fichier.
+        abort(404)
 
     return send_from_directory(upload_folder, safe_filename)
 
@@ -1156,263 +869,26 @@ def serve_upload(filename):
 
 
 
-@app.route("/dashboard/annonceur/generer_preview_video", methods=["POST"])
-@login_required
-def generer_preview_video():
-    if current_user.role != "annonceur":
-        return jsonify({"error": "Accès refusé"}), 403
-
-    user_id = str(current_user.id)
-
-    # 1. Vérification d'une génération déjà en cours via le statut Redis
-    current_status = get_progress(user_id)
-    if isinstance(current_status, dict):
-        statut_actuel = current_status.get("status", "")
-        pct_actuel = current_status.get("percentage", 0)
-
-        # Si une tâche est active et pas encore terminée ou en erreur
-        if 0 < pct_actuel < 100 and statut_actuel not in ["done", "error", "cancelled"]:
-            return jsonify({"error": "Une génération est déjà en cours. Veuillez patienter."}), 429
-
-    set_progress(user_id, {"percentage": 5, "status": "Vérification et réception des fichiers..."})
-
-    paths_locaux = []
-    noms_fichiers = []
-
-    use_cached = request.form.get("use_cached") == "true"
-    cached_files_str = request.form.get("cached_files", "")
-
-    if use_cached and cached_files_str:
-        noms_fichiers = [os.path.basename(f.strip()) for f in cached_files_str.split(",") if f.strip()]
-        for name in noms_fichiers:
-            path = os.path.join(current_app.config["UPLOAD_FOLDER"], name)
-            if os.path.exists(path):
-                paths_locaux.append(path)
-    else:
-        fichiers = request.files.getlist("media_files")
-
-        if len(fichiers) > MAX_IMAGES_PAR_VIDEO:
-            set_progress(user_id, {"percentage": 0, "status": "error"})
-            return jsonify({"error": f"Trop d'images. Maximum autorisé : {MAX_IMAGES_PAR_VIDEO}."}), 400
-
-        for fichier in fichiers:
-            if fichier and fichier.filename:
-                ok, err = valider_image(fichier)
-                if not ok:
-                    logger.warning("Upload image rejeté (user %s) : %s", user_id, err)
-                    continue
-                filename = generer_nom_unique(fichier.filename)
-                path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
-                fichier.save(path)
-                paths_locaux.append(path)
-                noms_fichiers.append(filename)
-
-    images_uniquement = [p for p in paths_locaux if os.path.splitext(p)[1].lower() in ALLOWED_IMAGE_EXTENSIONS]
-
-    if not images_uniquement:
-        set_progress(user_id, {"percentage": 0, "status": "Erreur : Aucune image valide."})
-        return jsonify({"error": "Aucune image valide détectée."}), 400
-
-    set_progress(user_id, {"percentage": 20, "status": "Configuration de la piste audio choisie..."})
-
-    audio_source = request.form.get("audio_source", "auto")
-    audio_path_final = None
-    PISTES_AUTORISEES = {"pop.mp3", "dynamique.mp3", "corporate.mp3"}
-
-    if audio_source == "auto":
-        audio_path_final = os.path.join(os.getcwd(), "static", "audio", random.choice(list(PISTES_AUTORISEES)))
-    elif audio_source == "library":
-        library_track = os.path.basename(request.form.get("library_track", "pop.mp3"))
-        if library_track not in PISTES_AUTORISEES:
-            library_track = "pop.mp3"
-        audio_path_final = os.path.join(os.getcwd(), "static", "audio", library_track)
-    elif audio_source == "local":
-        audio_file = request.files.get("local_audio_file")
-        if audio_file and audio_file.filename:
-            ok, err = valider_audio(audio_file)
-            if not ok:
-                logger.warning("Upload audio rejeté (user %s) : %s", user_id, err)
-            else:
-                audio_filename = generer_nom_unique(audio_file.filename)
-                audio_path_final = os.path.join(current_app.config["UPLOAD_FOLDER"], audio_filename)
-                audio_file.save(audio_path_final)
-
-    video_generee_nom = f"preview_{current_user.id}_{uuid.uuid4().hex}.mp4"
-    output_path = os.path.join(current_app.config["UPLOAD_FOLDER"], video_generee_nom)
-
-    nom_produit = request.form.get("promotion_detail", "").strip()
-    slogan_video = request.form.get("slogan_video", "").strip()
-    brand_name_final = nom_produit if nom_produit else (current_user.company_name or "PUBWEK")
-    logo_path_final = os.path.join(current_app.config["UPLOAD_FOLDER"], current_user.logo) if current_user.logo else None
-    noms_fichiers_str = ",".join(noms_fichiers)
-
-    # --- Intégration Creatomate (remplace la tâche Celery task_generer_video) ---
-    set_progress(user_id, {"percentage": 40, "status": "Envoi à Creatomate pour rendu..."})
-
-    # Construction des URLs publiques temporaires pour les images
-    image_urls = [
-        generer_url_asset_signee(app, os.path.basename(p), PUBLIC_BASE_URL)
-        for p in images_uniquement
-    ]
-
-    logo_url = None
-    if logo_path_final and os.path.exists(logo_path_final):
-        logo_url = generer_url_asset_signee(app, os.path.basename(logo_path_final), PUBLIC_BASE_URL)
-
-    audio_url = None
-    if audio_path_final and os.path.exists(audio_path_final):
-        # Musique de la bibliothèque (static/audio) → URL directe
-        if "static" in audio_path_final and "audio" in audio_path_final:
-            audio_url = generer_url_asset_statique(PUBLIC_BASE_URL, f"audio/{os.path.basename(audio_path_final)}")
-        else:
-            # Musique uploadée par l'utilisateur → URL signée
-            audio_url = generer_url_asset_signee(app, os.path.basename(audio_path_final), PUBLIC_BASE_URL)
-
-    source_json = build_creatomate_source(
-        image_urls=image_urls,
-        brand_name=brand_name_final,
-        slogan=slogan_video,
-        logo_url=logo_url,
-        audio_url=audio_url,
-    )
-
-    webhook_url = f"{PUBLIC_BASE_URL}/webhooks/creatomate"
-
-    try:
-        render_id = lancer_render_creatomate(source_json, webhook_url=webhook_url)
-        # On mémorise à quel user/fichier ce render_id correspond, pour le webhook
-        set_progress(f"render:{render_id}", {"user_id": user_id, "filename": video_generee_nom})
-        logger.info("Rendu Creatomate lancé (id=%s) pour user %s", render_id, user_id)
-    except Exception as e:
-        logger.error("Échec lancement rendu Creatomate : %s", e)
-        set_progress(user_id, {"percentage": 0, "status": "error"})
-        return jsonify({"error": "Échec du lancement de la génération vidéo."}), 500
-
-    return jsonify({"started": True})
-
-
-
-@app.route("/render-assets/<token>")
-def serve_render_asset(token):
-    """
-    Sert un fichier à Creatomate (cloud) via un jeton signé temporaire.
-    Pas de @login_required : Creatomate n'a pas de session utilisateur.
-    Sécurité assurée par la signature + expiration du jeton (ASSET_LINK_MAX_AGE).
-    """
-    serializer = get_asset_serializer(app)
-    try:
-        filename = serializer.loads(token, max_age=ASSET_LINK_MAX_AGE)
-    except SignatureExpired:
-        abort(410)  # lien expiré
-    except BadSignature:
-        abort(403)  # jeton invalide/falsifié
-
-    safe_filename = os.path.basename(filename)
-    upload_folder = current_app.config["UPLOAD_FOLDER"]
-    filepath = os.path.join(upload_folder, safe_filename)
-
-    if not os.path.exists(filepath):
-        abort(404)
-
-    # 1. Génération de la réponse standard send_from_directory
-    response = make_response(send_from_directory(upload_folder, safe_filename))
-
-    # 2. Contournement de la page d'interception Cloudflare / Ngrok pour Creatomate
-    response.headers["bypass-tunnel-reminder"] = "true"
-    response.headers["ngrok-skip-browser-warning"] = "true"
-
-    # 3. En-têtes CORS et Cache
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "*"
-    response.headers["Cache-Control"] = "public, max-age=3600"
-
-    return response
-
-
-
-
-@app.route("/webhooks/creatomate", methods=["POST"])
-@csrf.exempt
-def webhook_creatomate():
-    """
-    Appelée automatiquement par Creatomate quand un rendu se termine.
-    Télécharge la vidéo finale et la sauvegarde localement, comme avant
-    avec Celery, pour ne rien changer au reste de votre application.
-    """
-    data = request.get_json(silent=True) or {}
-    render_id = data.get("id")
-    status = data.get("status")
-
-    # On retrouve le user_id et le nom de fichier via le mapping Redis
-    # enregistré au moment du lancement du rendu (plus fiable que les tags)
-    mapping = get_progress(f"render:{render_id}")
-    if not isinstance(mapping, dict) or "user_id" not in mapping:
-        logger.warning("Webhook Creatomate reçu sans correspondance connue : %s", data)
-        return jsonify({"ok": True}), 200
-
-    user_id = mapping["user_id"]
-    video_generee_nom = mapping["filename"]
-
-    if status == "succeeded":
-        video_url = data.get("url")
-        output_path = os.path.join(current_app.config["UPLOAD_FOLDER"], video_generee_nom)
-        try:
-            r = requests.get(video_url, timeout=60)
-            r.raise_for_status()
-            with open(output_path, "wb") as f:
-                f.write(r.content)
-            set_progress(user_id, {"percentage": 100, "status": "done"})
-            logger.info("Vidéo Creatomate téléchargée et sauvegardée : %s", video_generee_nom)
-        except Exception as e:
-            logger.error("Échec téléchargement vidéo Creatomate : %s", e)
-            set_progress(user_id, {"percentage": 0, "status": "error"})
-    elif status == "failed":
-        logger.error("Rendu Creatomate échoué (id=%s) : %s", render_id, data.get("error_message"))
-        set_progress(user_id, {"percentage": 0, "status": "error"})
-
-    return jsonify({"ok": True}), 200
 
 
 
 
 
-@app.route("/dashboard/annonceur/video_progress_status", methods=["GET"])
-@login_required
-@limiter.exempt
-def get_video_progress_status():
-    user_id = str(current_user.id)
-    
-    # Récupération directe dans Redis
-    status = get_progress(user_id)
-    
-    # 💾 SAUVEGARDE EN SESSION : dès que la vidéo est prête
-    if isinstance(status, dict) and status.get("status") == "done" and "video_url" in status:
-        session['preview_video_url'] = status["video_url"]
-        session.modified = True
-        
-    return jsonify(status)
 
 
-@app.route("/dashboard/annonceur/annuler_generation_video", methods=["POST"])
-@login_required
-def annuler_generation_video():
-    user_id = str(current_user.id)
-    
-    # 🧹 Nettoyage de la session
-    session.pop('preview_video_url', None)
-    
-    # Signal d'annulation transmis à Redis pour le worker Celery
-    set_progress(user_id, {"percentage": 0, "status": "cancelled"})
-    
-    # Libération du verrou local/Redis pour ré-exécution immédiate
-    user_lock = get_user_lock(user_id)
-    try:
-        user_lock.release()
-    except RuntimeError:
-        pass
 
-    return jsonify({"success": True, "message": "Génération annulée."})
+
+
+
+
+
+
+
+
+
+
+
+
 
 # ==========================================
 # ROUTE : NOUVELLE CAMPAGNE (CRÉATION)
@@ -1443,21 +919,37 @@ def nouvelle_campagne():
         promotion_detail = bleach.clean(promotion_detail)
 
         provinces_list = request.form.getlist("provinces[]")
-        target_views = int(request.form.get("whatsapp_views", 0))
-        duration_days = int(request.form.get("duration_days", 7))
 
-        # 1️⃣ VALIDATION DE LA DURÉE (MAX 30 JOURS)
+        # 1️⃣ VALIDATION DES CHAMPS NUMÉRIQUES
+        # Un int() nu sur une saisie libre lève ValueError (erreur 500) sur toute
+        # valeur non numérique, et accepte les nombres négatifs — ce qui produit
+        # un coût négatif, refusé plus tard au paiement : la campagne devenait
+        # définitivement impayable.
+        try:
+            target_views = int(request.form.get("whatsapp_views", 0))
+            duration_days = int(request.form.get("duration_days", 7))
+        except (TypeError, ValueError):
+            flash("Le nombre de clics et la durée doivent être des nombres entiers. ⚠️", "danger")
+            return redirect(url_for("dashboard_annonceur"))
+
+        if target_views < MIN_CLICS_CAMPAGNE or target_views > MAX_CLICS_CAMPAGNE:
+            flash(
+                f"Le nombre de clics doit être compris entre {MIN_CLICS_CAMPAGNE} "
+                f"et {MAX_CLICS_CAMPAGNE:,}. ⚠️".replace(",", " "),
+                "danger"
+            )
+            return redirect(url_for("dashboard_annonceur"))
+
         if duration_days < 1 or duration_days > 30:
             flash("La durée de diffusion doit être comprise entre 1 et 30 jours maximum. ⚠️", "danger")
             return redirect(url_for("dashboard_annonceur"))
 
         whatsapp_number = request.form.get("whatsapp_number")
 
-        # Validation du numéro WhatsApp par regex
-        if whatsapp_number:
-            if not re.match(r"^\+?[0-9]{7,15}$", whatsapp_number):
-                flash("Numéro WhatsApp invalide. Utilisez un format international (ex: +22960000000).", "danger")
-                return redirect(url_for("dashboard_annonceur"))
+        # Même règle que le formulaire d'inscription (forms.NUMERO_WHATSAPP_REGEX)
+        if whatsapp_number and not numero_whatsapp_valide(whatsapp_number):
+            flash(MESSAGE_NUMERO_INVALIDE, "danger")
+            return redirect(url_for("dashboard_annonceur"))
 
         # --- Champ optionnel : site web / application web de la structure ---
         website_url = request.form.get("website_url", "").strip()
@@ -1518,6 +1010,7 @@ def nouvelle_campagne():
             video_generee_nom = f"video_{current_user.id}_{uuid.uuid4().hex}.mp4"
             output_path = os.path.join(current_app.config["UPLOAD_FOLDER"], video_generee_nom)
             shutil.move(tmp_path, output_path)
+            enregistrer_upload(video_generee_nom, current_user.id, kind="video")
 
             medias_pour_db = video_generee_nom
             cout_par_clic_base = config.cost_per_click_video
@@ -1555,6 +1048,7 @@ def nouvelle_campagne():
                     filename = generer_nom_unique(fichier.filename)
                     path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
                     fichier.save(path)
+                    enregistrer_upload(filename, current_user.id, kind="image")
                     if filename not in noms_fichiers:
                         noms_fichiers.append(filename)
 
@@ -1703,25 +1197,18 @@ def campagne_partageurs(campaign_id):
             "campagne_partageurs.html",
             campaign=camp,
             partageurs=[],
-            total_vues=0,
+            total_clics=0,
             total_clics_whatsapp=0,
             total_clics_site=0
         )
 
     share_ids = [s.id for s in shares]
 
-    # 2️⃣ Comptage des vues valides, par partageur (indépendant des clics)
-    vues_par_sharer = dict(
-        db.session.query(View.sharer_id, func.count(View.id))
-        .filter(
-            View.campaign_id == campaign_id,
-            View.counted == True
-        )
-        .group_by(View.sharer_id)
-        .all()
-    )
-
-    # 3️⃣ Comptage des clics, par CampaignShare ET par type de lien (indépendant des vues)
+    # 2️⃣ Comptage des clics, par CampaignShare et par type de lien.
+    #
+    # Il y avait ici un second comptage, celui des « vues », lu dans la table
+    # View. Cette table n'est alimentée nulle part : la colonne affichait donc
+    # invariablement zéro. Elle est retirée — la campagne se mesure en clics.
     clics_bruts = (
         db.session.query(
             CampaignClick.campaign_share_id,
@@ -1738,22 +1225,21 @@ def campagne_partageurs(campaign_id):
         clics_par_share.setdefault(share_id, {"whatsapp": 0, "website": 0})
         clics_par_share[share_id][link_type] = nb
 
-    # 4️⃣ Fusion des 3 sources en une liste exploitable par le template
+    # 3️⃣ Construction de la liste exploitable par le gabarit
     partageurs = []
     for s in shares:
         clics = clics_par_share.get(s.id, {"whatsapp": 0, "website": 0})
         partageurs.append({
             "pseudo": s.pseudo or "Partageur anonyme",
-            "nb_vues": vues_par_sharer.get(s.sharer_id, 0),
             "clics_whatsapp": clics["whatsapp"],
             "clics_site": clics["website"],
+            "total_clics": clics["whatsapp"] + clics["website"],
             "partage_le": s.created_at.strftime("%d/%m/%Y %H:%M") if s.created_at else None,
         })
 
-    # Tri décroissant par nombre de vues (comportement identique à avant)
-    partageurs.sort(key=lambda p: p["nb_vues"], reverse=True)
+    # Les partageurs les plus efficaces d'abord
+    partageurs.sort(key=lambda p: p["total_clics"], reverse=True)
 
-    total_vues = sum(p["nb_vues"] for p in partageurs)
     total_clics_whatsapp = sum(p["clics_whatsapp"] for p in partageurs)
     total_clics_site = sum(p["clics_site"] for p in partageurs)
 
@@ -1761,10 +1247,10 @@ def campagne_partageurs(campaign_id):
         "campagne_partageurs.html",
         campaign=camp,
         partageurs=partageurs,
-        total_vues=total_vues,
+        total_clics=total_clics_whatsapp + total_clics_site,
         total_clics_whatsapp=total_clics_whatsapp,
         total_clics_site=total_clics_site
-    )  
+    )
 
 
 
@@ -2296,6 +1782,73 @@ def accepter_cgu():
     return jsonify({'success': True})    
 
 
+# =========================================================================
+# 💳 APPLICATION D'UN PAIEMENT FEDAPAY
+#
+# Deux chemins mènent ici : le retour navigateur (paiement_callback) et le
+# webhook FedaPay. Les deux appellent la même fonction, qui est idempotente :
+# le premier arrivé applique les effets, le second ne fait rien.
+# =========================================================================
+
+
+def _statut_fedapay(details):
+    """Extrait le statut quelle que soit la forme de la réponse FedaPay."""
+    if isinstance(details, dict):
+        return details.get("status")
+    return getattr(details, "status", None)
+
+
+
+
+
+
+def appliquer_paiement_confirme(transaction, details=None):
+    """Applique les effets métier d'un paiement approuvé. Idempotent.
+
+    Retourne l'un de : "deja_traite", "campagne", "abonnement", "autre".
+    Ne fait aucun commit : l'appelant décide du moment.
+    """
+    if transaction.status == "approved" and transaction.verified_at:
+        return "deja_traite"
+
+    transaction.status = "approved"
+    transaction.verified_at = datetime.utcnow()
+    if isinstance(details, dict):
+        transaction.raw_response = details
+
+    if transaction.campaign_id:
+        camp = db.session.get(Campaign, transaction.campaign_id)
+        if camp:
+            camp.paid = True
+            camp.payment_status = "paid"
+
+            # Si l'admin avait déjà validé la campagne avant paiement
+            if camp.admin_status == "approved" or camp.validated:
+                camp.is_active = True
+                camp.status = "active"
+            else:
+                camp.is_active = False
+                camp.status = "en_attente"  # Passe en attente de modération admin
+        return "campagne"
+
+    # Les abonnements vidéo ont été retirés du produit. Une transaction de ce
+    # type ne peut plus être créée ; si une ancienne remontait encore, elle est
+    # simplement marquée payée sans effet métier.
+    return "autre"
+
+
+def appliquer_paiement_echoue(transaction, statut):
+    """Répercute une annulation ou un refus. Ne fait aucun commit."""
+    transaction.status = statut
+    if transaction.campaign_id:
+        camp = db.session.get(Campaign, transaction.campaign_id)
+        if camp and not camp.paid:
+            camp.payment_status = "unpaid"
+            camp.paid = False
+            camp.is_active = False
+            camp.status = "non_payee"
+
+
 # ==========================================
 # ROUTE : CALLBACK DE PAIEMENT FEDAPAY
 # ==========================================
@@ -2305,6 +1858,9 @@ def paiement_callback():
     """
     Route de retour après le parcours de paiement FedaPay.
     Vérifie le statut de la transaction directement auprès de FedaPay.
+
+    Ce retour reste un confort d'affichage : la source de vérité est le webhook
+    (/webhooks/fedapay), qui fonctionne même si le client ferme son navigateur.
     """
     # FedaPay passe l'ID sous le paramètre 'id' dans l'URL après redirection
     fedapay_id = request.args.get("id") or request.args.get("transaction_id")
@@ -2323,76 +1879,29 @@ def paiement_callback():
         flash("Transaction introuvable dans notre système. ⚠️", "danger")
         return redirect(url_for("mes_campagnes"))
 
-    # Si la transaction locale est déjà validée (ex: par un webhook ou un rechargement de page)
-    if transaction.status == "approved":
+    # Si la transaction a déjà été traitée (webhook plus rapide, ou rechargement)
+    if transaction.status == "approved" and transaction.verified_at:
         flash("Votre paiement a déjà été validé avec succès ! ✅", "success")
         return redirect(url_for("mes_campagnes"))
 
     # 2. Vérification côté serveur via verifier_transaction()
     try:
         details = verifier_transaction(transaction.fedapay_transaction_id)
-        
-        # Extraction du statut en toute sécurité quel que soit le format de réponse
-        if isinstance(details, dict):
-            status_fedapay = details.get("status")
-        elif hasattr(details, "status"):
-            status_fedapay = details.status
-        else:
-            status_fedapay = None
+        status_fedapay = _statut_fedapay(details)
 
         if status_fedapay in ["approved", "transferred"]:
-            # On met à jour la transaction locale
-            transaction.status = "approved"
+            resultat = appliquer_paiement_confirme(transaction, details)
+            db.session.commit()
 
-            # CASE A : Paiement de Campagne
-            if transaction.campaign_id:
-                camp = db.session.get(Campaign, transaction.campaign_id)
-                if camp:
-                    # Mises à jour des statuts
-                    camp.paid = True
-                    camp.payment_status = "paid"
-                    
-                    # Si l'admin avait déjà validé la campagne avant paiement
-                    if camp.admin_status == "approved" or camp.validated:
-                        camp.is_active = True
-                        camp.status = "active"
-                    else:
-                        camp.is_active = False
-                        camp.status = "en_attente"  # Passe en attente de modération admin
-
+            if resultat == "campagne":
                 flash("Paiement effectué avec succès ! Votre campagne a été transmise pour validation. 🎉", "success")
-
-            # CASE B : Paiement d'Abonnement Vidéo
-            elif transaction.transaction_type and transaction.transaction_type.startswith("video_subscription_"):
-                current_user.has_video_subscription = True
-                now = datetime.utcnow()
-
-                # Prolongation ou initialisation de la date d'expiration
-                base_date = current_user.video_subscription_end if (
-                    current_user.video_subscription_end and current_user.video_subscription_end > now
-                ) else now
-
-                if transaction.transaction_type == "video_subscription_monthly":
-                    current_user.video_subscription_end = base_date + timedelta(days=30)
-                elif transaction.transaction_type == "video_subscription_yearly":
-                    current_user.video_subscription_end = base_date + timedelta(days=365)
-
+            elif resultat == "abonnement":
                 flash("Félicitations ! Votre abonnement de génération vidéo est actif. 🚀", "success")
-
             else:
                 flash("Paiement validé avec succès ! ✅", "success")
 
-            db.session.commit()
-
         elif status_fedapay in ["canceled", "declined"]:
-            transaction.status = status_fedapay
-            if transaction.campaign_id:
-                camp = db.session.get(Campaign, transaction.campaign_id)
-                if camp:
-                    camp.payment_status = "unpaid"
-                    camp.paid = False
-                    camp.is_active = False
-                    camp.status = "non_payee"
+            appliquer_paiement_echoue(transaction, status_fedapay)
             db.session.commit()
             flash("Le paiement a été annulé ou a échoué. Vous pouvez réessayer. ⚠️", "warning")
 
@@ -2400,119 +1909,108 @@ def paiement_callback():
             flash("Le paiement est toujours en cours de traitement. Un moment svp... ⏳", "info")
 
     except Exception as e:
+        db.session.rollback()
         logger.error("Erreur vérification paiement FedaPay (TX: %s) : %s", fedapay_id, e)
         flash("Erreur lors de la vérification de votre paiement. Réessayez plus tard.", "danger")
 
     return redirect(url_for("mes_campagnes"))
 
 
+# ==========================================
+# ROUTE : WEBHOOK FEDAPAY
+# ==========================================
+@app.route("/webhooks/fedapay", methods=["POST"])
+@csrf.exempt
+@limiter.exempt
+def webhook_fedapay():
+    """
+    Notification serveur-à-serveur envoyée par FedaPay à chaque changement de
+    statut d'une transaction.
 
-def get_video_config():
-    """Récupère la configuration globale de génération vidéo."""
-    return VideoGenerationConfig.get_config()
+    Sans cette route, une campagne n'était marquée payée que si le client
+    revenait sur le site après le paiement. En mobile money, beaucoup ferment
+    l'onglet dès la confirmation par SMS : l'argent était débité et la campagne
+    restait bloquée en « non payée ».
+    """
+    secret = current_app.config.get("FEDAPAY_WEBHOOK_SECRET") or ""
+    if not secret:
+        logger.error("[SECURITE] Webhook FedaPay reçu mais FEDAPAY_WEBHOOK_SECRET n'est pas configuré.")
+        abort(503)
 
+    # FedaPay signe le corps de la requête (en-tête x-fedapay-signature,
+    # format « t=<horodatage>,s=<signature> »).
+    entete = request.headers.get("x-fedapay-signature", "")
+    corps_brut = request.get_data()
 
-@app.route('/souscrire-abonnement-video/<plan>')
-@login_required
-def souscrire_abonnement_video(plan):
-    if current_user.role != "annonceur":
-        flash("Accès refusé 🚫", "danger")
-        return redirect(url_for("index"))
+    signature_fournie = None
+    horodatage = None
+    for partie in entete.split(","):
+        cle, _, valeur = partie.strip().partition("=")
+        if cle == "s":
+            signature_fournie = valeur
+        elif cle == "t":
+            horodatage = valeur
 
-    # 1. Récupération de la configuration vidéo
-    video_config = get_video_config()
+    if not signature_fournie or not horodatage:
+        logger.warning("[SECURITE] Webhook FedaPay sans signature exploitable.")
+        abort(400)
 
-    if video_config.pricing_mode == "free":
-        flash("La génération vidéo est actuellement gratuite !", "info")
-        return redirect(url_for('dashboard_annonceur'))
+    attendu = hmac.new(
+        secret.encode("utf-8"),
+        f"{horodatage}.".encode("utf-8") + corps_brut,
+        hashlib.sha256,
+    ).hexdigest()
 
-    # 2. Détermination du prix et du type
-    if plan == 'mensuel':
-        base_price = video_config.monthly_price
-        transaction_type = 'video_subscription_monthly'
-    elif plan == 'annuel':
-        base_price = video_config.yearly_price
-        transaction_type = 'video_subscription_yearly'
-    else:
-        flash("Plan d'abonnement invalide. ⚠️", "danger")
-        return redirect(url_for('dashboard_annonceur'))
+    if not hmac.compare_digest(signature_fournie, attendu):
+        logger.warning("[SECURITE] Webhook FedaPay rejeté : signature invalide.")
+        abort(400)
 
-    # 3. Application de la promotion
-    final_price = base_price
-    if video_config.promo_active and video_config.promo_percentage > 0:
-        discount = base_price * (video_config.promo_percentage / 100.0)
-        final_price = base_price - discount
+    data = request.get_json(silent=True) or {}
+    entite = data.get("entity") or data.get("data") or {}
+    fedapay_id = entite.get("id") or data.get("id")
 
-    # 4. Réutilisation d'une transaction 'pending' existante si elle est encore valide
-    existing = (
-        Transaction.query.filter_by(
-            user_id=current_user.id, 
-            transaction_type=transaction_type, 
-            status="pending"
-        )
-        .order_by(Transaction.created_at.desc())
-        .first()
-    )
+    if not fedapay_id:
+        logger.warning("Webhook FedaPay sans identifiant de transaction.")
+        return jsonify({"ok": True}), 200
 
-    if existing and existing.fedapay_transaction_id:
-        try:
-            lien = generer_lien_paiement(existing.fedapay_transaction_id)
-            if lien:
-                return redirect(lien)
-        except Exception as e:
-            logger.warning("Réutilisation transaction abonnement impossible, on en recrée une : %s", e)
+    transaction = Transaction.query.filter_by(
+        fedapay_transaction_id=str(fedapay_id)
+    ).first()
 
-    # 5. Création de la transaction FedaPay
-    reference = f"SUB-{plan.upper()}-{current_user.id}-{uuid.uuid4().hex[:8]}"
+    if not transaction:
+        logger.warning("Webhook FedaPay pour une transaction inconnue (id=%s).", fedapay_id)
+        return jsonify({"ok": True}), 200
 
+    # On ne fait jamais confiance au statut annoncé dans le webhook : on
+    # réinterroge FedaPay, comme pour le retour navigateur.
     try:
-        fedapay_tx = creer_transaction(
-            montant=final_price,
-            description=f"Abonnement Vidéo {plan.capitalize()} - {current_user.email}",
-            metadata={
-                "type": transaction_type,
-                "plan": plan,
-                "user_id": str(current_user.id),
-                "reference": reference,
-            },
-            customer_email=current_user.email,
-            customer_phone=current_user.whatsapp_number,
-        )
+        details = verifier_transaction(transaction.fedapay_transaction_id)
+        statut = _statut_fedapay(details)
 
-        # Extraction sécurisée de l'ID FedaPay
-        if isinstance(fedapay_tx, dict):
-            tx_id = fedapay_tx.get("id")
-        elif hasattr(fedapay_tx, "id"):
-            tx_id = fedapay_tx.id
-        else:
-            tx_id = fedapay_tx
-
-        if not tx_id:
-            raise ValueError("ID de transaction FedaPay introuvable.")
-
-        lien_paiement = generer_lien_paiement(tx_id)
-        if not lien_paiement:
-            raise ValueError("Impossible de générer le lien de paiement.")
+        if statut in ["approved", "transferred"]:
+            resultat = appliquer_paiement_confirme(transaction, details)
+            db.session.commit()
+            logger.info(
+                "[PAIEMENT] Webhook FedaPay appliqué (tx=%s, type=%s, resultat=%s)",
+                fedapay_id, transaction.transaction_type, resultat
+            )
+        elif statut in ["canceled", "declined"]:
+            appliquer_paiement_echoue(transaction, statut)
+            db.session.commit()
+            logger.info("[PAIEMENT] Webhook FedaPay : transaction %s → %s", fedapay_id, statut)
 
     except Exception as e:
-        logger.error("Erreur création abonnement FedaPay : %s", e)
-        flash("Impossible d'initier le paiement de l'abonnement. Réessayez. ⚠️", "danger")
-        return redirect(url_for("dashboard_annonceur"))
+        db.session.rollback()
+        logger.error("Erreur traitement webhook FedaPay (tx=%s) : %s", fedapay_id, e)
+        # 500 : FedaPay réessaiera l'envoi.
+        return jsonify({"ok": False}), 500
 
-    # 6. Enregistrement local de la transaction
-    transaction = Transaction(
-        user_id=current_user.id,
-        reference=reference,
-        fedapay_transaction_id=str(tx_id),
-        amount=final_price,
-        currency="XOF",
-        transaction_type=transaction_type,
-        status="pending",
-    )
-    db.session.add(transaction)
-    db.session.commit()
+    return jsonify({"ok": True}), 200
 
-    return redirect(lien_paiement)
+
+
+
+
 
 
 
@@ -2595,8 +2093,10 @@ def reclamer_remboursement(campaign_id):
     clean_method = bleach.clean(payment_method)
     payment_info = f"Moyen : {clean_method} | Numéro : {clean_phone}"
 
-    # 🐞 FIX : RefundRequest n'était pas importé, donc 'RefundRequest' in globals() était toujours False
-    # et aucune demande n'était jamais réellement enregistrée en base pour l'admin.
+    # Enregistrement de la demande. La garde `if 'RefundRequest' in globals()`
+    # qui entourait ce bloc etait toujours fausse (le modele n'etait pas
+    # importe) : les coordonnees de remboursement saisies n'etaient ecrites
+    # nulle part.
     refund_req = RefundRequest(
         campaign_id=camp.id,
         user_id=current_user.id,
@@ -2605,6 +2105,18 @@ def reclamer_remboursement(campaign_id):
         status="pending"
     )
     db.session.add(refund_req)
+
+    # Notification aux administrateurs : sans elle, personne n'est prévenu
+    # qu'un virement est à effectuer.
+    for admin in User.query.filter_by(role="admin").all():
+        db.session.add(Notification(
+            user_id=admin.id,
+            title="Remboursement à traiter 💸",
+            message=f"L'annonceur de la campagne #{camp.id} a transmis ses coordonnées de remboursement.",
+            category="warning",
+            link=url_for("admin_validate"),
+            is_read=False
+        ))
 
     # --- MISE À JOUR DES STATUTS ---
     camp.status = "remboursement_demande"  # Permet un filtrage clair dans mes_campagnes
@@ -2663,9 +2175,9 @@ def register(role):
             email_ou_whatsapp_pris = True
 
         if whatsapp_number and not email_ou_whatsapp_pris:
-            # FIX: Validation du numéro WhatsApp par regex
-            if not re.match(r"^\+?[0-9]{7,15}$", whatsapp_number):
-                flash("Numéro WhatsApp invalide. Utilisez un format international (ex: +22960000000).", "danger")
+            # Même règle que le formulaire (forms.NUMERO_WHATSAPP_REGEX)
+            if not numero_whatsapp_valide(whatsapp_number):
+                flash(MESSAGE_NUMERO_INVALIDE, "danger")
                 return render_template("register.html", form=form, role=role, departements_communes=DEPARTEMENTS_COMMUNES)
             if User.query.filter_by(whatsapp_number=whatsapp_number).first():
                 email_ou_whatsapp_pris = True
@@ -2716,10 +2228,16 @@ def register(role):
         try:
             db.session.add(new_user)
             db.session.commit()
-            
+
+            # Le logo a été écrit sur disque avant que l'utilisateur n'existe :
+            # on ne peut lui attribuer un propriétaire qu'une fois l'id connu.
+            if logo_filename:
+                enregistrer_upload(logo_filename, new_user.id, kind="logo")
+                db.session.commit()
+
             # Une fois inscrit, on nettoie la session pour éviter les effets de bord
             session.pop("referrer_id", None)
-            
+
             logger.info("Nouvel utilisateur inscrit (role: %s, parrainé_par: %s).", role, referrer_id_to_save)
             
             if role == "partageur":
@@ -2743,41 +2261,17 @@ def dashboard_annonceur():
         flash("Accès refusé 🚫", "danger")
         return redirect(url_for("index"))
         
-    # 1. 🔍 CHARGER LA CONFIGURATION AVEC LE BON MODÈLE (SystemConfig)
-    from models import SystemConfig, VideoGenerationConfig
-    config = SystemConfig.get_config() # Récupère la configuration de manière robuste
-    
-    # 2. 🎬 CHARGER LA CONFIGURATION DU MODE VIDÉO (Ajouté)
-    video_config = VideoGenerationConfig.get_config()
-    
-    # 3. 💳 VÉRIFIER SI L'UTILISATEUR EST ABONNÉ (Ajouté)
-    user_has_video_subscription = getattr(current_user, 'has_video_subscription', False)
-    
+    # Configuration globale (tarifs, commissions, garde-fous anti-fraude)
+    config = SystemConfig.get_config()
+
     # L'annonceur voit uniquement ses campagnes
     campaigns = Campaign.query.filter_by(user_id=current_user.id).order_by(Campaign.created_at.desc()).all()
-    
-    # 💾 Récupérer l'URL de la preview vidéo générée depuis la session utilisateur
-    preview_video_url = session.get('preview_video_url')
 
-    # 🆕 5. VÉRIFIER SI UNE GÉNÉRATION VIDÉO EST ENCORE EN COURS POUR CET UTILISATEUR
-    # (utile si le client a rafraîchi la page pendant que le thread tournait encore en arrière-plan)
-    current_video_status = video_progress.get(str(current_user.id))
-    is_video_generating = bool(
-        current_video_status
-        and current_video_status.get("status") not in ("done", "error", "cancelled")
-        and current_video_status.get("percentage", 0) < 100
-    )
-    
-    # 4. 🚀 ENVOYER TOUTES LES VARIABLES AU TEMPLATE (y compris preview_video_url et l'état de génération)
     return render_template(
-        "dashboard_annonceur.html", 
-        campaigns=campaigns, 
+        "dashboard_annonceur.html",
+        campaigns=campaigns,
         config=config,
-        video_config=video_config,
-        user_has_video_subscription=user_has_video_subscription,
-        preview_video_url=preview_video_url,
-        is_video_generating=is_video_generating,
-        departements_communes=DEPARTEMENTS_COMMUNES  # 🆕 Ajouté ici !
+        departements_communes=DEPARTEMENTS_COMMUNES
     )
 
 
@@ -2841,7 +2335,8 @@ def dashboard_partageur():
     # =========================================================================
     campagnes_query = Campaign.query.filter_by(validated=True, shared_to_partageurs=True, is_active=True)
 
-    # Récupération en une fois de tous les CampaignShare de ce partageur (évite une requête par campagne)
+    # Recuperation en une fois de tous les CampaignShare de ce partageur
+    # (evite une requete par campagne)
     mes_shares = {
         s.campaign_id: s
         for s in CampaignShare.query.filter_by(sharer_id=current_user.id).all()
@@ -2849,30 +2344,23 @@ def dashboard_partageur():
 
     campagnes_disponibles = []
     for camp in campagnes_query.order_by(Campaign.shared_at.desc()).all():
-        communes_ciblees = [c.strip() for c in camp.communes.split(",")] if camp.communes else []
-        provinces_ciblees = [p.strip() for p in camp.provinces.split(",")] if camp.provinces and camp.provinces != "Toutes" else []
+        # Ciblage geographique : meme regle qu'a la confirmation de partage et
+        # qu'au controle d'acces aux medias (campagne_cible_utilisateur).
+        if not campagne_cible_utilisateur(camp, current_user):
+            continue
 
-        zone_ok = False
-        if communes_ciblees:
-            zone_ok = current_user.commune in communes_ciblees
-        elif provinces_ciblees:
-            zone_ok = current_user.province in provinces_ciblees
-        else:
-            zone_ok = True  # "Toutes zones" et aucune commune précisée
+        deja_partagee = camp.id in mes_shares
 
-        if zone_ok:
-            deja_partagee = camp.id in mes_shares
-
-            campagnes_disponibles.append({
-                "campaign": camp,
-                "deja_partagee": deja_partagee,
-                # 🆕 Statut du quota journalier, utile uniquement si déjà partagée par ce partageur
-                "quota_atteint_aujourdhui": bool(deja_partagee and camp.daily_quota_paused),
-                "jour_actuel": camp.current_day_number or 0,
-                "duree_totale": camp.duration_days,
-                "vues_aujourdhui": camp.views_today or 0,
-                "quota_du_jour": camp.views_per_day or 0,
-            })
+        campagnes_disponibles.append({
+            "campaign": camp,
+            "deja_partagee": deja_partagee,
+            # Statut du quota journalier, utile seulement si deja partagee
+            "quota_atteint_aujourdhui": bool(deja_partagee and camp.daily_quota_paused),
+            "jour_actuel": camp.current_day_number or 0,
+            "duree_totale": camp.duration_days,
+            "vues_aujourdhui": camp.views_today or 0,
+            "quota_du_jour": camp.views_per_day or 0,
+        })
 
     return render_template(
         "dashboard_partageur.html",
@@ -2956,25 +2444,15 @@ def admin_suivi_campagne(campaign_id):
     )
 
     partageurs = []
-    total_vues = 0
     total_clics_whatsapp = 0
     total_clics_site = 0
 
     if shares:
         share_ids = [s.id for s in shares]
 
-        # 2️⃣ Comptage des vues valides, par partageur
-        vues_par_sharer = dict(
-            db.session.query(View.sharer_id, func.count(View.id))
-            .filter(
-                View.campaign_id == campaign_id,
-                View.counted == True
-            )
-            .group_by(View.sharer_id)
-            .all()
-        )
-
-        # 3️⃣ Comptage des clics, par CampaignShare ET par type de lien
+        # 2️⃣ Comptage des clics, par CampaignShare et par type de lien.
+        #     Le comptage des « vues » qui se trouvait ici lisait la table View,
+        #     jamais alimentée : il renvoyait toujours zéro. Retiré.
         clics_bruts = (
             db.session.query(
                 CampaignClick.campaign_share_id,
@@ -2991,21 +2469,19 @@ def admin_suivi_campagne(campaign_id):
             clics_par_share.setdefault(share_id, {"whatsapp": 0, "website": 0})
             clics_par_share[share_id][link_type] = nb
 
-        # 4️⃣ Fusion des sources
+        # 3️⃣ Construction de la liste exploitable par le gabarit
         for s in shares:
             clics = clics_par_share.get(s.id, {"whatsapp": 0, "website": 0})
-            nb_vues = vues_par_sharer.get(s.sharer_id, 0)
             partageurs.append({
                 "pseudo": s.pseudo or "Partageur anonyme",
                 "email": s.email,
-                "nb_vues": nb_vues,
                 "clics_whatsapp": clics["whatsapp"],
                 "clics_site": clics["website"],
+                "total_clics": clics["whatsapp"] + clics["website"],
                 "partage_le": s.created_at.strftime("%d/%m/%Y %H:%M") if s.created_at else None,
             })
 
-        partageurs.sort(key=lambda p: p["nb_vues"], reverse=True)
-        total_vues = sum(p["nb_vues"] for p in partageurs)
+        partageurs.sort(key=lambda p: p["total_clics"], reverse=True)
         total_clics_whatsapp = sum(p["clics_whatsapp"] for p in partageurs)
         total_clics_site = sum(p["clics_site"] for p in partageurs)
 
@@ -3013,51 +2489,11 @@ def admin_suivi_campagne(campaign_id):
         "admin_suivi_campagne.html",
         campaign=camp,
         partageurs=partageurs,
-        total_vues=total_vues,
+        total_clics=total_clics_whatsapp + total_clics_site,
         total_clics_whatsapp=total_clics_whatsapp,
         total_clics_site=total_clics_site
     )
 
-@app.route('/admin/video-settings', methods=['GET', 'POST'])
-@login_required
-def admin_video_settings():
-    verifier_droits_admin("configurer_video")
-    
-    # Récupération de la configuration actuelle de l'option vidéo
-    config = VideoGenerationConfig.get_config()
-    
-    if request.method == 'POST':
-        # Extraction des données envoyées par le formulaire HTML
-        pricing_mode = request.form.get('pricing_mode', 'free')
-        monthly_price = request.form.get('monthly_price', type=float)
-        yearly_price = request.form.get('yearly_price', type=float)
-        
-        # Gestion de la case à cocher pour la promo ("y" si cochée, None sinon)
-        promo_active = True if request.form.get('promo_active') == 'y' else False
-        promo_percentage = request.form.get('promo_percentage', type=float) or 0.0
-        
-        try:
-            # Mise à jour des valeurs de la configuration
-            config.pricing_mode = pricing_mode
-            if monthly_price is not None:
-                config.monthly_price = monthly_price
-            if yearly_price is not None:
-                config.yearly_price = yearly_price
-                
-            config.promo_active = promo_active
-            config.promo_percentage = promo_percentage
-            
-            # Sauvegarde dans la base de données
-            db.session.commit()
-            flash("La configuration de l'option vidéo a été mise à jour avec succès ! 🎉", "success")
-            
-        except Exception as e:
-            db.session.rollback()
-            flash(f"Une erreur est survenue lors de l'enregistrement : {str(e)}", "danger")
-            
-        return redirect(url_for('admin_video_settings'))
-        
-    return render_template('admin_video_settings.html', config=config)    
 
 
 @app.route("/admin/settings", methods=["GET", "POST"])
@@ -3200,21 +2636,9 @@ def partager_campagne_partageur(campaign_id):
         flash("Cette campagne n'est plus disponible au partage. ⚠️", "warning")
         return redirect(url_for("dashboard_partageur"))
 
-    # Vérification de zone (sécurité : même logique que dashboard_partageur, empêche de forcer l'URL)
-    communes_ciblees = [c.strip() for c in camp.communes.split(",")] if camp.communes else []
-    provinces_ciblees = (
-        [p.strip() for p in camp.provinces.split(",")]
-        if camp.provinces and camp.provinces != "Toutes" else []
-    )
-
-    if communes_ciblees:
-        zone_ok = current_user.commune in communes_ciblees
-    elif provinces_ciblees:
-        zone_ok = current_user.province in provinces_ciblees
-    else:
-        zone_ok = True
-
-    if not zone_ok:
+    # Vérification de zone (sécurité : empêche de forcer l'URL d'une campagne
+    # qui ne cible pas la zone du partageur)
+    if not campagne_cible_utilisateur(camp, current_user):
         flash("Cette campagne ne cible pas votre zone. 🚫", "danger")
         return redirect(url_for("dashboard_partageur"))
 
@@ -3344,8 +2768,11 @@ def refuse_campaign(campaign_id):
         wa_link = f"https://wa.me/{annonceur.whatsapp_number}?text={encoded}"
         
         flash(
-            f'Campagne #{camp.id} refusée et enregistrée avec motif ❌. '
-            f'<a href="{wa_link}" target="_blank" class="btn btn-sm btn-outline-danger ms-2">📱 Notification WhatsApp</a>',
+            Markup(
+                f'Campagne #{escape(camp.id)} refusée et enregistrée avec motif ❌. '
+                f'<a href="{escape(wa_link)}" target="_blank" rel="noopener" '
+                f'class="btn btn-sm btn-outline-danger ms-2">📱 Notification WhatsApp</a>'
+            ),
             "warning"
         )
     else:
@@ -3461,9 +2888,14 @@ def validate_campaign(campaign_id):
         message = f"Bonjour, votre campagne #{camp.id} a été VALIDÉE ✅."
         encoded = urllib.parse.quote(message)
         wa_link = f"https://wa.me/{annonceur.whatsapp_number}?text={encoded}"
+        # Markup() : ce message contient du HTML construit par nous. Le gabarit
+        # échappe tout le reste par défaut.
         flash(
-            f'Campagne #{camp.id} validée avec succès !{parrain_notifie_str} ✅ '
-            f'<a href="{wa_link}" target="_blank" class="btn btn-sm btn-success ms-2">📱 Message WhatsApp</a>',
+            Markup(
+                f'Campagne #{escape(camp.id)} validée avec succès !{escape(parrain_notifie_str)} ✅ '
+                f'<a href="{escape(wa_link)}" target="_blank" rel="noopener" '
+                f'class="btn btn-sm btn-success ms-2">📱 Message WhatsApp</a>'
+            ),
             "success"
         )
     else:
@@ -3575,16 +3007,14 @@ def autoriser_remboursement_admin(campaign_id):
     camp.can_claim_refund = True
 
     # Notification interne pour l'annonceur
-    if 'Notification' in globals():
-        notif = Notification(
-            user_id=camp.user_id,
-            title="Remboursement disponible 💰",
-            message=f"L'administration a activé l'option de remboursement pour votre campagne #{camp.id}. Vous pouvez désormais soumettre vos coordonnées.",
-            category="info",
-            link=url_for("mes_campagnes"),
-            is_read=False
-        )
-        db.session.add(notif)
+    db.session.add(Notification(
+        user_id=camp.user_id,
+        title="Remboursement disponible 💰",
+        message=f"L'administration a activé l'option de remboursement pour votre campagne #{camp.id}. Vous pouvez désormais soumettre vos coordonnées.",
+        category="info",
+        link=url_for("mes_campagnes"),
+        is_read=False
+    ))
 
     db.session.commit()
 
@@ -3839,6 +3269,7 @@ def update_logo_ajax():
 
         filename = generer_nom_unique(file.filename)
         file.save(os.path.join(current_app.config["UPLOAD_FOLDER"], filename))
+        enregistrer_upload(filename, current_user.id, kind="logo")
         current_user.logo = filename
         db.session.commit()
         return jsonify({"success": True, "logo_url": url_for("serve_upload", filename=filename)})
@@ -3869,6 +3300,7 @@ def update_cover_ajax():
 
         filename = generer_nom_unique(file.filename)
         file.save(os.path.join(current_app.config["UPLOAD_FOLDER"], filename))
+        enregistrer_upload(filename, current_user.id, kind="cover")
         current_user.cover_photo = filename
         db.session.commit()
 
@@ -4030,8 +3462,254 @@ def update_logo_position_ajax():
 # ==========================================
 # 🆕 ROUTES : REDIRECTION AVEC TRACKING (liens dans les statuts des partageurs)
 # ==========================================
+# =========================================================================
+# 🛡️ SUIVI DES CLICS ET GARDE-FOUS ANTI-FRAUDE
+#
+# Les liens /t/<token>/... sont publics : n'importe qui peut les ouvrir, et
+# chaque ouverture crédite le portefeuille du partageur en argent réel. Sans
+# contrôle, il suffit à un partageur d'ouvrir son propre lien en boucle.
+#
+# Principe retenu : TOUS les clics sont enregistrés, mais seuls ceux qui
+# passent l'évaluation sont payés. Le motif de refus est conservé sur la ligne,
+# ce qui permet de justifier un solde auprès d'un partageur qui le conteste.
+# =========================================================================
+
+# Motifs de refus, stockés tels quels dans CampaignClick.rejection_reason
+MOTIF_CAMPAGNE_INACTIVE = "campagne_inactive"
+MOTIF_ROBOT            = "robot"
+MOTIF_SANS_IP          = "sans_ip"
+MOTIF_AUTO_CLIC        = "auto_clic"
+MOTIF_QUOTA_JOUR       = "quota_jour"
+MOTIF_DOUBLON_IP       = "doublon_ip"
+MOTIF_RAFALE           = "rafale"
+MOTIF_PLAFOND_PARTAGE  = "plafond_partage"
+MOTIF_PLAFOND_IP       = "plafond_ip"
+
+# Signatures d'agents automatiques. Le premier cas est le plus important :
+# quand un partageur publie son statut, WhatsApp visite lui-même le lien pour
+# fabriquer l'aperçu. Sans ce filtre, chaque publication générerait un clic
+# payé qui n'a jamais été vu par un humain.
+SIGNATURES_ROBOTS = (
+    "whatsapp", "facebookexternalhit", "facebot", "telegrambot", "twitterbot",
+    "slackbot", "discordbot", "linkedinbot", "skypeuripreview", "pinterest",
+    "googlebot", "bingbot", "yandexbot", "duckduckbot", "applebot",
+    "bot", "crawler", "spider", "preview", "scraper", "fetch",
+    "curl", "wget", "python-requests", "httpx", "axios", "okhttp",
+    "headlesschrome", "phantomjs", "puppeteer", "playwright",
+)
+
+
+def ip_client():
+    """Adresse IP réelle du visiteur.
+
+    ProxyFix (voir create_app) a déjà résolu X-Forwarded-For en amont, donc
+    request.remote_addr est fiable. Lire l'en-tête soi-même serait une faille :
+    il est envoyé par le client, qui pourrait le remplir au hasard à chaque
+    requête et faire sauter toute déduplication par IP.
+    """
+    return (request.remote_addr or "").strip()[:45]
+
+
+def est_robot(user_agent):
+    """L'agent ressemble-t-il à un automate plutôt qu'à un navigateur ?"""
+    if not user_agent or len(user_agent.strip()) < 10:
+        return True  # un vrai navigateur envoie toujours un agent détaillé
+    ua = user_agent.lower()
+    return any(signature in ua for signature in SIGNATURES_ROBOTS)
+
+
+def evaluer_clic(share, camp, ip, user_agent, config, maintenant=None):
+    """Ce clic doit-il être rémunéré ? Retourne (payable, motif_de_refus).
+
+    Les contrôles vont du moins coûteux au plus coûteux : on ne consulte la
+    base que si les vérifications immédiates sont passées.
+    """
+    maintenant = maintenant or datetime.utcnow()
+
+    # 1. La campagne doit être en cours de diffusion
+    if not (camp.is_active and camp.paid and camp.validated):
+        return False, MOTIF_CAMPAGNE_INACTIVE
+
+    # 2. Écarter les automates (aperçus de lien, robots d'indexation, scripts)
+    if est_robot(user_agent):
+        return False, MOTIF_ROBOT
+
+    # 3. Sans adresse IP, aucune déduplication n'est possible : on ne paie pas
+    if not ip:
+        return False, MOTIF_SANS_IP
+
+    # 4. Le partageur qui clique sur son propre lien
+    sharer = db.session.get(User, share.sharer_id)
+    if sharer and sharer.last_seen_ip and sharer.last_seen_ip == ip:
+        return False, MOTIF_AUTO_CLIC
+
+    # 5. Quota journalier de la campagne déjà atteint
+    if camp.quota_du_jour_atteint():
+        return False, MOTIF_QUOTA_JOUR
+
+    debut_journee = maintenant.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # 6. Ce couple (partage, IP) a-t-il déjà été payé récemment ?
+    #    C'est le garde-fou principal : une même machine ne rapporte qu'une
+    #    fois par fenêtre, quel que soit le nombre d'ouvertures.
+    fenetre = maintenant - timedelta(hours=config.click_dedup_hours or 24)
+    deja_paye = (
+        CampaignClick.query
+        .filter(
+            CampaignClick.campaign_share_id == share.id,
+            CampaignClick.ip == ip,
+            CampaignClick.is_paid.is_(True),
+            CampaignClick.clicked_at >= fenetre,
+        )
+        .first()
+    )
+    if deja_paye:
+        return False, MOTIF_DOUBLON_IP
+
+    # 7. Deux clics payés trop rapprochés sur le même partage
+    delai = config.min_seconds_between_paid_clicks or 0
+    if delai > 0:
+        recent = (
+            CampaignClick.query
+            .filter(
+                CampaignClick.campaign_share_id == share.id,
+                CampaignClick.is_paid.is_(True),
+                CampaignClick.clicked_at >= maintenant - timedelta(seconds=delai),
+            )
+            .first()
+        )
+        if recent:
+            return False, MOTIF_RAFALE
+
+    # 8. Plafond de clics payés pour ce partage aujourd'hui : borne le gain
+    #    d'un partageur sur une campagne, même s'il change d'adresse IP.
+    plafond_partage = config.max_paid_clicks_per_share_per_day or 0
+    if plafond_partage > 0:
+        payes_partage = (
+            CampaignClick.query
+            .filter(
+                CampaignClick.campaign_share_id == share.id,
+                CampaignClick.is_paid.is_(True),
+                CampaignClick.clicked_at >= debut_journee,
+            )
+            .count()
+        )
+        if payes_partage >= plafond_partage:
+            return False, MOTIF_PLAFOND_PARTAGE
+
+    # 9. Plafond par adresse IP, toutes campagnes confondues : borne une
+    #    machine qui ferait le tour de toutes les campagnes disponibles.
+    plafond_ip = config.max_paid_clicks_per_ip_per_day or 0
+    if plafond_ip > 0:
+        payes_ip = (
+            CampaignClick.query
+            .filter(
+                CampaignClick.ip == ip,
+                CampaignClick.is_paid.is_(True),
+                CampaignClick.clicked_at >= debut_journee,
+            )
+            .count()
+        )
+        if payes_ip >= plafond_ip:
+            return False, MOTIF_PLAFOND_IP
+
+    return True, None
+
+
+def recompense_pour(camp, config):
+    """Montant reversé au partageur pour un clic, selon le type de contenu."""
+    if camp.media_type == "video":
+        return config.reward_per_click_video or 0.0
+    if camp.media_type == "photo":
+        return config.reward_per_click_photo or 0.0
+    return config.reward_per_click_text or 0.0
+
+
+def enregistrer_clic(share, camp, link_type):
+    """Enregistre un clic et le rémunère s'il passe les garde-fous.
+
+    Ne lève jamais : le visiteur doit être redirigé quoi qu'il arrive, un
+    incident de journalisation ne doit pas casser le parcours du client final.
+    """
+    try:
+        config = SystemConfig.get_config()
+
+        # Le quota du jour doit être recalculé avant toute décision
+        if camp.is_active and camp.paid and camp.validated:
+            camp.verifier_et_reset_quota_journalier()
+
+        ip = ip_client()
+        user_agent = (request.headers.get("User-Agent") or "")[:255]
+
+        payable, motif = evaluer_clic(share, camp, ip, user_agent, config)
+
+        click = CampaignClick(
+            campaign_share_id=share.id,
+            link_type=link_type,
+            ip=ip or None,
+            user_agent=user_agent,
+            is_paid=payable,
+            rejection_reason=motif,
+        )
+        db.session.add(click)
+        db.session.flush()  # pour disposer de click.id
+
+        if payable:
+            camp.whatsapp_views = (camp.whatsapp_views or 0) + 1
+            camp.views_today = (camp.views_today or 0) + 1
+
+            recompense = recompense_pour(camp, config)
+            sharer = db.session.get(User, share.sharer_id)
+            if sharer and recompense > 0:
+                sharer.wallet_balance = (sharer.wallet_balance or 0.0) + recompense
+                db.session.add(WalletTransaction(
+                    user_id=sharer.id,
+                    amount=recompense,
+                    balance_after=sharer.wallet_balance,
+                    transaction_type="click_reward",
+                    campaign_click_id=click.id,
+                    description=(
+                        f"Clic généré sur la campagne #{camp.id} "
+                        f"({camp.promotion_detail or camp.promotion_type})"
+                    ),
+                ))
+
+            # Le quota du jour vient peut-être d'être atteint avec ce clic
+            if camp.quota_du_jour_atteint():
+                camp.daily_quota_paused = True
+                _notifier_partageurs_quota_atteint(camp)
+
+            # Objectif global de la campagne atteint → diffusion terminée
+            if camp.target_whatsapp_views and camp.whatsapp_views >= camp.target_whatsapp_views:
+                camp.is_active = False
+                camp.status = "terminee"
+
+        elif motif == MOTIF_QUOTA_JOUR:
+            camp.daily_quota_paused = True
+            if not camp.daily_quota_alert_sent:
+                _notifier_partageurs_quota_atteint(camp)
+
+        elif motif in (MOTIF_AUTO_CLIC, MOTIF_PLAFOND_PARTAGE, MOTIF_PLAFOND_IP):
+            # Motifs qui traduisent un comportement anormal, pas un simple
+            # doublon : on les journalise pour pouvoir enquêter.
+            logger.warning(
+                "[ANTI-FRAUDE] Clic non rémunéré (%s) — partage=%d campagne=%d ip=%s",
+                motif, share.id, camp.id, ip or "inconnue"
+            )
+
+        db.session.commit()
+
+    except Exception as e:
+        logger.error(
+            "Erreur enregistrement clic %s (partage %s) : %s",
+            link_type, getattr(share, "id", "?"), e
+        )
+        db.session.rollback()
+
+
 @app.route("/t/<token>/whatsapp")
 def tracking_redirect_whatsapp(token):
+    """Redirige le visiteur vers la conversation WhatsApp de l'annonceur."""
     share = CampaignShare.query.filter_by(tracking_token=token).first()
     if not share:
         abort(404)
@@ -4040,75 +3718,14 @@ def tracking_redirect_whatsapp(token):
     if not camp or not camp.whatsapp_number:
         abort(404)
 
-    # Le client final n'attend jamais : on prépare toujours le lien de redirection en premier
+    # La destination est calculée d'abord : le visiteur ne doit jamais attendre
     numero = re.sub(r"[^0-9]", "", camp.whatsapp_number)
-    message = quote(f"Bonjour, je suis intéressé(e) par : {camp.promotion_detail or camp.promotion_type}")
+    message = urllib.parse.quote(
+        f"Bonjour, je suis intéressé(e) par : {camp.promotion_detail or camp.promotion_type}"
+    )
     lien_final = f"https://wa.me/{numero}?text={message}"
 
-    try:
-        from models import SystemConfig
-        config = SystemConfig.get_config()
-
-        # 1️⃣ Enregistrement du clic (toujours tracé, indépendamment du quota du jour)
-        click = CampaignClick(
-            campaign_share_id=share.id,
-            link_type="whatsapp",
-            ip=request.headers.get("X-Forwarded-For", request.remote_addr),
-            user_agent=request.headers.get("User-Agent", "")[:255],
-        )
-        db.session.add(click)
-        db.session.flush()  # Pour obtenir click.id avant le commit final
-
-        # 2️⃣ Gestion du quota journalier de CLICS — uniquement si la campagne est encore active
-        if camp.is_active and camp.paid and camp.validated:
-            camp.verifier_et_reset_quota_journalier()
-
-            if not camp.quota_du_jour_atteint():
-                # Quota du jour pas encore atteint : ce clic est facturable/rémunéré
-                camp.whatsapp_views = (camp.whatsapp_views or 0) + 1  # Compteur global de clics facturés
-                camp.views_today = (camp.views_today or 0) + 1        # Compteur de clics du jour
-
-                # 🆕 Détermination du montant reversé au partageur selon le type de contenu
-                if camp.media_type == "video":
-                    recompense = config.reward_per_click_video
-                elif camp.media_type == "photo":
-                    recompense = config.reward_per_click_photo
-                else:
-                    recompense = config.reward_per_click_text
-
-                # 🆕 Crédit du portefeuille du partageur
-                sharer = db.session.get(User, share.sharer_id)
-                if sharer and recompense > 0:
-                    sharer.wallet_balance = (sharer.wallet_balance or 0.0) + recompense
-                    db.session.add(WalletTransaction(
-                        user_id=sharer.id,
-                        amount=recompense,
-                        balance_after=sharer.wallet_balance,
-                        transaction_type="click_reward",
-                        campaign_click_id=click.id,
-                        description=f"Clic généré sur la campagne #{camp.id} ({camp.promotion_detail or camp.promotion_type})"
-                    ))
-
-                # Le quota vient peut-être d'être atteint avec ce clic : on vérifie juste après
-                if camp.quota_du_jour_atteint():
-                    camp.daily_quota_paused = True
-                    _notifier_partageurs_quota_atteint(camp)
-
-                # Objectif GLOBAL de la campagne atteint (toutes journées confondues) → terminée
-                if camp.target_whatsapp_views and camp.whatsapp_views >= camp.target_whatsapp_views:
-                    camp.is_active = False
-                    camp.status = "terminee"
-            else:
-                # Quota du jour déjà atteint : le clic est tracé mais NON rémunéré/facturé
-                camp.daily_quota_paused = True
-                if not camp.daily_quota_alert_sent:
-                    _notifier_partageurs_quota_atteint(camp)
-
-        db.session.commit()
-    except Exception as e:
-        logger.error("Erreur enregistrement clic whatsapp (token %s) : %s", token, e)
-        db.session.rollback()
-
+    enregistrer_clic(share, camp, "whatsapp")
     return redirect(lien_final)
 
 
@@ -4143,6 +3760,7 @@ def _notifier_partageurs_quota_atteint(camp):
 
 @app.route("/t/<token>/site")
 def tracking_redirect_site(token):
+    """Redirige le visiteur vers le site web de l'annonceur."""
     share = CampaignShare.query.filter_by(tracking_token=token).first()
     if not share:
         abort(404)
@@ -4151,66 +3769,9 @@ def tracking_redirect_site(token):
     if not camp or not camp.website_url:
         abort(404)
 
-    try:
-        from models import SystemConfig
-        config = SystemConfig.get_config()
-
-        click = CampaignClick(
-            campaign_share_id=share.id,
-            link_type="website",
-            ip=request.headers.get("X-Forwarded-For", request.remote_addr),
-            user_agent=request.headers.get("User-Agent", "")[:255],
-        )
-        db.session.add(click)
-        db.session.flush()
-
-        # 🆕 Le clic vers le site web est traité EXACTEMENT comme le clic WhatsApp :
-        # même quota journalier, même règle de rémunération, car les deux sont le même "clic" pour l'annonceur.
-        if camp.is_active and camp.paid and camp.validated:
-            camp.verifier_et_reset_quota_journalier()
-
-            if not camp.quota_du_jour_atteint():
-                camp.whatsapp_views = (camp.whatsapp_views or 0) + 1
-                camp.views_today = (camp.views_today or 0) + 1
-
-                if camp.media_type == "video":
-                    recompense = config.reward_per_click_video
-                elif camp.media_type == "photo":
-                    recompense = config.reward_per_click_photo
-                else:
-                    recompense = config.reward_per_click_text
-
-                sharer = db.session.get(User, share.sharer_id)
-                if sharer and recompense > 0:
-                    sharer.wallet_balance = (sharer.wallet_balance or 0.0) + recompense
-                    db.session.add(WalletTransaction(
-                        user_id=sharer.id,
-                        amount=recompense,
-                        balance_after=sharer.wallet_balance,
-                        transaction_type="click_reward",
-                        campaign_click_id=click.id,
-                        description=f"Clic généré sur la campagne #{camp.id} ({camp.promotion_detail or camp.promotion_type})"
-                    ))
-
-                if camp.quota_du_jour_atteint():
-                    camp.daily_quota_paused = True
-                    _notifier_partageurs_quota_atteint(camp)
-
-                if camp.target_whatsapp_views and camp.whatsapp_views >= camp.target_whatsapp_views:
-                    camp.is_active = False
-                    camp.status = "terminee"
-            else:
-                camp.daily_quota_paused = True
-                if not camp.daily_quota_alert_sent:
-                    _notifier_partageurs_quota_atteint(camp)
-
-        db.session.commit()
-    except Exception as e:
-        logger.error("Erreur enregistrement clic site (token %s) : %s", token, e)
-        db.session.rollback()
-
+    # Un clic vers le site vaut un clic WhatsApp : même quota, même rémunération
+    enregistrer_clic(share, camp, "website")
     return redirect(camp.website_url)
-    
 
 # ==========================================
 # 🆕 ROUTE : DEMANDE DE RETRAIT (PARTAGEUR)
@@ -4254,8 +3815,26 @@ def demander_retrait():
         flash("Numéro de téléphone invalide. Utilisez un format international (ex: +22960000000).", "danger")
         return redirect(url_for("dashboard_partageur"))
 
-    # 3️⃣ Vérification du solde AU MOMENT de la demande (protection contre les demandes multiples)
-    current_balance = current_user.wallet_balance or 0.0
+    # 3️⃣ Verrouillage de la ligne utilisateur pour toute la durée de l'opération.
+    #
+    # Sans ce verrou, deux demandes simultanées (double-clic, ou deux workers
+    # gunicorn) pouvaient toutes les deux passer la vérification de solde avant
+    # que l'une ne débite : le même argent partait deux fois. Le verrou les met
+    # en file d'attente, la seconde voit le solde déjà débité.
+    #
+    # SELECT ... FOR UPDATE est actif sur PostgreSQL (la base de production) et
+    # sans effet sur SQLite, où l'écriture est de toute façon sérialisée.
+    partageur = (
+        db.session.query(User)
+        .filter_by(id=current_user.id)
+        .with_for_update()
+        .first()
+    )
+    if partageur is None:
+        flash("Compte introuvable. ⚠️", "danger")
+        return redirect(url_for("dashboard_partageur"))
+
+    current_balance = partageur.wallet_balance or 0.0
     if montant > current_balance:
         flash(f"Solde insuffisant. Votre solde disponible est de {current_balance:.0f} FCFA. ⚠️", "danger")
         return redirect(url_for("dashboard_partageur"))
@@ -4270,12 +3849,12 @@ def demander_retrait():
 
     try:
         # 5️⃣ Débit immédiat du portefeuille (le montant est "réservé" pour ce retrait)
-        current_user.wallet_balance = current_balance - montant
+        partageur.wallet_balance = current_balance - montant
 
         db.session.add(WalletTransaction(
             user_id=current_user.id,
             amount=-montant,
-            balance_after=current_user.wallet_balance,
+            balance_after=partageur.wallet_balance,
             transaction_type="withdrawal",
             description=f"Demande de retrait vers {payout_channel} ({payout_phone})"
         ))
@@ -4353,7 +3932,14 @@ def confirmer_retrait_manuel(withdrawal_id):
 
     from models import WithdrawalRequest
 
-    demande = db.session.get(WithdrawalRequest, withdrawal_id)
+    # Verrou sur la demande : deux clics rapprochés de l'admin (ou deux workers)
+    # pourraient sinon la traiter deux fois — donc rembourser ou payer en double.
+    demande = (
+        db.session.query(WithdrawalRequest)
+        .filter_by(id=withdrawal_id)
+        .with_for_update()
+        .first()
+    )
     if not demande:
         flash("Demande introuvable. ⚠️", "danger")
         return redirect(url_for("admin_retraits"))
@@ -4424,7 +4010,14 @@ def refuser_retrait(withdrawal_id):
 
     from models import WithdrawalRequest, WalletTransaction
 
-    demande = db.session.get(WithdrawalRequest, withdrawal_id)
+    # Verrou sur la demande : deux clics rapprochés de l'admin (ou deux workers)
+    # pourraient sinon la traiter deux fois — donc rembourser ou payer en double.
+    demande = (
+        db.session.query(WithdrawalRequest)
+        .filter_by(id=withdrawal_id)
+        .with_for_update()
+        .first()
+    )
     if not demande:
         flash("Demande introuvable. ⚠️", "danger")
         return redirect(url_for("admin_retraits"))
@@ -4609,8 +4202,11 @@ def creer_sous_admin():
         flash("Email et mot de passe sont obligatoires. ⚠️", "danger")
         return redirect(url_for("admin_gestion_sous_admins"))
 
-    if len(password) < 8:
-        flash("Le mot de passe doit contenir au moins 8 caractères. ⚠️", "danger")
+    if len(password) < LONGUEUR_MIN_MOT_DE_PASSE:
+        flash(
+            f"Le mot de passe doit contenir au moins "
+            f"{LONGUEUR_MIN_MOT_DE_PASSE} caractères. ⚠️", "danger"
+        )
         return redirect(url_for("admin_gestion_sous_admins"))
 
     if User.query.filter_by(email=email).first():
@@ -4752,7 +4348,7 @@ def envoyer_email_reset_async(app, destinataire, reset_url):
             response = requests.post(
                 "https://api.resend.com/emails",
                 headers={
-                    "Authorization": f"Bearer {os.environ.get('RESEND_API_KEY')}",
+                    "Authorization": f"Bearer {current_app.config['RESEND_API_KEY']}",
                     "Content-Type": "application/json",
                 },
                 json={
@@ -4784,11 +4380,23 @@ def envoyer_email_reset_async(app, destinataire, reset_url):
 @limiter.limit("5 per hour")
 def forgot_password():
     if request.method == "POST":
+        # Sans service d'envoi configuré, autant le dire : afficher « un lien
+        # vient d'être envoyé » alors que rien ne part laisse l'utilisateur
+        # attendre un e-mail qui n'arrivera jamais. Le message est le même pour
+        # tout le monde, il ne révèle donc pas si le compte existe.
+        if not current_app.config.get("RESEND_API_KEY"):
+            flash(
+                "L'envoi automatique est momentanément indisponible. "
+                "Contactez le support pour réinitialiser votre mot de passe. ⚠️",
+                "warning"
+            )
+            return redirect(url_for("login"))
+
         email = request.form.get("email", "").strip().lower()
         user = User.query.filter_by(email=email).first()
 
         if user:
-            token = reset_serializer.dumps(user.email, salt="reset-password-salt")
+            token = creer_jeton_reset(user)
             reset_url = url_for("reset_password", token=token, _external=True)
 
             # Envoi en arrière-plan : la page répond immédiatement, sans attendre Gmail
@@ -4812,23 +4420,26 @@ def forgot_password():
 @app.route("/reinitialiser-mot-de-passe/<token>", methods=["GET", "POST"])
 @limiter.limit("10 per hour")
 def reset_password(token):
-    try:
-        email = reset_serializer.loads(token, salt="reset-password-salt", max_age=3600)
-    except Exception:
-        flash("Ce lien de réinitialisation est invalide ou a expiré. Veuillez en redemander un. ⚠️", "danger")
-        return redirect(url_for("forgot_password"))
-
-    user = User.query.filter_by(email=email).first()
+    # Le jeton porte l'empreinte du mot de passe en vigueur au moment de son
+    # émission : une fois le mot de passe changé, il ne vaut plus rien, même
+    # s'il reste dans l'historique du navigateur ou dans un mail transféré.
+    user = lire_jeton_reset(token)
     if not user:
-        flash("Compte introuvable. ⚠️", "danger")
+        flash(
+            "Ce lien de réinitialisation est invalide, a expiré ou a déjà été "
+            "utilisé. Veuillez en redemander un. ⚠️", "danger"
+        )
         return redirect(url_for("forgot_password"))
 
     if request.method == "POST":
         password = request.form.get("password", "")
         confirm_password = request.form.get("confirm_password", "")
 
-        if len(password) < 6:
-            flash("Le mot de passe doit contenir au moins 6 caractères.", "danger")
+        if len(password) < LONGUEUR_MIN_MOT_DE_PASSE:
+            flash(
+                f"Le mot de passe doit contenir au moins "
+                f"{LONGUEUR_MIN_MOT_DE_PASSE} caractères.", "danger"
+            )
             return render_template("reset_password.html", token=token)
 
         if password != confirm_password:
@@ -4838,8 +4449,13 @@ def reset_password(token):
         user.password_hash = bcrypt.generate_password_hash(password).decode("utf-8")
         db.session.commit()
 
+        # Le changement de mot de passe modifie l'empreinte, donc toutes les
+        # sessions ouvertes ailleurs cessent d'être valides (voir load_user).
         logger.info("Mot de passe réinitialisé pour l'utilisateur id=%s", user.id)
-        flash("Votre mot de passe a été réinitialisé avec succès ! Vous pouvez vous connecter. 🎉", "success")
+        flash(
+            "Votre mot de passe a été réinitialisé. Toutes vos sessions ouvertes "
+            "ont été fermées, vous pouvez vous reconnecter. 🎉", "success"
+        )
         return redirect(url_for("login"))
 
     return render_template("reset_password.html", token=token)

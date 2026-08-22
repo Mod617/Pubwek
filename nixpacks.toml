@@ -1,0 +1,13 @@
+# Configuration de build Railway (Nixpacks).
+#
+# ffmpeg fournit la commande ffprobe, dont valider_video() se sert pour lire la
+# vraie durée d'une vidéo téléversée au lieu de faire confiance au navigateur.
+# Sans ce paquet, ffprobe est introuvable et TOUT téléversement de vidéo est
+# rejeté en production avec le message « Analyse vidéo indisponible sur le
+# serveur » — l'option A (campagne vidéo) devient inutilisable.
+#
+# Ce fichier avait été créé sur la branche `principal` puis perdu : il n'existait
+# plus sur aucune des deux branches.
+
+[phases.setup]
+nixPkgs = ["...", "ffmpeg"]

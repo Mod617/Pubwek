@@ -357,9 +357,16 @@
         .then(data => {
             const text = document.getElementById('companyBioText');
             if (data.success && text) {
-                text.innerHTML = data.bio
-                    ? `<i class="fas fa-quote-left me-1 opacity-50"></i>` + data.bio
-                    : "Ajouter une description ou présentation de votre entreprise...";
+                // textContent, pas innerHTML : la bio est une saisie utilisateur.
+                text.textContent = "";
+                if (data.bio) {
+                    const icone = document.createElement('i');
+                    icone.className = "fas fa-quote-left me-1 opacity-50";
+                    text.appendChild(icone);
+                    text.appendChild(document.createTextNode(" " + data.bio));
+                } else {
+                    text.textContent = "Ajouter une description ou présentation de votre entreprise...";
+                }
             } else {
                 alert("Erreur bio : " + data.error);
             }

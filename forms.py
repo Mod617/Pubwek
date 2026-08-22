@@ -15,6 +15,35 @@ from wtforms.validators import DataRequired, Email, Length, EqualTo, Optional, R
 from benin_communes import toutes_les_communes, commune_appartient_a
 
 
+# =============================================================================
+# 📞 Format des numéros WhatsApp béninois
+#
+# Depuis la migration de la numérotation (fin 2024), les numéros mobiles
+# comptent 10 chiffres et commencent par 01. L'ancien format à 8 chiffres reste
+# accepté pour ne pas bloquer les comptes créés avant la bascule.
+#
+# Cette constante est la référence unique : main.py l'importe pour valider les
+# numéros saisis hors formulaire (création de campagne, inscription).
+# =============================================================================
+NUMERO_WHATSAPP_REGEX = r"^\+229(01\d{8}|\d{8})$"
+
+# Longueur minimale d'un mot de passe, valable partout : inscription,
+# réinitialisation et création de sous-administrateur. Ces trois endroits
+# exigeaient auparavant 6, 6 et 8 caractères.
+LONGUEUR_MIN_MOT_DE_PASSE = 10
+
+MESSAGE_NUMERO_INVALIDE = (
+    "Numéro WhatsApp invalide. Format attendu : +229 suivi de 10 chiffres "
+    "(ex : +2290197000000)."
+)
+
+
+def numero_whatsapp_valide(numero):
+    """Vérifie qu'un numéro respecte le format béninois attendu."""
+    import re
+    return bool(numero and re.match(NUMERO_WHATSAPP_REGEX, numero.strip()))
+
+
 # ------------------------------
 # 🔐 Formulaire de connexion
 # ------------------------------
@@ -36,7 +65,11 @@ class RegisterForm(FlaskForm):
         "Mot de passe",
         validators=[
             DataRequired(),
-            Length(min=6, message="Le mot de passe doit contenir au moins 6 caractères"),
+            Length(
+                min=LONGUEUR_MIN_MOT_DE_PASSE,
+                message=f"Le mot de passe doit contenir au moins "
+                        f"{LONGUEUR_MIN_MOT_DE_PASSE} caractères",
+            ),
         ],
     )
     confirm_password = PasswordField(
@@ -94,14 +127,14 @@ class RegisterForm(FlaskForm):
         ]
     )
 
-    # ✅ Correction : Format béninois obligatoire pour les partageurs
+    # ✅ Format béninois obligatoire pour les partageurs
     whatsapp_number = StringField(
         "Numéro WhatsApp",
         validators=[
             Optional(),
             Regexp(
-                r"^(\+229\d{8})?$", 
-                message="Le numéro WhatsApp doit être un numéro béninois valide (ex : +229XXXXXXXX)"
+                r"^(\+229(01\d{8}|\d{8}))?$",
+                message=MESSAGE_NUMERO_INVALIDE
             ),
         ],
     )
@@ -184,8 +217,8 @@ class CampaignForm(FlaskForm):
     )
 
     whatsapp_views = IntegerField(
-        "Nombre de vues ciblées sur statut WhatsApp",
-        validators=[DataRequired(message="Veuillez indiquer un nombre de vues.")],
+        "Nombre de clics visés depuis votre statut WhatsApp",
+        validators=[DataRequired(message="Veuillez indiquer un nombre de clics.")],
         default=0
     )
 

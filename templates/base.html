@@ -101,7 +101,10 @@
       {% if messages %}
         {% for category, message in messages %}
           <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-            {{ message|safe }}
+            {# Pas de |safe : l'échappement automatique s'applique par défaut.
+               Les rares messages contenant du HTML (lien WhatsApp de la zone
+               admin) sont explicitement marqués Markup() côté Python. #}
+            {{ message }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
           </div>
         {% endfor %}

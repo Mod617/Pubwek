@@ -7,9 +7,6 @@
         <div class="mt-3 mt-md-0 d-flex gap-2 flex-wrap">
             <!-- 🆕 Chaque bouton n'apparaît que si l'utilisateur (admin ou sous-admin) a la permission correspondante -->
             {% if current_user.role == "admin" or current_user.has_permission("configurer_video") %}
-            <a href="{{ url_for('admin_video_settings') }}" class="btn btn-purple text-white fw-bold shadow-sm py-2 px-3" style="background-color: #6f42c1;">
-                <i class="bi bi-film me-1"></i> 🎬 Option Génération Vidéo
-            </a>
             {% endif %}
 
             {% if current_user.role == "admin" or current_user.has_permission("gerer_retraits") %}
@@ -215,7 +212,7 @@
                     <th>Détail & Texte</th>
                     <th>Zones / Communes</th>
                     <th>Médias</th>
-                    <th>Objectif Vues</th>
+                    <th>Objectif Clics</th>
                     <th>Durée / Progression</th>
                     <th>Coût total</th>
                     <th>Statut</th>
@@ -298,7 +295,7 @@
                     </td>
                     <td class="text-center">
                         <span class="badge bg-info text-dark">
-                            {{ camp.target_whatsapp_views if camp.target_whatsapp_views else camp.whatsapp_views }} vues
+                            {{ camp.target_whatsapp_views if camp.target_whatsapp_views else camp.whatsapp_views }} clics
                         </span>
                     </td>
                     <!-- COLONNE DURÉE / PROGRESSION -->
@@ -307,7 +304,7 @@
                             <i class="bi bi-calendar3 me-1"></i>{{ camp.duration_days }} jour{{ 's' if camp.duration_days > 1 else '' }}
                         </div>
                         <div class="text-muted small">
-                            ≈ {{ camp.views_per_day }} vues / jour
+                            ≈ {{ camp.views_per_day }} clics / jour
                         </div>
                         {% if camp.validated and camp.is_active and camp.current_day_number %}
                             <hr class="my-1">
@@ -315,7 +312,7 @@
                                 <span class="badge bg-primary">Jour {{ camp.current_day_number }} / {{ camp.duration_days }}</span>
                             </div>
                             <div class="small text-muted mt-1">
-                                {{ camp.views_today or 0 }} / {{ camp.views_per_day }} vues aujourd'hui
+                                {{ camp.views_today or 0 }} / {{ camp.views_per_day }} clics aujourd'hui
                             </div>
                             {% if camp.daily_quota_paused %}
                                 <span class="badge bg-warning text-dark mt-1">⏸️ Quota du jour atteint</span>

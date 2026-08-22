@@ -33,15 +33,15 @@
                     <div class="h5 fw-bold text-dark mb-0">{{ campaign.duration_days }} jour{{ 's' if campaign.duration_days > 1 else '' }}</div>
                 </div>
                 <div class="col-6 col-md-3 mb-3">
-                    <div class="text-muted small">Vues / jour prévues</div>
+                    <div class="text-muted small">Clics / jour prévus</div>
                     <div class="h5 fw-bold text-dark mb-0">{{ campaign.views_per_day }}</div>
                 </div>
                 <div class="col-6 col-md-3 mb-3">
-                    <div class="text-muted small">Vues aujourd'hui</div>
+                    <div class="text-muted small">Clics aujourd'hui</div>
                     <div class="h5 fw-bold text-primary mb-0">{{ campaign.views_today or 0 }} / {{ campaign.views_per_day }}</div>
                 </div>
                 <div class="col-6 col-md-3 mb-3">
-                    <div class="text-muted small">Vues totales / objectif</div>
+                    <div class="text-muted small">Clics totaux / objectif</div>
                     <div class="h5 fw-bold text-success mb-0">{{ campaign.whatsapp_views or 0 }} / {{ campaign.target_whatsapp_views }}</div>
                 </div>
             </div>
@@ -49,13 +49,13 @@
             {% if campaign.daily_quota_paused %}
                 <div class="alert alert-warning small mb-0">
                     <i class="bi bi-exclamation-triangle-fill me-1"></i>
-                    Le quota du jour est atteint. Les partageurs ont été notifiés qu'ils peuvent retirer leur statut ; aucune vue supplémentaire n'est comptabilisée aujourd'hui.
+                    Le quota du jour est atteint. Les partageurs ont été notifiés qu'ils peuvent retirer leur statut ; aucun clic supplémentaire n'est rémunéré aujourd'hui.
                 </div>
             {% endif %}
         </div>
     </div>
 
-    <!-- Résumé partageurs / vues / clics -->
+    <!-- Résumé partageurs / clics -->
     <div class="row mb-4">
         <div class="col-md-3 mb-3">
             <div class="card border-0 shadow-sm text-center p-3 bg-light">
@@ -65,8 +65,8 @@
         </div>
         <div class="col-md-3 mb-3">
             <div class="card border-0 shadow-sm text-center p-3 bg-light">
-                <div class="text-muted small">Total de vues comptabilisées</div>
-                <div class="h3 fw-bold text-primary mb-0">{{ "{:,}".format(total_vues) }}</div>
+                <div class="text-muted small">Total de clics comptabilisés</div>
+                <div class="h3 fw-bold text-primary mb-0">{{ "{:,}".format(total_clics) }}</div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
@@ -93,8 +93,7 @@
                         <tr>
                             <th class="ps-3">Pseudo</th>
                             <th>Email</th>
-                            <th>Vues générées</th>
-                            <th><i class="bi bi-whatsapp text-success me-1"></i>Clics WhatsApp</th>
+                                                        <th><i class="bi bi-whatsapp text-success me-1"></i>Clics WhatsApp</th>
                             <th><i class="bi bi-globe text-info me-1"></i>Clics Site web</th>
                             <th class="pe-3">A partagé le</th>
                         </tr>
@@ -107,7 +106,6 @@
                             </td>
                             <td class="text-muted small">{{ p.email }}</td>
                             <td>
-                                <span class="badge bg-primary">{{ "{:,}".format(p.nb_vues) }} vue{{ 's' if p.nb_vues != 1 else '' }}</span>
                             </td>
                             <td>
                                 {% if p.clics_whatsapp %}

@@ -75,7 +75,7 @@ from markupsafe import Markup, escape
 PILImage.MAX_IMAGE_PIXELS = 50_000_000
 
 # =========================================================================
-# 🔒 LOGGING SÉCURISÉ (remplace les print)
+# 🔒 LOGGING SÉCURISÉ 
 # =========================================================================
 logging.basicConfig(
     level=logging.INFO,

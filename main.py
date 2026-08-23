@@ -69,6 +69,7 @@ from PIL import Image as PILImage
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
 from werkzeug.security import generate_password_hash, check_password_hash
+from markupsafe import Markup, escape
 
 # FIX: Protection contre les Decompression Bombs (images très compressées)
 PILImage.MAX_IMAGE_PIXELS = 50_000_000
@@ -3112,17 +3113,17 @@ def refuse_user(user_id):
     return redirect(url_for("admin_validate"))
 
 
+
+
 @app.route("/admin/contacter_partageur/<int:user_id>", methods=["POST"])
 @login_required
 @limiter.limit("60 per hour")
 def contacter_partageur_verification(user_id):
     verifier_droits_admin("valider_utilisateurs")
-
     user = db.session.get(User, user_id)
     if not user:
         flash("Utilisateur introuvable. ⚠️", "danger")
         return redirect(url_for("admin_validate"))
-
     if user.is_confirmed:
         flash("Cet utilisateur est déjà confirmé. ⚠️", "warning")
         return redirect(url_for("admin_validate"))
@@ -3131,14 +3132,13 @@ def contacter_partageur_verification(user_id):
     if user.contacted_by_id and user.contacted_by_id != current_user.id:
         contacteur = db.session.get(User, user.contacted_by_id)
         nom_contacteur = contacteur.pseudo or contacteur.email if contacteur else "un autre administrateur"
-        flash(f"Ce dossier est déjà pris en charge par {nom_contacteur}. ⚠️", "warning")
+        flash(f"Ce dossier est déjà pris en charge par {escape(nom_contacteur)}. ⚠️", "warning")
         return redirect(url_for("admin_validate"))
 
     # 🆕 Verrouillage du dossier sur l'admin/sous-admin qui envoie le message
     user.contacted_by_id = current_user.id
     user.contacted_at = datetime.utcnow()
     db.session.commit()
-
     logger.info(
         "[VÉRIFICATION] Partageur id=%d contacté par admin/sous-admin id=%d",
         user_id, current_user.id
@@ -3152,15 +3152,37 @@ def contacter_partageur_verification(user_id):
     )
 
     if user.whatsapp_number:
-        encoded = urllib.parse.quote(message)
-        wa_link = f"https://wa.me/{user.whatsapp_number}?text={encoded}"
+        # 🔒 Sécurité : le numéro WhatsApp est nettoyé pour ne garder que les chiffres.
+        # Il est inséré directement dans le chemin de l'URL (pas dans la query string),
+        # donc s'il contenait des caractères imprévus (espaces, "/", "?", balises...),
+        # cela pourrait casser ou détourner le lien. On élimine ce risque à la source.
+        numero_propre = re.sub(r"\D", "", user.whatsapp_number)
+
+        if not numero_propre:
+            flash(
+                f"Dossier de {escape(user.email)} verrouillé, mais le numéro WhatsApp "
+                f"enregistré est invalide. ⚠️",
+                "warning"
+            )
+            return redirect(url_for("admin_validate"))
+
+        encoded_message = urllib.parse.quote(message)
+        wa_link = f"https://wa.me/{numero_propre}?text={encoded_message}"
+
+        # 🔒 Sécurité : on construit le HTML nous-mêmes avec des valeurs contrôlées
+        # (wa_link est fait de chiffres + texte encodé en URL, donc sûr), et on
+        # échappe explicitement le seul champ "libre" injecté dans le HTML : l'email.
+        # Markup() dit ensuite à Jinja2 "ce texte est déjà sûr, n'échappe pas le HTML".
         flash(
-            f'Dossier de {user.email} verrouillé sur votre compte. '
-            f'<a href="{wa_link}" target="_blank" class="btn btn-sm btn-primary ms-2">📱 Envoyer le message de vérification</a>',
+            Markup(
+                'Dossier de {email} verrouillé sur votre compte. '
+                '<a href="{link}" target="_blank" rel="noopener noreferrer" '
+                'class="btn btn-sm btn-primary ms-2">📱 Envoyer le message de vérification</a>'
+            ).format(email=escape(user.email), link=wa_link),
             "info"
         )
     else:
-        flash(f"Dossier de {user.email} verrouillé, mais aucun numéro WhatsApp disponible. ⚠️", "warning")
+        flash(f"Dossier de {escape(user.email)} verrouillé, mais aucun numéro WhatsApp disponible. ⚠️", "warning")
 
     return redirect(url_for("admin_validate"))    
 

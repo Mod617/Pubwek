@@ -839,9 +839,9 @@ def peut_acceder_au_fichier(user, safe_filename):
 
 @app.route("/uploads/<path:filename>")
 @login_required
+@limiter.exempt
 def serve_upload(filename):
     """Sert un fichier téléversé, après vérification du droit d'accès.
-
     Auparavant, tout utilisateur connecté pouvait télécharger n'importe quel
     fichier du dossier : il suffisait d'en connaître le nom. La propriété est
     désormais tracée par le modèle UploadedFile.
@@ -849,10 +849,8 @@ def serve_upload(filename):
     safe_filename = os.path.basename(filename)
     upload_folder = current_app.config["UPLOAD_FOLDER"]
     filepath = os.path.join(upload_folder, safe_filename)
-
     if not os.path.exists(filepath):
         abort(404)
-
     if not peut_acceder_au_fichier(current_user, safe_filename):
         logger.warning(
             "[SECURITE] Accès refusé au fichier %s pour l'utilisateur id=%s (role=%s)",
@@ -860,7 +858,6 @@ def serve_upload(filename):
         )
         # 404 plutôt que 403 : ne pas confirmer l'existence du fichier.
         abort(404)
-
     return send_from_directory(upload_folder, safe_filename)
 
 

@@ -3929,7 +3929,7 @@ def admin_preuves_partage():
         .order_by(CampaignShareProof.submitted_at.asc())
         .all()
     )
-    return render_template("admin/preuves_partage.html", preuves=preuves)
+    return render_template("preuves_partage.html", preuves=preuves)
 
 
 

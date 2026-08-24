@@ -1,17 +1,173 @@
 {% extends "base.html" %}
 {% block content %}
-  <div class="container mt-5">
-    <h2 class="mb-4 text-center">Connexion</h2>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+<style>
+  .login-wrapper {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e8f5e9 100%);
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 440px;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    padding: 2.5rem 2.25rem;
+  }
+
+  .login-card .login-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+    font-size: 1.75rem;
+    color: #fff;
+  }
+
+  .login-card h2 {
+    font-weight: 700;
+    color: #1a1a2e;
+    text-align: center;
+    margin-bottom: 0.25rem;
+  }
+
+  .login-subtitle {
+    text-align: center;
+    color: #777;
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+  }
+
+  .login-card .form-label {
+    font-weight: 600;
+    color: #333;
+    font-size: 0.9rem;
+  }
+
+  .login-card .form-control {
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    padding: 0.65rem 0.9rem;
+  }
+
+  .login-card .form-control:focus {
+    border-color: #27ae60;
+    box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.15);
+  }
+
+  .login-card .input-group .form-control {
+    border-radius: 10px 0 0 10px;
+  }
+
+  .login-card .input-group .btn-outline-secondary {
+    border-radius: 0 10px 10px 0;
+    border: 1px solid #ddd;
+    border-left: none;
+  }
+
+  .forgot-link {
+    color: #27ae60;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .forgot-link:hover {
+    text-decoration: underline;
+  }
+
+  .form-check-input:checked {
+    background-color: #27ae60;
+    border-color: #27ae60;
+  }
+
+  .form-check-label {
+    font-size: 0.9rem;
+    color: #444;
+  }
+
+  #submitBtnLogin {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    border: none;
+    border-radius: 50px;
+    padding: 0.75rem;
+    font-weight: 600;
+    transition: opacity 0.2s ease;
+  }
+
+  #submitBtnLogin:hover {
+    opacity: 0.9;
+  }
+
+  .btn-back {
+    border-radius: 50px;
+    padding: 0.75rem;
+    font-weight: 600;
+    background: #f1f1f1;
+    color: #333;
+    border: none;
+    transition: background 0.2s ease;
+  }
+
+  .btn-back:hover {
+    background: #e4e4e4;
+    color: #111;
+  }
+
+  .signup-links {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    color: #555;
+  }
+
+  .signup-links a {
+    color: #27ae60;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .signup-links a:hover {
+    text-decoration: underline;
+  }
+
+  .signup-links .divider {
+    color: #ccc;
+    margin: 0 0.35rem;
+  }
+
+  @media (max-width: 576px) {
+    .login-card {
+      padding: 2rem 1.5rem;
+      border-radius: 16px;
+    }
+  }
+</style>
+
+<div class="login-wrapper">
+  <div class="login-card">
+    <div class="login-icon">
+      <i class="bi bi-person-fill"></i>
+    </div>
+    <h2>Connexion</h2>
+    <p class="login-subtitle">Ravi de vous revoir sur Pubwek</p>
 
     <form method="POST" action="">
       {{ form.hidden_tag() }}
-
       <!-- Email -->
       <div class="mb-3">
         {{ form.email.label(class="form-label") }}
         {{ form.email(class="form-control") }}
       </div>
-
       <!-- Mot de passe -->
       <div class="mb-3">
         {{ form.password.label(class="form-label") }}
@@ -22,49 +178,47 @@
           </button>
         </div>
         <div class="text-end mt-1">
-          <a href="{{ url_for('forgot_password') }}" class="small">Mot de passe oublié ?</a>
+          <a href="{{ url_for('forgot_password') }}" class="small forgot-link">Mot de passe oublié ?</a>
         </div>
       </div>
-
       <!-- Se souvenir de moi -->
       <div class="form-check mb-3">
         {{ form.remember(class="form-check-input") }}
         {{ form.remember.label(class="form-check-label") }}
       </div>
-
       <!-- Boutons -->
-      <div class="d-grid gap-2">
-        {{ form.submit(class="btn btn-primary btn-lg") }}
-        <a href="{{ url_for('index') }}" class="btn btn-secondary btn-lg">⬅ Retour à l’accueil</a>
+      <div class="d-grid gap-2 mt-4">
+        {{ form.submit(class="btn btn-lg", id="submitBtnLogin") }}
+        <a href="{{ url_for('index') }}" class="btn btn-back btn-lg">⬅ Retour à l'accueil</a>
       </div>
     </form>
 
     <!-- Liens inscription -->
-    <div class="text-center mt-3">
-      <p>Pas encore de compte ?  
-        <a href="{{ url_for('register', role='partageur') }}">Inscription Partageur</a> | 
+    <div class="signup-links">
+      <p>
+        Pas encore de compte ?<br>
+        <a href="{{ url_for('register', role='partageur') }}">Inscription Partageur</a>
+        <span class="divider">|</span>
         <a href="{{ url_for('register', role='annonceur') }}">Inscription Annonceur</a>
       </p>
     </div>
   </div>
+</div>
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
-  <script>
-  // 🆕 Bascule afficher/masquer le mot de passe (identique à register.html)
-  function togglePasswordVisibility(fieldId, btn) {
-    const field = document.getElementById(fieldId);
-    const icon = btn.querySelector("i");
-
-    if (field.type === "password") {
-      field.type = "text";
-      icon.classList.remove("bi-eye");
-      icon.classList.add("bi-eye-slash");
-    } else {
-      field.type = "password";
-      icon.classList.remove("bi-eye-slash");
-      icon.classList.add("bi-eye");
-    }
+<script>
+// 🆕 Bascule afficher/masquer le mot de passe (identique à register.html)
+function togglePasswordVisibility(fieldId, btn) {
+  const field = document.getElementById(fieldId);
+  const icon = btn.querySelector("i");
+  if (field.type === "password") {
+    field.type = "text";
+    icon.classList.remove("bi-eye");
+    icon.classList.add("bi-eye-slash");
+  } else {
+    field.type = "password";
+    icon.classList.remove("bi-eye-slash");
+    icon.classList.add("bi-eye");
   }
-  </script>
+}
+</script>
 {% endblock %}

@@ -3037,7 +3037,6 @@ def autoriser_remboursement_admin(campaign_id):
 @limiter.limit("60 per hour")
 def confirm_user(user_id):
     verifier_droits_admin("valider_utilisateurs")
-
     user = db.session.get(User, user_id)
     if not user:
         flash("Utilisateur introuvable. ⚠️", "danger")
@@ -3059,15 +3058,22 @@ def confirm_user(user_id):
     message = f"Bonjour {pseudo_or_name}, votre compte Pubwek a été VALIDÉ ✅."
 
     if user.whatsapp_number:
-        encoded = urllib.parse.quote(message)
-        wa_link = f"https://wa.me/{user.whatsapp_number}?text={encoded}"
-        flash(
-            f'Utilisateur {user.email} confirmé ✅. '
-            f'<a href="{wa_link}" target="_blank" class="btn btn-sm btn-success ms-2">📱 Message de confirmation</a>',
-            "success"
-        )
+        numero_propre = re.sub(r"\D", "", user.whatsapp_number)
+        if numero_propre:
+            encoded = urllib.parse.quote(message)
+            wa_link = f"https://wa.me/{numero_propre}?text={encoded}"
+            flash(
+                Markup(
+                    'Utilisateur {email} confirmé ✅. '
+                    '<a href="{link}" target="_blank" rel="noopener noreferrer" '
+                    'class="btn btn-sm btn-success ms-2">📱 Message de confirmation</a>'
+                ).format(email=escape(user.email), link=wa_link),
+                "success"
+            )
+        else:
+            flash(f"Utilisateur {escape(user.email)} confirmé ✅ (numéro WhatsApp invalide).", "success")
     else:
-        flash(f"Utilisateur {user.email} confirmé ✅", "success")
+        flash(f"Utilisateur {escape(user.email)} confirmé ✅", "success")
 
     return redirect(url_for("admin_validate"))
 
@@ -3077,7 +3083,6 @@ def confirm_user(user_id):
 @limiter.limit("60 per hour")
 def refuse_user(user_id):
     verifier_droits_admin("valider_utilisateurs")
-
     user = db.session.get(User, user_id)
     if not user:
         flash("Utilisateur introuvable. ⚠️", "danger")
@@ -3090,7 +3095,6 @@ def refuse_user(user_id):
 
     whatsapp = user.whatsapp_number
     email_log = user.email
-
     db.session.delete(user)
     db.session.commit()
     logger.warning(
@@ -3099,14 +3103,21 @@ def refuse_user(user_id):
     )
 
     if whatsapp:
-        message = "Bonjour, votre demande d'inscription Pubwek a été REFUSÉE."
-        encoded = urllib.parse.quote(message)
-        wa_link = f"https://wa.me/{whatsapp}?text={encoded}"
-        flash(
-            f'Utilisateur {email_log} supprimé ❌. '
-            f'<a href="{wa_link}" target="_blank" class="btn btn-sm btn-outline-danger ms-2">📱 Notification WhatsApp</a>',
-            "warning"
-        )
+        numero_propre = re.sub(r"\D", "", whatsapp)
+        if numero_propre:
+            message = "Bonjour, votre demande d'inscription Pubwek a été REFUSÉE."
+            encoded = urllib.parse.quote(message)
+            wa_link = f"https://wa.me/{numero_propre}?text={encoded}"
+            flash(
+                Markup(
+                    'Utilisateur {email} supprimé ❌. '
+                    '<a href="{link}" target="_blank" rel="noopener noreferrer" '
+                    'class="btn btn-sm btn-outline-danger ms-2">📱 Notification WhatsApp</a>'
+                ).format(email=escape(email_log), link=wa_link),
+                "warning"
+            )
+        else:
+            flash(f"Utilisateur {escape(email_log)} supprimé ✅ (numéro WhatsApp invalide).", "warning")
     else:
         flash("Utilisateur supprimé ✅", "warning")
 

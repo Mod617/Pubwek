@@ -8,9 +8,14 @@
             <h2 class="mb-1 fw-bold">📊 Suivi de la campagne #{{ campaign.id }}</h2>
             <p class="text-muted mb-0">{{ campaign.promotion_type | capitalize }} - {{ campaign.promotion_detail }}</p>
         </div>
-        <a href="{{ url_for('admin_validate') }}" class="btn btn-outline-secondary fw-bold shadow-sm">
-            ⬅️ Retour au panneau d'administration
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('admin_preuves_partage', campaign_id=campaign.id) }}" class="btn btn-outline-warning fw-bold shadow-sm">
+                📸 Voir les preuves de partage
+            </a>
+            <a href="{{ url_for('admin_validate') }}" class="btn btn-outline-secondary fw-bold shadow-sm">
+                ⬅️ Retour au panneau d'administration
+            </a>
+        </div>
     </div>
 
     <!-- Progression jour par jour -->

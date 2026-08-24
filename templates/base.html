@@ -21,14 +21,225 @@
   <!-- ✅ Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
+  <!-- ✅ Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
   <!-- ✅ CSS personnalisé -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <style>
+    :root {
+      --pw-green-1: #2ecc71;
+      --pw-green-2: #27ae60;
+      --pw-dark: #1a1a2e;
+      --pw-dark-2: #33334d;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #fafcfb;
+    }
+
+    h1, h2, h3, h4, h5, h6, .navbar-brand {
+      font-family: 'Poppins', 'Inter', sans-serif;
+    }
+
+    /* ===== NAVBAR ===== */
+    .navbar-pubwek {
+      background: linear-gradient(135deg, var(--pw-dark) 0%, var(--pw-dark-2) 100%) !important;
+      padding-top: 0.85rem;
+      padding-bottom: 0.85rem;
+      box-shadow: 0 2px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .navbar-pubwek .navbar-brand {
+      font-weight: 700;
+      font-size: 1.35rem;
+      letter-spacing: 0.3px;
+    }
+
+    .navbar-pubwek .navbar-brand img {
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+    }
+
+    .navbar-pubwek .nav-link {
+      font-weight: 500;
+      font-size: 0.92rem;
+      padding: 0.55rem 0.9rem !important;
+      border-radius: 8px;
+      transition: background 0.2s ease, color 0.2s ease;
+      color: rgba(255,255,255,0.85) !important;
+    }
+
+    .navbar-pubwek .nav-link:hover {
+      background: rgba(255,255,255,0.08);
+      color: #fff !important;
+    }
+
+    .navbar-pubwek .nav-link.text-warning {
+      color: #f1c40f !important;
+    }
+
+    .navbar-pubwek .nav-link.text-warning:hover {
+      background: rgba(241, 196, 15, 0.12);
+    }
+
+    .navbar-pubwek .nav-link[href*="logout"] {
+      background: rgba(231, 76, 60, 0.12);
+      color: #ff8a80 !important;
+      margin-left: 0.25rem;
+    }
+
+    .navbar-pubwek .nav-link[href*="logout"]:hover {
+      background: rgba(231, 76, 60, 0.22);
+    }
+
+    .navbar-toggler {
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    /* ===== FLASH MESSAGES ===== */
+    main .alert {
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+      font-size: 0.92rem;
+    }
+
+    /* ===== FOOTER ===== */
+    footer.footer-pubwek {
+      background: linear-gradient(135deg, var(--pw-dark) 0%, var(--pw-dark-2) 100%) !important;
+      position: relative;
+      overflow: hidden;
+    }
+
+    footer.footer-pubwek::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--pw-green-1), var(--pw-green-2), var(--pw-green-1));
+    }
+
+    footer.footer-pubwek img {
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+    }
+
+    footer.footer-pubwek .footer-tagline {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.55);
+    }
+
+    footer.footer-pubwek .social-label {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.7);
+    }
+
+    footer.footer-pubwek .btn.rounded-pill {
+      font-weight: 600;
+      font-size: 0.82rem;
+      border: none;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    footer.footer-pubwek .btn.rounded-pill:hover {
+      transform: translateY(-2px);
+      opacity: 0.9;
+    }
+
+    footer.footer-pubwek .footer-links a {
+      color: rgba(255,255,255,0.65) !important;
+      transition: color 0.2s ease;
+    }
+
+    footer.footer-pubwek .footer-links a:hover {
+      color: var(--pw-green-1) !important;
+    }
+
+    footer.footer-pubwek hr {
+      border-color: rgba(255,255,255,0.1);
+    }
+
+    /* ===== MODALS CGU / CONFIDENTIALITÉ ===== */
+    #modalCGU .modal-header,
+    #modalPrivacy .modal-header {
+      background: linear-gradient(135deg, var(--pw-dark) 0%, var(--pw-dark-2) 100%) !important;
+      border: none;
+    }
+
+    #modalCGU .modal-content,
+    #modalPrivacy .modal-content {
+      border: none;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    /* ===== MODAL CGU OBLIGATOIRE ===== */
+    #forceTermsModal .modal-content {
+      border-radius: 18px;
+    }
+
+    #forceTermsModal .modal-header {
+      background: linear-gradient(135deg, var(--pw-dark) 0%, var(--pw-dark-2) 100%) !important;
+    }
+
+    #forceTermsModal .modal-body h4 {
+      font-size: 1.15rem;
+    }
+
+    #forceTermsModal .modal-body h6 {
+      color: #333;
+    }
+
+    #forceTermsModal .alert-warning {
+      border: none;
+      border-radius: 10px;
+      background: #fff8ec;
+      color: #92650b;
+    }
+
+    #forceTermsModal .form-check-input:checked {
+      background-color: var(--pw-green-2);
+      border-color: var(--pw-green-2);
+    }
+
+    #btnConfirmTerms {
+      background: linear-gradient(135deg, var(--pw-green-1), var(--pw-green-2));
+      border: none;
+      border-radius: 50px;
+      font-size: 1rem;
+      transition: opacity 0.2s ease;
+    }
+
+    #btnConfirmTerms:not(:disabled):hover {
+      opacity: 0.9;
+    }
+
+    #btnConfirmTerms:disabled {
+      background: #ccc;
+    }
+
+    @media (max-width: 991.98px) {
+      .navbar-pubwek .navbar-collapse {
+        margin-top: 0.75rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid rgba(255,255,255,0.1);
+      }
+      .navbar-pubwek .nav-link[href*="logout"] {
+        margin-left: 0;
+        margin-top: 0.25rem;
+      }
+    }
+  </style>
 </head>
 
 <body class="d-flex flex-column min-vh-100">
 
   <!-- ✅ Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-pubwek mb-4">
     <div class="container-fluid">
       <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
         <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Pubwek" height="40" class="me-2">
@@ -119,7 +330,7 @@
   <div class="modal fade show" id="forceTermsModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" style="display: block; background: rgba(0,0,0,0.85);" aria-modal="true" role="dialog">
     <div class="modal-dialog modal-dialog-scrollable modal-xl modal-dialog-centered">
       <div class="modal-content border-0 shadow-lg rounded-4">
-        <div class="modal-header bg-dark text-white border-0 py-3">
+        <div class="modal-header text-white border-0 py-3">
           <h5 class="modal-title fw-bold"><i class="fa-solid fa-file-contract me-2 text-warning"></i>Conditions Générales & Politique de Confidentialité — PUBWEK</h5>
         </div>
         <div class="modal-body p-4 text-start" style="max-height: 60vh; overflow-y: auto;">
@@ -208,7 +419,7 @@
               J'ai lu et j'accepte l'intégralité des Conditions Générales d'Utilisation / de Vente (CGU/CGV) et la Politique de Confidentialité (APDP Bénin) de Pubwek.
             </label>
           </div>
-          <button type="button" class="btn btn-success fw-bold w-100 py-2 shadow-sm" id="btnConfirmTerms" disabled onclick="submitTermsAcceptance()">
+          <button type="button" class="btn fw-bold w-100 py-2 shadow-sm text-white" id="btnConfirmTerms" disabled onclick="submitTermsAcceptance()">
             🚀 Valider et continuer sur Pubwek
           </button>
         </div>
@@ -221,7 +432,7 @@
   <div class="modal fade" id="modalCGU" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable modal-lg">
       <div class="modal-content">
-        <div class="modal-header bg-dark text-white">
+        <div class="modal-header text-white">
           <h5 class="modal-title fw-bold">Conditions Générales d'Utilisation et de Vente (CGU / CGV)</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
@@ -263,7 +474,7 @@
   <div class="modal fade" id="modalPrivacy" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable modal-lg">
       <div class="modal-content">
-        <div class="modal-header bg-dark text-white">
+        <div class="modal-header text-white">
           <h5 class="modal-title fw-bold">Politique de Confidentialité (APDP Bénin)</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
@@ -290,15 +501,15 @@
   </div>
 
   <!-- ✅ Footer -->
-  <footer class="bg-dark text-white mt-5 py-4">
+  <footer class="footer-pubwek text-white mt-5 py-4">
     <div class="container text-center">
       <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo Pubwek" width="120" class="mb-3">
       <p class="mb-1">© {{ current_year if current_year else 2026 }} Pubwek - Tous droits réservés</p>
-      <p class="small text-muted mb-3">Plateforme de partage publicitaire sur Statut WhatsApp au Bénin</p>
+      <p class="footer-tagline mb-3">Plateforme de partage publicitaire sur Statut WhatsApp au Bénin</p>
 
       <!-- 🌐 RÉSEAUX SOCIAUX & CANAUX OFFICIELS -->
       <div class="mb-3">
-        <p class="small fw-bold text-light mb-2">Rejoignez-nous et découvrez nos tutoriels & actualités :</p>
+        <p class="social-label fw-bold mb-2">Rejoignez-nous et découvrez nos tutoriels & actualités :</p>
         <div class="d-flex justify-content-center flex-wrap gap-2">
           <a href="https://whatsapp.com/channel/0029Vb8lW6FDjiOm15Zv8I1x" target="_blank" class="btn btn-sm btn-success rounded-pill px-3">
             <i class="fa-brands fa-whatsapp me-1"></i> WhatsApp
@@ -315,9 +526,11 @@
         </div>
       </div>
 
-      <div>
-        <a href="#" class="text-white me-3 text-decoration-none small" data-bs-toggle="modal" data-bs-target="#modalCGU">Conditions d’utilisation</a>
-        <a href="#" class="text-white text-decoration-none small" data-bs-toggle="modal" data-bs-target="#modalPrivacy">Politique de confidentialité</a>
+      <hr>
+
+      <div class="footer-links">
+        <a href="#" class="me-3 text-decoration-none small" data-bs-toggle="modal" data-bs-target="#modalCGU">Conditions d'utilisation</a>
+        <a href="#" class="text-decoration-none small" data-bs-toggle="modal" data-bs-target="#modalPrivacy">Politique de confidentialité</a>
       </div>
     </div>
   </footer>

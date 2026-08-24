@@ -119,6 +119,7 @@
                             <div class="alert alert-danger py-2 px-3 small mb-2">❌ Rejetée : {{ preuve_debut.rejection_reason }}. Veuillez renvoyer une capture.</div>
                         {% endif %}
                         <form method="POST" action="{{ url_for('envoyer_preuve_partage', share_id=share.id, proof_type='debut') }}" enctype="multipart/form-data" class="d-flex gap-2">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="file" name="preuve" accept="image/*" required class="form-control form-control-sm">
                             <button type="submit" class="btn btn-primary btn-sm text-nowrap">Envoyer</button>
                         </form>
@@ -136,6 +137,7 @@
                             <div class="alert alert-danger py-2 px-3 small mb-2">❌ Rejetée : {{ preuve_fin.rejection_reason }}. Veuillez renvoyer une capture.</div>
                         {% endif %}
                         <form method="POST" action="{{ url_for('envoyer_preuve_partage', share_id=share.id, proof_type='fin') }}" enctype="multipart/form-data" class="d-flex gap-2">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="file" name="preuve" accept="image/*" required class="form-control form-control-sm">
                             <button type="submit" class="btn btn-primary btn-sm text-nowrap">Envoyer</button>
                         </form>

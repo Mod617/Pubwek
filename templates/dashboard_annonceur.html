@@ -4,10 +4,235 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 
+<style>
+  .pubwek-wrap {
+    --paper:        #F5F3ED;
+    --paper-raised: #FFFFFF;
+    --ink:          #1B2A2E;
+    --ink-soft:     #5B6B6C;
+    --line:         #E3DFD3;
+    --emerald:      #2F6F5E;
+    --emerald-dark: #1F4F42;
+    --emerald-tint: #E7F0EC;
+    --amber:        #B8842E;
+    --amber-tint:   #F8EEDD;
+    --clay:         #B0483C;
+    --clay-tint:    #F6E7E3;
+    --violet:       #6b21a8;
+    --violet-tint:  #f3e8ff;
+    --slate-tint:   #EFEDE4;
+
+    background: var(--paper);
+    padding: 2.5rem 1.25rem 4rem;
+    margin: -1.5rem calc(50% - 50vw) 0;
+    padding-left: calc(1.25rem + (50vw - 50%));
+    padding-right: calc(1.25rem + (50vw - 50%));
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  .pubwek-wrap .container { max-width: 980px; }
+
+  /* ---------- Profile hero card ---------- */
+  .pubwek-wrap .profile-hero-card {
+    border-radius: 18px !important;
+    border: 1px solid var(--line) !important;
+    box-shadow: 0 1px 2px rgba(27,42,46,0.05) !important;
+  }
+  .pubwek-wrap .cover-photo-container { background: var(--ink) !important; }
+  .pubwek-wrap .cover-actions .btn {
+    font-family: 'Inter', sans-serif;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.78rem;
+    border: none;
+  }
+  .pubwek-wrap .cover-actions .btn-light { background: rgba(255,255,255,0.92); color: var(--ink); }
+  .pubwek-wrap .cover-actions .btn-danger { background: var(--clay); }
+  .pubwek-wrap .cover-actions .btn-success { background: var(--emerald); }
+
+  .pubwek-wrap .profile-logo-container {
+    width: 110px; height: 110px;
+    margin-top: -55px;
+    border: 4px solid var(--paper-raised);
+    box-shadow: 0 2px 8px rgba(27,42,46,0.12);
+  }
+  .pubwek-wrap .logo-overlay {
+    position: absolute; inset: 0;
+    background: rgba(27,42,46,0.35);
+    opacity: 0;
+    transition: opacity .15s ease;
+    cursor: pointer;
+  }
+  .pubwek-wrap .profile-logo-container:hover .logo-overlay { opacity: 1; }
+
+  .pubwek-wrap #companyNameText {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    color: var(--ink) !important;
+  }
+  .pubwek-wrap .badge.bg-primary {
+    background: var(--emerald) !important;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+  }
+  .pubwek-wrap .style-bio-text { color: var(--ink-soft) !important; }
+
+  /* ---------- Section heading ---------- */
+  .pubwek-wrap h2.mb-4.text-center {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    color: var(--ink);
+    margin-top: 1rem;
+  }
+
+  /* ---------- Form card ---------- */
+  .pubwek-wrap .form-card-elegant {
+    border: 1px solid var(--line) !important;
+    border-radius: 18px !important;
+    box-shadow: 0 1px 2px rgba(27,42,46,0.05) !important;
+  }
+
+  .pubwek-wrap .form-label.fw-bold {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500 !important;
+    font-size: 0.76rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .pubwek-wrap .form-control,
+  .pubwek-wrap .form-select {
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    font-family: 'Inter', sans-serif;
+  }
+  .pubwek-wrap .form-control:focus,
+  .pubwek-wrap .form-select:focus {
+    border-color: var(--emerald);
+    box-shadow: 0 0 0 0.2rem var(--emerald-tint);
+  }
+
+  .pubwek-wrap .btn-outline-magic {
+    border-radius: 999px !important;
+    background: var(--violet-tint) !important;
+    color: var(--violet) !important;
+    border: 1px solid #dcb8f7 !important;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .pubwek-wrap #charCount {
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--slate-tint) !important;
+    color: var(--ink-soft) !important;
+    font-weight: 500;
+  }
+
+  /* ---------- Option cards (A/B/C) ---------- */
+  .pubwek-wrap .option-card {
+    border-radius: 14px !important;
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .pubwek-wrap .option-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(27,42,46,0.08) !important;
+  }
+  .pubwek-wrap .option-card .form-check-label {
+    font-family: 'Fraunces', serif;
+    font-weight: 600 !important;
+    color: var(--ink) !important;
+  }
+  .pubwek-wrap .option-card p.text-muted { color: var(--ink-soft) !important; }
+  .pubwek-wrap .option-card .badge.bg-dark { background: var(--ink) !important; }
+  .pubwek-wrap .option-card .badge.bg-secondary { background: var(--slate-tint) !important; color: var(--ink-soft) !important; }
+  .pubwek-wrap .option-card .badge#badge_option_b { background: var(--emerald) !important; }
+  .pubwek-wrap .form-check-input:checked { background-color: var(--emerald); border-color: var(--emerald); }
+
+  /* ---------- Upload groups ---------- */
+  .pubwek-wrap #videoUploadGroup,
+  .pubwek-wrap #uploadGroup {
+    background: var(--slate-tint) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 12px;
+  }
+  .pubwek-wrap .text-primary.fw-bold { color: var(--emerald-dark) !important; }
+
+  /* ---------- Zones de diffusion ---------- */
+  .pubwek-wrap #accordionZones .border {
+    border-color: var(--line) !important;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .pubwek-wrap #accordionZones .bg-light {
+    background: var(--paper) !important;
+  }
+  .pubwek-wrap #accordionZones .form-check-label { font-weight: 500; }
+  .pubwek-wrap #accordionZones .btn-outline-secondary {
+    border-radius: 999px;
+    font-size: 0.78rem;
+    border-color: var(--line);
+    color: var(--ink-soft);
+  }
+
+  /* ---------- Budget box (signature element) ---------- */
+  .pubwek-wrap .row.mb-4.bg-dark.text-white {
+    background: linear-gradient(135deg, var(--ink) 0%, #24393D 100%) !important;
+    border-radius: 14px !important;
+  }
+  .pubwek-wrap .row.mb-4.bg-dark.text-white .form-label.small {
+    font-family: 'IBM Plex Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: rgba(255,255,255,0.65);
+  }
+  .pubwek-wrap .row.mb-4.bg-dark.text-white .text-warning {
+    color: var(--amber) !important;
+    font-family: 'IBM Plex Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.76rem;
+  }
+  .pubwek-wrap #total_cost_display {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    color: var(--amber) !important;
+  }
+
+  /* ---------- CTA ---------- */
+  .pubwek-wrap .cta-elegant {
+    background: var(--emerald) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    transition: background .15s ease, transform .15s ease;
+  }
+  .pubwek-wrap .cta-elegant:hover {
+    background: var(--emerald-dark) !important;
+    transform: translateY(-1px);
+  }
+
+  .pubwek-wrap .input-group-text {
+    background: var(--slate-tint);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+</style>
+
+<div class="pubwek-wrap">
 <div class="container mt-5">
 
-  <div class="card shadow-sm mb-4 bg-white border-0 rounded-4 overflow-hidden position-relative">
+  <div class="card shadow-sm mb-4 bg-white border-0 rounded-4 overflow-hidden position-relative profile-hero-card">
     
     <div class="cover-photo-container position-relative bg-dark" style="height: 250px; cursor: move;" id="coverContainer"
          data-pos-x="{{ current_user.cover_position_x or 50 }}" data-pos-y="{{ current_user.cover_position_y or 50 }}">
@@ -78,7 +303,7 @@
 
   <h2 class="mb-4 text-center">📢 Lancer une Campagne Pubwek</h2>
   
-  <div class="card p-4 shadow-sm mb-5">
+  <div class="card p-4 shadow-sm mb-5 form-card-elegant">
     <form id="campaignForm" method="POST" action="{{ url_for('nouvelle_campagne') }}" enctype="multipart/form-data"
           data-cost-video="{{ config.cost_per_click_video | default(3.0, true) }}" 
           data-cost-photo="{{ config.cost_per_click_photo | default(2.0, true) }}" 
@@ -257,12 +482,13 @@
       </div>
 
       <div class="d-grid gap-2">
-        <button type="submit" id="btnSubmitCampaign" class="btn btn-success btn-lg shadow">
+        <button type="submit" id="btnSubmitCampaign" class="btn btn-success btn-lg shadow cta-elegant">
           🚀 Valider ma Campagne
         </button>
       </div>
     </form>
   </div>
+</div>
 </div>
 
 <!-- Modal Bootstrap pour l'agrandissement des photos -->
@@ -358,22 +584,22 @@
 
     if (option === 'A') {
       radioA.checked = true;
-      cardA.style.border = '2px solid #198754';
-      cardA.style.backgroundColor = '#f0fdf4';
+      cardA.style.border = '2px solid #2F6F5E';
+      cardA.style.backgroundColor = '#E7F0EC';
       videoGroup.classList.remove('d-none');
       descriptionField.maxLength = 150;
       descriptionLabel.textContent = '📝 Description (Texte du statut)';
     } else if (option === 'B') {
       radioB.checked = true;
-      cardB.style.border = '2px solid #198754';
-      cardB.style.backgroundColor = '#f0fdf4';
+      cardB.style.border = '2px solid #2F6F5E';
+      cardB.style.backgroundColor = '#E7F0EC';
       photoGroup.classList.remove('d-none');
       descriptionField.maxLength = 150;
       descriptionLabel.textContent = '📝 Description (Texte du statut)';
     } else {
       radioC.checked = true;
-      cardC.style.border = '2px solid #198754';
-      cardC.style.backgroundColor = '#f0fdf4';
+      cardC.style.border = '2px solid #2F6F5E';
+      cardC.style.backgroundColor = '#E7F0EC';
       descriptionField.maxLength = 500;
       descriptionLabel.textContent = '📝 Texte de votre publicité (publié tel quel en statut)';
     }

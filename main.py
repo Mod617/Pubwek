@@ -3655,24 +3655,99 @@ def recompense_pour(camp, config):
     return config.reward_per_click_text or 0.0
 
 
-def enregistrer_clic(share, camp, link_type):
-    """Enregistre un clic et le rémunère s'il passe les garde-fous.
+def jour_diffusion_campagne(camp, moment=None):
+    """Numéro du jour de diffusion (1, 2, 3...) à un instant donné.
+    Calculé sur la date calendaire, indépendamment des clics reçus : un jour
+    sans clic doit quand même pouvoir recevoir une preuve de publication.
+    Le point de départ est shared_at (date de mise à disposition aux
+    partageurs) ; à défaut, created_at.
+    """
+    moment = moment or datetime.utcnow()
+    reference = camp.shared_at or camp.created_at
+    delta_jours = (moment.date() - reference.date()).days + 1
+    plafond = camp.duration_days or 1
+    return max(1, min(delta_jours, plafond))
 
+
+def preuve_jour_validee(campaign_share_id, day_number):
+    """Les deux preuves (début + fin) de ce jour sont-elles validées ?"""
+    validees = (
+        CampaignShareProof.query
+        .filter(
+            CampaignShareProof.campaign_share_id == campaign_share_id,
+            CampaignShareProof.day_number == day_number,
+            CampaignShareProof.status == "validee",
+        )
+        .count()
+    )
+    return validees >= 2
+
+
+def crediter_clics_du_jour(share, day_number):
+    """Verse la récompense de tous les clics payables et non encore
+    rémunérés de ce partage, pour ce jour de diffusion. Appelée uniquement
+    quand les deux preuves du jour viennent d'être validées.
+    Retourne (nombre_de_clics_credites, montant_total_verse).
+    """
+    camp = share.campaign
+    config = SystemConfig.get_config()
+    clics = (
+        CampaignClick.query
+        .filter(
+            CampaignClick.campaign_share_id == share.id,
+            CampaignClick.campaign_day_number == day_number,
+            CampaignClick.is_paid.is_(True),
+            CampaignClick.rewarded_at.is_(None),
+        )
+        .all()
+    )
+    if not clics:
+        return 0, 0.0
+
+    sharer = db.session.get(User, share.sharer_id)
+    maintenant = datetime.utcnow()
+    total = 0.0
+
+    for click in clics:
+        recompense = recompense_pour(camp, config)
+        if sharer and recompense > 0:
+            sharer.wallet_balance = (sharer.wallet_balance or 0.0) + recompense
+            db.session.add(WalletTransaction(
+                user_id=sharer.id,
+                amount=recompense,
+                balance_after=sharer.wallet_balance,
+                transaction_type="click_reward",
+                campaign_click_id=click.id,
+                description=(
+                    f"Clic généré sur la campagne #{camp.id} (jour {day_number}) "
+                    f"({camp.promotion_detail or camp.promotion_type})"
+                ),
+            ))
+            total += recompense
+        click.rewarded_at = maintenant
+
+    return len(clics), total
+
+
+
+
+def enregistrer_clic(share, camp, link_type):
+    """Enregistre un clic. Le clic est marqué payable ou non selon les
+    garde-fous anti-fraude, mais l'argent n'est versé qu'après validation,
+    par un admin, des preuves (captures d'écran) du jour de diffusion
+    concerné — voir crediter_clics_du_jour().
     Ne lève jamais : le visiteur doit être redirigé quoi qu'il arrive, un
     incident de journalisation ne doit pas casser le parcours du client final.
     """
     try:
         config = SystemConfig.get_config()
-
         # Le quota du jour doit être recalculé avant toute décision
         if camp.is_active and camp.paid and camp.validated:
             camp.verifier_et_reset_quota_journalier()
-
         ip = ip_client()
         user_agent = (request.headers.get("User-Agent") or "")[:255]
-
         payable, motif = evaluer_clic(share, camp, ip, user_agent, config)
-
+        jour = jour_diffusion_campagne(camp)
         click = CampaignClick(
             campaign_share_id=share.id,
             link_type=link_type,
@@ -3680,45 +3755,44 @@ def enregistrer_clic(share, camp, link_type):
             user_agent=user_agent,
             is_paid=payable,
             rejection_reason=motif,
+            campaign_day_number=jour,
         )
         db.session.add(click)
         db.session.flush()  # pour disposer de click.id
-
         if payable:
             camp.whatsapp_views = (camp.whatsapp_views or 0) + 1
             camp.views_today = (camp.views_today or 0) + 1
-
-            recompense = recompense_pour(camp, config)
-            sharer = db.session.get(User, share.sharer_id)
-            if sharer and recompense > 0:
-                sharer.wallet_balance = (sharer.wallet_balance or 0.0) + recompense
-                db.session.add(WalletTransaction(
-                    user_id=sharer.id,
-                    amount=recompense,
-                    balance_after=sharer.wallet_balance,
-                    transaction_type="click_reward",
-                    campaign_click_id=click.id,
-                    description=(
-                        f"Clic généré sur la campagne #{camp.id} "
-                        f"({camp.promotion_detail or camp.promotion_type})"
-                    ),
-                ))
-
+            # Si les preuves du jour sont déjà validées (clic tardif après
+            # validation admin), on crédite immédiatement ce clic-là.
+            if preuve_jour_validee(share.id, jour):
+                sharer = db.session.get(User, share.sharer_id)
+                recompense = recompense_pour(camp, config)
+                if sharer and recompense > 0:
+                    sharer.wallet_balance = (sharer.wallet_balance or 0.0) + recompense
+                    db.session.add(WalletTransaction(
+                        user_id=sharer.id,
+                        amount=recompense,
+                        balance_after=sharer.wallet_balance,
+                        transaction_type="click_reward",
+                        campaign_click_id=click.id,
+                        description=(
+                            f"Clic généré sur la campagne #{camp.id} (jour {jour}) "
+                            f"({camp.promotion_detail or camp.promotion_type})"
+                        ),
+                    ))
+                    click.rewarded_at = datetime.utcnow()
             # Le quota du jour vient peut-être d'être atteint avec ce clic
             if camp.quota_du_jour_atteint():
                 camp.daily_quota_paused = True
                 _notifier_partageurs_quota_atteint(camp)
-
             # Objectif global de la campagne atteint → diffusion terminée
             if camp.target_whatsapp_views and camp.whatsapp_views >= camp.target_whatsapp_views:
                 camp.is_active = False
                 camp.status = "terminee"
-
         elif motif == MOTIF_QUOTA_JOUR:
             camp.daily_quota_paused = True
             if not camp.daily_quota_alert_sent:
                 _notifier_partageurs_quota_atteint(camp)
-
         elif motif in (MOTIF_AUTO_CLIC, MOTIF_PLAFOND_PARTAGE, MOTIF_PLAFOND_IP):
             # Motifs qui traduisent un comportement anormal, pas un simple
             # doublon : on les journalise pour pouvoir enquêter.
@@ -3726,15 +3800,138 @@ def enregistrer_clic(share, camp, link_type):
                 "[ANTI-FRAUDE] Clic non rémunéré (%s) — partage=%d campagne=%d ip=%s",
                 motif, share.id, camp.id, ip or "inconnue"
             )
-
         db.session.commit()
-
     except Exception as e:
         logger.error(
             "Erreur enregistrement clic %s (partage %s) : %s",
             link_type, getattr(share, "id", "?"), e
         )
         db.session.rollback()
+
+
+@app.route("/partageur/preuve/<int:share_id>/<proof_type>", methods=["POST"])
+@login_required
+@limiter.limit("20 per hour")
+def envoyer_preuve_partage(share_id, proof_type):
+    if current_user.role != "partageur":
+        flash("Accès refusé 🚫", "danger")
+        return redirect(url_for("index"))
+
+    if proof_type not in ("debut", "fin"):
+        abort(404)
+
+    share = CampaignShare.query.filter_by(id=share_id, sharer_id=current_user.id).first()
+    if not share:
+        abort(404)
+
+    camp = share.campaign
+    if not (camp.is_active and camp.paid and camp.validated):
+        flash("Cette campagne n'est plus active. ⚠️", "warning")
+        return redirect(url_for("dashboard_partageur"))
+
+    jour = jour_diffusion_campagne(camp)
+
+    fichier = request.files.get("preuve")
+    if not fichier or not fichier.filename:
+        flash("Veuillez sélectionner une capture d'écran. ⚠️", "danger")
+        return redirect(url_for("dashboard_partageur"))
+
+    ok, err = valider_image(fichier)
+    if not ok:
+        flash(f"Image refusée : {err}", "danger")
+        return redirect(url_for("dashboard_partageur"))
+
+    filename = generer_nom_unique(fichier.filename)
+    path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
+    fichier.save(path)
+    enregistrer_upload(filename, current_user.id, kind="preuve_partage")
+
+    preuve = CampaignShareProof.query.filter_by(
+        campaign_share_id=share.id, day_number=jour, proof_type=proof_type
+    ).first()
+
+    if preuve and preuve.status == "validee":
+        flash("Cette preuve a déjà été validée, impossible de la remplacer. ⚠️", "warning")
+        return redirect(url_for("dashboard_partageur"))
+
+    if preuve:
+        # Renvoi après rejet : on écrase l'ancien fichier et on repasse en attente
+        preuve.filename = filename
+        preuve.status = "en_attente"
+        preuve.submitted_at = datetime.utcnow()
+        preuve.reviewed_at = None
+        preuve.reviewed_by_id = None
+        preuve.rejection_reason = None
+    else:
+        preuve = CampaignShareProof(
+            campaign_share_id=share.id,
+            day_number=jour,
+            proof_type=proof_type,
+            filename=filename,
+        )
+        db.session.add(preuve)
+
+    db.session.commit()
+    flash(f"Preuve du jour {jour} ({'début' if proof_type == 'debut' else 'fin'}) envoyée, en attente de validation. ✅", "success")
+    return redirect(url_for("dashboard_partageur"))
+
+
+@app.route("/admin/preuve/<int:proof_id>/<decision>", methods=["POST"])
+@login_required
+def valider_preuve_partage(proof_id, decision):
+    if current_user.role != "admin":
+        flash("Accès refusé 🚫", "danger")
+        return redirect(url_for("index"))
+
+    if decision not in ("valider", "rejeter"):
+        abort(404)
+
+    preuve = CampaignShareProof.query.get_or_404(proof_id)
+
+    if preuve.status != "en_attente":
+        flash("Cette preuve a déjà été traitée. ⚠️", "warning")
+        return redirect(url_for("admin_preuves_partage"))
+
+    preuve.reviewed_at = datetime.utcnow()
+    preuve.reviewed_by_id = current_user.id
+
+    if decision == "valider":
+        preuve.status = "validee"
+        db.session.commit()
+
+        if preuve_jour_validee(preuve.campaign_share_id, preuve.day_number):
+            share = db.session.get(CampaignShare, preuve.campaign_share_id)
+            nb, montant = crediter_clics_du_jour(share, preuve.day_number)
+            db.session.commit()
+            flash(f"Preuve validée. {nb} clic(s) crédité(s) pour {montant:.0f} FCFA. ✅", "success")
+        else:
+            flash("Preuve validée. En attente de la seconde preuve du jour pour créditer les vues. ✅", "info")
+    else:
+        motif = request.form.get("motif", "").strip()
+        preuve.status = "rejetee"
+        preuve.rejection_reason = bleach.clean(motif) if motif else "Non conforme"
+        db.session.commit()
+        flash("Preuve rejetée. Le partageur devra en renvoyer une nouvelle. ⚠️", "warning")
+
+    return redirect(url_for("admin_preuves_partage"))
+
+
+@app.route("/admin/preuves_partage")
+@login_required
+def admin_preuves_partage():
+    if current_user.role != "admin":
+        flash("Accès refusé 🚫", "danger")
+        return redirect(url_for("index"))
+
+    preuves = (
+        CampaignShareProof.query
+        .filter_by(status="en_attente")
+        .order_by(CampaignShareProof.submitted_at.asc())
+        .all()
+    )
+    return render_template("admin/preuves_partage.html", preuves=preuves)
+
+
 
 
 @app.route("/t/<token>/whatsapp")

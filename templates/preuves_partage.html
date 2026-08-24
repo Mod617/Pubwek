@@ -1,14 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
 <h2>Preuves de partage en attente ({{ preuves|length }})</h2>
-
 {% if camp_filtree %}
     <div class="alert alert-info d-flex justify-content-between align-items-center">
         <span>Filtré sur la campagne : <strong>#{{ camp_filtree.id }} — {{ camp_filtree.promotion_detail or camp_filtree.promotion_type }}</strong></span>
         <a href="{{ url_for('admin_preuves_partage') }}" class="btn btn-sm btn-outline-secondary">Voir toutes les campagnes</a>
     </div>
 {% endif %}
-
 {% if not preuves %}
     <p>Aucune preuve en attente pour le moment. ✅</p>
 {% else %}
@@ -39,10 +37,12 @@
             <td>{{ p.submitted_at.strftime("%d/%m/%Y %H:%M") }}</td>
             <td>
                 <form method="POST" action="{{ url_for('valider_preuve_partage', proof_id=p.id, decision='valider') }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-success btn-sm">✅ Valider</button>
                 </form>
                 <button type="button" class="btn btn-danger btn-sm" onclick="document.getElementById('rejet-{{ p.id }}').classList.toggle('d-none')">❌ Rejeter</button>
                 <form id="rejet-{{ p.id }}" method="POST" action="{{ url_for('valider_preuve_partage', proof_id=p.id, decision='rejeter') }}" class="d-none mt-2">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="text" name="motif" placeholder="Motif du rejet" class="form-control form-control-sm">
                     <button type="submit" class="btn btn-outline-danger btn-sm mt-1">Confirmer le rejet</button>
                 </form>

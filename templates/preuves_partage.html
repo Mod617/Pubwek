@@ -1,0 +1,48 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<h2>Preuves de partage en attente ({{ preuves|length }})</h2>
+
+{% if not preuves %}
+    <p>Aucune preuve en attente pour le moment. ✅</p>
+{% else %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Partageur</th>
+            <th>Campagne</th>
+            <th>Jour</th>
+            <th>Type</th>
+            <th>Capture</th>
+            <th>Envoyée le</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for p in preuves %}
+        <tr>
+            <td>{{ p.campaign_share.sharer.username or p.campaign_share.sharer.email }}</td>
+            <td>#{{ p.campaign_share.campaign_id }} — {{ p.campaign_share.campaign.promotion_detail or p.campaign_share.campaign.promotion_type }}</td>
+            <td>Jour {{ p.day_number }}</td>
+            <td>{{ "Début" if p.proof_type == "debut" else "Fin" }}</td>
+            <td>
+                <a href="{{ url_for('serve_upload', filename=p.filename) }}" target="_blank">
+                    <img src="{{ url_for('serve_upload', filename=p.filename) }}" alt="Capture" style="max-width:120px; max-height:120px;">
+                </a>
+            </td>
+            <td>{{ p.submitted_at.strftime("%d/%m/%Y %H:%M") }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('valider_preuve_partage', proof_id=p.id, decision='valider') }}" style="display:inline;">
+                    <button type="submit" class="btn btn-success btn-sm">✅ Valider</button>
+                </form>
+                <button type="button" class="btn btn-danger btn-sm" onclick="document.getElementById('rejet-{{ p.id }}').classList.toggle('d-none')">❌ Rejeter</button>
+                <form id="rejet-{{ p.id }}" method="POST" action="{{ url_for('valider_preuve_partage', proof_id=p.id, decision='rejeter') }}" class="d-none mt-2">
+                    <input type="text" name="motif" placeholder="Motif du rejet" class="form-control form-control-sm">
+                    <button type="submit" class="btn btn-outline-danger btn-sm mt-1">Confirmer le rejet</button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+{% endblock %}

@@ -1,6 +1,203 @@
 {% extends "base.html" %}
 
 {% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+
+<style>
+  .mescamp-wrap {
+    --paper:        #F5F3ED;
+    --paper-raised: #FFFFFF;
+    --ink:          #1B2A2E;
+    --ink-soft:     #5B6B6C;
+    --line:         #E3DFD3;
+    --emerald:      #2F6F5E;
+    --emerald-dark: #1F4F42;
+    --emerald-tint: #E7F0EC;
+    --amber:        #B8842E;
+    --amber-tint:   #F8EEDD;
+    --clay:         #B0483C;
+    --clay-tint:    #F6E7E3;
+    --slate-tint:   #EFEDE4;
+
+    background: var(--paper);
+    padding: 2.5rem 1.25rem 4rem;
+    margin: -1.5rem calc(50% - 50vw) 0;
+    padding-left: calc(1.25rem + (50vw - 50%));
+    padding-right: calc(1.25rem + (50vw - 50%));
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  .mescamp-wrap .container { max-width: 1180px; }
+
+  /* ---------- Page header ---------- */
+  .mescamp-wrap h2.fw-bold {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    color: var(--ink) !important;
+  }
+  .mescamp-wrap .btn-outline-dark {
+    border-color: var(--line) !important;
+    color: var(--ink) !important;
+    border-radius: 999px !important;
+    background: var(--paper-raised) !important;
+  }
+  .mescamp-wrap .btn-outline-dark:hover { background: var(--ink) !important; color: #fff !important; }
+  .mescamp-wrap .btn-primary {
+    background: var(--emerald) !important;
+    border: none !important;
+    border-radius: 999px !important;
+  }
+  .mescamp-wrap .btn-primary:hover { background: var(--emerald-dark) !important; }
+
+  /* ---------- Section titles ---------- */
+  .mescamp-wrap h4.fw-bold {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  .mescamp-wrap h4.fw-bold.text-danger { color: var(--clay) !important; }
+  .mescamp-wrap h4.fw-bold .text-warning { color: var(--amber) !important; }
+  .mescamp-wrap h4.fw-bold .text-primary { color: var(--emerald) !important; }
+  .mescamp-wrap h4.fw-bold .text-success { color: var(--emerald-dark) !important; }
+  .mescamp-wrap p.text-muted { color: var(--ink-soft) !important; }
+  .mescamp-wrap hr { border-color: var(--line); opacity: 1; margin: 2rem 0; }
+
+  /* ---------- Card shell (generic) ---------- */
+  .mescamp-wrap .card {
+    border-radius: 14px !important;
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .mescamp-wrap .card:hover { transform: translateY(-2px); }
+  .mescamp-wrap .card-title { font-family: 'Fraunces', serif; font-weight: 600 !important; }
+  .mescamp-wrap .card-text.text-muted { color: var(--ink-soft) !important; }
+
+  /* ---------- Refusées ---------- */
+  .mescamp-wrap .card.border-danger { border: 1px solid var(--clay-tint) !important; border-top: 3px solid var(--clay) !important; }
+  .mescamp-wrap .card-header.bg-danger {
+    background: var(--clay) !important;
+    border: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+  }
+  .mescamp-wrap .card-header.bg-danger .badge.bg-white { color: var(--clay) !important; border-radius: 999px; }
+  .mescamp-wrap .alert-danger.border-start {
+    background: var(--clay-tint) !important;
+    border-color: var(--clay) !important;
+    color: #7c3327 !important;
+    border-radius: 8px !important;
+  }
+  .mescamp-wrap .btn-warning {
+    background: var(--amber) !important;
+    border: none !important;
+    color: #fff !important;
+    border-radius: 8px !important;
+  }
+  .mescamp-wrap .btn-warning:hover { filter: brightness(0.93); }
+  .mescamp-wrap .btn-outline-danger {
+    color: var(--clay) !important;
+    border-color: var(--clay) !important;
+    border-radius: 8px !important;
+  }
+  .mescamp-wrap .btn-outline-danger:hover { background: var(--clay) !important; color: #fff !important; }
+  .mescamp-wrap .btn-light.text-muted { background: var(--slate-tint) !important; border-radius: 8px !important; }
+
+  /* ---------- Non payées ---------- */
+  .mescamp-wrap .card.border-warning { border: 1px solid var(--amber-tint) !important; border-top: 3px solid var(--amber) !important; }
+  .mescamp-wrap .badge.bg-warning.text-dark {
+    background: var(--amber-tint) !important;
+    color: var(--amber) !important;
+    border-radius: 999px;
+  }
+  .mescamp-wrap .btn-success {
+    background: var(--emerald) !important;
+    border: none !important;
+    border-radius: 8px !important;
+  }
+  .mescamp-wrap .btn-success:hover { background: var(--emerald-dark) !important; }
+
+  /* ---------- En cours ---------- */
+  .mescamp-wrap .card.border-primary { border: 1px solid var(--emerald-tint) !important; border-top: 3px solid var(--emerald) !important; }
+  .mescamp-wrap .badge.bg-primary { background: var(--emerald) !important; border-radius: 999px; }
+  .mescamp-wrap .badge.bg-success { background: var(--emerald) !important; border-radius: 999px; }
+  .mescamp-wrap .bg-light.border.rounded {
+    background: var(--slate-tint) !important;
+    border: 1px solid var(--line) !important;
+  }
+  .mescamp-wrap .btn-outline-primary {
+    color: var(--emerald-dark) !important;
+    border-color: var(--emerald) !important;
+    border-radius: 8px !important;
+  }
+  .mescamp-wrap .btn-outline-primary:hover { background: var(--emerald) !important; color: #fff !important; }
+
+  /* Daily quota progress (signature element, reused across pages) */
+  .mescamp-wrap .quota-track {
+    width: 100%; height: 6px;
+    border-radius: 999px;
+    background: var(--line);
+    overflow: hidden;
+    margin-top: 0.5rem;
+  }
+  .mescamp-wrap .quota-fill { height: 100%; background: var(--emerald); border-radius: 999px; }
+  .mescamp-wrap .quota-fill.quota-paused { background: var(--amber); }
+
+  /* ---------- Terminées ---------- */
+  .mescamp-wrap .card.border-success { border: 1px solid var(--emerald-tint) !important; border-top: 3px solid var(--emerald-dark) !important; }
+  .mescamp-wrap .btn-outline-success {
+    color: var(--emerald-dark) !important;
+    border-color: var(--emerald) !important;
+    border-radius: 8px !important;
+  }
+  .mescamp-wrap .btn-outline-success:hover { background: var(--emerald) !important; color: #fff !important; }
+
+  /* ---------- Modals ---------- */
+  .mescamp-wrap .modal-content { border-radius: 16px !important; border: none !important; overflow: hidden; }
+  .mescamp-wrap .modal-header.bg-warning {
+    background: var(--amber) !important;
+    color: #fff !important;
+  }
+  .mescamp-wrap .modal-header.bg-warning .btn-close { filter: invert(1) brightness(2); }
+  .mescamp-wrap .modal-header.bg-danger { background: var(--clay) !important; }
+  .mescamp-wrap .modal-title { font-family: 'Fraunces', serif; font-weight: 600; }
+  .mescamp-wrap .modal-body .form-label.fw-bold {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500 !important;
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .mescamp-wrap .modal-body .form-control,
+  .mescamp-wrap .modal-body .form-select {
+    border: 1px solid var(--line);
+    border-radius: 9px;
+  }
+  .mescamp-wrap .modal-body .form-control:focus,
+  .mescamp-wrap .modal-body .form-select:focus {
+    border-color: var(--emerald);
+    box-shadow: 0 0 0 0.2rem var(--emerald-tint);
+  }
+  .mescamp-wrap .modal-body .bg-light.p-3.rounded.border {
+    background: var(--slate-tint) !important;
+    border-color: var(--line) !important;
+  }
+  .mescamp-wrap .modal-footer { border-top: 1px solid var(--line); }
+  .mescamp-wrap .modal-footer .btn-secondary {
+    background: var(--paper-raised) !important;
+    border: 1px solid var(--line) !important;
+    color: var(--ink) !important;
+    border-radius: 8px !important;
+  }
+</style>
+
+<div class="mescamp-wrap">
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <h2 class="mb-0 fw-bold">📊 Mes Campagnes Publicitaires</h2>
@@ -315,6 +512,8 @@
                             {{ campaign.views_today or 0 }} / {{ campaign.views_per_day }} clics aujourd'hui
                             — {{ campaign.whatsapp_views or 0 }} / {{ campaign.target_whatsapp_views }} clics au total
                         </div>
+                        {% set jour_pct = (campaign.views_today / campaign.views_per_day * 100) if campaign.views_per_day else 0 %}
+                        <div class="quota-track"><div class="quota-fill {{ 'quota-paused' if campaign.daily_quota_paused else '' }}" style="width: {{ [jour_pct, 100] | min }}%;"></div></div>
                     </div>
 
                     <span class="badge bg-primary mb-2">🚀 Active / Diffusée</span>
@@ -364,5 +563,6 @@
     {% else %}
     <p class="text-muted">Aucune campagne terminée.</p>
     {% endif %}
+</div>
 </div>
 {% endblock %}

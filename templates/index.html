@@ -1,35 +1,139 @@
 {% extends "base.html" %}
 {% block content %}
-  <div class="text-center mb-5">
-    <h1>Bienvenue sur Pubwek</h1>
-    <p class="lead">
-      Pubwek est une plateforme qui connecte les <strong>entreprises</strong> du Bénin 
-      et les <strong>partageurs</strong> qui font la promotion des produits sur des statut  
-      WhatsApp.
-    </p>
+<style>
+  .hero {
+    text-align: center;
+    padding: 60px 20px 40px;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e8f5e9 100%);
+    border-radius: 16px;
+    margin-bottom: 3rem;
+  }
+
+  .hero h1 {
+    font-size: 2.75rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 1rem;
+  }
+
+  .hero .lead {
+    font-size: 1.15rem;
+    color: #444;
+    max-width: 700px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  .cards-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    justify-content: center;
+  }
+
+  .role-card {
+    flex: 1 1 320px;
+    max-width: 420px;
+    background: #fff;
+    padding: 2.5rem 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    border: 1px solid #eee;
+  }
+
+  .role-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  }
+
+  .role-card .icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .role-card h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #1a1a2e;
+  }
+
+  .role-card p {
+    color: #666;
+    margin-bottom: 1.75rem;
+    line-height: 1.5;
+  }
+
+  .role-card .btn {
+    padding: 0.7rem 1.8rem;
+    border-radius: 50px;
+    font-weight: 600;
+    border: none;
+    text-decoration: none;
+    display: inline-block;
+    transition: opacity 0.2s ease;
+  }
+
+  .role-card .btn:hover {
+    opacity: 0.9;
+  }
+
+  .btn-annonceur {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    color: #fff;
+  }
+
+  .btn-partageur {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: #fff;
+  }
+
+  @media (max-width: 576px) {
+    .hero {
+      padding: 40px 16px 30px;
+    }
+    .hero h1 {
+      font-size: 2rem;
+    }
+    .hero .lead {
+      font-size: 1rem;
+    }
+    .role-card {
+      padding: 2rem 1.5rem;
+    }
+  }
+</style>
+
+<div class="hero">
+  <h1>Bienvenue sur Pubwek</h1>
+  <p class="lead">
+    Pubwek est une plateforme qui connecte les <strong>entreprises</strong> du Bénin
+    et les <strong>partageurs</strong> qui font la promotion des produits sur des statuts
+    WhatsApp.
+  </p>
+</div>
+
+<div class="cards-row">
+  <!-- Section Annonceurs -->
+  <div class="role-card">
+    <div class="icon">🏢</div>
+    <h2>Annonceurs</h2>
+    <p>Publiez vos produits et touchez plus de clients grâce aux partageurs.</p>
+    <a href="{{ url_for('register', role='annonceur') }}" class="btn btn-annonceur">
+      Je suis un annonceur
+    </a>
   </div>
 
-  <div class="row">
-    <!-- Section Annonceurs -->
-    <div class="col-md-6">
-      <div class="section-annonceurs text-center p-4 border rounded shadow-sm">
-        <h2>Annonceurs</h2>
-        <p>Publiez vos produits et touchez plus de clients grâce aux partageurs.</p>
-        <a href="{{ url_for('register', role='annonceur') }}" class="btn btn-success">
-          Je suis un annonceur
-        </a>
-      </div>
-    </div>
-
-    <!-- Section Partageurs -->
-    <div class="col-md-6">
-      <div class="section-partageurs text-center p-4 border rounded shadow-sm">
-        <h2>Partageurs</h2>
-        <p>Partagez des produits et gagnez de l’argent selon les clics que vous générez.</p>
-        <a href="{{ url_for('register', role='partageur') }}" class="btn btn-primary">
-          Je suis un partageur
-        </a>
-      </div>
-    </div>
+  <!-- Section Partageurs -->
+  <div class="role-card">
+    <div class="icon">📲</div>
+    <h2>Partageurs</h2>
+    <p>Partagez des produits et gagnez de l'argent selon les clics que vous générez.</p>
+    <a href="{{ url_for('register', role='partageur') }}" class="btn btn-partageur">
+      Je suis un partageur
+    </a>
   </div>
+</div>
 {% endblock %}

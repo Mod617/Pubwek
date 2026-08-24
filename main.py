@@ -55,6 +55,7 @@ from models import (
     SystemConfig,
     Transaction,
     UploadedFile,
+    CampaignShareProof,
     User,
     UserSubscription,
     WalletTransaction,

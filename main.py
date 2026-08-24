@@ -3932,13 +3932,17 @@ def admin_preuves_partage():
         flash("Accès refusé 🚫", "danger")
         return redirect(url_for("index"))
 
-    preuves = (
-        CampaignShareProof.query
-        .filter_by(status="en_attente")
-        .order_by(CampaignShareProof.submitted_at.asc())
-        .all()
-    )
-    return render_template("preuves_partage.html", preuves=preuves)
+    campaign_id = request.args.get("campaign_id", type=int)
+
+    query = CampaignShareProof.query.filter_by(status="en_attente")
+    if campaign_id:
+        query = query.join(CampaignShare).filter(CampaignShare.campaign_id == campaign_id)
+
+    preuves = query.order_by(CampaignShareProof.submitted_at.asc()).all()
+
+    camp_filtree = db.session.get(Campaign, campaign_id) if campaign_id else None
+
+    return render_template("preuves_partage.html", preuves=preuves, camp_filtree=camp_filtree)
 
 
 

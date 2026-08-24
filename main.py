@@ -2668,33 +2668,42 @@ def instructions_partage(campaign_id):
     if current_user.role != "partageur":
         flash("Accès réservé aux partageurs. 🚫", "danger")
         return redirect(url_for("index"))
-
     camp = db.session.get(Campaign, campaign_id)
     if not camp:
         flash("Campagne introuvable. ⚠️", "danger")
         return redirect(url_for("dashboard_partageur"))
-
     share = CampaignShare.query.filter_by(campaign_id=camp.id, sharer_id=current_user.id).first()
     if not share:
         flash('Veuillez d\'abord cliquer sur "Partager cette campagne" depuis votre tableau de bord. ⚠️', "warning")
         return redirect(url_for("dashboard_partageur"))
-
     media_urls = []
     if camp.media_files:
         for f in camp.media_files.split(","):
             media_urls.append(url_for("serve_upload", filename=f))
-
     # 🆕 Liens de tracking à insérer dans le statut (whatsapp + site web si disponibles)
     lien_whatsapp_tracking = url_for("tracking_redirect_whatsapp", token=share.tracking_token, _external=True) if camp.whatsapp_number else None
     lien_site_tracking = url_for("tracking_redirect_site", token=share.tracking_token, _external=True) if camp.website_url else None
 
+    # 🆕 Preuves du jour de diffusion en cours
+    jour_actuel = jour_diffusion_campagne(camp)
+    preuve_debut = CampaignShareProof.query.filter_by(
+        campaign_share_id=share.id, day_number=jour_actuel, proof_type="debut"
+    ).first()
+    preuve_fin = CampaignShareProof.query.filter_by(
+        campaign_share_id=share.id, day_number=jour_actuel, proof_type="fin"
+    ).first()
+
     return render_template(
         "instructions_partage.html",
         camp=camp,
+        share=share,
         media_urls=media_urls,
         lien_whatsapp_tracking=lien_whatsapp_tracking,
-        lien_site_tracking=lien_site_tracking
-    )   
+        lien_site_tracking=lien_site_tracking,
+        jour_actuel=jour_actuel,
+        preuve_debut=preuve_debut,
+        preuve_fin=preuve_fin,
+    ) 
 
 
 # ==========================================

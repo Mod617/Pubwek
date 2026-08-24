@@ -80,7 +80,7 @@
             </div>
             {% endif %}
 
-            <!-- ÉTAPE FINALE : OUVRIR WHATSAPP -->
+            <!-- ÉTAPE : OUVRIR WHATSAPP -->
             <div class="mb-2">
                 <h5 class="fw-bold">
                     <span class="badge bg-primary rounded-circle me-2">{{ "3" if media_urls else "2" }}</span>
@@ -96,6 +96,51 @@
                 <small class="text-muted d-block mt-2 text-center">
                     Sur ordinateur, WhatsApp doit être installé pour que ce lien fonctionne. Sinon, ouvrez WhatsApp directement sur votre téléphone.
                 </small>
+            </div>
+
+            <!-- ÉTAPE FINALE : ENVOI DES PREUVES DU JOUR -->
+            <div class="mb-4 mt-4 pt-3 border-top">
+                <h5 class="fw-bold">
+                    <span class="badge bg-primary rounded-circle me-2">{{ "4" if media_urls else "3" }}</span>
+                    Envoyez vos preuves du jour {{ jour_actuel }} / {{ camp.duration_days }}
+                </h5>
+                <p class="text-muted small mb-3">
+                    Pour que vos clics du jour {{ jour_actuel }} soient crédités sur votre portefeuille, envoyez une capture d'écran de votre statut au début et une autre à la fin de la journée.
+                </p>
+
+                <div class="mb-3">
+                    <strong class="d-block mb-1">📸 Capture de début de journée</strong>
+                    {% if preuve_debut and preuve_debut.status == "validee" %}
+                        <span class="badge bg-success">✅ Validée</span>
+                    {% elif preuve_debut and preuve_debut.status == "en_attente" %}
+                        <span class="badge bg-warning text-dark">⏳ En attente de validation</span>
+                    {% else %}
+                        {% if preuve_debut and preuve_debut.status == "rejetee" %}
+                            <div class="alert alert-danger py-2 px-3 small mb-2">❌ Rejetée : {{ preuve_debut.rejection_reason }}. Veuillez renvoyer une capture.</div>
+                        {% endif %}
+                        <form method="POST" action="{{ url_for('envoyer_preuve_partage', share_id=share.id, proof_type='debut') }}" enctype="multipart/form-data" class="d-flex gap-2">
+                            <input type="file" name="preuve" accept="image/*" required class="form-control form-control-sm">
+                            <button type="submit" class="btn btn-primary btn-sm text-nowrap">Envoyer</button>
+                        </form>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <strong class="d-block mb-1">📸 Capture de fin de journée</strong>
+                    {% if preuve_fin and preuve_fin.status == "validee" %}
+                        <span class="badge bg-success">✅ Validée</span>
+                    {% elif preuve_fin and preuve_fin.status == "en_attente" %}
+                        <span class="badge bg-warning text-dark">⏳ En attente de validation</span>
+                    {% else %}
+                        {% if preuve_fin and preuve_fin.status == "rejetee" %}
+                            <div class="alert alert-danger py-2 px-3 small mb-2">❌ Rejetée : {{ preuve_fin.rejection_reason }}. Veuillez renvoyer une capture.</div>
+                        {% endif %}
+                        <form method="POST" action="{{ url_for('envoyer_preuve_partage', share_id=share.id, proof_type='fin') }}" enctype="multipart/form-data" class="d-flex gap-2">
+                            <input type="file" name="preuve" accept="image/*" required class="form-control form-control-sm">
+                            <button type="submit" class="btn btn-primary btn-sm text-nowrap">Envoyer</button>
+                        </form>
+                    {% endif %}
+                </div>
             </div>
 
             <div class="text-center mt-4">

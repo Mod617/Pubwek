@@ -1,108 +1,445 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-5">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-        <div>
-            <h2 class="mb-1 fw-bold">👥 Partageurs de la campagne</h2>
-            <p class="text-muted mb-0">{{ campaign.promotion_type | capitalize }} - {{ campaign.promotion_detail }}</p>
-        </div>
-        <a href="{{ url_for('mes_campagnes') }}" class="btn btn-outline-secondary fw-bold shadow-sm">
-            ⬅️ Retour à mes campagnes
-        </a>
+<style>
+  :root {
+    --paper:        #F5F3ED;
+    --paper-raised: #FFFFFF;
+    --ink:          #1B2A2E;
+    --ink-soft:     #5B6B6C;
+    --line:         #E3DFD3;
+    --emerald:      #2F6F5E;
+    --emerald-dark: #1F4F42;
+    --emerald-tint: #E7F0EC;
+    --amber:        #B8842E;
+    --amber-tint:   #F8EEDD;
+    --clay:         #B0483C;
+    --clay-tint:    #F6E7E3;
+    --whatsapp:     #2F9E6F;
+    --site:         #2E6C8E;
+    --slate-tint:   #EFEDE4;
+  }
+
+  .partageurs-wrap {
+    background: var(--paper);
+    padding: 2.5rem 1.25rem 4rem;
+    margin: -1.5rem calc(50% - 50vw) 0;
+    padding-left: calc(1.25rem + (50vw - 50%));
+    padding-right: calc(1.25rem + (50vw - 50%));
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  .partageurs-inner { max-width: 1180px; margin: 0 auto; }
+
+  /* ---------- Header ---------- */
+  .p-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-bottom: 2.25rem;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 1.5rem;
+  }
+  .p-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--emerald);
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .p-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: clamp(1.6rem, 3vw, 2.35rem);
+    margin: 0 0 0.3rem;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .p-subtitle { color: var(--ink-soft); font-size: 0.95rem; margin: 0; }
+
+  .btn-retour {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--ink);
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.6rem 1.25rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: border-color .15s ease, transform .15s ease;
+    white-space: nowrap;
+  }
+  .btn-retour:hover { border-color: var(--emerald); color: var(--emerald-dark); transform: translateY(-1px); }
+
+  /* ---------- Stat strip ---------- */
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  @media (max-width: 860px) {
+    .stat-strip { grid-template-columns: repeat(2, 1fr); }
+  }
+  .stat-box {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 1.15rem 1.2rem;
+    text-align: center;
+  }
+  .stat-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 0.4rem;
+  }
+  .stat-value {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 1.7rem;
+    color: var(--ink);
+  }
+  .stat-value.c-emerald { color: var(--emerald-dark); }
+  .stat-value.c-whatsapp { color: var(--whatsapp); }
+  .stat-value.c-site { color: var(--site); }
+
+  /* ---------- Signature element: goal progress ---------- */
+  .goal-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 1.4rem 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .goal-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.9rem;
+  }
+  .goal-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .goal-figures {
+    font-family: 'Fraunces', serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .goal-figures span { color: var(--ink-soft); font-family: 'Inter', sans-serif; font-weight: 500; font-size: 0.95rem; }
+
+  .goal-track {
+    position: relative;
+    width: 100%;
+    height: 14px;
+    border-radius: 999px;
+    background: var(--slate-tint);
+    overflow: hidden;
+    display: flex;
+  }
+  .goal-fill-whatsapp { background: var(--whatsapp); height: 100%; }
+  .goal-fill-site { background: var(--site); height: 100%; }
+  .goal-fill-overflow {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    border: 2px solid var(--amber);
+  }
+
+  .goal-legend {
+    display: flex;
+    gap: 1.4rem;
+    margin-top: 0.7rem;
+    flex-wrap: wrap;
+  }
+  .goal-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+  }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .legend-dot.whatsapp { background: var(--whatsapp); }
+  .legend-dot.site { background: var(--site); }
+  .legend-dot.remaining { background: var(--slate-tint); border: 1px solid var(--line); }
+
+  /* ---------- Table ---------- */
+  .p-card {
+    background: var(--paper-raised);
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(27,42,46,0.04);
+  }
+  .p-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  .p-table thead th {
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 0.9rem 1.1rem;
+  }
+  .p-table tbody tr { border-bottom: 1px solid var(--line); transition: background .15s ease; }
+  .p-table tbody tr:last-child { border-bottom: none; }
+  .p-table tbody tr:hover { background: var(--emerald-tint); }
+  .p-table td { padding: 0.9rem 1.1rem; vertical-align: middle; text-align: left; }
+
+  .pseudo-cell { display: flex; align-items: center; gap: 0.65rem; font-weight: 600; }
+  .avatar-badge {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--emerald-tint);
+    color: var(--emerald-dark);
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+
+  .clic-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.28rem 0.65rem;
+    border-radius: 999px;
+  }
+  .clic-badge.whatsapp { background: var(--emerald-tint); color: var(--whatsapp); }
+  .clic-badge.site { background: #E4EEF3; color: var(--site); }
+  .clic-empty { color: var(--ink-soft); font-size: 0.85rem; }
+  .date-cell { color: var(--ink-soft); font-size: 0.85rem; white-space: nowrap; }
+
+  .p-empty {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--ink-soft);
+  }
+  .p-empty .empty-glyph {
+    font-family: 'Fraunces', serif;
+    font-size: 2.2rem;
+    color: var(--emerald);
+    display: block;
+    margin-bottom: 0.6rem;
+  }
+
+  /* ---------- Mobile cards ---------- */
+  .p-mobile-list { display: none; }
+  @media (max-width: 860px) {
+    .p-table-wrap { display: none; }
+    .p-mobile-list { display: block; }
+
+    .m-card {
+      background: var(--paper-raised);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 1.05rem 1.15rem;
+      margin-bottom: 0.85rem;
+    }
+    .m-top { display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.75rem; }
+    .m-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.4rem 0;
+      border-top: 1px solid var(--line);
+      font-size: 0.88rem;
+    }
+    .m-row:first-of-type { border-top: none; }
+    .m-row-label { color: var(--ink-soft); font-size: 0.78rem; }
+  }
+
+  /* ---------- Footer note ---------- */
+  .p-footnote {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    color: var(--ink-soft);
+    font-size: 0.82rem;
+    margin-top: 1.4rem;
+    line-height: 1.5;
+  }
+  .p-footnote i { color: var(--emerald); margin-top: 0.15rem; }
+</style>
+
+<div class="partageurs-wrap">
+  <div class="partageurs-inner">
+
+    <div class="p-head">
+      <div>
+        <span class="p-eyebrow">Performance de diffusion</span>
+        <h2 class="p-title">Partageurs de la campagne</h2>
+        <p class="p-subtitle">{{ campaign.promotion_type | capitalize }} — {{ campaign.promotion_detail }}</p>
+      </div>
+      <a href="{{ url_for('mes_campagnes') }}" class="btn-retour">← Retour à mes campagnes</a>
     </div>
 
-    <!-- Résumé rapide -->
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="card border-0 shadow-sm text-center p-3 bg-light">
-                <div class="text-muted small">Nombre de partageurs</div>
-                <div class="h3 fw-bold text-dark mb-0">{{ partageurs | length }}</div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card border-0 shadow-sm text-center p-3 bg-light">
-                <div class="text-muted small">Total de clics comptabilisés</div>
-                <div class="h3 fw-bold text-primary mb-0">{{ "{:,}".format(total_clics) }}</div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card border-0 shadow-sm text-center p-3 bg-light">
-                <div class="text-muted small">Clics WhatsApp</div>
-                <div class="h3 fw-bold text-success mb-0">{{ "{:,}".format(total_clics_whatsapp) }}</div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card border-0 shadow-sm text-center p-3 bg-light">
-                <div class="text-muted small">Clics Site web</div>
-                <div class="h3 fw-bold text-info mb-0">{{ "{:,}".format(total_clics_site) }}</div>
-            </div>
-        </div>
+    <!-- Stat strip -->
+    <div class="stat-strip">
+      <div class="stat-box">
+        <div class="stat-label">Partageurs</div>
+        <div class="stat-value">{{ partageurs | length }}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Total clics</div>
+        <div class="stat-value c-emerald">{{ "{:,}".format(total_clics).replace(",", " ") }}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label"><i class="bi bi-whatsapp"></i> Clics WhatsApp</div>
+        <div class="stat-value c-whatsapp">{{ "{:,}".format(total_clics_whatsapp).replace(",", " ") }}</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label"><i class="bi bi-globe"></i> Clics site web</div>
+        <div class="stat-value c-site">{{ "{:,}".format(total_clics_site).replace(",", " ") }}</div>
+      </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-md-4 mb-3">
-            <div class="card border-0 shadow-sm text-center p-3 bg-white border">
-                <div class="text-muted small">Objectif de clics de la campagne</div>
-                <div class="h4 fw-bold text-dark mb-0">{{ "{:,}".format(campaign.target_whatsapp_views) }}</div>
-            </div>
-        </div>
+    <!-- Signature: goal progress -->
+    <div class="goal-card">
+      {% set target = campaign.target_whatsapp_views %}
+      {% set pct_whatsapp = (total_clics_whatsapp / target * 100) if target else 0 %}
+      {% set pct_site = (total_clics_site / target * 100) if target else 0 %}
+      {% set pct_total = (total_clics / target * 100) if target else 0 %}
+      <div class="goal-top">
+        <span class="goal-label">Objectif de clics de la campagne</span>
+        <span class="goal-figures">
+          {{ "{:,}".format(total_clics).replace(",", " ") }}
+          <span>/ {{ "{:,}".format(target).replace(",", " ") }} visés · {{ pct_total | round(1) }}%</span>
+        </span>
+      </div>
+      <div class="goal-track">
+        <div class="goal-fill-whatsapp" style="width: {{ [pct_whatsapp, 100] | min }}%;"></div>
+        <div class="goal-fill-site" style="width: {{ [pct_site, 100 - ([pct_whatsapp, 100] | min)] | min }}%;"></div>
+      </div>
+      <div class="goal-legend">
+        <span class="goal-legend-item"><span class="legend-dot whatsapp"></span>WhatsApp</span>
+        <span class="goal-legend-item"><span class="legend-dot site"></span>Site web</span>
+        <span class="goal-legend-item"><span class="legend-dot remaining"></span>Restant à atteindre</span>
+      </div>
     </div>
 
     <!-- Liste des partageurs -->
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-0">
-            {% if partageurs %}
-            <div class="table-responsive">
-                <table class="table table-hover mb-0 align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="ps-3">Pseudo</th>
-                                                        <th><i class="bi bi-whatsapp text-success me-1"></i>Clics WhatsApp</th>
-                            <th><i class="bi bi-globe text-info me-1"></i>Clics Site web</th>
-                            <th class="pe-3">A partagé le</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for p in partageurs %}
-                        <tr>
-                            <td class="ps-3 fw-bold">
-                                <i class="fas fa-user-circle text-secondary me-2"></i>{{ p.pseudo }}
-                            </td>
-                            <td>
-                                {% if p.clics_whatsapp %}
-                                <span class="badge bg-success">{{ "{:,}".format(p.clics_whatsapp) }} clic{{ 's' if p.clics_whatsapp != 1 else '' }}</span>
-                                {% else %}
-                                <span class="text-muted small">—</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if p.clics_site %}
-                                <span class="badge bg-info text-dark">{{ "{:,}".format(p.clics_site) }} clic{{ 's' if p.clics_site != 1 else '' }}</span>
-                                {% else %}
-                                <span class="text-muted small">—</span>
-                                {% endif %}
-                            </td>
-                            <td class="pe-3 text-muted small">{{ p.partage_le or "—" }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <p class="text-muted text-center p-4 mb-0">Aucun partageur n'a encore pris cette campagne.</p>
-            {% endif %}
-        </div>
-    </div>
+    {% if partageurs %}
 
-    <p class="text-muted small mt-3">
-        <i class="fas fa-shield-alt me-1"></i>
-        Pour la sécurité et la confidentialité des partageurs, seul leur pseudo est affiché.
-        Aucune information personnelle (numéro, email) n'est communiquée aux annonceurs.
+      <!-- Desktop table -->
+      <div class="p-table-wrap">
+        <div class="p-card">
+          <table class="p-table">
+            <thead>
+              <tr>
+                <th>Pseudo</th>
+                <th><i class="bi bi-whatsapp"></i> Clics WhatsApp</th>
+                <th><i class="bi bi-globe"></i> Clics site web</th>
+                <th>A partagé le</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in partageurs %}
+              <tr>
+                <td>
+                  <div class="pseudo-cell">
+                    <span class="avatar-badge">{{ p.pseudo[0] }}</span>
+                    {{ p.pseudo }}
+                  </div>
+                </td>
+                <td>
+                  {% if p.clics_whatsapp %}
+                    <span class="clic-badge whatsapp"><i class="bi bi-whatsapp"></i>{{ "{:,}".format(p.clics_whatsapp) }} clic{{ 's' if p.clics_whatsapp != 1 else '' }}</span>
+                  {% else %}
+                    <span class="clic-empty">—</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if p.clics_site %}
+                    <span class="clic-badge site"><i class="bi bi-globe"></i>{{ "{:,}".format(p.clics_site) }} clic{{ 's' if p.clics_site != 1 else '' }}</span>
+                  {% else %}
+                    <span class="clic-empty">—</span>
+                  {% endif %}
+                </td>
+                <td class="date-cell">{{ p.partage_le or "—" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Mobile cards -->
+      <div class="p-mobile-list">
+        {% for p in partageurs %}
+        <div class="m-card">
+          <div class="m-top">
+            <span class="avatar-badge">{{ p.pseudo[0] }}</span>
+            <strong>{{ p.pseudo }}</strong>
+          </div>
+          <div class="m-row">
+            <span class="m-row-label"><i class="bi bi-whatsapp"></i> Clics WhatsApp</span>
+            <span>
+              {% if p.clics_whatsapp %}
+                <span class="clic-badge whatsapp">{{ "{:,}".format(p.clics_whatsapp) }} clic{{ 's' if p.clics_whatsapp != 1 else '' }}</span>
+              {% else %}<span class="clic-empty">—</span>{% endif %}
+            </span>
+          </div>
+          <div class="m-row">
+            <span class="m-row-label"><i class="bi bi-globe"></i> Clics site web</span>
+            <span>
+              {% if p.clics_site %}
+                <span class="clic-badge site">{{ "{:,}".format(p.clics_site) }} clic{{ 's' if p.clics_site != 1 else '' }}</span>
+              {% else %}<span class="clic-empty">—</span>{% endif %}
+            </span>
+          </div>
+          <div class="m-row">
+            <span class="m-row-label">A partagé le</span>
+            <span class="date-cell">{{ p.partage_le or "—" }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+    {% else %}
+      <div class="p-card">
+        <div class="p-empty">
+          <span class="empty-glyph">◌</span>
+          <p class="mb-0">Aucun partageur n'a encore pris cette campagne.</p>
+        </div>
+      </div>
+    {% endif %}
+
+    <p class="p-footnote">
+      <i class="fas fa-shield-alt"></i>
+      Pour la sécurité et la confidentialité des partageurs, seul leur pseudo est affiché. Aucune information personnelle (numéro, email) n'est communiquée aux annonceurs.
     </p>
 
+  </div>
 </div>
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 {% endblock %}

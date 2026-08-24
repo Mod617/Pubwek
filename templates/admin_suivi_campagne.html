@@ -1,58 +1,306 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-5">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+<style>
+  .campaign-page {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e8f5e9 100%);
+    min-height: 100vh;
+    padding: 2.5rem 0 3rem;
+  }
+
+  .page-header {
+    background: #fff;
+    border-radius: 16px;
+    padding: 1.75rem 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    margin-bottom: 2rem;
+  }
+
+  .page-header h2 {
+    color: #1a1a2e;
+    font-weight: 700;
+  }
+
+  .page-header .text-muted {
+    font-size: 0.95rem;
+  }
+
+  .btn-outline-warning {
+    border-radius: 50px;
+    font-weight: 600;
+    border-color: #e67e22;
+    color: #e67e22;
+  }
+
+  .btn-outline-warning:hover {
+    background: #e67e22;
+    border-color: #e67e22;
+  }
+
+  .btn-back-admin {
+    border-radius: 50px;
+    padding: 0.6rem 1.4rem;
+    font-weight: 600;
+    background: #f1f1f1;
+    color: #333;
+    border: none;
+    transition: background 0.2s ease;
+  }
+
+  .btn-back-admin:hover {
+    background: #e4e4e4;
+    color: #111;
+  }
+
+  /* Carte progression */
+  .progress-card {
+    border: none;
+    border-radius: 18px;
+    box-shadow: 0 6px 28px rgba(0, 0, 0, 0.07);
+    margin-bottom: 2rem;
+    overflow: hidden;
+  }
+
+  .progress-card .card-body {
+    padding: 2rem;
+  }
+
+  .progress-card h5 {
+    color: #1a1a2e;
+  }
+
+  .status-badge {
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  .metric-block {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .metric-block .metric-label {
+    color: #999;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .metric-block .metric-value {
+    font-size: 1.35rem;
+    font-weight: 700;
+  }
+
+  .alert-quota {
+    border-radius: 12px;
+    background: #fff8ec;
+    border: 1px solid #ffe0a3;
+    color: #92650b;
+  }
+
+  /* Cartes résumé */
+  .summary-card {
+    border: none;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    text-align: center;
+    padding: 1.25rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    height: 100%;
+  }
+
+  .summary-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+
+  .summary-card .text-muted {
+    font-size: 0.8rem;
+  }
+
+  .summary-card .h3 {
+    margin-top: 0.35rem;
+  }
+
+  /* Tableau */
+  .table-card {
+    border: none;
+    border-radius: 18px;
+    box-shadow: 0 6px 28px rgba(0, 0, 0, 0.07);
+    overflow: hidden;
+  }
+
+  .table-card thead tr {
+    background: #1a1a2e !important;
+  }
+
+  .table-card thead th {
+    border: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.3px;
+    color: #fff !important;
+    padding: 1rem 0.9rem;
+  }
+
+  .table-card tbody td {
+    padding: 0.9rem;
+    vertical-align: middle;
+    border-color: #f0f0f0;
+  }
+
+  .table-card tbody tr:hover {
+    background-color: #f8fbf9;
+  }
+
+  .empty-state {
+    padding: 2.5rem;
+    text-align: center;
+    color: #888;
+  }
+
+  @media (max-width: 768px) {
+    .page-header {
+      padding: 1.5rem;
+    }
+    .page-header .d-flex.gap-2 {
+      width: 100%;
+    }
+    .page-header .d-flex.gap-2 .btn {
+      flex: 1;
+    }
+    .progress-card .card-body {
+      padding: 1.5rem;
+    }
+  }
+
+  /* ========================================== */
+  /* 📱 TRANSFORMATION TABLEAU → CARTES SUR MOBILE */
+  /* ========================================== */
+  @media (max-width: 767.98px) {
+    .responsive-table thead {
+      display: none;
+    }
+
+    .responsive-table,
+    .responsive-table tbody,
+    .responsive-table tr,
+    .responsive-table td {
+      display: block;
+      width: 100%;
+    }
+
+    .responsive-table tr {
+      background: #fff;
+      border: 1px solid #eee;
+      border-radius: 14px;
+      margin: 0.75rem;
+      padding: 0.75rem 1rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    }
+
+    .responsive-table tr:hover {
+      background-color: #fff;
+    }
+
+    .responsive-table td {
+      text-align: right !important;
+      padding: 0.6rem 0 !important;
+      border: none !important;
+      border-bottom: 1px solid #f2f2f2 !important;
+      position: relative;
+      padding-left: 45% !important;
+      min-height: 1.5rem;
+    }
+
+    .responsive-table td:last-child {
+      border-bottom: none !important;
+    }
+
+    .responsive-table td::before {
+      content: attr(data-label);
+      position: absolute;
+      left: 0;
+      top: 0.6rem;
+      width: 40%;
+      font-weight: 600;
+      font-size: 0.78rem;
+      color: #888;
+      text-align: left;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .responsive-table td[data-label="Pseudo"] {
+      text-align: left !important;
+    }
+  }
+</style>
+
+<div class="campaign-page">
+<div class="container">
+
+    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
-            <h2 class="mb-1 fw-bold">📊 Suivi de la campagne #{{ campaign.id }}</h2>
+            <h2 class="mb-1">📊 Suivi de la campagne #{{ campaign.id }}</h2>
             <p class="text-muted mb-0">{{ campaign.promotion_type | capitalize }} - {{ campaign.promotion_detail }}</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ url_for('admin_preuves_partage', campaign_id=campaign.id) }}" class="btn btn-outline-warning fw-bold shadow-sm">
+            <a href="{{ url_for('admin_preuves_partage', campaign_id=campaign.id) }}" class="btn btn-outline-warning">
                 📸 Voir les preuves de partage
             </a>
-            <a href="{{ url_for('admin_validate') }}" class="btn btn-outline-secondary fw-bold shadow-sm">
+            <a href="{{ url_for('admin_validate') }}" class="btn btn-back-admin">
                 ⬅️ Retour au panneau d'administration
             </a>
         </div>
     </div>
 
     <!-- Progression jour par jour -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
+    <div class="card progress-card">
+        <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                 <h5 class="fw-bold mb-0"><i class="bi bi-calendar3 me-2"></i>Progression de la diffusion</h5>
                 {% if campaign.is_active and campaign.current_day_number %}
-                    <span class="badge bg-primary px-3 py-2">Jour {{ campaign.current_day_number }} / {{ campaign.duration_days }}</span>
+                    <span class="badge status-badge bg-primary px-3 py-2">Jour {{ campaign.current_day_number }} / {{ campaign.duration_days }}</span>
                 {% elif campaign.status == "terminee" %}
-                    <span class="badge bg-success px-3 py-2">✅ Diffusion terminée</span>
+                    <span class="badge status-badge bg-success px-3 py-2">✅ Diffusion terminée</span>
                 {% else %}
-                    <span class="badge bg-secondary px-3 py-2">En attente de démarrage</span>
+                    <span class="badge status-badge bg-secondary px-3 py-2">En attente de démarrage</span>
                 {% endif %}
             </div>
 
             <div class="row text-center">
                 <div class="col-6 col-md-3 mb-3">
-                    <div class="text-muted small">Durée totale</div>
-                    <div class="h5 fw-bold text-dark mb-0">{{ campaign.duration_days }} jour{{ 's' if campaign.duration_days > 1 else '' }}</div>
+                    <div class="metric-block">
+                        <div class="metric-label">Durée totale</div>
+                        <div class="metric-value text-dark">{{ campaign.duration_days }} jour{{ 's' if campaign.duration_days > 1 else '' }}</div>
+                    </div>
                 </div>
                 <div class="col-6 col-md-3 mb-3">
-                    <div class="text-muted small">Clics / jour prévus</div>
-                    <div class="h5 fw-bold text-dark mb-0">{{ campaign.views_per_day }}</div>
+                    <div class="metric-block">
+                        <div class="metric-label">Clics / jour prévus</div>
+                        <div class="metric-value text-dark">{{ campaign.views_per_day }}</div>
+                    </div>
                 </div>
                 <div class="col-6 col-md-3 mb-3">
-                    <div class="text-muted small">Clics aujourd'hui</div>
-                    <div class="h5 fw-bold text-primary mb-0">{{ campaign.views_today or 0 }} / {{ campaign.views_per_day }}</div>
+                    <div class="metric-block">
+                        <div class="metric-label">Clics aujourd'hui</div>
+                        <div class="metric-value text-primary">{{ campaign.views_today or 0 }} / {{ campaign.views_per_day }}</div>
+                    </div>
                 </div>
                 <div class="col-6 col-md-3 mb-3">
-                    <div class="text-muted small">Clics totaux / objectif</div>
-                    <div class="h5 fw-bold text-success mb-0">{{ campaign.whatsapp_views or 0 }} / {{ campaign.target_whatsapp_views }}</div>
+                    <div class="metric-block">
+                        <div class="metric-label">Clics totaux / objectif</div>
+                        <div class="metric-value text-success">{{ campaign.whatsapp_views or 0 }} / {{ campaign.target_whatsapp_views }}</div>
+                    </div>
                 </div>
             </div>
 
             {% if campaign.daily_quota_paused %}
-                <div class="alert alert-warning small mb-0">
+                <div class="alert alert-quota small mb-0">
                     <i class="bi bi-exclamation-triangle-fill me-1"></i>
                     Le quota du jour est atteint. Les partageurs ont été notifiés qu'ils peuvent retirer leur statut ; aucun clic supplémentaire n'est rémunéré aujourd'hui.
                 </div>
@@ -62,83 +310,80 @@
 
     <!-- Résumé partageurs / clics -->
     <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="card border-0 shadow-sm text-center p-3 bg-light">
-                <div class="text-muted small">Nombre de partageurs</div>
+        <div class="col-6 col-md-3 mb-3">
+            <div class="summary-card">
+                <div class="text-muted">Nombre de partageurs</div>
                 <div class="h3 fw-bold text-dark mb-0">{{ partageurs | length }}</div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="card border-0 shadow-sm text-center p-3 bg-light">
-                <div class="text-muted small">Total de clics comptabilisés</div>
+        <div class="col-6 col-md-3 mb-3">
+            <div class="summary-card">
+                <div class="text-muted">Total de clics comptabilisés</div>
                 <div class="h3 fw-bold text-primary mb-0">{{ "{:,}".format(total_clics) }}</div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="card border-0 shadow-sm text-center p-3 bg-light">
-                <div class="text-muted small">Clics WhatsApp</div>
+        <div class="col-6 col-md-3 mb-3">
+            <div class="summary-card">
+                <div class="text-muted">Clics WhatsApp</div>
                 <div class="h3 fw-bold text-success mb-0">{{ "{:,}".format(total_clics_whatsapp) }}</div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="card border-0 shadow-sm text-center p-3 bg-light">
-                <div class="text-muted small">Clics Site web</div>
+        <div class="col-6 col-md-3 mb-3">
+            <div class="summary-card">
+                <div class="text-muted">Clics Site web</div>
                 <div class="h3 fw-bold text-info mb-0">{{ "{:,}".format(total_clics_site) }}</div>
             </div>
         </div>
     </div>
 
     <!-- Liste des partageurs -->
-    <div class="card shadow-sm border-0">
+    <div class="card table-card">
         <div class="card-body p-0">
             {% if partageurs %}
             <div class="table-responsive">
-                <table class="table table-hover mb-0 align-middle">
-                    <thead class="table-light">
+                <table class="table table-hover mb-0 align-middle responsive-table">
+                    <thead>
                         <tr>
                             <th class="ps-3">Pseudo</th>
                             <th>Email</th>
-                                                        <th><i class="bi bi-whatsapp text-success me-1"></i>Clics WhatsApp</th>
-                            <th><i class="bi bi-globe text-info me-1"></i>Clics Site web</th>
+                            <th><i class="bi bi-whatsapp me-1"></i>Clics WhatsApp</th>
+                            <th><i class="bi bi-globe me-1"></i>Clics Site web</th>
                             <th class="pe-3">A partagé le</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for p in partageurs %}
                         <tr>
-                            <td class="ps-3 fw-bold">
-                                <i class="fas fa-user-circle text-secondary me-2"></i>{{ p.pseudo }}
+                            <td class="ps-3 fw-bold" data-label="Pseudo">
+                                <i class="bi bi-person-circle text-secondary me-2"></i>{{ p.pseudo }}
                             </td>
-                            <td class="text-muted small">{{ p.email }}</td>
-                            <td>
-                            </td>
-                            <td>
+                            <td class="text-muted small" data-label="Email">{{ p.email }}</td>
+                            <td data-label="Clics WhatsApp">
                                 {% if p.clics_whatsapp %}
                                 <span class="badge bg-success">{{ "{:,}".format(p.clics_whatsapp) }} clic{{ 's' if p.clics_whatsapp != 1 else '' }}</span>
                                 {% else %}
                                 <span class="text-muted small">—</span>
                                 {% endif %}
                             </td>
-                            <td>
+                            <td data-label="Clics Site web">
                                 {% if p.clics_site %}
                                 <span class="badge bg-info text-dark">{{ "{:,}".format(p.clics_site) }} clic{{ 's' if p.clics_site != 1 else '' }}</span>
                                 {% else %}
                                 <span class="text-muted small">—</span>
                                 {% endif %}
                             </td>
-                            <td class="pe-3 text-muted small">{{ p.partage_le or "—" }}</td>
+                            <td class="pe-3 text-muted small" data-label="A partagé le">{{ p.partage_le or "—" }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
             {% else %}
-            <p class="text-muted text-center p-4 mb-0">Aucun partageur n'a encore pris cette campagne.</p>
+            <p class="empty-state mb-0">Aucun partageur n'a encore pris cette campagne.</p>
             {% endif %}
         </div>
     </div>
 
 </div>
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</div>
 {% endblock %}

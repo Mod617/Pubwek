@@ -328,7 +328,12 @@
                         {% elif camp.admin_status == "rejected" or camp.status == "rejete" %}
                             <span class="badge bg-danger">❌ Rejetée</span>
                         {% else %}
-                            <span class="badge bg-warning text-dark">⏳ En attente</span>
+                            <span class="badge bg-warning text-dark d-block mb-1">⏳ En attente</span>
+                            {% if camp.paid %}
+                                <span class="badge bg-success">💰 Déjà payée</span>
+                            {% else %}
+                                <span class="badge bg-danger">⚠️ Non payée</span>
+                            {% endif %}
                         {% endif %}
                     </td>
                     <td class="text-center">

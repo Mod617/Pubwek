@@ -3579,17 +3579,17 @@ def evaluer_clic(share, camp, ip, user_agent, config, maintenant=None):
 
     debut_journee = maintenant.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # 6. Ce couple (partage, IP) a-t-il déjà été payé récemment ?
-    #    C'est le garde-fou principal : une même machine ne rapporte qu'une
-    #    fois par fenêtre, quel que soit le nombre d'ouvertures.
-    fenetre = maintenant - timedelta(hours=config.click_dedup_hours or 24)
+    # 6. Cet appareil (IP + navigateur) a-t-il déjà été payé sur ce partage,
+    #    depuis le début de la campagne ? Pas de fenêtre de temps : un même
+    #    appareil ne rapporte qu'une seule fois pour toute la durée de la
+    #    diffusion de la campagne.
     deja_paye = (
         CampaignClick.query
         .filter(
             CampaignClick.campaign_share_id == share.id,
             CampaignClick.ip == ip,
+            CampaignClick.user_agent == user_agent,
             CampaignClick.is_paid.is_(True),
-            CampaignClick.clicked_at >= fenetre,
         )
         .first()
     )

@@ -1,5 +1,242 @@
 {% extends "base.html" %} 
 {% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+
+<style>
+  .partageur-wrap {
+    --paper:        #F5F3ED;
+    --paper-raised: #FFFFFF;
+    --ink:          #1B2A2E;
+    --ink-soft:     #5B6B6C;
+    --line:         #E3DFD3;
+    --emerald:      #2F6F5E;
+    --emerald-dark: #1F4F42;
+    --emerald-tint: #E7F0EC;
+    --amber:        #B8842E;
+    --amber-tint:   #F8EEDD;
+    --clay:         #B0483C;
+    --clay-tint:    #F6E7E3;
+    --slate-tint:   #EFEDE4;
+
+    background: var(--paper);
+    padding: 2.5rem 1.25rem 4rem;
+    margin: -1.5rem calc(50% - 50vw) 0;
+    padding-left: calc(1.25rem + (50vw - 50%));
+    padding-right: calc(1.25rem + (50vw - 50%));
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  .partageur-wrap .container { max-width: 1180px; }
+
+  /* ---------- Header ---------- */
+  .partageur-wrap h2.fw-bold.text-dark {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    color: var(--ink) !important;
+    margin-bottom: 0.2rem;
+  }
+  .partageur-wrap h2.fw-bold.text-dark .text-success { color: var(--emerald) !important; }
+  .partageur-wrap p.text-muted { color: var(--ink-soft) !important; }
+
+  .partageur-wrap .badge.bg-success.px-3 {
+    background: var(--emerald) !important;
+    border-radius: 999px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+  }
+
+  .partageur-wrap .btn-light.position-relative {
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--paper-raised);
+  }
+
+  /* ---------- Cards, generic ---------- */
+  .partageur-wrap .card {
+    border-radius: 16px !important;
+    border: 1px solid var(--line) !important;
+  }
+
+  /* ---------- Wallet balance (signature hero) ---------- */
+  .partageur-wrap .card.bg-success.bg-opacity-10 {
+    background: linear-gradient(135deg, var(--emerald) 0%, var(--emerald-dark) 100%) !important;
+    border: none !important;
+    border-left: none !important;
+    box-shadow: 0 4px 18px rgba(31,79,66,0.18);
+  }
+  .partageur-wrap .card.bg-success.bg-opacity-10 h6 { color: rgba(255,255,255,0.75) !important; }
+  .partageur-wrap .card.bg-success.bg-opacity-10 h6 i { color: rgba(255,255,255,0.75) !important; }
+  .partageur-wrap .card.bg-success.bg-opacity-10 h2 {
+    color: var(--amber) !important;
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+  }
+  .partageur-wrap .card.bg-success.bg-opacity-10 p.text-muted { color: rgba(255,255,255,0.65) !important; }
+  .partageur-wrap .card.bg-success.bg-opacity-10 .btn-success {
+    background: var(--amber) !important;
+    border: none !important;
+    color: var(--ink) !important;
+    border-radius: 999px !important;
+  }
+  .partageur-wrap .card.bg-success.bg-opacity-10 .btn-success:hover { filter: brightness(0.94); }
+
+  /* ---------- Parrainage card ---------- */
+  .partageur-wrap .card.bg-light {
+    background: var(--paper-raised) !important;
+  }
+  .partageur-wrap .card.bg-light h5 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    color: var(--ink) !important;
+  }
+  .partageur-wrap .badge.bg-warning.text-dark {
+    background: var(--amber-tint) !important;
+    color: var(--amber) !important;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+  .partageur-wrap #referralLink {
+    border: 1px solid var(--line);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.86rem;
+    background: var(--slate-tint) !important;
+  }
+  .partageur-wrap .input-group .btn-success {
+    background: var(--emerald) !important;
+    border: none !important;
+    border-radius: 0 9px 9px 0 !important;
+  }
+  .partageur-wrap .input-group .btn-success:hover { background: var(--emerald-dark) !important; }
+  .partageur-wrap #copyFeedback { color: var(--emerald-dark) !important; }
+
+  /* ---------- Stat cards ---------- */
+  .partageur-wrap .row.g-4.mb-4 > .col-md-4 .card {
+    border-left: none !important;
+  }
+  .partageur-wrap .row.g-4.mb-4 > .col-md-4:nth-child(2) .card,
+  .partageur-wrap .row.g-4.mb-4 > .col-md-4:nth-child(3) .card {
+    border-left: none !important;
+  }
+  .partageur-wrap .rounded-circle.p-3 {
+    border-radius: 50% !important;
+  }
+  .partageur-wrap .bg-primary.bg-opacity-10 { background: var(--slate-tint) !important; color: var(--ink) !important; }
+  .partageur-wrap .bg-success.bg-opacity-10.text-success { background: var(--emerald-tint) !important; color: var(--emerald-dark) !important; }
+  .partageur-wrap .bg-warning.bg-opacity-10.text-warning { background: var(--amber-tint) !important; color: var(--amber) !important; }
+  .partageur-wrap .row.g-4.mb-4 h6.text-muted {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--ink-soft) !important;
+  }
+  .partageur-wrap .row.g-4.mb-4 h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+  }
+  .partageur-wrap .row.g-4.mb-4 h3.text-success { color: var(--emerald-dark) !important; }
+  .partageur-wrap .row.g-4.mb-4 h3.text-warning { color: var(--amber) !important; }
+
+  /* ---------- Campagnes disponibles ---------- */
+  .partageur-wrap #produitsDisponibles h4 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+  }
+  .partageur-wrap #produitsDisponibles .card.border {
+    border: 1px solid var(--line) !important;
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .partageur-wrap #produitsDisponibles .card.border:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(27,42,46,0.08) !important;
+  }
+  .partageur-wrap #produitsDisponibles .card.border-warning {
+    border: 1px solid var(--amber) !important;
+  }
+  .partageur-wrap #produitsDisponibles .badge.bg-secondary {
+    background: var(--slate-tint) !important;
+    color: var(--ink) !important;
+    font-weight: 600;
+  }
+  .partageur-wrap #produitsDisponibles .badge.bg-dark {
+    background: var(--ink) !important;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+  }
+  .partageur-wrap #produitsDisponibles h6.fw-bold {
+    font-family: 'Fraunces', serif;
+    font-weight: 600 !important;
+  }
+
+  .partageur-wrap .quota-track {
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--slate-tint);
+    overflow: hidden;
+    margin: 0.5rem 0 0.7rem;
+  }
+  .partageur-wrap .quota-fill { height: 100%; background: var(--emerald); border-radius: 999px; }
+  .partageur-wrap .quota-fill.quota-full { background: var(--amber); }
+
+  .partageur-wrap .alert.alert-warning {
+    background: var(--amber-tint) !important;
+    border: 1px solid #ecd7ae !important;
+    color: #8a6420 !important;
+  }
+  .partageur-wrap .alert.alert-light.border {
+    background: var(--slate-tint) !important;
+    border-color: var(--line) !important;
+    color: var(--ink-soft) !important;
+  }
+
+  .partageur-wrap .btn-outline-success {
+    color: var(--emerald-dark) !important;
+    border-color: var(--emerald) !important;
+    border-radius: 9px !important;
+  }
+  .partageur-wrap .btn-outline-success:hover {
+    background: var(--emerald) !important;
+    color: #fff !important;
+  }
+  .partageur-wrap #produitsDisponibles .btn-success {
+    background: var(--emerald) !important;
+    border: none !important;
+    border-radius: 9px !important;
+  }
+  .partageur-wrap #produitsDisponibles .btn-success:hover { background: var(--emerald-dark) !important; }
+
+  /* ---------- Empty state ---------- */
+  .partageur-wrap #produitsDisponibles .text-center.py-5 i.text-warning { color: var(--amber) !important; }
+  .partageur-wrap #produitsDisponibles .text-center.py-5 h5 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+  }
+
+  /* ---------- Bottom two cards ---------- */
+  .partageur-wrap .row.g-4:last-child h4 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+  }
+  .partageur-wrap .row.g-4:last-child .btn-outline-dark {
+    border-color: var(--line) !important;
+    color: var(--ink) !important;
+    border-radius: 9px !important;
+  }
+  .partageur-wrap .row.g-4:last-child .btn-outline-dark:hover {
+    background: var(--ink) !important;
+    color: #fff !important;
+  }
+</style>
+
+<div class="partageur-wrap">
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -157,11 +394,14 @@
                                     <!-- 🆕 Statut du quota journalier, affiché uniquement si déjà partagée -->
                                     {% if item.deja_partagee %}
                                         {% if item.quota_atteint_aujourdhui %}
+                                            <div class="quota-track"><div class="quota-fill quota-full" style="width: 100%;"></div></div>
                                             <div class="alert alert-warning py-2 px-3 small mb-2">
                                                 <i class="bi bi-exclamation-triangle-fill me-1"></i>
                                                 <strong>Quota du jour atteint !</strong> Vous pouvez retirer votre statut si vous le souhaitez — vous ne serez pas facturé au-delà. La diffusion reprend demain.
                                             </div>
                                         {% elif item.jour_actuel > 0 %}
+                                            {% set quota_pct = (item.vues_aujourdhui / item.quota_du_jour * 100) if item.quota_du_jour else 0 %}
+                                            <div class="quota-track"><div class="quota-fill" style="width: {{ [quota_pct, 100] | min }}%;"></div></div>
                                             <div class="alert alert-light border py-2 px-3 small mb-2 text-muted">
                                                 <i class="bi bi-calendar-check me-1"></i>
                                                 Jour {{ item.jour_actuel }} / {{ item.duree_totale }} — {{ item.vues_aujourdhui }} / {{ item.quota_du_jour }} clics aujourd'hui
@@ -225,6 +465,7 @@
         </div>
     </div>
 </div>
+</div>
 
 <script>
 function copyReferralLink() {
@@ -243,6 +484,4 @@ function copyReferralLink() {
     });
 }
 </script>
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 {% endblock %}

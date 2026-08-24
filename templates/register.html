@@ -1,127 +1,268 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-5">
-  <h2 class="mb-4 text-center">
-    Inscription {{ "Partageur" if role == "partageur" else "Annonceur" }}
-  </h2>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-  <form id="registerForm" method="POST" action="" enctype="multipart/form-data"
-        data-communes="{{ departements_communes | tojson | forceescape }}"
-        data-commune-initiale="{{ form.commune.data or '' }}">
-    {{ form.hidden_tag() }}
+<style>
+  .register-wrapper {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e8f5e9 100%);
+  }
 
-    <input type="hidden" name="role" value="{{ role }}">
+  .register-card {
+    width: 100%;
+    max-width: 560px;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    padding: 2.5rem 2.25rem;
+  }
 
-    <div class="mb-3">
-      {{ form.email.label(class="form-label") }}
-      {{ form.email(class="form-control", id="email", placeholder="ex: utilisateur@gmail.com") }}
-      {% for error in form.email.errors %}
-        <div class="text-danger small">{{ error }}</div>
-      {% endfor %}
-    </div>
+  .register-card h2 {
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 0.25rem;
+  }
 
-    <div class="mb-3">
-      {{ form.password.label(class="form-label") }}
-      <div class="input-group">
-        {{ form.password(class="form-control", id="password", placeholder="••••••") }}
-        <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('password', this)" tabindex="-1">
-          <i class="bi bi-eye"></i>
+  .register-subtitle {
+    text-align: center;
+    color: #777;
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+  }
+
+  .register-card .form-label {
+    font-weight: 600;
+    color: #333;
+    font-size: 0.9rem;
+  }
+
+  .register-card .form-control,
+  .register-card .form-select {
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    padding: 0.65rem 0.9rem;
+  }
+
+  .register-card .form-control:focus,
+  .register-card .form-select:focus {
+    border-color: #27ae60;
+    box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.15);
+  }
+
+  .register-card .input-group-text {
+    border-radius: 10px 0 0 10px;
+    background: #f5f5f5;
+    font-weight: 600;
+    color: #444;
+  }
+
+  .register-card .input-group .form-control {
+    border-radius: 0 10px 10px 0;
+  }
+
+  .register-card .input-group .btn-outline-secondary {
+    border-radius: 0 10px 10px 0;
+    border: 1px solid #ddd;
+    border-left: none;
+  }
+
+  #submitBtn {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    border: none;
+    border-radius: 50px;
+    padding: 0.75rem;
+    font-weight: 600;
+    transition: opacity 0.2s ease;
+  }
+
+  #submitBtn:hover {
+    opacity: 0.9;
+  }
+
+  #submitBtn:disabled {
+    opacity: 0.7;
+  }
+
+  .btn-back {
+    border-radius: 50px;
+    padding: 0.75rem;
+    font-weight: 600;
+    background: #f1f1f1;
+    color: #333;
+    border: none;
+    transition: background 0.2s ease;
+  }
+
+  .btn-back:hover {
+    background: #e4e4e4;
+    color: #111;
+  }
+
+  .form-text {
+    font-size: 0.8rem;
+  }
+
+  #confirmationMessage {
+    border-radius: 12px;
+  }
+
+  .login-link {
+    text-align: center;
+    margin-top: 1.25rem;
+    font-size: 0.9rem;
+    color: #555;
+  }
+
+  .login-link a {
+    color: #27ae60;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .login-link a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 576px) {
+    .register-card {
+      padding: 2rem 1.5rem;
+      border-radius: 16px;
+    }
+  }
+</style>
+
+<div class="register-wrapper">
+  <div class="register-card">
+    <h2 class="text-center">
+      Inscription {{ "Partageur" if role == "partageur" else "Annonceur" }}
+    </h2>
+    <p class="register-subtitle">
+      {% if role == "partageur" %}
+        Rejoignez Pubwek et commencez à gagner de l'argent en partageant des produits.
+      {% else %}
+        Rejoignez Pubwek et faites connaître vos produits à plus de clients.
+      {% endif %}
+    </p>
+
+    <form id="registerForm" method="POST" action="" enctype="multipart/form-data"
+          data-communes="{{ departements_communes | tojson | forceescape }}"
+          data-commune-initiale="{{ form.commune.data or '' }}">
+      {{ form.hidden_tag() }}
+
+      <input type="hidden" name="role" value="{{ role }}">
+
+      <div class="mb-3">
+        {{ form.email.label(class="form-label") }}
+        {{ form.email(class="form-control", id="email", placeholder="ex: utilisateur@gmail.com") }}
+        {% for error in form.email.errors %}
+          <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="mb-3">
+        {{ form.password.label(class="form-label") }}
+        <div class="input-group">
+          {{ form.password(class="form-control", id="password", placeholder="••••••") }}
+          <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('password', this)" tabindex="-1">
+            <i class="bi bi-eye"></i>
+          </button>
+        </div>
+        {% for error in form.password.errors %}
+          <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="mb-3">
+        {{ form.confirm_password.label(class="form-label") }}
+        <div class="input-group">
+          {{ form.confirm_password(class="form-control", id="confirm_password", placeholder="••••••") }}
+          <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('confirm_password', this)" tabindex="-1">
+            <i class="bi bi-eye"></i>
+          </button>
+        </div>
+        {% for error in form.confirm_password.errors %}
+          <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      {% if role == "partageur" %}
+      <div class="mb-3">
+        {{ form.province.label(class="form-label") }}
+        {{ form.province(class="form-select", id="province") }}
+        {% for error in form.province.errors %}
+          <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="mb-3">
+        {{ form.commune.label(class="form-label") }}
+        {{ form.commune(class="form-select", id="commune") }}
+        {% for error in form.commune.errors %}
+          <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+        <small class="form-text text-muted">Sélectionnez d'abord votre province ci-dessus.</small>
+      </div>
+
+      <div class="mb-3">
+        {{ form.whatsapp_number.label(class="form-label") }}
+        <div class="input-group">
+          <span class="input-group-text">+229</span>
+          {{ form.whatsapp_number(
+                class="form-control",
+                id="whatsapp_number",
+                placeholder="0190000000",
+                value=((form.whatsapp_number.data or "") | replace("+229", "")),
+                inputmode="numeric",
+                maxlength="10"
+          ) }}
+        </div>
+        {% for error in form.whatsapp_number.errors %}
+          <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+        <small class="form-text text-muted">Saisissez seulement les 10 chiffres (ex : 0190000000). Le préfixe +229 est ajouté automatiquement.</small>
+      </div>
+      {% endif %}
+
+      {% if role == "annonceur" %}
+      <div class="mb-3">
+        {{ form.company_name.label(class="form-label") }}
+        {{ form.company_name(class="form-control", id="company_name", placeholder="Nom de votre entreprise") }}
+        {% for error in form.company_name.errors %}
+          <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="mb-3">
+        {{ form.logo_file.label(class="form-label") }}
+        {{ form.logo_file(class="form-control", id="logo_file", accept="image/*") }}
+        {% for error in form.logo_file.errors %}
+          <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+        <small class="form-text text-muted">Optionnel. Permet d'incruster votre logo de marque sur vos vidéos.</small>
+      </div>
+      {% endif %}
+
+      <div class="d-grid gap-2 mt-4">
+        <button type="submit" class="btn btn-success btn-lg" id="submitBtn">
+          <span id="btnText">Créer mon compte</span>
+          <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
         </button>
+        <a href="{{ url_for('index') }}" class="btn btn-back btn-lg">⬅ Retour à l'accueil</a>
       </div>
-      {% for error in form.password.errors %}
-        <div class="text-danger small">{{ error }}</div>
-      {% endfor %}
-    </div>
+    </form>
 
-    <div class="mb-3">
-      {{ form.confirm_password.label(class="form-label") }}
-      <div class="input-group">
-        {{ form.confirm_password(class="form-control", id="confirm_password", placeholder="••••••") }}
-        <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('confirm_password', this)" tabindex="-1">
-          <i class="bi bi-eye"></i>
-        </button>
-      </div>
-      {% for error in form.confirm_password.errors %}
-        <div class="text-danger small">{{ error }}</div>
-      {% endfor %}
-    </div>
+    <div id="confirmationMessage" class="alert alert-info mt-4 text-center d-none"></div>
 
-    {% if role == "partageur" %}
-    <div class="mb-3">
-      {{ form.province.label(class="form-label") }}
-      {{ form.province(class="form-select", id="province") }}
-      {% for error in form.province.errors %}
-        <div class="text-danger small">{{ error }}</div>
-      {% endfor %}
+    <div class="login-link">
+      <p>Déjà inscrit ? <a href="{{ url_for('login') }}">Se connecter</a></p>
     </div>
-
-    <div class="mb-3">
-      {{ form.commune.label(class="form-label") }}
-      {{ form.commune(class="form-select", id="commune") }}
-      {% for error in form.commune.errors %}
-        <div class="text-danger small">{{ error }}</div>
-      {% endfor %}
-      <small class="form-text text-muted">Sélectionnez d'abord votre province ci-dessus.</small>
-    </div>
-
-    <div class="mb-3">
-      {{ form.whatsapp_number.label(class="form-label") }}
-      <div class="input-group">
-        <span class="input-group-text">+229</span>
-        {{ form.whatsapp_number(
-              class="form-control",
-              id="whatsapp_number",
-              placeholder="0190000000",
-              value=((form.whatsapp_number.data or "") | replace("+229", "")),
-              inputmode="numeric",
-              maxlength="10"
-        ) }}
-      </div>
-      {% for error in form.whatsapp_number.errors %}
-        <div class="text-danger small">{{ error }}</div>
-      {% endfor %}
-      <small class="form-text text-muted">Saisissez seulement les 10 chiffres (ex : 0190000000). Le préfixe +229 est ajouté automatiquement.</small>
-    </div>
-    {% endif %}
-
-    {% if role == "annonceur" %}
-    <div class="mb-3">
-      {{ form.company_name.label(class="form-label") }}
-      {{ form.company_name(class="form-control", id="company_name", placeholder="Nom de votre entreprise") }}
-      {% for error in form.company_name.errors %}
-        <div class="text-danger small">{{ error }}</div>
-      {% endfor %}
-    </div>
-
-    <div class="mb-3">
-      {{ form.logo_file.label(class="form-label") }}
-      {{ form.logo_file(class="form-control", id="logo_file", accept="image/*") }}
-      {% for error in form.logo_file.errors %}
-        <div class="text-danger small">{{ error }}</div>
-      {% endfor %}
-      <small class="form-text text-muted">Optionnel. Permet d'incruster votre logo de marque sur vos vidéos.</small>
-    </div>
-    {% endif %}
-
-    <div class="d-grid gap-2">
-      <button type="submit" class="btn btn-success btn-lg" id="submitBtn">
-        <span id="btnText">Créer mon compte</span>
-        <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
-      </button>
-      <a href="{{ url_for('index') }}" class="btn btn-secondary btn-lg">⬅ Retour à l’accueil</a>
-    </div>
-  </form>
-
-  <div id="confirmationMessage" class="alert alert-info mt-4 text-center d-none">
-    </div>
-
-  <div class="text-center mt-3">
-    <p>Déjà inscrit ? <a href="{{ url_for('login') }}">Se connecter</a></p>
   </div>
 </div>
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
 <script>
 // 🆕 Bascule afficher/masquer un champ mot de passe (utilisé sur password et confirm_password)

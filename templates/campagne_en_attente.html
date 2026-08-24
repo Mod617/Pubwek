@@ -2,78 +2,440 @@
 {% block title %}Campagnes en attente{% endblock %}
 
 {% block content %}
-<div class="container mt-4 mb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-        <h2 class="mb-0 fw-bold">📋 Suivi des Campagnes en Attente</h2>
-        <a href="{{ url_for('mes_campagnes') }}" class="btn btn-outline-primary fw-bold">
-            📊 Retour à "Mes Campagnes"
-        </a>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --paper:        #F5F3ED;
+    --paper-raised: #FFFFFF;
+    --ink:          #1B2A2E;
+    --ink-soft:     #5B6B6C;
+    --line:         #E3DFD3;
+    --emerald:      #2F6F5E;
+    --emerald-dark: #1F4F42;
+    --emerald-tint: #E7F0EC;
+    --amber:        #B8842E;
+    --amber-tint:   #F8EEDD;
+    --clay:         #B0483C;
+    --clay-tint:    #F6E7E3;
+    --slate-tint:   #EFEDE4;
+  }
+
+  .campagnes-wrap {
+    background: var(--paper);
+    padding: 2.5rem 1.25rem 4rem;
+    margin: -1.5rem calc(50% - 50vw) 0;
+    padding-left: calc(1.25rem + (50vw - 50%));
+    padding-right: calc(1.25rem + (50vw - 50%));
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  .campagnes-inner { max-width: 1180px; margin: 0 auto; }
+
+  .campagnes-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-bottom: 2.25rem;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 1.5rem;
+  }
+
+  .campagnes-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--emerald);
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  .campagnes-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: clamp(1.6rem, 3vw, 2.35rem);
+    margin: 0;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+
+  .btn-retour {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--ink);
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.6rem 1.25rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: border-color .15s ease, transform .15s ease;
+    white-space: nowrap;
+  }
+  .btn-retour:hover {
+    border-color: var(--emerald);
+    color: var(--emerald-dark);
+    transform: translateY(-1px);
+  }
+
+  /* ---------- Empty state ---------- */
+  .campagnes-empty {
+    background: var(--paper-raised);
+    border: 1px dashed var(--line);
+    border-radius: 14px;
+    padding: 3.5rem 2rem;
+    text-align: center;
+    color: var(--ink-soft);
+  }
+  .campagnes-empty .empty-glyph {
+    font-family: 'Fraunces', serif;
+    font-size: 2.4rem;
+    color: var(--emerald);
+    display: block;
+    margin-bottom: 0.75rem;
+  }
+  .campagnes-empty p { margin: 0; font-size: 1rem; }
+
+  /* ---------- Card shell (desktop table) ---------- */
+  .campagnes-card {
+    background: var(--paper-raised);
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(27,42,46,0.04);
+  }
+
+  .campagnes-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  .campagnes-table thead th {
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 0.9rem 1.1rem;
+  }
+  .campagnes-table thead th:first-child { text-align: left; }
+
+  .campagnes-table tbody tr { border-bottom: 1px solid var(--line); transition: background .15s ease; }
+  .campagnes-table tbody tr:last-child { border-bottom: none; }
+  .campagnes-table tbody tr:hover { background: var(--emerald-tint); }
+
+  .campagnes-table td { padding: 1rem 1.1rem; vertical-align: middle; text-align: left; }
+
+  .cell-id { font-family: 'IBM Plex Mono', monospace; font-weight: 500; color: var(--ink-soft); }
+
+  .type-chip {
+    display: inline-block;
+    font-size: 0.76rem;
+    font-weight: 600;
+    padding: 0.28rem 0.65rem;
+    border-radius: 6px;
+    background: var(--slate-tint);
+    color: var(--ink);
+    border: 1px solid var(--line);
+  }
+
+  .cell-detail { color: var(--ink-soft); max-width: 220px; }
+  .cell-provinces { color: var(--ink-soft); font-size: 0.85rem; }
+
+  .cell-cost {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    color: var(--emerald-dark);
+    white-space: nowrap;
+  }
+
+  .cell-date { color: var(--ink-soft); font-size: 0.85rem; white-space: nowrap; }
+
+  /* ---------- Status badge ---------- */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.32rem 0.7rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .status-attente { background: var(--amber-tint); color: var(--amber); }
+  .status-paiement { background: #E4EEF3; color: #2E6C8E; }
+  .status-active { background: var(--emerald-tint); color: var(--emerald-dark); }
+  .status-terminee { background: var(--slate-tint); color: var(--ink-soft); }
+  .status-rejetee { background: var(--clay-tint); color: var(--clay); }
+
+  /* ---------- Signature element: pipeline tracker ---------- */
+  .pipeline { display: flex; align-items: center; margin-top: 0.45rem; }
+  .pipeline .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .pipeline .dot-done  { background: var(--emerald); }
+  .pipeline .dot-current {
+    background: var(--paper-raised);
+    border: 2px solid var(--emerald);
+    width: 9px; height: 9px;
+  }
+  .pipeline .seg { width: 16px; height: 2px; background: var(--line); flex-shrink: 0; }
+  .pipeline .seg-done { background: var(--emerald); }
+  .pipeline .seg-broken {
+    background: repeating-linear-gradient(90deg, var(--clay) 0 3px, transparent 3px 6px);
+  }
+  .pipeline .dot-x {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--clay); color: #fff;
+    font-size: 8px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .pipeline-caption {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.03em;
+    color: var(--ink-soft);
+    margin-top: 0.3rem;
+    display: block;
+  }
+
+  /* ---------- Action button ---------- */
+  .btn-payer {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--emerald);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.82rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background .15s ease;
+  }
+  .btn-payer:hover { background: var(--emerald-dark); color: #fff; }
+
+  .btn-corriger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: transparent;
+    color: var(--clay);
+    border: 1px solid var(--clay-tint);
+    font-weight: 600;
+    font-size: 0.82rem;
+    padding: 0.48rem 0.9rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background .15s ease;
+  }
+  .btn-corriger:hover { background: var(--clay-tint); color: var(--clay); }
+
+  .no-action { color: var(--ink-soft); font-size: 0.82rem; }
+
+  /* ---------- Mobile: cards instead of table ---------- */
+  .campagnes-mobile-list { display: none; }
+
+  @media (max-width: 860px) {
+    .campagnes-table-wrap { display: none; }
+    .campagnes-mobile-list { display: block; }
+
+    .m-card {
+      background: var(--paper-raised);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 1.1rem 1.15rem;
+      margin-bottom: 0.9rem;
+    }
+    .m-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.7rem;
+    }
+    .m-card-id { font-family: 'IBM Plex Mono', monospace; color: var(--ink-soft); font-size: 0.82rem; }
+    .m-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.4rem 0;
+      border-top: 1px solid var(--line);
+      font-size: 0.88rem;
+    }
+    .m-row:first-of-type { border-top: none; }
+    .m-row-label { color: var(--ink-soft); font-size: 0.78rem; flex-shrink: 0; }
+    .m-row-value { text-align: right; font-weight: 500; }
+    .m-cost { color: var(--emerald-dark); font-family: 'IBM Plex Mono', monospace; font-weight: 600; }
+    .m-action { margin-top: 0.85rem; text-align: right; }
+  }
+</style>
+
+{% macro pipeline_track(status) %}
+  {% if status == "rejetee" %}
+    <div class="pipeline">
+      <span class="dot dot-done"></span>
+      <span class="seg seg-broken"></span>
+      <span class="dot-x">✕</span>
+    </div>
+    <span class="pipeline-caption">Arrêtée avant activation</span>
+  {% else %}
+    {% if status == "en_attente" %}{% set stage = 0 %}
+    {% elif status in ["valide_admin", "non_payee"] %}{% set stage = 1 %}
+    {% elif status == "active" %}{% set stage = 2 %}
+    {% elif status == "terminee" %}{% set stage = 3 %}
+    {% else %}{% set stage = 0 %}
+    {% endif %}
+    <div class="pipeline">
+      {% for i in range(4) %}
+        <span class="dot {% if i < stage %}dot-done{% elif i == stage %}dot-current{% endif %}"></span>
+        {% if i < 3 %}<span class="seg {% if i < stage %}seg-done{% endif %}"></span>{% endif %}
+      {% endfor %}
+    </div>
+    <span class="pipeline-caption">
+      {% if stage == 0 %}Envoyée → validation
+      {% elif stage == 1 %}Validée → paiement
+      {% elif stage == 2 %}En diffusion
+      {% else %}Cycle terminé
+      {% endif %}
+    </span>
+  {% endif %}
+{% endmacro %}
+
+{% macro status_badge(status) %}
+  {% if status == "en_attente" %}
+    <span class="status-badge status-attente">⏳ En attente de validation</span>
+  {% elif status == "valide_admin" or status == "non_payee" %}
+    <span class="status-badge status-paiement">💳 En attente de paiement</span>
+  {% elif status == "active" %}
+    <span class="status-badge status-active">● Active</span>
+  {% elif status == "terminee" %}
+    <span class="status-badge status-terminee">🏁 Terminée</span>
+  {% elif status == "rejetee" %}
+    <span class="status-badge status-rejetee">✕ Rejetée</span>
+  {% endif %}
+{% endmacro %}
+
+<div class="campagnes-wrap">
+  <div class="campagnes-inner">
+
+    <div class="campagnes-head">
+      <div>
+        <span class="campagnes-eyebrow">Tableau de suivi</span>
+        <h2 class="campagnes-title">Campagnes en attente</h2>
+      </div>
+      <a href="{{ url_for('mes_campagnes') }}" class="btn-retour">← Retour à "Mes campagnes"</a>
     </div>
 
     {% if campagnes %}
-    <div class="card shadow-sm border-0 rounded-3">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover table-striped align-middle text-center mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th># ID</th>
-                            <th>Type</th>
-                            <th>Détails / Produit</th>
-                            <th>Provinces ciblées</th>
-                            <th>Coût Total</th>
-                            <th>Date de création</th>
-                            <th>Statut</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for c in campagnes %}
-                        <tr>
-                            <td class="fw-bold">#{{ c.id }}</td>
-                            <td><span class="badge bg-light text-dark border">{{ c.promotion_type | capitalize }}</span></td>
-                            <td>{{ c.promotion_detail or "-" }}</td>
-                            <td><small class="text-muted">{{ c.provinces }}</small></td>
-                            <td class="fw-bold text-success">{{ "{:,.0f}".format(c.total_cost) }} XOF</td>
-                            <td><small class="text-muted">{{ c.created_at.strftime("%d/%m/%Y à %H:%M") }}</small></td>
-                            <td>
-                                {% if c.status == "en_attente" %}
-                                    <span class="badge bg-warning text-dark"><i class="fas fa-hourglass-half me-1"></i>En attente de validation</span>
-                                {% elif c.status == "valide_admin" or c.status == "non_payee" %}
-                                    <span class="badge bg-info text-dark"><i class="fas fa-wallet me-1"></i>Validée — En attente de paiement</span>
-                                {% elif c.status == "active" %}
-                                    <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Active</span>
-                                {% elif c.status == "terminee" %}
-                                    <span class="badge bg-secondary"><i class="fas fa-flag-checkered me-1"></i>Terminée</span>
-                                {% elif c.status == "rejetee" %}
-                                    <span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>Rejetée</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if c.status == "valide_admin" or c.status == "non_payee" %}
-                                    <a href="{{ url_for('payer_campagne', campaign_id=c.id) }}" class="btn btn-sm btn-success fw-bold">
-                                        💳 Payer
-                                    </a>
-                                {% elif c.status == "rejetee" %}
-                                    <a href="{{ url_for('mes_campagnes') }}" class="btn btn-sm btn-outline-danger">
-                                        ✏️ Corriger
-                                    </a>
-                                {% else %}
-                                    <span class="text-muted small">Aucune action</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+
+      <!-- Desktop table -->
+      <div class="campagnes-table-wrap">
+        <div class="campagnes-card">
+          <table class="campagnes-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Détails / Produit</th>
+                <th>Provinces ciblées</th>
+                <th>Coût total</th>
+                <th>Créée le</th>
+                <th>Statut &amp; progression</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in campagnes %}
+              <tr>
+                <td class="cell-id">#{{ c.id }}</td>
+                <td><span class="type-chip">{{ c.promotion_type | capitalize }}</span></td>
+                <td class="cell-detail">{{ c.promotion_detail or "—" }}</td>
+                <td class="cell-provinces">{{ c.provinces }}</td>
+                <td class="cell-cost">{{ "{:,.0f}".format(c.total_cost).replace(",", " ") }} XOF</td>
+                <td class="cell-date">{{ c.created_at.strftime("%d/%m/%Y à %H:%M") }}</td>
+                <td>
+                  {{ status_badge(c.status) }}
+                  {{ pipeline_track(c.status) }}
+                </td>
+                <td>
+                  {% if c.status == "valide_admin" or c.status == "non_payee" %}
+                    <a href="{{ url_for('payer_campagne', campaign_id=c.id) }}" class="btn-payer">💳 Payer</a>
+                  {% elif c.status == "rejetee" %}
+                    <a href="{{ url_for('mes_campagnes') }}" class="btn-corriger">✏️ Corriger</a>
+                  {% else %}
+                    <span class="no-action">Aucune action</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
-    </div>
+      </div>
+
+      <!-- Mobile cards -->
+      <div class="campagnes-mobile-list">
+        {% for c in campagnes %}
+        <div class="m-card">
+          <div class="m-card-top">
+            <span class="m-card-id">#{{ c.id }}</span>
+            {{ status_badge(c.status) }}
+          </div>
+
+          {{ pipeline_track(c.status) }}
+
+          <div class="m-row">
+            <span class="m-row-label">Type</span>
+            <span class="m-row-value"><span class="type-chip">{{ c.promotion_type | capitalize }}</span></span>
+          </div>
+          <div class="m-row">
+            <span class="m-row-label">Détails / Produit</span>
+            <span class="m-row-value">{{ c.promotion_detail or "—" }}</span>
+          </div>
+          <div class="m-row">
+            <span class="m-row-label">Provinces</span>
+            <span class="m-row-value">{{ c.provinces }}</span>
+          </div>
+          <div class="m-row">
+            <span class="m-row-label">Coût total</span>
+            <span class="m-row-value m-cost">{{ "{:,.0f}".format(c.total_cost).replace(",", " ") }} XOF</span>
+          </div>
+          <div class="m-row">
+            <span class="m-row-label">Créée le</span>
+            <span class="m-row-value">{{ c.created_at.strftime("%d/%m/%Y à %H:%M") }}</span>
+          </div>
+
+          <div class="m-action">
+            {% if c.status == "valide_admin" or c.status == "non_payee" %}
+              <a href="{{ url_for('payer_campagne', campaign_id=c.id) }}" class="btn-payer">💳 Payer</a>
+            {% elif c.status == "rejetee" %}
+              <a href="{{ url_for('mes_campagnes') }}" class="btn-corriger">✏️ Corriger</a>
+            {% else %}
+              <span class="no-action">Aucune action</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
     {% else %}
-    <div class="alert alert-info text-center p-4 shadow-sm border-0 rounded-3">
-        <i class="fas fa-info-circle fa-2x mb-2 d-block"></i>
-        Aucune campagne en attente de traitement pour le moment.
-    </div>
+      <div class="campagnes-empty">
+        <span class="empty-glyph">◌</span>
+        <p>Aucune campagne en attente de traitement pour le moment.</p>
+      </div>
     {% endif %}
+
+  </div>
 </div>
 {% endblock %}

@@ -1,34 +1,252 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 pb-3 border-bottom">
-        <h2 class="mb-0 text-dark fw-bold">👨‍💻 Panneau d’administration</h2>
-        <div class="mt-3 mt-md-0 d-flex gap-2 flex-wrap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+<style>
+  .admin-page {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e8f5e9 100%);
+    min-height: 100vh;
+    padding: 2.5rem 0 3rem;
+  }
+
+  .page-header {
+    background: #fff;
+    border-radius: 16px;
+    padding: 1.75rem 2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    margin-bottom: 2.5rem;
+    border-bottom: none !important;
+  }
+
+  .page-header h2 {
+    color: #1a1a2e;
+  }
+
+  .action-btn {
+    border-radius: 50px;
+    font-weight: 600;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    box-shadow: none !important;
+    transition: opacity 0.2s ease, transform 0.15s ease;
+  }
+
+  .action-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .action-btn-success {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    color: #fff;
+  }
+
+  .action-btn-outline-dark {
+    background: #f1f1f1;
+    color: #333;
+  }
+
+  .action-btn-danger {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: #fff;
+  }
+
+  .action-btn-dark {
+    background: linear-gradient(135deg, #1a1a2e, #33334d);
+    color: #fff;
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 700;
+    color: #2980b9;
+    margin: 2rem 0 1.25rem;
+  }
+
+  .table-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    padding: 0.5rem;
+    margin-bottom: 3rem;
+    overflow: hidden;
+  }
+
+  .table-card table {
+    margin-bottom: 0;
+  }
+
+  .table-card thead tr {
+    background: #1a1a2e !important;
+  }
+
+  .table-card thead th {
+    border: none;
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.3px;
+    padding: 1rem 0.75rem;
+  }
+
+  .table-card tbody td {
+    padding: 0.85rem 0.75rem;
+    vertical-align: middle;
+    border-color: #f0f0f0;
+    font-size: 0.88rem;
+  }
+
+  .table-card tbody tr:hover {
+    background-color: #f8fbf9;
+  }
+
+  .btn-back-home {
+    border-radius: 50px;
+    padding: 0.7rem 2rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    border: none;
+  }
+
+  .btn-back-home:hover {
+    opacity: 0.9;
+  }
+
+  /* Modals */
+  .modal-content {
+    border-radius: 16px;
+    border: none;
+    overflow: hidden;
+  }
+
+  .modal-header {
+    border: none;
+  }
+
+  .modal-header.bg-danger {
+    background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+  }
+
+  .modal-header.bg-primary {
+    background: linear-gradient(135deg, #3498db, #2980b9) !important;
+  }
+
+  .modal-footer {
+    border: none;
+  }
+
+  @media (max-width: 768px) {
+    .page-header {
+      padding: 1.5rem;
+    }
+  }
+
+  /* ========================================== */
+  /* 📱 TRANSFORMATION TABLEAU → CARTES SUR MOBILE */
+  /* ========================================== */
+  @media (max-width: 767.98px) {
+    .responsive-table thead {
+      display: none;
+    }
+
+    .responsive-table,
+    .responsive-table tbody,
+    .responsive-table tr,
+    .responsive-table td {
+      display: block;
+      width: 100%;
+    }
+
+    .responsive-table tr {
+      background: #fff;
+      border: 1px solid #eee;
+      border-radius: 14px;
+      margin-bottom: 1rem;
+      padding: 0.75rem 1rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    }
+
+    .responsive-table tr:hover {
+      background-color: #fff;
+    }
+
+    .responsive-table td {
+      text-align: right !important;
+      padding: 0.6rem 0 !important;
+      border: none !important;
+      border-bottom: 1px solid #f2f2f2 !important;
+      position: relative;
+      padding-left: 45% !important;
+      min-height: 1.5rem;
+    }
+
+    .responsive-table td:last-child {
+      border-bottom: none !important;
+    }
+
+    .responsive-table td::before {
+      content: attr(data-label);
+      position: absolute;
+      left: 0;
+      top: 0.6rem;
+      width: 40%;
+      font-weight: 600;
+      font-size: 0.75rem;
+      color: #888;
+      text-align: left;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .responsive-table td.left-align,
+    .responsive-table td[data-label="Email"],
+    .responsive-table td[data-label="Annonceur"],
+    .responsive-table td[data-label="Détail & Texte"] {
+      text-align: left !important;
+    }
+
+    .responsive-table td.empty-row {
+      text-align: center !important;
+      padding-left: 0 !important;
+    }
+
+    .responsive-table td.empty-row::before {
+      display: none;
+    }
+  }
+</style>
+
+<div class="admin-page">
+<div class="container">
+    <div class="page-header d-flex flex-column flex-md-row justify-content-between align-items-center">
+        <h2 class="mb-0 fw-bold">👨‍💻 Panneau d'administration</h2>
+        <div class="mt-3 mt-md-0 d-flex gap-2 flex-wrap justify-content-center">
             <!-- 🆕 Chaque bouton n'apparaît que si l'utilisateur (admin ou sous-admin) a la permission correspondante -->
             {% if current_user.role == "admin" or current_user.has_permission("configurer_video") %}
             {% endif %}
 
             {% if current_user.role == "admin" or current_user.has_permission("gerer_retraits") %}
-            <a href="{{ url_for('admin_retraits') }}" class="btn btn-success text-white fw-bold shadow-sm py-2 px-3">
+            <a href="{{ url_for('admin_retraits') }}" class="btn action-btn action-btn-success">
                 <i class="bi bi-cash-stack me-1"></i> 💰 Demandes de retrait
             </a>
             {% endif %}
 
             {% if current_user.role == "admin" or current_user.has_permission("voir_transactions") %}
-            <a href="{{ url_for('admin_transactions_globales') }}" class="btn btn-outline-dark fw-bold shadow-sm py-2 px-3">
+            <a href="{{ url_for('admin_transactions_globales') }}" class="btn action-btn action-btn-outline-dark">
                 <i class="bi bi-journal-text me-1"></i> 🧾 Registre des transactions
             </a>
             {% endif %}
 
             {% if current_user.role == "admin" or current_user.has_permission("configurer_tarifs") %}
-            <a href="{{ url_for('admin_settings') }}" class="btn btn-danger fw-bold shadow-sm py-2 px-3">
+            <a href="{{ url_for('admin_settings') }}" class="btn action-btn action-btn-danger">
                 <i class="bi bi-sliders me-1"></i> ⚙️ Configurer les Tarifs
             </a>
             {% endif %}
 
             {% if current_user.role == "admin" %}
-            <a href="{{ url_for('admin_gestion_sous_admins') }}" class="btn btn-dark fw-bold shadow-sm py-2 px-3">
+            <a href="{{ url_for('admin_gestion_sous_admins') }}" class="btn action-btn action-btn-dark">
                 <i class="bi bi-people-fill me-1"></i> 🔑 Gérer les sous-admins
             </a>
             {% endif %}
@@ -38,11 +256,11 @@
     <!-- 🆕 MACRO PARTAGÉE : une ligne de tableau pour un utilisateur (annonceur, partageur ou admin) -->
     {% macro user_row(user) %}
         <tr>
-            <td>{{ user.email }}</td>
-            <td class="text-capitalize text-center">{{ user.role }}</td>
-            <td class="text-center">{{ user.province or user.department or "Non spécifié" }}</td>
-            <td class="text-center">{{ user.company_name or "-" }}</td>
-            <td class="text-center">
+            <td class="left-align" data-label="Email">{{ user.email }}</td>
+            <td class="text-capitalize text-center" data-label="Rôle">{{ user.role }}</td>
+            <td class="text-center" data-label="Département / Zone">{{ user.province or user.department or "Non spécifié" }}</td>
+            <td class="text-center" data-label="Entreprise">{{ user.company_name or "-" }}</td>
+            <td class="text-center" data-label="Numéro WhatsApp">
                 {% if user.whatsapp_number %}
                     <a href="https://wa.me/{{ user.whatsapp_number | replace(' ', '') }}"
                        target="_blank" class="btn btn-sm btn-outline-success">
@@ -52,7 +270,7 @@
                     <span class="text-muted">Aucun numéro</span>
                 {% endif %}
             </td>
-            <td class="text-center">
+            <td class="text-center" data-label="Statut">
                 {% if user.is_confirmed %}
                     <span class="badge bg-success">✅ Confirmé</span>
                 {% else %}
@@ -73,7 +291,7 @@
                     {% endif %}
                 {% endif %}
             </td>
-            <td class="text-center">
+            <td class="text-center" data-label="Actions">
                 {% if user.is_confirmed %}
                     <button class="btn btn-sm btn-secondary" disabled>Déjà validé</button>
                 {% elif user.contacted_by_id and user.contacted_by_id != current_user.id and current_user.role != "admin" %}
@@ -112,10 +330,11 @@
         {% set admins = users | rejectattr("role", "equalto", "annonceur") | rejectattr("role", "equalto", "partageur") | list %}
 
         <!-- 🆕 TABLEAU 1 : ANNONCEURS EN ATTENTE DE VALIDATION -->
-        <h4 class="mb-3 text-primary">📢 Annonceurs en attente de validation</h4>
-        <div class="table-responsive mb-5">
-            <table class="table table-striped table-bordered align-middle shadow-sm">
-                <thead class="table-dark text-center">
+        <h4 class="section-title">📢 Annonceurs en attente de validation</h4>
+        <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0 responsive-table">
+                <thead class="text-white text-center">
                     <tr>
                         <th>Email</th>
                         <th>Rôle</th>
@@ -131,7 +350,7 @@
                     {{ user_row(user) }}
                 {% else %}
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-3">
+                        <td colspan="7" class="empty-row text-center text-muted py-3">
                             Aucun annonceur en attente de validation.
                         </td>
                     </tr>
@@ -139,12 +358,14 @@
                 </tbody>
             </table>
         </div>
+        </div>
 
         <!-- 🆕 TABLEAU 2 : PARTAGEURS EN ATTENTE DE VALIDATION -->
-        <h4 class="mb-3 text-primary">🤝 Partageurs en attente de validation</h4>
-        <div class="table-responsive mb-5">
-            <table class="table table-striped table-bordered align-middle shadow-sm">
-                <thead class="table-dark text-center">
+        <h4 class="section-title">🤝 Partageurs en attente de validation</h4>
+        <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0 responsive-table">
+                <thead class="text-white text-center">
                     <tr>
                         <th>Email</th>
                         <th>Rôle</th>
@@ -160,7 +381,7 @@
                     {{ user_row(user) }}
                 {% else %}
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-3">
+                        <td colspan="7" class="empty-row text-center text-muted py-3">
                             Aucun partageur en attente de validation.
                         </td>
                     </tr>
@@ -168,12 +389,14 @@
                 </tbody>
             </table>
         </div>
+        </div>
 
         <!-- 🆕 TABLEAU 3 : ADMINISTRATEURS / SOUS-ADMINS EN ATTENTE DE VALIDATION -->
-        <h4 class="mb-3 text-primary">🔑 Administrateurs en attente de validation</h4>
-        <div class="table-responsive mb-5">
-            <table class="table table-striped table-bordered align-middle shadow-sm">
-                <thead class="table-dark text-center">
+        <h4 class="section-title">🔑 Administrateurs en attente de validation</h4>
+        <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0 responsive-table">
+                <thead class="text-white text-center">
                     <tr>
                         <th>Email</th>
                         <th>Rôle</th>
@@ -189,7 +412,7 @@
                     {{ user_row(user) }}
                 {% else %}
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-3">
+                        <td colspan="7" class="empty-row text-center text-muted py-3">
                             Aucun administrateur en attente de validation.
                         </td>
                     </tr>
@@ -197,14 +420,16 @@
                 </tbody>
             </table>
         </div>
+        </div>
     {% endif %}
 
     <!-- 🆕 TABLEAU 2 : GESTION DES CAMPAGNES — visible uniquement si permission accordée -->
     {% if peut_voir_campagnes %}
-    <h4 class="mt-5 mb-3 text-primary">Campagnes publicitaires (WhatsApp)</h4>
+    <h4 class="section-title">Campagnes publicitaires (WhatsApp)</h4>
+    <div class="table-card">
     <div class="table-responsive">
-        <table class="table table-striped table-bordered align-middle shadow-sm">
-            <thead class="table-dark text-center">
+        <table class="table table-striped align-middle mb-0 responsive-table">
+            <thead class="text-white text-center">
                 <tr>
                     <th>ID</th>
                     <th>Annonceur</th>
@@ -222,8 +447,8 @@
             <tbody>
             {% for camp in campaigns %}
                 <tr>
-                    <td class="text-center fw-bold">#{{ camp.id }}</td>
-                    <td>
+                    <td class="text-center fw-bold" data-label="ID">#{{ camp.id }}</td>
+                    <td data-label="Annonceur">
                         {% if camp.annonceur %}
                             <div>{{ camp.annonceur.email }}</div>
                             <button type="button" class="btn btn-xs btn-outline-info mt-1 btn-voir-profil" style="font-size: 0.75rem;"
@@ -245,7 +470,7 @@
                             <span class="text-muted">Utilisateur supprimé</span>
                         {% endif %}
                     </td>
-                    <td class="text-center">
+                    <td class="text-center" data-label="Type">
                         <span class="text-capitalize d-block">{{ camp.promotion_type }}</span>
                         {% if camp.display_option == "A" %}
                             <span class="badge bg-success mt-1">🎬 Vidéo</span>
@@ -255,11 +480,11 @@
                             <span class="badge bg-secondary mt-1">📝 Texte seul</span>
                         {% endif %}
                     </td>
-                    <td>
+                    <td data-label="Détail & Texte">
                         <strong>Détail :</strong> {{ camp.promotion_detail or "-" }}<br>
                         <small class="text-muted"><strong>Statut WhatsApp :</strong> {{ camp.description or "-" }}</small>
                     </td>
-                    <td class="text-center">
+                    <td class="text-center" data-label="Zones / Communes">
                         <div>{{ camp.provinces or camp.departments or "Toutes zones" }}</div>
                         {% if camp.communes %}
                             <small class="text-muted d-block mt-1">
@@ -267,7 +492,7 @@
                             </small>
                         {% endif %}
                     </td>
-                    <td class="text-center">
+                    <td class="text-center" data-label="Médias">
                         {% if camp.display_option == "C" %}
                             <span class="text-muted small">📝 Aucun média — annonce textuelle uniquement</span>
                         {% elif camp.media_files %}
@@ -277,7 +502,7 @@
                                     {% if file.lower().endswith(('.mp4', '.mov', '.avi', '.webm')) %}
                                         <div class="position-relative d-inline-block bg-dark rounded overflow-hidden shadow-sm" style="width: 120px; height: 80px; cursor: pointer;" onclick="showMedia('{{ file_url }}', true)">
                                             <div class="position-absolute top-50 start-50 translate-middle text-white z-3">
-                                                <i class="fas fa-play-circle fa-2x opacity-75"></i>
+                                                <i class="bi bi-play-circle-fill fs-2 opacity-75"></i>
                                             </div>
                                             <video src="{{ file_url }}" class="w-100 h-100 object-fit-cover opacity-50"></video>
                                         </div>
@@ -293,13 +518,13 @@
                             <span class="text-muted">Aucun média</span>
                         {% endif %}
                     </td>
-                    <td class="text-center">
+                    <td class="text-center" data-label="Objectif Clics">
                         <span class="badge bg-info text-dark">
                             {{ camp.target_whatsapp_views if camp.target_whatsapp_views else camp.whatsapp_views }} clics
                         </span>
                     </td>
                     <!-- COLONNE DURÉE / PROGRESSION -->
-                    <td class="text-center" style="min-width: 150px;">
+                    <td class="text-center" data-label="Durée / Progression" style="min-width: 150px;">
                         <div class="fw-bold text-dark">
                             <i class="bi bi-calendar3 me-1"></i>{{ camp.duration_days }} jour{{ 's' if camp.duration_days > 1 else '' }}
                         </div>
@@ -321,8 +546,8 @@
                             <span class="badge bg-success mt-1">✅ Diffusion terminée</span>
                         {% endif %}
                     </td>
-                    <td class="text-center fw-bold text-success">{{ "{:,.0f}".format(camp.total_cost) }} XOF</td>
-                    <td class="text-center">
+                    <td class="text-center fw-bold text-success" data-label="Coût total">{{ "{:,.0f}".format(camp.total_cost) }} XOF</td>
+                    <td class="text-center" data-label="Statut">
                         {% if camp.validated or camp.admin_status == "approved" %}
                             <span class="badge bg-success">✅ Validée</span>
                         {% elif camp.admin_status == "rejected" or camp.status == "rejete" %}
@@ -336,7 +561,7 @@
                             {% endif %}
                         {% endif %}
                     </td>
-                    <td class="text-center">
+                    <td class="text-center" data-label="Actions">
                         {% if not camp.validated and camp.admin_status != "rejected" and camp.status != "rejete" %}
                             <div class="d-flex flex-column gap-1 align-items-center">
                                 <form action="{{ url_for('validate_campaign', campaign_id=camp.id) }}" method="POST" class="d-inline">
@@ -410,7 +635,7 @@
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="11" class="text-center text-muted py-3">
+                    <td colspan="11" class="empty-row text-center text-muted py-3">
                         Aucune campagne à afficher pour le moment.
                     </td>
                 </tr>
@@ -418,11 +643,13 @@
             </tbody>
         </table>
     </div>
+    </div>
     {% endif %}
 
     <div class="text-center mt-4">
-        <a href="{{ url_for('index') }}" class="btn btn-primary">⬅ Retour à l’accueil</a>
+        <a href="{{ url_for('index') }}" class="btn btn-back-home text-white">⬅ Retour à l'accueil</a>
     </div>
+</div>
 </div>
 
 <!-- MODAL : VISUALISATION MÉDIA -->

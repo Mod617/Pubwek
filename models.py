@@ -439,14 +439,19 @@ class Campaign(db.Model):
     target_whatsapp_views = db.Column(db.Integer, default=0)
     
     # --- Vues quotidiennes consécutives ---
+    # 🆕 Reste un indicateur informatif (affiché comme "rythme moyen prévu"),
+    # mais le quota réellement exigé chaque jour est désormais recalculé
+    # dynamiquement par quota_effectif_du_jour(), pour ne jamais perdre de
+    # clics par troncature/arrondi et pour rattraper automatiquement les
+    # jours sous-performants sur les jours restants.
     views_per_day = db.Column(db.Integer, default=0) # Calculé automatiquement (ex: target_views / duration_days)
 
     # =========================================================================
     # 🆕 GESTION DU QUOTA JOURNALIER DE VUES (clics WhatsApp vérifiés)
     # =========================================================================
     views_today = db.Column(db.Integer, default=0)  # Compteur du jour en cours, remis à 0 chaque nouveau jour
-    current_day_number = db.Column(db.Integer, default=0)  # Jour 1, jour 2, jour 3... de la diffusion
-    last_quota_date = db.Column(db.Date, nullable=True)  # Date du dernier calcul de quota (détecte le changement de jour)
+    current_day_number = db.Column(db.Integer, default=0)  # Jour 1, jour 2, jour 3... de la diffusion — resynchronisé sur jour_diffusion_campagne()
+    last_quota_date = db.Column(db.Date, nullable=True)  # Informatif uniquement : date du dernier reset détecté (traçabilité/support)
     daily_quota_paused = db.Column(db.Boolean, default=False)  # True quand le quota du jour est atteint
     daily_quota_alert_sent = db.Column(db.Boolean, default=False)  # Empêche de spammer les partageurs plusieurs fois le même jour
 
@@ -485,27 +490,43 @@ class Campaign(db.Model):
             self.is_active = False
         db.session.commit()
 
+    def quota_effectif_du_jour(self):
+        """Quota de clics réellement exigé aujourd'hui : l'objectif restant
+        de la campagne, réparti sur les jours de diffusion restants (jour
+        courant inclus). Recalculé dynamiquement — pas de valeur figée à la
+        création, donc aucune perte par troncature/arrondi au fil des jours,
+        et rattrapage automatique d'un jour sous-performant sur les jours
+        suivants."""
+        jour_actuel = jour_diffusion_campagne(self)
+        jours_restants = max(1, (self.duration_days or 1) - jour_actuel + 1)
+        restant_objectif = max(0, (self.target_whatsapp_views or 0) - (self.whatsapp_views or 0))
+        # Arrondi au-dessus : mieux vaut viser large que perdre des clics à la fin.
+        return -(-restant_objectif // jours_restants)  # équivalent d'un ceil() en entier
+
     def verifier_et_reset_quota_journalier(self):
         """
-        Vérifie si on est passé à un nouveau jour calendaire depuis le dernier clic compté.
-        Si oui : reset le compteur du jour, avance le numéro du jour, et réactive la campagne.
-        Retourne True si un reset a eu lieu (utile pour savoir si on doit notifier un "nouveau jour disponible").
+        Resynchronise l'état de la campagne sur jour_diffusion_campagne(), l'unique
+        source de vérité pour le jour de diffusion. Si le jour calculé a changé
+        depuis le dernier passage : reset le compteur du jour et réactive la campagne.
+        last_quota_date est conservée à titre informatif (traçabilité/support), elle
+        ne pilote plus la logique.
+        Retourne True si un changement de jour a eu lieu.
         """
-        aujourdhui = datetime.utcnow().date()
+        nouveau_jour = jour_diffusion_campagne(self)
 
         # Jamais initialisé (première vue de la campagne)
         if self.last_quota_date is None:
-            self.last_quota_date = aujourdhui
-            self.current_day_number = 1
+            self.last_quota_date = datetime.utcnow().date()
+            self.current_day_number = nouveau_jour
             self.views_today = 0
             self.daily_quota_paused = False
             self.daily_quota_alert_sent = False
             return True
 
-        # Nouveau jour détecté
-        if aujourdhui > self.last_quota_date:
-            self.last_quota_date = aujourdhui
-            self.current_day_number += 1
+        # Changement de jour détecté (comparaison sur le jour calculé, plus sur la date brute)
+        if nouveau_jour != self.current_day_number:
+            self.last_quota_date = datetime.utcnow().date()
+            self.current_day_number = nouveau_jour
             self.views_today = 0
             self.daily_quota_paused = False
             self.daily_quota_alert_sent = False
@@ -514,10 +535,11 @@ class Campaign(db.Model):
         return False
 
     def quota_du_jour_atteint(self):
-        """Retourne True si le quota de vues du jour en cours est atteint ou dépassé."""
-        if not self.views_per_day or self.views_per_day <= 0:
+        """Retourne True si le quota effectif du jour en cours est atteint ou dépassé."""
+        quota = self.quota_effectif_du_jour()
+        if quota <= 0:
             return False
-        return self.views_today >= self.views_per_day
+        return self.views_today >= quota
 
 
 class CampaignShare(db.Model):

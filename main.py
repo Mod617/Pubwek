@@ -3705,7 +3705,7 @@ def crediter_clics_du_jour(share, day_number):
         CampaignClick.query
         .filter(
             CampaignClick.campaign_share_id == share.id,
-            CampaignClick.campaign_day_number == day_number,
+            CampaignClick.day_number == day_number,
             CampaignClick.is_paid.is_(True),
             CampaignClick.rewarded_at.is_(None),
         )

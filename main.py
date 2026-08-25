@@ -560,7 +560,9 @@ if not app.config.get("RESEND_API_KEY"):
 with app.app_context():
     lancer_nettoyage_periodique(app, app.config["UPLOAD_FOLDER"])
 
-
+@app.route('/sw.js')
+def service_worker():
+    return send_from_directory('.', 'sw.js', mimetype='application/javascript')
 
 
 

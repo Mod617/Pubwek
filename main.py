@@ -3665,18 +3665,7 @@ def recompense_pour(camp, config):
     return config.reward_per_click_text or 0.0
 
 
-def jour_diffusion_campagne(camp, moment=None):
-    """Numéro du jour de diffusion (1, 2, 3...) à un instant donné.
-    Calculé sur la date calendaire, indépendamment des clics reçus : un jour
-    sans clic doit quand même pouvoir recevoir une preuve de publication.
-    Le point de départ est shared_at (date de mise à disposition aux
-    partageurs) ; à défaut, created_at.
-    """
-    moment = moment or datetime.utcnow()
-    reference = camp.shared_at or camp.created_at
-    delta_jours = (moment.date() - reference.date()).days + 1
-    plafond = camp.duration_days or 1
-    return max(1, min(delta_jours, plafond))
+
 
 
 def preuve_jour_validee(campaign_share_id, day_number):

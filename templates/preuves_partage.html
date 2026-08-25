@@ -1,55 +1,219 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h2>Preuves de partage en attente ({{ preuves|length }})</h2>
-{% if camp_filtree %}
-    <div class="alert alert-info d-flex justify-content-between align-items-center">
-        <span>Filtré sur la campagne : <strong>#{{ camp_filtree.id }} — {{ camp_filtree.promotion_detail or camp_filtree.promotion_type }}</strong></span>
-        <a href="{{ url_for('admin_preuves_partage') }}" class="btn btn-sm btn-outline-secondary">Voir toutes les campagnes</a>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+<style>
+  :root{
+    --pf-ink:       #12261F;
+    --pf-emerald:   #0F6B4C;
+    --pf-emerald-2: #14875F;
+    --pf-amber:     #F0A63C;
+    --pf-bg:        #F4F2EC;
+    --pf-surface:   #FFFFFF;
+    --pf-line:      #E7E3D8;
+    --pf-muted:     #6E7A73;
+    --pf-danger:    #C6493D;
+    --pf-danger-bg: #FBEAE8;
+    --pf-radius:    16px;
+  }
+
+  .pf-wrap{
+    background: var(--pf-bg);
+    padding: 2.25rem 0 4rem;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--pf-ink);
+  }
+  .pf-wrap h2{ font-family: 'Space Grotesk', 'Inter', sans-serif; letter-spacing: -0.01em; }
+  .pf-mono{ font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+  /* ---------- Header ---------- */
+  .pf-header{ margin-bottom: 1.5rem; }
+  .pf-eyebrow{
+    text-transform:uppercase; letter-spacing:.14em; font-size:.72rem;
+    font-weight:600; color: var(--pf-emerald-2); margin-bottom:.35rem;
+  }
+  .pf-header h2{ font-weight:700; font-size:1.75rem; margin:0; color:var(--pf-ink); display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;}
+  .pf-count{
+    display:inline-flex; align-items:center; justify-content:center;
+    background: var(--pf-amber); color:#3A2504; font-family:'JetBrains Mono', monospace;
+    font-weight:700; font-size:.95rem; min-width:2.1rem; height:2.1rem; border-radius:999px; padding:0 .5rem;
+  }
+
+  .pf-alert{
+    border-radius: 14px; padding:.9rem 1.15rem; font-size:.9rem;
+    display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;
+    background:#EAF4EF; color:#0F5138; border:1px solid #CFE7DA; margin-bottom:1.5rem;
+  }
+  .pf-alert strong{ color:var(--pf-ink); }
+  .pf-alert-link{
+    border:1.5px solid var(--pf-line); background:var(--pf-surface); color:var(--pf-ink);
+    font-weight:600; border-radius:999px; padding:.4rem 1rem; font-size:.82rem;
+    text-decoration:none; white-space:nowrap; transition:.15s;
+  }
+  .pf-alert-link:hover{ border-color:var(--pf-emerald); color:var(--pf-emerald); }
+
+  .pf-empty{
+    background: var(--pf-surface); border:1px solid var(--pf-line); border-radius: var(--pf-radius);
+    text-align:center; padding:3.5rem 1.5rem; color:var(--pf-muted); font-size:1rem;
+  }
+  .pf-empty i{ font-size:2rem; color: var(--pf-emerald-2); display:block; margin-bottom:.75rem; }
+
+  /* ---------- Grid of proof cards ---------- */
+  .pf-grid{
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .pf-proof-card{
+    background: var(--pf-surface); border:1px solid var(--pf-line); border-radius: var(--pf-radius);
+    overflow:hidden; display:flex; flex-direction:column;
+    box-shadow: 0 1px 2px rgba(18,38,31,.04);
+  }
+
+  .pf-proof-top{
+    padding: 1rem 1.15rem .85rem; border-bottom: 1px dashed var(--pf-line);
+  }
+  .pf-sharer{ font-weight:700; font-size:.98rem; color:var(--pf-ink); }
+  .pf-campaign{ font-size:.82rem; color:var(--pf-muted); margin-top:.15rem; }
+  .pf-tags{ display:flex; gap:.4rem; margin-top:.6rem; flex-wrap:wrap; }
+  .pf-tag{
+    font-size:.72rem; font-weight:600; padding:.2rem .55rem; border-radius:999px;
+  }
+  .pf-tag-day{ background:#F1EBFB; color:#6B3FCB; }
+  .pf-tag-debut{ background:#E9F0FE; color:#2255C7; }
+  .pf-tag-fin{ background:#FDF3E2; color:#8A5A0C; }
+
+  .pf-proof-photo{
+    position:relative; display:block; background:#EFEDE6;
+    aspect-ratio: 4 / 3; overflow:hidden;
+  }
+  .pf-proof-photo img{
+    width:100%; height:100%; object-fit:cover; display:block;
+    transition: transform .25s ease;
+  }
+  .pf-proof-photo:hover img{ transform: scale(1.045); }
+  .pf-photo-overlay{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background: rgba(18,38,31,.0); opacity:0; transition:.2s;
+    color:#fff; font-size:.82rem; font-weight:600; gap:.4rem;
+  }
+  .pf-proof-photo:hover .pf-photo-overlay{ opacity:1; background: rgba(18,38,31,.35); }
+
+  .pf-proof-meta{
+    padding: .8rem 1.15rem; font-size:.78rem; color:var(--pf-muted);
+    display:flex; align-items:center; gap:.4rem; border-bottom:1px solid var(--pf-line);
+  }
+
+  .pf-proof-actions{ padding: 1rem 1.15rem 1.15rem; margin-top:auto; }
+  .pf-btn-row{ display:flex; gap:.5rem; }
+  .pf-btn-valider{
+    flex:1; background: var(--pf-emerald); border:none; color:#fff; font-weight:700;
+    border-radius: 999px; padding:.55rem .9rem; font-size:.85rem;
+    display:inline-flex; align-items:center; justify-content:center; gap:.35rem;
+    transition: transform .15s ease, background .15s ease;
+  }
+  .pf-btn-valider:hover{ background: var(--pf-emerald-2); color:#fff; transform: translateY(-1px); }
+  .pf-btn-rejeter{
+    flex:1; background: var(--pf-danger-bg); border:1px solid #F3CBC6; color: var(--pf-danger);
+    font-weight:700; border-radius: 999px; padding:.55rem .9rem; font-size:.85rem;
+    display:inline-flex; align-items:center; justify-content:center; gap:.35rem;
+    transition: background .15s ease;
+  }
+  .pf-btn-rejeter:hover{ background:#F8DAD6; color: var(--pf-danger); }
+
+  .pf-reject-form{
+    margin-top:.65rem; padding: .75rem; background:#FAF9F5; border:1px dashed var(--pf-line);
+    border-radius: 12px;
+  }
+  .pf-reject-form input[type="text"]{
+    border-radius: 10px; border:1.5px solid var(--pf-line); padding:.45rem .7rem;
+    font-size:.85rem; width:100%; background:#fff;
+  }
+  .pf-reject-form input[type="text"]:focus{
+    outline:none; border-color: var(--pf-danger); box-shadow: 0 0 0 3px rgba(198,73,61,.12);
+  }
+  .pf-btn-confirm-reject{
+    margin-top:.5rem; width:100%; background:#fff; border:1.5px solid var(--pf-danger);
+    color: var(--pf-danger); font-weight:700; border-radius:999px; padding:.4rem .8rem; font-size:.8rem;
+    transition:.15s;
+  }
+  .pf-btn-confirm-reject:hover{ background: var(--pf-danger); color:#fff; }
+
+  @media (max-width: 575px){
+    .pf-header h2{ font-size:1.4rem; }
+    .pf-grid{ grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="container pf-wrap">
+
+  <div class="pf-header">
+    <div class="pf-eyebrow">Modération</div>
+    <h2>Preuves de partage en attente <span class="pf-count">{{ preuves|length }}</span></h2>
+  </div>
+
+  {% if camp_filtree %}
+    <div class="pf-alert">
+      <span>Filtré sur la campagne : <strong>#{{ camp_filtree.id }} — {{ camp_filtree.promotion_detail or camp_filtree.promotion_type }}</strong></span>
+      <a href="{{ url_for('admin_preuves_partage') }}" class="pf-alert-link">Voir toutes les campagnes</a>
     </div>
-{% endif %}
-{% if not preuves %}
-    <p>Aucune preuve en attente pour le moment. ✅</p>
-{% else %}
-<table class="table">
-    <thead>
-        <tr>
-            <th>Partageur</th>
-            <th>Campagne</th>
-            <th>Jour</th>
-            <th>Type</th>
-            <th>Capture</th>
-            <th>Envoyée le</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
+  {% endif %}
+
+  {% if not preuves %}
+    <div class="pf-empty">
+      <i class="bi bi-check-circle"></i>
+      Aucune preuve en attente pour le moment.
+    </div>
+  {% else %}
+  <div class="pf-grid">
     {% for p in preuves %}
-        <tr>
-            <td>{{ p.campaign_share.sharer.pseudo or p.campaign_share.sharer.email }}</td>
-            <td>#{{ p.campaign_share.campaign_id }} — {{ p.campaign_share.campaign.promotion_detail or p.campaign_share.campaign.promotion_type }}</td>
-            <td>Jour {{ p.day_number }}</td>
-            <td>{{ "Début" if p.proof_type == "debut" else "Fin" }}</td>
-            <td>
-                <a href="{{ url_for('serve_upload', filename=p.filename) }}" target="_blank">
-                    <img src="{{ url_for('serve_upload', filename=p.filename) }}" alt="Capture" style="max-width:120px; max-height:120px;">
-                </a>
-            </td>
-            <td>{{ p.submitted_at.strftime("%d/%m/%Y %H:%M") }}</td>
-            <td>
-                <form method="POST" action="{{ url_for('valider_preuve_partage', proof_id=p.id, decision='valider') }}" style="display:inline;">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-success btn-sm">✅ Valider</button>
-                </form>
-                <button type="button" class="btn btn-danger btn-sm" onclick="document.getElementById('rejet-{{ p.id }}').classList.toggle('d-none')">❌ Rejeter</button>
-                <form id="rejet-{{ p.id }}" method="POST" action="{{ url_for('valider_preuve_partage', proof_id=p.id, decision='rejeter') }}" class="d-none mt-2">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="text" name="motif" placeholder="Motif du rejet" class="form-control form-control-sm">
-                    <button type="submit" class="btn btn-outline-danger btn-sm mt-1">Confirmer le rejet</button>
-                </form>
-            </td>
-        </tr>
+    <div class="pf-proof-card">
+      <div class="pf-proof-top">
+        <div class="pf-sharer">{{ p.campaign_share.sharer.pseudo or p.campaign_share.sharer.email }}</div>
+        <div class="pf-campaign">#{{ p.campaign_share.campaign_id }} — {{ p.campaign_share.campaign.promotion_detail or p.campaign_share.campaign.promotion_type }}</div>
+        <div class="pf-tags">
+          <span class="pf-tag pf-tag-day">Jour {{ p.day_number }}</span>
+          {% if p.proof_type == "debut" %}
+            <span class="pf-tag pf-tag-debut">Début</span>
+          {% else %}
+            <span class="pf-tag pf-tag-fin">Fin</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <a href="{{ url_for('serve_upload', filename=p.filename) }}" target="_blank" class="pf-proof-photo">
+        <img src="{{ url_for('serve_upload', filename=p.filename) }}" alt="Capture de preuve">
+        <div class="pf-photo-overlay"><i class="bi bi-arrows-angle-expand"></i> Voir en grand</div>
+      </a>
+
+      <div class="pf-proof-meta">
+        <i class="bi bi-clock"></i> Envoyée le {{ p.submitted_at.strftime("%d/%m/%Y %H:%M") }}
+      </div>
+
+      <div class="pf-proof-actions">
+        <div class="pf-btn-row">
+          <form method="POST" action="{{ url_for('valider_preuve_partage', proof_id=p.id, decision='valider') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="pf-btn-valider"><i class="bi bi-check-lg"></i> Valider</button>
+          </form>
+          <button type="button" class="pf-btn-rejeter" onclick="document.getElementById('rejet-{{ p.id }}').classList.toggle('d-none')">
+            <i class="bi bi-x-lg"></i> Rejeter
+          </button>
+        </div>
+        <form id="rejet-{{ p.id }}" method="POST" action="{{ url_for('valider_preuve_partage', proof_id=p.id, decision='rejeter') }}" class="pf-reject-form d-none">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="text" name="motif" placeholder="Motif du rejet">
+          <button type="submit" class="pf-btn-confirm-reject">Confirmer le rejet</button>
+        </form>
+      </div>
+    </div>
     {% endfor %}
-    </tbody>
-</table>
-{% endif %}
+  </div>
+  {% endif %}
+
+</div>
 {% endblock %}

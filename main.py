@@ -3765,7 +3765,7 @@ def enregistrer_clic(share, camp, link_type):
             user_agent=user_agent,
             is_paid=payable,
             rejection_reason=motif,
-            campaign_day_number=jour,
+            day_number=jour,
         )
         db.session.add(click)
         db.session.flush()  # pour disposer de click.id

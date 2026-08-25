@@ -272,6 +272,7 @@
                 {% endif %}
             </div>
 
+            {% set quota_jour = campaign.quota_effectif_du_jour() %}
             <div class="row text-center">
                 <div class="col-6 col-md-3 mb-3">
                     <div class="metric-block">
@@ -281,14 +282,14 @@
                 </div>
                 <div class="col-6 col-md-3 mb-3">
                     <div class="metric-block">
-                        <div class="metric-label">Clics / jour prévus</div>
-                        <div class="metric-value text-dark">{{ campaign.views_per_day }}</div>
+                        <div class="metric-label">Quota du jour</div>
+                        <div class="metric-value text-dark">{{ quota_jour }}</div>
                     </div>
                 </div>
                 <div class="col-6 col-md-3 mb-3">
                     <div class="metric-block">
                         <div class="metric-label">Clics aujourd'hui</div>
-                        <div class="metric-value text-primary">{{ campaign.views_today or 0 }} / {{ campaign.views_per_day }}</div>
+                        <div class="metric-value text-primary">{{ campaign.views_today or 0 }} / {{ quota_jour }}</div>
                     </div>
                 </div>
                 <div class="col-6 col-md-3 mb-3">

@@ -1,108 +1,234 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-        <div>
-            <h2 class="mb-1 fw-bold">🧾 Mes Transactions</h2>
-            <p class="text-muted mb-0">Historique complet de vos paiements de campagnes publicitaires.</p>
-        </div>
-        <a href="{{ url_for('mes_campagnes') }}" class="btn btn-outline-secondary fw-bold shadow-sm">
-            ⬅️ Retour à mes campagnes
-        </a>
-    </div>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-    <div class="d-flex justify-content-end mb-3">
-        <a href="{{ url_for('mes_transactions_pdf') }}" class="btn btn-outline-dark fw-bold shadow-sm">
-            <i class="fas fa-file-pdf me-1"></i> 📄 Télécharger ma fiche en PDF
-        </a>
-    </div>
+<style>
+  :root{
+    --pf-ink:       #12261F;
+    --pf-emerald:   #0F6B4C;
+    --pf-emerald-2: #14875F;
+    --pf-amber:     #F0A63C;
+    --pf-bg:        #F4F2EC;
+    --pf-surface:   #FFFFFF;
+    --pf-line:      #E7E3D8;
+    --pf-muted:     #6E7A73;
+    --pf-danger:    #C6493D;
+    --pf-radius:    18px;
+  }
 
-    <!-- Résumé -->
-    <div class="row mb-4">
-        <div class="col-md-4 mb-3">
-            <div class="card border-0 shadow-sm text-center p-3 bg-success bg-opacity-10 border-start border-success border-4">
-                <div class="text-muted small">Total payé (transactions approuvées)</div>
-                <div class="h3 fw-bold text-success mb-0">{{ "{:,.0f}".format(total_paye) }} FCFA</div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <div class="card border-0 shadow-sm text-center p-3 bg-light">
-                <div class="text-muted small">Nombre de transactions</div>
-                <div class="h3 fw-bold text-dark mb-0">{{ transactions | length }}</div>
-            </div>
-        </div>
-    </div>
+  .pf-wrap{
+    background: var(--pf-bg);
+    padding: 2.25rem 0 4rem;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--pf-ink);
+  }
+  .pf-wrap h2, .pf-wrap h4, .pf-wrap h5{
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    letter-spacing: -0.01em;
+  }
+  .pf-mono{ font-family: 'JetBrains Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
 
-    <!-- Liste des transactions -->
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-0">
-            {% if transactions %}
-            <div class="table-responsive">
-                <table class="table table-hover mb-0 align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="ps-3">Référence</th>
-                            <th>Campagne</th>
-                            <th>Type</th>
-                            <th>Montant</th>
-                            <th>Statut</th>
-                            <th class="pe-3">Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for t in transactions %}
-                        <tr>
-                            <td class="ps-3 small font-monospace">{{ t.reference }}</td>
-                            <td>
-                                {% if t.campaign %}
-                                    <a href="{{ url_for('campagne_partageurs', campaign_id=t.campaign.id) }}" class="text-decoration-none">
-                                        #{{ t.campaign.id }} — {{ t.campaign.promotion_detail or t.campaign.promotion_type }}
-                                    </a>
-                                {% else %}
-                                    <span class="text-muted">—</span>
-                                {% endif %}
-                            </td>
-                            <td class="text-capitalize small">
-                                {% if t.transaction_type == "campaign_payment" %}
-                                    📢 Paiement de campagne
-                                {% elif "subscription" in t.transaction_type %}
-                                    🎬 Abonnement vidéo
-                                {% else %}
-                                    {{ t.transaction_type }}
-                                {% endif %}
-                            </td>
-                            <td class="fw-bold">{{ "{:,.0f}".format(t.amount) }} {{ t.currency }}</td>
-                            <td>
-                                {% if t.status == "approved" %}
-                                    <span class="badge bg-success">✅ Approuvée</span>
-                                {% elif t.status == "pending" %}
-                                    <span class="badge bg-warning text-dark">⏳ En attente</span>
-                                {% elif t.status == "declined" %}
-                                    <span class="badge bg-danger">❌ Déclinée</span>
-                                {% elif t.status == "canceled" %}
-                                    <span class="badge bg-secondary">🚫 Annulée</span>
-                                {% else %}
-                                    <span class="badge bg-light text-dark">{{ t.status }}</span>
-                                {% endif %}
-                            </td>
-                            <td class="pe-3 small text-muted">{{ t.created_at.strftime("%d/%m/%Y %H:%M") if t.created_at else "-" }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <p class="text-muted text-center p-4 mb-0">Aucune transaction pour le moment.</p>
-            {% endif %}
-        </div>
-    </div>
+  /* ---------- Header ---------- */
+  .pf-header{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    flex-wrap:wrap; gap:1rem; margin-bottom:1.75rem;
+  }
+  .pf-eyebrow{
+    text-transform:uppercase; letter-spacing:.14em; font-size:.72rem;
+    font-weight:600; color: var(--pf-emerald-2); margin-bottom:.35rem;
+  }
+  .pf-header h2{ font-weight:700; font-size:1.9rem; margin:0; color:var(--pf-ink);}
+  .pf-header p{ color: var(--pf-muted); margin:.3rem 0 0; }
+  .pf-btn-back{
+    border:1.5px solid var(--pf-line); background:var(--pf-surface); color:var(--pf-ink);
+    font-weight:600; border-radius:999px; padding:.55rem 1.15rem; font-size:.9rem;
+    transition: all .15s ease; text-decoration:none; white-space:nowrap;
+  }
+  .pf-btn-back:hover{ border-color:var(--pf-emerald); color:var(--pf-emerald); background:var(--pf-surface);}
+  .pf-pdf-link{
+    display:inline-flex; align-items:center; gap:.4rem; font-weight:600; font-size:.88rem;
+    color: var(--pf-ink); text-decoration:none; border-bottom:1.5px dashed var(--pf-line);
+    padding-bottom:2px; transition:.15s;
+  }
+  .pf-pdf-link:hover{ color:var(--pf-emerald); border-color:var(--pf-emerald);}
 
-    <p class="text-muted small mt-3">
-        <i class="fas fa-shield-alt me-1"></i>
-        Chaque transaction est identifiée par une référence unique et son statut réel confirmé par notre partenaire de paiement.
-        Ce document constitue votre preuve de paiement officielle.
-    </p>
+  /* ---------- Stat row ---------- */
+  .pf-stat-row{ display:grid; grid-template-columns: 1.3fr 1fr; gap:1rem; margin-bottom:2rem;}
+  @media (max-width: 700px){ .pf-stat-row{ grid-template-columns:1fr; } }
+
+  .pf-stat-hero{
+    position:relative; overflow:hidden;
+    background: linear-gradient(135deg, var(--pf-emerald) 0%, #0B5A40 100%);
+    border-radius: var(--pf-radius);
+    padding: 1.75rem 1.75rem 1.5rem;
+    color:#fff;
+    box-shadow: 0 14px 30px -14px rgba(15,107,76,.55);
+  }
+  .pf-stat-hero::after{
+    content:""; position:absolute; right:-40px; top:-40px; width:160px; height:160px;
+    background: radial-gradient(circle, rgba(255,255,255,.10) 0%, transparent 70%);
+  }
+  .pf-stat-hero .pf-label{ font-size:.75rem; text-transform:uppercase; letter-spacing:.12em; opacity:.85; font-weight:600; }
+  .pf-stat-hero .pf-amount{ font-size: clamp(1.9rem, 4vw, 2.5rem); font-weight:700; line-height:1.15; margin:.35rem 0 0; }
+  .pf-stat-hero .pf-amount small{ font-size:1rem; font-weight:600; opacity:.85; margin-left:.25rem;}
+
+  .pf-stat{
+    background: var(--pf-surface); border-radius: var(--pf-radius);
+    padding: 1.5rem 1.6rem; border:1px solid var(--pf-line);
+    display:flex; flex-direction:column; justify-content:center;
+  }
+  .pf-stat .pf-label{ font-size:.75rem; text-transform:uppercase; letter-spacing:.1em; color:var(--pf-muted); font-weight:600;}
+  .pf-stat .pf-value{ font-size:1.9rem; font-weight:700; margin-top:.3rem; color:var(--pf-ink);}
+
+  /* ---------- Card / table ---------- */
+  .pf-card{
+    background: var(--pf-surface); border-radius: var(--pf-radius);
+    border:1px solid var(--pf-line); box-shadow: 0 1px 2px rgba(18,38,31,.04);
+    margin-bottom: 1.25rem;
+  }
+  .pf-table thead th{
+    text-transform:uppercase; font-size:.7rem; letter-spacing:.08em; color:var(--pf-muted);
+    font-weight:700; background:#FAF9F5; border-bottom:1px solid var(--pf-line);
+    padding:.85rem 1rem; white-space:nowrap;
+  }
+  .pf-table tbody td{ padding:.85rem 1rem; font-size:.9rem; border-bottom:1px solid var(--pf-line); vertical-align:middle; }
+  .pf-table tbody tr:last-child td{ border-bottom:none; }
+  .pf-table tbody tr:hover{ background:#FBFAF6; }
+  .pf-ref{ font-family:'JetBrains Mono', monospace; font-size:.82rem; color:var(--pf-muted); }
+  .pf-amount-cell{ font-family:'JetBrains Mono', monospace; font-weight:700; }
+  .pf-campaign-link{ color:var(--pf-ink); font-weight:600; text-decoration:none; }
+  .pf-campaign-link:hover{ color: var(--pf-emerald); }
+
+  .pf-badge{
+    display:inline-flex; align-items:center; gap:.35rem; font-size:.76rem; font-weight:600;
+    padding:.32rem .68rem; border-radius:999px; border:1px solid transparent; white-space:nowrap;
+  }
+  .pf-badge-approved{ background:#E7F5EC; color:#137445; border-color:#C6E9D3;}
+  .pf-badge-pending{ background:#FDF3E2; color:#8A5A0C; border-color:#F5DFB2;}
+  .pf-badge-declined{ background:#FBEAE8; color:#B8362B; border-color:#F3CBC6;}
+  .pf-badge-canceled{ background:#EFEEEA; color:#5A5A52; border-color:#DFDCD1;}
+  .pf-badge-other{ background:#F1EBFB; color:#6B3FCB; border-color:#DDCCF6;}
+
+  .pf-type-cell{ display:inline-flex; align-items:center; gap:.4rem; font-size:.86rem; }
+  .pf-type-cell i{ color: var(--pf-emerald); }
+
+  .pf-empty{ text-align:center; padding:3rem 1.5rem; color:var(--pf-muted); font-size:.92rem; }
+
+  .pf-note{
+    display:flex; align-items:flex-start; gap:.6rem;
+    background: var(--pf-surface); border:1px solid var(--pf-line); border-radius:14px;
+    padding: 1rem 1.2rem; font-size:.85rem; color:var(--pf-muted); margin-top:1.25rem;
+  }
+  .pf-note i{ color: var(--pf-amber); margin-top:.15rem; }
+
+  @media (max-width: 575px){
+    .pf-header h2{ font-size:1.55rem; }
+  }
+</style>
+
+<div class="container pf-wrap">
+
+  <div class="pf-header">
+    <div>
+      <div class="pf-eyebrow">Espace annonceur</div>
+      <h2>Mes transactions</h2>
+      <p>Historique complet de vos paiements de campagnes publicitaires.</p>
+    </div>
+    <a href="{{ url_for('mes_campagnes') }}" class="pf-btn-back">
+      <i class="bi bi-arrow-left me-1"></i>Retour à mes campagnes
+    </a>
+  </div>
+
+  <div class="d-flex justify-content-end mb-3">
+    <a href="{{ url_for('mes_transactions_pdf') }}" class="pf-pdf-link">
+      <i class="bi bi-file-earmark-pdf"></i> Télécharger ma fiche en PDF
+    </a>
+  </div>
+
+  <!-- Résumé -->
+  <div class="pf-stat-row">
+    <div class="pf-stat-hero">
+      <div class="pf-label">Total payé (transactions approuvées)</div>
+      <div class="pf-amount pf-mono">{{ "{:,.0f}".format(total_paye) }}<small>FCFA</small></div>
+    </div>
+    <div class="pf-stat">
+      <div class="pf-label">Nombre de transactions</div>
+      <div class="pf-value pf-mono">{{ transactions | length }}</div>
+    </div>
+  </div>
+
+  <!-- Liste des transactions -->
+  <div class="pf-card">
+    <div class="pf-card-body p-0">
+      {% if transactions %}
+      <div class="table-responsive">
+        <table class="table pf-table mb-0 align-middle">
+          <thead>
+            <tr>
+              <th>Référence</th>
+              <th>Campagne</th>
+              <th>Type</th>
+              <th>Montant</th>
+              <th>Statut</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in transactions %}
+            <tr>
+              <td class="pf-ref">{{ t.reference }}</td>
+              <td>
+                {% if t.campaign %}
+                  <a href="{{ url_for('campagne_partageurs', campaign_id=t.campaign.id) }}" class="pf-campaign-link">
+                    #{{ t.campaign.id }} — {{ t.campaign.promotion_detail or t.campaign.promotion_type }}
+                  </a>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if t.transaction_type == "campaign_payment" %}
+                  <span class="pf-type-cell"><i class="bi bi-megaphone"></i> Paiement de campagne</span>
+                {% elif "subscription" in t.transaction_type %}
+                  <span class="pf-type-cell"><i class="bi bi-play-btn"></i> Abonnement vidéo</span>
+                {% else %}
+                  <span class="pf-type-cell">{{ t.transaction_type }}</span>
+                {% endif %}
+              </td>
+              <td class="pf-amount-cell">{{ "{:,.0f}".format(t.amount) }} {{ t.currency }}</td>
+              <td>
+                {% if t.status == "approved" %}
+                  <span class="pf-badge pf-badge-approved"><i class="bi bi-check-circle"></i> Approuvée</span>
+                {% elif t.status == "pending" %}
+                  <span class="pf-badge pf-badge-pending"><i class="bi bi-hourglass-split"></i> En attente</span>
+                {% elif t.status == "declined" %}
+                  <span class="pf-badge pf-badge-declined"><i class="bi bi-x-circle"></i> Déclinée</span>
+                {% elif t.status == "canceled" %}
+                  <span class="pf-badge pf-badge-canceled"><i class="bi bi-slash-circle"></i> Annulée</span>
+                {% else %}
+                  <span class="pf-badge pf-badge-other">{{ t.status }}</span>
+                {% endif %}
+              </td>
+              <td class="text-muted small">{{ t.created_at.strftime("%d/%m/%Y %H:%M") if t.created_at else "-" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="pf-empty mb-0">Aucune transaction pour le moment.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="pf-note">
+    <i class="bi bi-shield-check"></i>
+    <div>Chaque transaction est identifiée par une référence unique et son statut réel confirmé par notre partenaire de paiement. Ce document constitue votre preuve de paiement officielle.</div>
+  </div>
 
 </div>
 {% endblock %}

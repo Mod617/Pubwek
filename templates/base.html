@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token() if csrf_token else '' }}">
 
+  <!-- ✅ PWA Meta Tags & Manifest -->
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#2ecc71">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192x192.png') }}">
+
   <!-- ✅ Titre dynamique -->
   {% if title %}
     <title>{{ title }} - Pubwek</title>
@@ -312,9 +317,6 @@
       {% if messages %}
         {% for category, message in messages %}
           <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-            {# Pas de |safe : l'échappement automatique s'applique par défaut.
-               Les rares messages contenant du HTML (lien WhatsApp de la zone
-               admin) sont explicitement marqués Markup() côté Python. #}
             {{ message }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
           </div>
@@ -565,20 +567,32 @@
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        window.location.reload();
+        location.reload();
       } else {
-        alert("Erreur lors de la validation. Veuillez réessayer.");
+        alert(data.message || 'Une erreur est survenue.');
       }
     })
     .catch(error => {
       console.error('Erreur:', error);
-      alert("Erreur de connexion au serveur.");
+      alert('Erreur réseau lors de la validation.');
     });
   }
   </script>
   {% endif %}
 
-  <!-- ✅ Bloc réservé aux scripts spécifiques des pages filles -->
-  {% block scripts %}{% endblock %}
+  <!-- ✅ Script d'enregistrement du Service Worker pour la PWA -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(registration => {
+            console.log('ServiceWorker enregistré avec succès, scope:', registration.scope);
+          })
+          .catch(error => {
+            console.log('Échec de l\'enregistrement du ServiceWorker:', error);
+          });
+      });
+    }
+  </script>
 </body>
 </html>

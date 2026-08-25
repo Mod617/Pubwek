@@ -4,106 +4,166 @@
 <style>
     @page {
         size: A4;
-        margin: 2cm;
+        margin: 1.8cm 2cm;
     }
+    * { box-sizing: border-box; }
     body {
-        font-family: Helvetica, Arial, sans-serif;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
         font-size: 11px;
-        color: #212529;
+        color: #12261F;
+        line-height: 1.45;
     }
+
+    /* ---------- Header ---------- */
     .header {
-        text-align: center;
-        border-bottom: 3px solid #198754;
-        padding-bottom: 12px;
-        margin-bottom: 20px;
+        display: table;
+        width: 100%;
+        border-bottom: 3px solid #0F6B4C;
+        padding-bottom: 14px;
+        margin-bottom: 22px;
+    }
+    .header .brand { display: table-cell; vertical-align: bottom; text-align: left; }
+    .header .meta  { display: table-cell; vertical-align: bottom; text-align: right; }
+    .header .eyebrow {
+        text-transform: uppercase; letter-spacing: 2px; font-size: 8px;
+        color: #14875F; font-weight: bold; margin-bottom: 3px;
     }
     .header h1 {
-        color: #198754;
-        font-size: 20px;
-        margin: 0 0 4px 0;
+        color: #0F6B4C; font-size: 21px; margin: 0; font-weight: bold;
+        letter-spacing: -0.3px;
     }
-    .header p {
-        color: #6c757d;
-        font-size: 10px;
-        margin: 0;
-    }
+    .header .tagline { color: #6E7A73; font-size: 9px; margin-top: 2px; }
+    .header .meta p { margin: 0; color: #6E7A73; font-size: 9px; }
+    .header .meta .doc-id { font-family: 'Courier New', monospace; color: #12261F; font-weight: bold; font-size: 10px; }
+
+    /* ---------- Info block ---------- */
     .info-block {
-        margin-bottom: 20px;
-    }
-    .info-block table {
         width: 100%;
+        border: 1px solid #E7E3D8;
+        border-radius: 3px;
+        background-color: #FAF9F5;
+        padding: 10px 16px;
+        margin-bottom: 18px;
     }
-    .info-block td {
-        padding: 4px 0;
-    }
-    .label {
-        color: #6c757d;
-        width: 40%;
-    }
-    .value {
-        font-weight: bold;
-    }
+    .info-block table { width: 100%; border-collapse: collapse; }
+    .info-block td { padding: 3px 0; font-size: 10px; }
+    .label { color: #6E7A73; width: 32%; }
+    .value { font-weight: bold; color: #12261F; }
+
+    /* ---------- Balance ticket ---------- */
     .solde-box {
-        background-color: #d1e7dd;
-        border: 1px solid #198754;
-        padding: 12px;
+        background-color: #0F6B4C;
+        color: #ffffff;
+        padding: 16px 18px 14px;
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 22px;
+        border-radius: 4px;
+    }
+    .solde-box .label {
+        text-transform: uppercase; letter-spacing: 1.5px; font-size: 8.5px;
+        color: #D9EEE3; font-weight: bold; margin-bottom: 4px;
     }
     .solde-box .montant {
-        font-size: 22px;
+        font-family: 'Courier New', monospace;
+        font-size: 25px;
         font-weight: bold;
-        color: #198754;
+        color: #ffffff;
+        letter-spacing: 0.5px;
     }
+    .solde-box .montant .devise { font-size: 12px; font-weight: bold; color: #D9EEE3; margin-left: 4px; }
+    .perf {
+        margin-top: 10px;
+        border-top: 1px dashed #6FB79A;
+        height: 0;
+    }
+
+    /* ---------- Section titles ---------- */
     h2 {
-        font-size: 13px;
-        color: #212529;
-        border-bottom: 1px solid #dee2e6;
-        padding-bottom: 4px;
-        margin-top: 24px;
-        margin-bottom: 8px;
+        font-size: 12px;
+        color: #12261F;
+        border-bottom: 1px solid #E7E3D8;
+        padding-bottom: 5px;
+        margin-top: 26px;
+        margin-bottom: 10px;
+        font-weight: bold;
     }
+    h2 .tag {
+        display: inline-block;
+        background-color: #F0A63C;
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        margin-right: 6px;
+    }
+
+    /* ---------- Tables ---------- */
     table.data {
         width: 100%;
         border-collapse: collapse;
         margin-bottom: 16px;
     }
     table.data th {
-        background-color: #212529;
-        color: white;
-        padding: 6px 4px;
+        background-color: #12261F;
+        color: #ffffff;
+        padding: 7px 6px;
         text-align: left;
-        font-size: 9px;
+        font-size: 8.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
     }
     table.data td {
-        padding: 5px 4px;
-        border-bottom: 1px solid #dee2e6;
+        padding: 6px 6px;
+        border-bottom: 1px solid #E7E3D8;
         font-size: 9px;
     }
+    table.data tbody tr:nth-child(even) { background-color: #FAF9F5; }
+    .amount-cell { font-family: 'Courier New', monospace; font-weight: bold; }
+    .amount-pos { color: #14875F; }
+    .amount-neg { color: #C6493D; }
+
     .badge {
-        padding: 2px 6px;
-        border-radius: 3px;
-        color: white;
-        font-size: 8px;
+        display: inline-block;
+        padding: 2px 7px;
+        border-radius: 8px;
+        font-size: 7.5px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
     }
-    .badge-success { background-color: #198754; }
-    .badge-warning { background-color: #ffc107; color: #212529; }
-    .badge-danger { background-color: #dc3545; }
+    .badge-success { background-color: #E7F5EC; color: #137445; border: 1px solid #C6E9D3; }
+    .badge-warning { background-color: #FDF3E2; color: #8A5A0C; border: 1px solid #F5DFB2; }
+    .badge-danger  { background-color: #FBEAE8; color: #B8362B; border: 1px solid #F3CBC6; }
+
+    p.empty {
+        color: #6E7A73;
+        font-style: italic;
+        font-size: 9.5px;
+        padding: 8px 0;
+    }
+
+    /* ---------- Footer ---------- */
     .footer {
-        margin-top: 30px;
+        margin-top: 34px;
         padding-top: 10px;
-        border-top: 1px solid #dee2e6;
+        border-top: 1px solid #E7E3D8;
         font-size: 8px;
-        color: #6c757d;
+        color: #6E7A73;
         text-align: center;
     }
+    .footer .brandmark { color: #0F6B4C; font-weight: bold; }
 </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>PUBWEK — Fiche de retraits</h1>
-        <p>Document généré le {{ date_generation }}</p>
+        <div class="brand">
+            <div class="eyebrow">Espace partageur</div>
+            <h1>Pubwek</h1>
+            <div class="tagline">Fiche de retraits &amp; mouvements de portefeuille</div>
+        </div>
+        <div class="meta">
+            <p>Document généré le</p>
+            <p class="doc-id">{{ date_generation }}</p>
+        </div>
     </div>
 
     <div class="info-block">
@@ -124,11 +184,12 @@
     </div>
 
     <div class="solde-box">
-        <div>Solde disponible au moment de l'édition</div>
-        <div class="montant">{{ "{:,.0f}".format(solde_actuel) }} FCFA</div>
+        <div class="label">Solde disponible au moment de l'édition</div>
+        <div class="montant">{{ "{:,.0f}".format(solde_actuel) }}<span class="devise">FCFA</span></div>
+        <div class="perf"></div>
     </div>
 
-    <h2>Historique des demandes de retrait</h2>
+    <h2><span class="tag"></span>Historique des demandes de retrait</h2>
     {% if demandes %}
     <table class="data">
         <thead>
@@ -144,7 +205,7 @@
             {% for d in demandes %}
             <tr>
                 <td>{{ d.requested_at.strftime("%d/%m/%Y %H:%M") if d.requested_at else "-" }}</td>
-                <td>{{ "{:,.0f}".format(d.amount) }} FCFA</td>
+                <td class="amount-cell">{{ "{:,.0f}".format(d.amount) }} FCFA</td>
                 <td>{{ d.payout_channel }}</td>
                 <td>
                     {% if d.status == "pending" %}<span class="badge badge-warning">En attente</span>
@@ -162,10 +223,10 @@
         </tbody>
     </table>
     {% else %}
-    <p>Aucune demande de retrait effectuée.</p>
+    <p class="empty">Aucune demande de retrait effectuée.</p>
     {% endif %}
 
-    <h2>Détail des mouvements du portefeuille</h2>
+    <h2><span class="tag"></span>Détail des mouvements du portefeuille</h2>
     {% if mouvements %}
     <table class="data">
         <thead>
@@ -187,18 +248,18 @@
                     {% elif m.transaction_type == "withdrawal_refund" %}Remboursement
                     {% else %}{{ m.transaction_type }}{% endif %}
                 </td>
-                <td>{{ "+" if m.amount > 0 else "" }}{{ "{:,.0f}".format(m.amount) }} FCFA</td>
+                <td class="amount-cell {{ 'amount-pos' if m.amount > 0 else 'amount-neg' }}">{{ "+" if m.amount > 0 else "" }}{{ "{:,.0f}".format(m.amount) }} FCFA</td>
                 <td>{{ m.description or "-" }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
     {% else %}
-    <p>Aucun mouvement enregistré.</p>
+    <p class="empty">Aucun mouvement enregistré.</p>
     {% endif %}
 
     <div class="footer">
-        Document généré automatiquement par la plateforme Pubwek — Ce document fait foi des mouvements enregistrés sur le portefeuille de l'utilisateur.
+        Document généré automatiquement par la plateforme <span class="brandmark">Pubwek</span> — Ce document fait foi des mouvements enregistrés sur le portefeuille de l'utilisateur.
     </div>
 
 </body>

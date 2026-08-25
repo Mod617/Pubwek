@@ -557,22 +557,24 @@ class CampaignClick(db.Model):
     inséré par un partageur dans son statut, pour une campagne donnée.
     """
     __tablename__ = "campaign_clicks"
-
     id = db.Column(db.Integer, primary_key=True)
     campaign_share_id = db.Column(db.Integer, db.ForeignKey("campaign_shares.id"), nullable=False, index=True)
-
     link_type = db.Column(db.String(20), nullable=False)  # "whatsapp" ou "website"
     ip = db.Column(db.String(45), nullable=True, index=True)
     user_agent = db.Column(db.String(255), nullable=True)
     clicked_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-
     # --- Decision anti-fraude ---
     # Tous les clics sont enregistres ; seuls ceux marques is_paid ont donne
     # lieu a une remuneration. rejection_reason garde la trace du motif, ce qui
     # permet de justifier un solde aupres d'un partageur qui conteste.
     is_paid = db.Column(db.Boolean, default=False, nullable=False, index=True)
     rejection_reason = db.Column(db.String(40), nullable=True)
-
+    # 🆕 Jour de diffusion de la campagne (1, 2, 3...) auquel appartient ce clic.
+    # Sert à rattacher le clic aux preuves (captures) validées pour ce jour précis
+    # — même convention de nommage que CampaignShareProof.day_number.
+    day_number = db.Column(db.Integer, nullable=True)
+    # 🆕 Horodatage de la récompense effective du partageur pour ce clic (audit/litiges).
+    rewarded_at = db.Column(db.DateTime, nullable=True)
     __table_args__ = (
         Index("idx_share_type_clicked", "campaign_share_id", "link_type", "clicked_at"),
         # Sert la deduplication : "ce couple (partage, IP) a-t-il deja ete paye

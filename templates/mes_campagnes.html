@@ -499,6 +499,7 @@
                     <p class="mb-2"><strong>Coût total :</strong> {{ "{:,.0f}".format(campaign.total_cost) }} XOF</p>
 
                     <!-- 🆕 Progression jour par jour -->
+                    {% set quota_jour = campaign.quota_effectif_du_jour() %}
                     <div class="bg-light border rounded p-2 mb-2">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="fw-bold small"><i class="bi bi-calendar3 me-1"></i>Jour {{ campaign.current_day_number or 1 }} / {{ campaign.duration_days }}</span>
@@ -509,10 +510,10 @@
                             {% endif %}
                         </div>
                         <div class="text-muted small mt-1">
-                            {{ campaign.views_today or 0 }} / {{ campaign.views_per_day }} clics aujourd'hui
+                            {{ campaign.views_today or 0 }} / {{ quota_jour }} clics aujourd'hui
                             — {{ campaign.whatsapp_views or 0 }} / {{ campaign.target_whatsapp_views }} clics au total
                         </div>
-                        {% set jour_pct = (campaign.views_today / campaign.views_per_day * 100) if campaign.views_per_day else 0 %}
+                        {% set jour_pct = (campaign.views_today / quota_jour * 100) if quota_jour else 0 %}
                         <div class="quota-track"><div class="quota-fill {{ 'quota-paused' if campaign.daily_quota_paused else '' }}" style="width: {{ [jour_pct, 100] | min }}%;"></div></div>
                     </div>
 

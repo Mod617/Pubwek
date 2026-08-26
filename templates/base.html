@@ -356,7 +356,7 @@
           </ul>
 
           <h6 class="fw-bold mt-3">Article 2 – Acceptation Explicite et Obligatoire</h6>
-          <p class="small">L'accès, la création de compte et l'utilisation de PUBWEK sont strictly conditionnés par l'acceptation des présentes CGU/CGV. Lors de sa première connexion, chaque utilisateur doit prendre connaissance des présentes conditions et cocher la case d'acceptation. Tout refus d'acceptation bloque immédiatement l'accès à la plateforme.</p>
+          <p class="small">L'accès, la création de compte et l'utilisation de PUBWEK sont strictement conditionnés par l'acceptation des présentes CGU/CGV. Lors de sa première connexion, chaque utilisateur doit prendre connaissance des présentes conditions et cocher la case d'acceptation. Tout refus d'acceptation bloque immédiatement l'accès à la plateforme.</p>
 
           <h6 class="fw-bold mt-3">Article 3 – Inscription et Numéro de Téléphone</h6>
           <p class="small">L'accès est réservé aux personnes physiques âgées d'au moins 18 ans ou aux structures professionnelles exerçant au Bénin. L'utilisateur s'engage à fournir des informations exactes (Nom d'entreprise, bio, numéro WhatsApp valide au Bénin). Tout compte créant de fausses identités ou utilisant des numéros de téléphone non attribués sera suspendu.</p>
@@ -409,7 +409,7 @@
           <p class="small">Vos données sont traitées pour : assurer le ciblage et la comptabilisation précise des clics sur WhatsApp, procéder au calcul et au crédit automatique des gains et commissions de parrainage sur le portefeuille, exécuter les retraits de fonds (dès le seuil de 500 FCFA atteint) et en conserver les preuves de paiement, permettre la sous-administration sécurisée selon des rôles dédiés, mettre à disposition les historiques téléchargeables en PDF, et lutter efficacement contre la fraude conformément aux règles de l'APDP au Bénin.</p>
 
           <h6 class="fw-bold mt-3">3. Partage des Données avec des Tiers</h6>
-          <p class="small">PUBWEK ne vend et ne loue aucune donnée personnelle à des entreprises tiers. Les seules transmises le sont à <strong>FedaPay / Prestataires de paiement</strong> (exécution sécurisée des rechargements et retraits), aux <strong>Sous-Administrateurs habilités</strong> (strictly restreints aux données nécessaires à leurs missions), et au <strong>Public/Partageurs</strong> (uniquement les visuels, accroches et liens commerciaux de la campagne).</p>
+          <p class="small">PUBWEK ne vend et ne loue aucune donnée personnelle à des entreprises tiers. Les seules transmises le sont à <strong>FedaPay / Prestataires de paiement</strong> (exécution sécurisée des rechargements et retraits), aux <strong>Sous-Administrateurs habilités</strong> (strictement restreints aux données nécessaires à leurs missions), et au <strong>Public/Partageurs</strong> (uniquement les visuels, accroches et liens commerciaux de la campagne).</p>
 
           <h6 class="fw-bold mt-3">4. Vos Droits (Conformité APDP Bénin)</h6>
           <p class="small">Conformément au Code du Numérique du Bénin, vous bénéficiez du droit d'accès, de rectification, de téléchargement de vos historiques sous format PDF, ainsi que du droit de suppression de votre compte sur simple demande adressée à pubwek1@gmail.com.</p>
@@ -493,7 +493,7 @@
           <p class="small">Suivi des clics, calcul des rémunérations et parrainages, traitement des retraits à partir du seuil de 500 FCFA, gestion des accès sous-admin, édition de reçus/historiques PDF et prévention de la fraude.</p>
 
           <h6 class="fw-bold">3. Partage des Données</h6>
-          <p class="small">Aucune vente de données. Partage strictly limité à FedaPay/prestataires de paiement, aux sous-administrateurs autorisés selon leurs droits, et au public pour les visuels de campagne.</p>
+          <p class="small">Aucune vente de données. Partage strictement limité à FedaPay/prestataires de paiement, aux sous-administrateurs autorisés selon leurs droits, et au public pour les visuels de campagne.</p>
 
           <h6 class="fw-bold">4. Vos Droits</h6>
           <p class="small">Droit d'accès, de rectification directe, de téléchargement d'historique PDF et de suppression sur demande à pubwek1@gmail.com.</p>
@@ -597,5 +597,11 @@
       });
     }
   </script>
+
+  <!-- ✅ CORRECTIF : bloc scripts manquant, requis pour que annonceur.html (et tout
+       autre template enfant) puisse injecter son <script> inline et/ou
+       <script src="{{ url_for('static', filename='js/script.js') }}">.
+       Placé en dernier pour s'exécuter après Bootstrap JS. -->
+  {% block scripts %}{% endblock %}
 </body>
 </html>

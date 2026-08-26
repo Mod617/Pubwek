@@ -563,7 +563,10 @@ with app.app_context():
 @app.route('/sw.js')
 def service_worker():
     return send_from_directory('.', 'sw.js', mimetype='application/javascript')
-
+    
+@app.route('/manifest.json')
+def manifest():
+    return send_from_directory('.', 'manifest.json', mimetype='application/manifest+json')
 
 
 @app.route("/generer-description-auto", methods=["POST"])

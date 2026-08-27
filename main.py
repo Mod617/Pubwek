@@ -2691,7 +2691,7 @@ def instructions_partage(campaign_id):
     lien_site_tracking = url_for("tracking_redirect_site", token=share.tracking_token, _external=True) if camp.website_url else None
 
     # 🆕 Preuves du jour de diffusion en cours
-    jour_actuel = jour_diffusion_campagne(camp)
+    jour_actuel = camp.jour_diffusion_campagne()
     preuve_debut = CampaignShareProof.query.filter_by(
         campaign_share_id=share.id, day_number=jour_actuel, proof_type="debut"
     ).first()

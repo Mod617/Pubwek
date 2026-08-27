@@ -3751,7 +3751,7 @@ def enregistrer_clic(share, camp, link_type):
         ip = ip_client()
         user_agent = (request.headers.get("User-Agent") or "")[:255]
         payable, motif = evaluer_clic(share, camp, ip, user_agent, config)
-        jour = jour_diffusion_campagne(camp)
+        jour = camp.jour_diffusion_campagne()
         click = CampaignClick(
             campaign_share_id=share.id,
             link_type=link_type,

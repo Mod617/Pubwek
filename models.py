@@ -497,7 +497,7 @@ class Campaign(db.Model):
         création, donc aucune perte par troncature/arrondi au fil des jours,
         et rattrapage automatique d'un jour sous-performant sur les jours
         suivants."""
-        jour_actuel = jour_diffusion_campagne(self)
+        jour_actuel = self.jour_diffusion_campagne()
         jours_restants = max(1, (self.duration_days or 1) - jour_actuel + 1)
         restant_objectif = max(0, (self.target_whatsapp_views or 0) - (self.whatsapp_views or 0))
         # Arrondi au-dessus : mieux vaut viser large que perdre des clics à la fin.
@@ -512,7 +512,7 @@ class Campaign(db.Model):
         ne pilote plus la logique.
         Retourne True si un changement de jour a eu lieu.
         """
-        nouveau_jour = jour_diffusion_campagne(self)
+        nouveau_jour = self.jour_diffusion_campagne()
 
         # Jamais initialisé (première vue de la campagne)
         if self.last_quota_date is None:
@@ -541,7 +541,7 @@ class Campaign(db.Model):
             return False
         return self.views_today >= quota
 
-    def jour_diffusion_campagne(camp, moment=None):
+    def jour_diffusion_campagne(self, moment=None):
         """Numéro du jour de diffusion (1, 2, 3...) à un instant donné.
         Calculé sur la date calendaire, indépendamment des clics reçus : un jour
         sans clic doit quand même pouvoir recevoir une preuve de publication.
@@ -549,9 +549,9 @@ class Campaign(db.Model):
         partageurs) ; à défaut, created_at.
         """
         moment = moment or datetime.utcnow()
-        reference = camp.shared_at or camp.created_at
+        reference = self.shared_at or self.created_at
         delta_jours = (moment.date() - reference.date()).days + 1
-        plafond = camp.duration_days or 1
+        plafond = self.duration_days or 1
         return max(1, min(delta_jours, plafond))
 
 

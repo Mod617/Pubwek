@@ -464,11 +464,11 @@
       <div class="mb-4">
         <label for="whatsapp_number" class="form-label fw-bold">📲 Votre Numéro WhatsApp Business</label>
         <div class="input-group">
-          <span class="input-group-text">+229</span>
+          <span class="input-group-text">+22901</span>
           <input type="tel" name="whatsapp_number" id="whatsapp_number" class="form-control"
-                 placeholder="0190000000" inputmode="numeric" maxlength="10" required>
+                 placeholder="57290905" inputmode="numeric" maxlength="8" required>
         </div>
-        <div class="form-text text-muted">Saisissez seulement les 10 chiffres (ex : 0190000000). Le préfixe +229 est ajouté automatiquement.</div>
+        <div class="form-text text-muted">Saisissez seulement les 8 chiffres après le 01 (ex : 57290905). Le préfixe +22901 est ajouté automatiquement.</div>
       </div>
 
       <div class="mb-4">
@@ -539,25 +539,18 @@
     const checkedOption = document.querySelector('input[name="display_option"]:checked');
     selectOption(checkedOption ? checkedOption.value : 'A');
 
-    // 🆕 Numéro WhatsApp : n'autorise que la saisie de chiffres dans le champ
-    // (le préfixe +229 est géré séparément, ajouté juste avant l'envoi du formulaire)
+    // 🆕 Numéro WhatsApp : n'autorise que la saisie de chiffres dans le champ,
+    // limité aux 8 chiffres après le préfixe fixe +22901 affiché à côté.
     const whatsappInput = document.getElementById('whatsapp_number');
     if (whatsappInput) {
       whatsappInput.addEventListener('input', function() {
-        this.value = this.value.replace(/\D/g, '').slice(0, 10);
+        this.value = this.value.replace(/\D/g, '').slice(0, 8);
       });
     }
 
-    // 🆕 Préfixe +229 ajouté juste avant l'envoi du formulaire de campagne
-    const campaignForm = document.getElementById('campaignForm');
-    if (campaignForm) {
-      campaignForm.addEventListener('submit', function() {
-        const input = document.getElementById('whatsapp_number');
-        if (input && input.value && !input.value.startsWith('+229')) {
-          input.value = '+229' + input.value;
-        }
-      });
-    }
+    // ℹ️ Le champ whatsapp_number ne contient plus que les 8 chiffres saisis :
+    // le préfixe +22901 est désormais reconstruit côté serveur (main.py) avant
+    // sauvegarde en base, donc on n'ajoute plus rien avant l'envoi.
   });
 
   // --- Bascule entre Option A (vidéo), B (photos) et C (texte seul) ---

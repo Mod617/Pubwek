@@ -222,9 +222,18 @@ class CampaignForm(FlaskForm):
         default=0
     )
 
+    # ✅ CORRIGÉ : remplace Length(max=20) — qui acceptait n'importe quelle chaîne
+    # jusqu'à 20 caractères, chiffres ou non — par la même regex que RegisterForm,
+    # garantissant le format béninois exact (+229 suivi de 8 ou 10 chiffres).
     whatsapp_number = StringField(
         "Numéro WhatsApp de contact (pour les clients)",
-        validators=[DataRequired(), Length(max=20)]
+        validators=[
+            DataRequired(),
+            Regexp(
+                NUMERO_WHATSAPP_REGEX,
+                message=MESSAGE_NUMERO_INVALIDE
+            ),
+        ],
     )
 
     submit = SubmitField("🚀 Lancer ma campagne")

@@ -18,14 +18,22 @@ from benin_communes import toutes_les_communes, commune_appartient_a
 # =============================================================================
 # 📞 Format des numéros WhatsApp béninois
 #
-# Depuis la migration de la numérotation (fin 2024), les numéros mobiles
-# comptent 10 chiffres et commencent par 01. L'ancien format à 8 chiffres reste
-# accepté pour ne pas bloquer les comptes créés avant la bascule.
+# Base de données remise à zéro : on n'accepte plus qu'un seul format, le
+# nouveau format béninois (+229 01 suivi de 8 chiffres).
+#
+# Pour simplifier la saisie, l'utilisateur ne tape QUE les 8 chiffres finaux
+# (ex : 57290905) — le préfixe "+22901" est ajouté automatiquement par les
+# routes (main.py) avant sauvegarde en base. NUMERO_WHATSAPP_REGEX valide donc
+# le numéro COMPLET reconstruit, pas la saisie brute de l'utilisateur.
 #
 # Cette constante est la référence unique : main.py l'importe pour valider les
-# numéros saisis hors formulaire (création de campagne, inscription).
+# numéros complets (création de campagne, inscription).
 # =============================================================================
-NUMERO_WHATSAPP_REGEX = r"^\+229(01\d{8}|\d{8})$"
+NUMERO_WHATSAPP_REGEX = r"^\+22901\d{8}$"
+
+# Regex appliquée directement sur le champ de saisie du formulaire : seulement
+# les 8 chiffres que l'utilisateur tape, sans préfixe.
+HUIT_CHIFFRES_REGEX = r"^\d{8}$"
 
 # Longueur minimale d'un mot de passe, valable partout : inscription,
 # réinitialisation et création de sous-administrateur. Ces trois endroits
@@ -33,13 +41,13 @@ NUMERO_WHATSAPP_REGEX = r"^\+229(01\d{8}|\d{8})$"
 LONGUEUR_MIN_MOT_DE_PASSE = 10
 
 MESSAGE_NUMERO_INVALIDE = (
-    "Numéro WhatsApp invalide. Format attendu : +229 suivi de 10 chiffres "
-    "(ex : +2290197000000)."
+    "Numéro WhatsApp invalide. Veuillez entrer les 8 chiffres de votre "
+    "numéro, sans le +229 01 (ex : 57290905)."
 )
 
 
 def numero_whatsapp_valide(numero):
-    """Vérifie qu'un numéro respecte le format béninois attendu."""
+    """Vérifie qu'un numéro COMPLET (+22901XXXXXXXX) respecte le format béninois attendu."""
     import re
     return bool(numero and re.match(NUMERO_WHATSAPP_REGEX, numero.strip()))
 
@@ -127,13 +135,15 @@ class RegisterForm(FlaskForm):
         ]
     )
 
-    # ✅ Format béninois obligatoire pour les partageurs
+    # ✅ L'utilisateur ne saisit que les 8 chiffres après +22901.
+    # La reconstruction du numéro complet (+22901 + 8 chiffres) se fait dans
+    # la route register() de main.py avant sauvegarde en base.
     whatsapp_number = StringField(
         "Numéro WhatsApp",
         validators=[
             Optional(),
             Regexp(
-                r"^(\+229(01\d{8}|\d{8}))?$",
+                HUIT_CHIFFRES_REGEX,
                 message=MESSAGE_NUMERO_INVALIDE
             ),
         ],
@@ -222,15 +232,15 @@ class CampaignForm(FlaskForm):
         default=0
     )
 
-    # ✅ CORRIGÉ : remplace Length(max=20) — qui acceptait n'importe quelle chaîne
-    # jusqu'à 20 caractères, chiffres ou non — par la même regex que RegisterForm,
-    # garantissant le format béninois exact (+229 suivi de 8 ou 10 chiffres).
+    # ✅ Même principe que RegisterForm : l'utilisateur ne saisit que les 8
+    # chiffres après +22901. La reconstruction du numéro complet se fait dans
+    # la route nouvelle_campagne() de main.py avant sauvegarde en base.
     whatsapp_number = StringField(
         "Numéro WhatsApp de contact (pour les clients)",
         validators=[
             DataRequired(),
             Regexp(
-                NUMERO_WHATSAPP_REGEX,
+                HUIT_CHIFFRES_REGEX,
                 message=MESSAGE_NUMERO_INVALIDE
             ),
         ],

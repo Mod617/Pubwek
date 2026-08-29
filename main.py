@@ -2170,7 +2170,16 @@ def register(role):
 
     if form.validate_on_submit():
         existing_user = User.query.filter_by(email=form.email.data).first()
+
+        # =========================================================================
+        # 📞 === RECONSTRUCTION DU NUMÉRO WHATSAPP COMPLET ===
+        # form.whatsapp_number.data ne contient que les 8 chiffres saisis par
+        # l'utilisateur (le champ n'accepte plus le préfixe). On reconstruit ici
+        # le numéro complet au format béninois avant toute validation/sauvegarde.
+        # =========================================================================
         whatsapp_number = form.whatsapp_number.data
+        if whatsapp_number:
+            whatsapp_number = "+22901" + whatsapp_number.strip()
 
         # FIX: Anti-énumération — même message que l'email soit pris ou non
         email_ou_whatsapp_pris = False

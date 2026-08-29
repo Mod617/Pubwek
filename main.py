@@ -948,7 +948,15 @@ def nouvelle_campagne():
             flash("La durée de diffusion doit être comprise entre 1 et 30 jours maximum. ⚠️", "danger")
             return redirect(url_for("dashboard_annonceur"))
 
+        # =========================================================================
+        # 📞 === RECONSTRUCTION DU NUMÉRO WHATSAPP COMPLET ===
+        # Le champ whatsapp_number du formulaire de campagne ne contient plus que
+        # les 8 chiffres saisis par l'annonceur (le préfixe +22901 n'est plus
+        # tapé). On reconstruit ici le numéro complet avant toute validation.
+        # =========================================================================
         whatsapp_number = request.form.get("whatsapp_number")
+        if whatsapp_number:
+            whatsapp_number = "+22901" + whatsapp_number.strip()
 
         # Même règle que le formulaire d'inscription (forms.NUMERO_WHATSAPP_REGEX)
         if whatsapp_number and not numero_whatsapp_valide(whatsapp_number):

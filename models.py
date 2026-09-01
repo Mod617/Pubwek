@@ -234,35 +234,33 @@ class CampaignShareProof(db.Model):
     """
     Preuve (capture d'écran) envoyée par un partageur pour justifier qu'un
     statut WhatsApp est resté publié pendant un jour de diffusion donné.
-    Deux preuves attendues par jour : "debut" (publication) et "fin"
-    (statut toujours visible en fin de journée). Les vues du jour ne sont
-    créditées au portefeuille qu'une fois les deux validées par un admin.
+    Une seule preuve par jour est désormais exigée : la capture de FIN de
+    journée (proof_type="fin"). Les clics du jour ne sont crédités au
+    portefeuille retirable qu'une fois cette preuve validée par un admin,
+    dans une fenêtre de Campaign.FENETRE_RATTRAPAGE_HEURES après la fin du
+    jour concerné — passé ce délai, les clics du jour sont définitivement
+    perdus.
     """
     __tablename__ = "campaign_share_proofs"
-
     id = db.Column(db.Integer, primary_key=True)
     campaign_share_id = db.Column(db.Integer, db.ForeignKey("campaign_shares.id"), nullable=False, index=True)
     day_number = db.Column(db.Integer, nullable=False)  # jour de diffusion : 1, 2, 3...
-    proof_type = db.Column(db.String(10), nullable=False)  # "debut" ou "fin"
+    proof_type = db.Column(db.String(10), nullable=False)  # "fin" uniquement désormais
     filename = db.Column(db.String(255), nullable=False)
-
     status = db.Column(db.String(20), default="en_attente", nullable=False, index=True)  # en_attente / validee / rejetee
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
     reviewed_at = db.Column(db.DateTime, nullable=True)
     reviewed_by_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
     rejection_reason = db.Column(db.String(255), nullable=True)
-
     campaign_share = db.relationship(
         "CampaignShare",
         backref=db.backref("proofs", lazy=True, cascade="all, delete-orphan")
     )
     reviewed_by = db.relationship("User", foreign_keys=[reviewed_by_id])
-
     __table_args__ = (
         UniqueConstraint("campaign_share_id", "day_number", "proof_type", name="uq_share_day_prooftype"),
         Index("idx_share_day_status", "campaign_share_id", "day_number", "status"),
     )
-
     def __repr__(self):
         return f"<CampaignShareProof share={self.campaign_share_id} jour={self.day_number} type={self.proof_type} statut={self.status}>"
 
@@ -481,6 +479,14 @@ class Campaign(db.Model):
     fraud_logs = db.relationship("FraudLog", backref="campaign", lazy=True, cascade="all, delete-orphan")
     refund_requests = db.relationship("RefundRequest", backref="campaign", lazy=True, cascade="all, delete-orphan")
 
+    # =========================================================================
+    # 🆕 FENÊTRE DE RATTRAPAGE DES PREUVES
+    #
+    # Au-delà de ce délai après la fin d'un jour de diffusion, la preuve de ce
+    # jour n'est plus acceptée et les clics correspondants sont perdus.
+    # =========================================================================
+    FENETRE_RATTRAPAGE_HEURES = 48
+
     def check_progress(self):
         """Désactive la campagne si l'objectif est atteint ou la date dépassée."""
         now = datetime.utcnow()
@@ -553,6 +559,22 @@ class Campaign(db.Model):
         delta_jours = (moment.date() - reference.date()).days + 1
         plafond = self.duration_days or 1
         return max(1, min(delta_jours, plafond))
+
+    def fin_du_jour(self, day_number):
+        """Instant exact (minuit) où se termine le jour de diffusion `day_number`."""
+        reference = self.shared_at or self.created_at
+        date_du_jour = reference.date() + timedelta(days=day_number - 1)
+        return datetime.combine(date_du_jour + timedelta(days=1), datetime.min.time())
+
+    def date_limite_preuve(self, day_number):
+        """Instant après lequel la preuve de `day_number` n'est plus acceptée."""
+        return self.fin_du_jour(day_number) + timedelta(hours=self.FENETRE_RATTRAPAGE_HEURES)
+
+    def jour_encore_reclamable(self, day_number, moment=None):
+        """La preuve de ce jour peut-elle encore être envoyée/validée ?"""
+        moment = moment or datetime.utcnow()
+        return moment < self.date_limite_preuve(day_number)
+    
 
 
 class CampaignShare(db.Model):

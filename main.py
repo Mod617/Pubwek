@@ -3686,6 +3686,45 @@ def recompense_pour(camp, config):
         return config.reward_per_click_photo or 0.0
     return config.reward_per_click_text or 0.0
 
+def montant_en_attente_validation(user):
+    """Montant total des clics valides déjà obtenus par ce partageur, mais
+    pas encore crédités à son portefeuille retirable, car la preuve de fin
+    de journée du jour concerné n'a pas encore été validée par un admin.
+
+    Additionne, pour tous les partages de l'utilisateur, les clics payables
+    non encore rémunérés (rewarded_at IS NULL), valorisés au tarif du type
+    de contenu de la campagne correspondante (vidéo / photo / texte).
+    """
+    config = SystemConfig.get_config()
+
+    lignes = (
+        db.session.query(
+            Campaign.media_type,
+            func.count(CampaignClick.id)
+        )
+        .join(CampaignShare, CampaignShare.id == CampaignClick.campaign_share_id)
+        .join(Campaign, Campaign.id == CampaignShare.campaign_id)
+        .filter(
+            CampaignShare.sharer_id == user.id,
+            CampaignClick.is_paid.is_(True),
+            CampaignClick.rewarded_at.is_(None),
+        )
+        .group_by(Campaign.media_type)
+        .all()
+    )
+
+    total = 0.0
+    for media_type, nb in lignes:
+        if media_type == "video":
+            tarif = config.reward_per_click_video or 0.0
+        elif media_type == "photo":
+            tarif = config.reward_per_click_photo or 0.0
+        else:
+            tarif = config.reward_per_click_text or 0.0
+        total += tarif * nb
+
+    return total
+
 
 
 

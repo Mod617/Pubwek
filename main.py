@@ -2336,6 +2336,14 @@ def dashboard_partageur():
             gain_parrain = round(cout_base * (config.referral_reward_rate / 100.0), 2)
             gains_en_attente += gain_parrain
 
+    # =========================================================================
+    # 🆕 CLICS VALIDES EN ATTENTE DE VALIDATION ADMIN (preuve de fin de journée
+    # pas encore validée) — distinct des gains_en_attente ci-dessus, qui eux
+    # concernent le parrainage. Ce montant n'est pas encore dans le portefeuille
+    # retirable (wallet_balance) : il le rejoindra une fois la preuve validée.
+    # =========================================================================
+    clics_en_attente_validation = montant_en_attente_validation(current_user)
+
     # Lien d'affiliation unique du partageur (redirige vers l'inscription d'un annonceur avec sa réf)
     affiliate_link = url_for("register", role="annonceur", ref=current_user.pseudo or current_user.id, _external=True)
 
@@ -2388,6 +2396,7 @@ def dashboard_partageur():
         total_filleuls=total_filleuls,
         gains_valides=round(gains_valides, 2),
         gains_en_attente=round(gains_en_attente, 2),
+        clics_en_attente_validation=round(clics_en_attente_validation, 2),
         solde_portefeuille=current_user.wallet_balance or 0.0,
         affiliate_link=affiliate_link,
         notifications=notifications,

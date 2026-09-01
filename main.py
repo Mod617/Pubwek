@@ -3830,16 +3830,40 @@ def enregistrer_clic(share, camp, link_type):
         db.session.rollback()
 
 
-@app.route("/partageur/preuve/<int:share_id>/<proof_type>", methods=["POST"])
+def preuve_jour_validee(campaign_share_id, day_number):
+    """La preuve de fin de journée de ce jour est-elle validée ?
+
+    Une seule preuve est désormais exigée par jour (la capture de fin de
+    journée) : sa validation par un admin suffit à autoriser le crédit des
+    clics de ce jour au portefeuille retirable du partageur.
+    """
+    validee = (
+        CampaignShareProof.query
+        .filter(
+            CampaignShareProof.campaign_share_id == campaign_share_id,
+            CampaignShareProof.day_number == day_number,
+            CampaignShareProof.status == "validee",
+        )
+        .first()
+    )
+    return validee is not None
+
+
+@app.route("/partageur/preuve/<int:share_id>/<int:day_number>", methods=["POST"])
 @login_required
 @limiter.limit("20 per hour")
-def envoyer_preuve_partage(share_id, proof_type):
+def envoyer_preuve_partage(share_id, day_number):
+    """Envoi de la capture de fin de journée, pour un jour de diffusion précis.
+
+    Une seule preuve est désormais exigée par jour (fin de journée). Le
+    partageur peut encore régulariser un jour passé tant qu'il reste dans la
+    fenêtre de rattrapage (Campaign.FENETRE_RATTRAPAGE_HEURES après la fin de
+    ce jour) ; passé ce délai, les clics de ce jour sont définitivement perdus
+    et l'envoi est refusé.
+    """
     if current_user.role != "partageur":
         flash("Accès refusé 🚫", "danger")
         return redirect(url_for("index"))
-
-    if proof_type not in ("debut", "fin"):
-        abort(404)
 
     share = CampaignShare.query.filter_by(id=share_id, sharer_id=current_user.id).first()
     if not share:
@@ -3850,7 +3874,22 @@ def envoyer_preuve_partage(share_id, proof_type):
         flash("Cette campagne n'est plus active. ⚠️", "warning")
         return redirect(url_for("dashboard_partageur"))
 
-    jour = jour_diffusion_campagne(camp)
+    jour_courant = camp.jour_diffusion_campagne()
+
+    # Le jour visé doit être un jour déjà entamé de cette campagne (jamais un
+    # jour futur), et encore dans sa fenêtre de rattrapage.
+    if day_number < 1 or day_number > jour_courant:
+        flash("Jour de diffusion invalide. ⚠️", "danger")
+        return redirect(url_for("dashboard_partageur"))
+
+    if not camp.jour_encore_reclamable(day_number):
+        flash(
+            f"Le délai pour envoyer la preuve du jour {day_number} est dépassé "
+            f"({camp.FENETRE_RATTRAPAGE_HEURES}h après la fin de ce jour). "
+            f"Les clics de ce jour sont malheureusement perdus. ⚠️",
+            "danger"
+        )
+        return redirect(url_for("dashboard_partageur"))
 
     fichier = request.files.get("preuve")
     if not fichier or not fichier.filename:
@@ -3868,7 +3907,7 @@ def envoyer_preuve_partage(share_id, proof_type):
     enregistrer_upload(filename, current_user.id, kind="preuve_partage")
 
     preuve = CampaignShareProof.query.filter_by(
-        campaign_share_id=share.id, day_number=jour, proof_type=proof_type
+        campaign_share_id=share.id, day_number=day_number, proof_type="fin"
     ).first()
 
     if preuve and preuve.status == "validee":
@@ -3886,15 +3925,61 @@ def envoyer_preuve_partage(share_id, proof_type):
     else:
         preuve = CampaignShareProof(
             campaign_share_id=share.id,
-            day_number=jour,
-            proof_type=proof_type,
+            day_number=day_number,
+            proof_type="fin",
             filename=filename,
         )
         db.session.add(preuve)
 
     db.session.commit()
-    flash(f"Preuve du jour {jour} ({'début' if proof_type == 'debut' else 'fin'}) envoyée, en attente de validation. ✅", "success")
+    flash(f"Preuve du jour {day_number} envoyée, en attente de validation. ✅", "success")
     return redirect(url_for("dashboard_partageur"))
+
+
+def crediter_clics_du_jour(share, day_number):
+    """Verse la récompense de tous les clics payables et non encore
+    rémunérés de ce partage, pour ce jour de diffusion. Appelée uniquement
+    quand la preuve de fin de journée de ce jour vient d'être validée.
+    Retourne (nombre_de_clics_credites, montant_total_verse).
+    """
+    camp = share.campaign
+    config = SystemConfig.get_config()
+    clics = (
+        CampaignClick.query
+        .filter(
+            CampaignClick.campaign_share_id == share.id,
+            CampaignClick.day_number == day_number,
+            CampaignClick.is_paid.is_(True),
+            CampaignClick.rewarded_at.is_(None),
+        )
+        .all()
+    )
+    if not clics:
+        return 0, 0.0
+
+    sharer = db.session.get(User, share.sharer_id)
+    maintenant = datetime.utcnow()
+    total = 0.0
+
+    for click in clics:
+        recompense = recompense_pour(camp, config)
+        if sharer and recompense > 0:
+            sharer.wallet_balance = (sharer.wallet_balance or 0.0) + recompense
+            db.session.add(WalletTransaction(
+                user_id=sharer.id,
+                amount=recompense,
+                balance_after=sharer.wallet_balance,
+                transaction_type="click_reward",
+                campaign_click_id=click.id,
+                description=(
+                    f"Clic généré sur la campagne #{camp.id} (jour {day_number}) "
+                    f"({camp.promotion_detail or camp.promotion_type})"
+                ),
+            ))
+            total += recompense
+        click.rewarded_at = maintenant
+
+    return len(clics), total
 
 
 @app.route("/admin/preuve/<int:proof_id>/<decision>", methods=["POST"])
@@ -3916,22 +4001,63 @@ def valider_preuve_partage(proof_id, decision):
     preuve.reviewed_at = datetime.utcnow()
     preuve.reviewed_by_id = current_user.id
 
+    share = db.session.get(CampaignShare, preuve.campaign_share_id)
+    camp = share.campaign if share else None
+
     if decision == "valider":
         preuve.status = "validee"
         db.session.commit()
 
-        if preuve_jour_validee(preuve.campaign_share_id, preuve.day_number):
-            share = db.session.get(CampaignShare, preuve.campaign_share_id)
-            nb, montant = crediter_clics_du_jour(share, preuve.day_number)
+        # Une seule preuve est désormais exigée par jour : sa validation
+        # déclenche systématiquement le crédit des clics de ce jour.
+        nb, montant = crediter_clics_du_jour(share, preuve.day_number)
+        db.session.commit()
+
+        # 🆕 Notification verte au partageur : ses clics de ce jour précis
+        # viennent d'être ajoutés à son portefeuille disponible au retrait.
+        if share:
+            nom_campagne = camp.promotion_detail or camp.promotion_type if camp else "campagne"
+            db.session.add(Notification(
+                user_id=share.sharer_id,
+                title=f"Clics du jour {preuve.day_number} validés ✅",
+                message=(
+                    f"Votre preuve du jour {preuve.day_number} pour la campagne "
+                    f"« {nom_campagne} » a été validée. {nb} clic(s) pour {montant:.0f} FCFA "
+                    f"ont été ajoutés à votre portefeuille disponible. 💰"
+                ),
+                category="success",
+                link=url_for("mes_retraits"),
+                is_read=False
+            ))
             db.session.commit()
-            flash(f"Preuve validée. {nb} clic(s) crédité(s) pour {montant:.0f} FCFA. ✅", "success")
-        else:
-            flash("Preuve validée. En attente de la seconde preuve du jour pour créditer les vues. ✅", "info")
+
+        flash(f"Preuve validée. {nb} clic(s) crédité(s) pour {montant:.0f} FCFA. ✅", "success")
     else:
         motif = request.form.get("motif", "").strip()
         preuve.status = "rejetee"
         preuve.rejection_reason = bleach.clean(motif) if motif else "Non conforme"
         db.session.commit()
+
+        # 🆕 Le partageur doit être averti du rejet pour pouvoir renvoyer une
+        # preuve avant l'expiration de la fenêtre de rattrapage, sans quoi il
+        # perdrait ses clics du jour sans même en être informé.
+        if share:
+            delai = camp.FENETRE_RATTRAPAGE_HEURES if camp else 48
+            db.session.add(Notification(
+                user_id=share.sharer_id,
+                title=f"Preuve du jour {preuve.day_number} rejetée ⚠️",
+                message=(
+                    f"Votre preuve du jour {preuve.day_number} a été rejetée. "
+                    f"Motif : {preuve.rejection_reason}. Veuillez en renvoyer une nouvelle "
+                    f"avant l'expiration du délai de {delai}h après la fin de ce jour, "
+                    f"sinon les clics de cette journée seront définitivement perdus."
+                ),
+                category="warning",
+                link=url_for("dashboard_partageur"),
+                is_read=False
+            ))
+            db.session.commit()
+
         flash("Preuve rejetée. Le partageur devra en renvoyer une nouvelle. ⚠️", "warning")
 
     return redirect(url_for("admin_preuves_partage"))

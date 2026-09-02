@@ -4263,11 +4263,98 @@ def tracking_redirect_whatsapp(token):
     return redirect(lien_final)
 
 
+# =========================================================================
+# 🆕 ALERTES PROGRESSIVES — RAPPEL DE PREUVE AVANT EXPIRATION
+#
+# Nombre d'heures avant l'expiration du délai de rattrapage (48h, voir
+# Campaign.FENETRE_RATTRAPAGE_HEURES) à partir duquel un rappel urgent est
+# envoyé au partageur, s'il n'a pas encore soumis (ou vu validée) sa preuve
+# de fin de journée pour ce jour précis.
+# =========================================================================
+URGENCE_SEUIL_HEURES = 24
+
+
+def relancer_rappels_preuves():
+    """Parcourt toutes les campagnes actives et alerte les partageurs dont la
+    deadline de preuve approche (moins de URGENCE_SEUIL_HEURES restantes),
+    sans preuve envoyée ou validée pour le jour concerné. Chaque rappel n'est
+    envoyé qu'une seule fois par jour, grâce à
+    CampaignShare.jours_rappel_urgent_envoyes.
+
+    Doit être appelée dans un contexte d'application. Utilise un chemin
+    relatif codé en dur plutôt que url_for() : cette fonction tourne hors
+    contexte de requête HTTP (tâche de fond), où url_for() n'est pas fiable.
+    """
+    campagnes_actives = Campaign.query.filter_by(is_active=True, paid=True, validated=True).all()
+    total_alertes = 0
+
+    for camp in campagnes_actives:
+        shares = CampaignShare.query.filter_by(campaign_id=camp.id).all()
+        for share in shares:
+            jours = etats_preuves_partage(share, camp)
+            for item in jours:
+                if item["statut"] not in ("a_envoyer", "rejetee"):
+                    continue
+                if not item["reclamable"]:
+                    continue
+                if item["heures_restantes"] > URGENCE_SEUIL_HEURES:
+                    continue
+                if share.rappel_urgent_deja_envoye(item["jour"]):
+                    continue
+
+                db.session.add(Notification(
+                    user_id=share.sharer_id,
+                    title=f"⏰ Dernière chance pour le jour {item['jour']} !",
+                    message=(
+                        f"Il vous reste environ {item['heures_restantes']}h pour envoyer votre "
+                        f"capture de fin de journée du jour {item['jour']} sur la campagne "
+                        f"« {camp.promotion_detail or camp.promotion_type} ». Passé ce délai, "
+                        f"les clics de cette journée seront définitivement perdus."
+                    ),
+                    category="danger",
+                    link=f"/partageur/instructions_partage/{camp.id}",
+                    is_read=False
+                ))
+                share.marquer_rappel_urgent_envoye(item["jour"])
+                total_alertes += 1
+
+    if total_alertes:
+        try:
+            db.session.commit()
+            logger.info("[RAPPEL PREUVE] %d alerte(s) urgente(s) envoyée(s).", total_alertes)
+        except Exception as e:
+            db.session.rollback()
+            logger.error("Erreur envoi rappels preuves : %s", e)
+
+
+def lancer_rappels_preuves_periodique(application, intervalle_secondes=3600):
+    """Lance un thread qui vérifie, toutes les intervalle_secondes, si des
+    partageurs doivent recevoir un rappel urgent pour l'envoi de leur preuve
+    de fin de journée avant l'expiration du délai de rattrapage.
+    """
+    def _boucle():
+        while True:
+            time.sleep(intervalle_secondes)
+            try:
+                with application.app_context():
+                    relancer_rappels_preuves()
+            except Exception as e:
+                logger.error("Erreur boucle rappels preuves : %s", e)
+    t = threading.Thread(target=_boucle, daemon=True)
+    t.start()
+
+
+# =========================================================================
+# 🆕 (MISE À JOUR) NOTIFICATION QUOTA ATTEINT — mentionne désormais l'envoi
+# de la preuve, ce que l'ancien message omettait complètement.
+# =========================================================================
 def _notifier_partageurs_quota_atteint(camp):
     """
     Notifie tous les partageurs actifs d'une campagne que le quota de clics du jour
-    est atteint, afin qu'ils puissent retirer leur statut WhatsApp s'ils le souhaitent.
-    Ils ne sont jamais rémunérés pour les clics au-delà du quota, donc aucune obligation.
+    est atteint, afin qu'ils puissent retirer leur statut WhatsApp s'ils le souhaitent,
+    et leur rappelle d'envoyer leur preuve de fin de journée pour faire créditer
+    leurs clics. Ils ne sont jamais rémunérés pour les clics au-delà du quota,
+    donc aucune obligation de retirer le statut.
     """
     try:
         shares = CampaignShare.query.filter_by(campaign_id=camp.id).all()
@@ -4279,7 +4366,10 @@ def _notifier_partageurs_quota_atteint(camp):
                     f"Les clics prévus aujourd'hui pour la campagne "
                     f"« {camp.promotion_detail or camp.promotion_type} » sont atteints. "
                     f"Vous pouvez retirer votre statut WhatsApp si vous le souhaitez — "
-                    f"vous ne serez pas rémunéré(e) au-delà de ce quota. La diffusion reprendra demain."
+                    f"vous ne serez pas rémunéré(e) au-delà de ce quota. "
+                    f"N'oubliez surtout pas d'envoyer votre capture de fin de journée : "
+                    f"c'est elle qui permet de faire valider et créditer vos clics du jour. "
+                    f"La diffusion reprendra demain."
                 ),
                 category="warning",
                 link=url_for("instructions_partage", campaign_id=camp.id),

@@ -2444,25 +2444,7 @@ def verifier_droits_admin(permission_requise=None):
 
 # ==========================================
 # 🆕 ROUTE ADMIN : SUIVI COMPLET D'UNE CAMPAGNE VALIDÉE
-# ==========================================
-# =========================================================================
-# 🆕 LIBELLÉS LISIBLES DES MOTIFS DE REJET ANTI-FRAUDE
-#
-# Traduit les codes techniques stockés dans CampaignClick.rejection_reason
-# en phrases compréhensibles pour l'admin, sans dupliquer la logique.
-# À placer à côté des constantes MOTIF_* déjà définies dans main.py.
-# =========================================================================
-MOTIFS_REJET_LIBELLES = {
-    MOTIF_CAMPAGNE_INACTIVE: "Campagne inactive au moment du clic",
-    MOTIF_ROBOT: "Agent automatique détecté (robot, aperçu de lien WhatsApp...)",
-    MOTIF_SANS_IP: "Adresse IP manquante",
-    MOTIF_AUTO_CLIC: "Le partageur a cliqué sur son propre lien",
-    MOTIF_QUOTA_JOUR: "Quota journalier de la campagne déjà atteint",
-    MOTIF_DOUBLON_IP: "Cet appareil a déjà été payé sur ce partage",
-    MOTIF_RAFALE: "Délai anti-rafale non respecté (clics trop rapprochés)",
-    MOTIF_PLAFOND_PARTAGE: "Plafond quotidien de ce partage atteint",
-    MOTIF_PLAFOND_IP: "Plafond quotidien de cette adresse IP atteint",
-}
+
 
 
 @app.route("/admin/campagne/<int:campaign_id>/suivi")
@@ -3634,16 +3616,10 @@ def update_logo_position_ajax():
 # ==========================================
 # =========================================================================
 # 🛡️ SUIVI DES CLICS ET GARDE-FOUS ANTI-FRAUDE
-#
-# Les liens /t/<token>/... sont publics : n'importe qui peut les ouvrir, et
-# chaque ouverture crédite le portefeuille du partageur en argent réel. Sans
-# contrôle, il suffit à un partageur d'ouvrir son propre lien en boucle.
-#
 # Principe retenu : TOUS les clics sont enregistrés, mais seuls ceux qui
 # passent l'évaluation sont payés. Le motif de refus est conservé sur la ligne,
 # ce qui permet de justifier un solde auprès d'un partageur qui le conteste.
 # =========================================================================
-
 # Motifs de refus, stockés tels quels dans CampaignClick.rejection_reason
 MOTIF_CAMPAGNE_INACTIVE = "campagne_inactive"
 MOTIF_ROBOT            = "robot"
@@ -3654,6 +3630,24 @@ MOTIF_DOUBLON_IP       = "doublon_ip"
 MOTIF_RAFALE           = "rafale"
 MOTIF_PLAFOND_PARTAGE  = "plafond_partage"
 MOTIF_PLAFOND_IP       = "plafond_ip"
+
+# =========================================================================
+# 🆕 LIBELLÉS LISIBLES DES MOTIFS DE REJET ANTI-FRAUDE
+#
+# Traduit les codes techniques stockés dans CampaignClick.rejection_reason
+# en phrases compréhensibles pour l'admin, sans dupliquer la logique.
+# =========================================================================
+MOTIFS_REJET_LIBELLES = {
+    MOTIF_CAMPAGNE_INACTIVE: "Campagne inactive au moment du clic",
+    MOTIF_ROBOT: "Agent automatique détecté (robot, aperçu de lien WhatsApp...)",
+    MOTIF_SANS_IP: "Adresse IP manquante",
+    MOTIF_AUTO_CLIC: "Le partageur a cliqué sur son propre lien",
+    MOTIF_QUOTA_JOUR: "Quota journalier de la campagne déjà atteint",
+    MOTIF_DOUBLON_IP: "Cet appareil a déjà été payé sur ce partage",
+    MOTIF_RAFALE: "Délai anti-rafale non respecté (clics trop rapprochés)",
+    MOTIF_PLAFOND_PARTAGE: "Plafond quotidien de ce partage atteint",
+    MOTIF_PLAFOND_IP: "Plafond quotidien de cette adresse IP atteint",
+}
 
 # Signatures d'agents automatiques. Le premier cas est le plus important :
 # quand un partageur publie son statut, WhatsApp visite lui-même le lien pour

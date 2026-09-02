@@ -1211,23 +1211,26 @@ def campagne_partageurs(campaign_id):
             partageurs=[],
             total_clics=0,
             total_clics_whatsapp=0,
-            total_clics_site=0
+            total_clics_site=0,
+            total_clics_frauduleux=0
         )
 
     share_ids = [s.id for s in shares]
 
-    # 2️⃣ Comptage des clics, par CampaignShare et par type de lien.
-    #
-    # Il y avait ici un second comptage, celui des « vues », lu dans la table
-    # View. Cette table n'est alimentée nulle part : la colonne affichait donc
-    # invariablement zéro. Elle est retirée — la campagne se mesure en clics.
+    # 2️⃣ Comptage des clics VALIDES uniquement, par CampaignShare et par type
+    # de lien. Les clics frauduleux ne sont plus mélangés à ces totaux — ils
+    # sont comptés séparément ci-dessous, pour rester transparent sans pour
+    # autant les facturer à l'annonceur.
     clics_bruts = (
         db.session.query(
             CampaignClick.campaign_share_id,
             CampaignClick.link_type,
             func.count(CampaignClick.id)
         )
-        .filter(CampaignClick.campaign_share_id.in_(share_ids))
+        .filter(
+            CampaignClick.campaign_share_id.in_(share_ids),
+            CampaignClick.is_paid.is_(True),
+        )
         .group_by(CampaignClick.campaign_share_id, CampaignClick.link_type)
         .all()
     )
@@ -1255,13 +1258,25 @@ def campagne_partageurs(campaign_id):
     total_clics_whatsapp = sum(p["clics_whatsapp"] for p in partageurs)
     total_clics_site = sum(p["clics_site"] for p in partageurs)
 
+    # 4️⃣ Total des clics frauduleux détectés sur cette campagne, tous
+    # partageurs confondus — affiché pour la transparence, jamais facturé.
+    total_clics_frauduleux = (
+        db.session.query(func.count(CampaignClick.id))
+        .filter(
+            CampaignClick.campaign_share_id.in_(share_ids),
+            CampaignClick.is_paid.is_(False),
+        )
+        .scalar()
+    ) or 0
+
     return render_template(
         "campagne_partageurs.html",
         campaign=camp,
         partageurs=partageurs,
         total_clics=total_clics_whatsapp + total_clics_site,
         total_clics_whatsapp=total_clics_whatsapp,
-        total_clics_site=total_clics_site
+        total_clics_site=total_clics_site,
+        total_clics_frauduleux=total_clics_frauduleux
     )
 
 

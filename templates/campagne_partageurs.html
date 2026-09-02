@@ -121,6 +121,30 @@
   .stat-value.c-whatsapp { color: var(--whatsapp); }
   .stat-value.c-site { color: var(--site); }
 
+  /* ---------- 🆕 Encart transparence clics frauduleux ---------- */
+  .fraud-note {
+    background: var(--clay-tint);
+    border: 1px solid #ecd2cc;
+    border-radius: 14px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  .fraud-note i { color: var(--clay); font-size: 1.2rem; margin-top: 0.1rem; }
+  .fraud-note-title {
+    font-weight: 700;
+    color: var(--clay);
+    font-size: 0.92rem;
+    margin-bottom: 0.15rem;
+  }
+  .fraud-note-text {
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
   /* ---------- Signature element: goal progress ---------- */
   .goal-card {
     background: var(--paper-raised);
@@ -304,14 +328,14 @@
       <a href="{{ url_for('mes_campagnes') }}" class="btn-retour">← Retour à mes campagnes</a>
     </div>
 
-    <!-- Stat strip -->
+    <!-- Stat strip : uniquement les clics valides, facturables -->
     <div class="stat-strip">
       <div class="stat-box">
         <div class="stat-label">Partageurs</div>
         <div class="stat-value">{{ partageurs | length }}</div>
       </div>
       <div class="stat-box">
-        <div class="stat-label">Total clics</div>
+        <div class="stat-label">Total clics valides</div>
         <div class="stat-value c-emerald">{{ "{:,}".format(total_clics).replace(",", " ") }}</div>
       </div>
       <div class="stat-box">
@@ -323,6 +347,20 @@
         <div class="stat-value c-site">{{ "{:,}".format(total_clics_site).replace(",", " ") }}</div>
       </div>
     </div>
+
+    <!-- 🆕 Transparence : clics frauduleux détectés, jamais facturés -->
+    {% if total_clics_frauduleux and total_clics_frauduleux > 0 %}
+    <div class="fraud-note">
+      <i class="bi bi-shield-exclamation"></i>
+      <div>
+        <div class="fraud-note-title">{{ "{:,}".format(total_clics_frauduleux).replace(",", " ") }} clic{{ 's' if total_clics_frauduleux != 1 else '' }} frauduleux détecté{{ 's' if total_clics_frauduleux != 1 else '' }}</div>
+        <div class="fraud-note-text">
+            Notre système anti-fraude a automatiquement écarté ces clics (robots, doublons, tentatives suspectes...).
+            Ils n'apparaissent dans aucun total ci-dessus et ne vous sont jamais facturés.
+        </div>
+      </div>
+    </div>
+    {% endif %}
 
     <!-- Signature: goal progress -->
     <div class="goal-card">

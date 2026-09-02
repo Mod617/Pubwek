@@ -5096,10 +5096,14 @@ def reset_password(token):
            
 
 
+# 🆕 Lancement du rappel automatique des preuves de fin de journée en retard
+with app.app_context():
+    lancer_rappels_preuves_periodique(app)
+
+
 # =========================================================================
 # 🚀 Point d'entrée
 # =========================================================================
-
 if __name__ == "__main__":
     # FIX: debug=False en production. Pour dev local uniquement, passez DEBUG=true en variable d'env.
     debug_mode = os.environ.get("FLASK_DEBUG", "false").lower() == "true"

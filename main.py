@@ -2840,27 +2840,21 @@ def instructions_partage(campaign_id):
 @limiter.limit("60 per hour")
 def refuse_campaign(campaign_id):
     verifier_droits_admin("valider_campagnes")
-
     camp = db.session.get(Campaign, campaign_id)
     if not camp:
         flash("Campagne introuvable. ⚠️", "danger")
         return redirect(url_for("admin_validate"))
-
     if camp.validated or camp.status == "valide":
         flash("Impossible de refuser une campagne déjà validée. ⚠️", "danger")
         return redirect(url_for("admin_validate"))
-
     # Récupération et nettoyage de la raison
     reason = request.form.get("rejection_reason")
     if reason:
         reason = bleach.clean(reason.strip())
-
     if not reason:
         flash("Veuillez obligatoirement fournir un motif de refus. ⚠️", "warning")
         return redirect(url_for("admin_validate"))
-
     annonceur = db.session.get(User, camp.user_id)
-
     # 1. Mise à jour des statuts de la campagne
     camp.validated = False
     camp.is_active = False
@@ -2868,11 +2862,9 @@ def refuse_campaign(campaign_id):
     camp.status = "rejete"            # Statut principal harmonisé pour mes_campagnes
     camp.rejection_reason = reason
     camp.can_claim_refund = camp.paid  # 🐞 FIX : remboursement possible UNIQUEMENT si un paiement a réellement été effectué
-
     # 2. Création de la notification interne pour l'annonceur
     nom_campagne = camp.promotion_detail or f"#{camp.id}"
     notif_msg = f"Votre campagne '{nom_campagne}' a été refusée pour le motif suivant : {reason}."
-
     notif = Notification(
         user_id=camp.user_id,
         title="Campagne refusée ❌",
@@ -2882,14 +2874,11 @@ def refuse_campaign(campaign_id):
         is_read=False
     )
     db.session.add(notif)
-
     db.session.commit()
-
     logger.warning(
         "[ACTION ADMIN] Campagne #%d refusée (Motif: %s) par admin id=%d", 
         campaign_id, reason, current_user.id
     )
-
     # 3. Notification WhatsApp facultative avec lien direct
     if annonceur and annonceur.whatsapp_number:
         wa_message = (
@@ -2898,8 +2887,8 @@ def refuse_campaign(campaign_id):
             f"Connectez-vous à votre espace pour corriger et relancer votre campagne ou demander un remboursement."
         )
         encoded = urllib.parse.quote(wa_message)
-        wa_link = f"https://wa.me/{annonceur.whatsapp_number}?text={encoded}"
-        
+        wa_link = f"https://wa.me/{numero_pour_wa_me(annonceur.whatsapp_number)}?text={encoded}"
+
         flash(
             Markup(
                 f'Campagne #{escape(camp.id)} refusée et enregistrée avec motif ❌. '
@@ -2910,7 +2899,6 @@ def refuse_campaign(campaign_id):
         )
     else:
         flash(f"Campagne #{camp.id} refusée avec succès. Motif transmis à l'annonceur ❌", "warning")
-
     return redirect(url_for("admin_validate"))
 
 
@@ -3020,7 +3008,7 @@ def validate_campaign(campaign_id):
     if annonceur and annonceur.whatsapp_number:
         message = f"Bonjour, votre campagne #{camp.id} a été VALIDÉE ✅."
         encoded = urllib.parse.quote(message)
-        wa_link = f"https://wa.me/{annonceur.whatsapp_number}?text={encoded}"
+        wa_link = f"https://wa.me/{numero_pour_wa_me(annonceur.whatsapp_number)}?text={encoded}"
         # Markup() : ce message contient du HTML construit par nous. Le gabarit
         # échappe tout le reste par défaut.
         flash(

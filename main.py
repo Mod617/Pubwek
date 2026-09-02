@@ -560,6 +560,10 @@ if not app.config.get("RESEND_API_KEY"):
 with app.app_context():
     lancer_nettoyage_periodique(app, app.config["UPLOAD_FOLDER"])
 
+# 🆕 Lancement du rappel automatique des preuves de fin de journée en retard
+with app.app_context():
+    lancer_rappels_preuves_periodique(app)
+
 @app.route('/sw.js')
 def service_worker():
     return send_from_directory('.', 'sw.js', mimetype='application/javascript')

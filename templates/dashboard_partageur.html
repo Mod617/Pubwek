@@ -87,6 +87,36 @@
   }
   .partageur-wrap .card.bg-success.bg-opacity-10 .btn-success:hover { filter: brightness(0.94); }
 
+  /* ---------- 🆕 Ligne "en attente de validation" dans la carte portefeuille ---------- */
+  .partageur-wrap .wallet-pending-row {
+    border-top: 1px solid rgba(255,255,255,0.18);
+    margin-top: 1.1rem;
+    padding-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .partageur-wrap .wallet-pending-label {
+    color: rgba(255,255,255,0.8) !important;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .partageur-wrap .wallet-pending-value {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: #fff !important;
+  }
+  .partageur-wrap .wallet-pending-note {
+    color: rgba(255,255,255,0.6) !important;
+    font-size: 0.78rem;
+    margin-top: 0.15rem;
+  }
+
   /* ---------- Parrainage card ---------- */
   .partageur-wrap .card.bg-light {
     background: var(--paper-raised) !important;
@@ -292,6 +322,17 @@
                     </a>
                 </div>
             </div>
+
+            <!-- 🆕 Ligne : clics valides en attente de validation admin -->
+            {% if clics_en_attente_validation and clics_en_attente_validation > 0 %}
+            <div class="wallet-pending-row">
+                <div>
+                    <div class="wallet-pending-label"><i class="bi bi-hourglass-split"></i> En attente de validation</div>
+                    <div class="wallet-pending-note">Clics déjà obtenus, crédités dès qu'un admin valide votre capture du jour.</div>
+                </div>
+                <div class="wallet-pending-value">{{ "{:,.0f}".format(clics_en_attente_validation) }} FCFA</div>
+            </div>
+            {% endif %}
         </div>
     </div>
 

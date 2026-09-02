@@ -4239,24 +4239,45 @@ def admin_preuves_partage():
 
 
 
+# =========================================================================
+# 🆕 CONVERSION DU NUMÉRO POUR LES LIENS wa.me
+#
+# De nombreux comptes WhatsApp vérifiés avant la réforme de numérotation du
+# Bénin (30 novembre 2024) restent indexés par WhatsApp sous l'ANCIEN format
+# (sans le "01" inséré après l'indicatif +229). Un lien wa.me construit avec
+# le nouveau format complet (+22901XXXXXXXX) échoue alors avec "Ce numéro
+# n'est pas sur WhatsApp", même si le compte existe bel et bien.
+#
+# Cette fonction ne modifie JAMAIS ce qui est stocké en base (qui reste au
+# nouveau format officiel, seul valide pour les SMS/appels réseau) — elle ne
+# sert qu'à construire le numéro tel que wa.me doit le recevoir.
+# =========================================================================
+def numero_pour_wa_me(numero):
+    """Retire le "01" du numéro stocké (+22901XXXXXXXX -> 229XXXXXXXX),
+    pour contourner le décalage entre la réforme de numérotation béninoise
+    et l'indexation interne des comptes WhatsApp créés avant celle-ci.
+    """
+    chiffres = re.sub(r"[^0-9]", "", numero or "")
+    if chiffres.startswith("22901"):
+        chiffres = "229" + chiffres[5:]
+    return chiffres
+
+
 @app.route("/t/<token>/whatsapp")
 def tracking_redirect_whatsapp(token):
     """Redirige le visiteur vers la conversation WhatsApp de l'annonceur."""
     share = CampaignShare.query.filter_by(tracking_token=token).first()
     if not share:
         abort(404)
-
     camp = share.campaign
     if not camp or not camp.whatsapp_number:
         abort(404)
-
     # La destination est calculée d'abord : le visiteur ne doit jamais attendre
-    numero = re.sub(r"[^0-9]", "", camp.whatsapp_number)
+    numero = numero_pour_wa_me(camp.whatsapp_number)
     message = urllib.parse.quote(
         f"Bonjour, je suis intéressé(e) par : {camp.promotion_detail or camp.promotion_type}"
     )
     lien_final = f"https://wa.me/{numero}?text={message}"
-
     enregistrer_clic(share, camp, "whatsapp")
     return redirect(lien_final)
 

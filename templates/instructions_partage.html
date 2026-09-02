@@ -145,19 +145,75 @@
     transform: translateY(-1px);
   }
 
+  /* ---------- Anti-fraude info box ---------- */
+  .instructions-wrap .antifraude-note {
+    background: var(--slate-tint);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+  }
+  .instructions-wrap .antifraude-note i { color: var(--emerald); margin-top: 0.15rem; }
+
   /* ---------- Proof section ---------- */
   .instructions-wrap .border-top { border-color: var(--line) !important; }
-  .instructions-wrap .badge.bg-success { background: var(--emerald) !important; border-radius: 999px; }
-  .instructions-wrap .badge.bg-warning.text-dark {
-    background: var(--amber-tint) !important;
-    color: var(--amber) !important;
-    border-radius: 999px;
+
+  .instructions-wrap .proof-day-card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+    margin-bottom: 0.75rem;
+    background: var(--paper-raised);
   }
+  .instructions-wrap .proof-day-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .instructions-wrap .proof-day-title {
+    font-weight: 700;
+    font-size: 0.92rem;
+  }
+
+  .badge-statut {
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    padding: 0.3rem 0.7rem;
+  }
+  .badge-statut.validee { background: var(--emerald-tint); color: var(--emerald-dark); }
+  .badge-statut.en_attente { background: var(--amber-tint); color: var(--amber); }
+  .badge-statut.rejetee { background: var(--clay-tint); color: var(--clay); }
+  .badge-statut.perdue { background: var(--slate-tint); color: var(--ink-soft); }
+  .badge-statut.a_envoyer { background: var(--slate-tint); color: var(--ink); }
+
+  .instructions-wrap .proof-deadline {
+    font-size: 0.78rem;
+    color: var(--clay);
+    font-weight: 600;
+  }
+  .instructions-wrap .proof-deadline.calme { color: var(--ink-soft); font-weight: 500; }
+
   .instructions-wrap .alert-danger {
     background: var(--clay-tint) !important;
     border: 1px solid #ecd2cc !important;
     color: var(--clay) !important;
     border-radius: 10px !important;
+  }
+  .instructions-wrap .alert-success-soft {
+    background: var(--emerald-tint);
+    border: 1px solid #cfe4da;
+    color: var(--emerald-dark);
+    border-radius: 10px;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.85rem;
   }
   .instructions-wrap .btn-primary.btn-sm {
     background: var(--emerald) !important;
@@ -272,51 +328,77 @@
                 </small>
             </div>
 
-            <!-- ÉTAPE FINALE : ENVOI DES PREUVES DU JOUR -->
+            <!-- ÉTAPE FINALE : ENVOI DES PREUVES -->
             <div class="mb-4 mt-4 pt-3 border-top step-block">
                 <h5 class="fw-bold">
                     <span class="badge bg-primary rounded-circle me-2">{{ "4" if media_urls else "3" }}</span>
-                    Envoyez vos preuves du jour {{ jour_actuel }} / {{ camp.duration_days }}
+                    Envoyez la preuve de fin de journée
                 </h5>
-                <p class="text-muted small mb-3">
-                    Pour que vos clics du jour {{ jour_actuel }} soient crédités sur votre portefeuille, envoyez une capture d'écran de votre statut au début et une autre à la fin de la journée.
-                </p>
 
-                <div class="mb-3">
-                    <strong class="d-block mb-1">📸 Capture de début de journée</strong>
-                    {% if preuve_debut and preuve_debut.status == "validee" %}
-                        <span class="badge bg-success">✅ Validée</span>
-                    {% elif preuve_debut and preuve_debut.status == "en_attente" %}
-                        <span class="badge bg-warning text-dark">⏳ En attente de validation</span>
-                    {% else %}
-                        {% if preuve_debut and preuve_debut.status == "rejetee" %}
-                            <div class="alert alert-danger py-2 px-3 small mb-2">❌ Rejetée : {{ preuve_debut.rejection_reason }}. Veuillez renvoyer une capture.</div>
-                        {% endif %}
-                        <form method="POST" action="{{ url_for('envoyer_preuve_partage', share_id=share.id, proof_type='debut') }}" enctype="multipart/form-data" class="d-flex gap-2">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <input type="file" name="preuve" accept="image/*" required class="form-control form-control-sm">
-                            <button type="submit" class="btn btn-primary btn-sm text-nowrap">Envoyer</button>
-                        </form>
-                    {% endif %}
+                <div class="antifraude-note mb-3">
+                    <i class="bi bi-shield-check"></i>
+                    <div>
+                        Seuls les clics réels comptent : notre système écarte automatiquement les clics
+                        suspects (robots, doublons, votre propre lien...), qui sont définitivement perdus,
+                        sans recours possible. Envoyez votre capture de fin de journée pour faire valider
+                        et créditer vos clics valides du jour — vous avez <strong>{{ camp.FENETRE_RATTRAPAGE_HEURES }} heures</strong>
+                        après la fin de chaque jour pour le faire, sans quoi les clics de ce jour-là seront perdus.
+                    </div>
                 </div>
 
-                <div>
-                    <strong class="d-block mb-1">📸 Capture de fin de journée</strong>
-                    {% if preuve_fin and preuve_fin.status == "validee" %}
-                        <span class="badge bg-success">✅ Validée</span>
-                    {% elif preuve_fin and preuve_fin.status == "en_attente" %}
-                        <span class="badge bg-warning text-dark">⏳ En attente de validation</span>
-                    {% else %}
-                        {% if preuve_fin and preuve_fin.status == "rejetee" %}
-                            <div class="alert alert-danger py-2 px-3 small mb-2">❌ Rejetée : {{ preuve_fin.rejection_reason }}. Veuillez renvoyer une capture.</div>
+                {% if jours_preuves %}
+                    {% for item in jours_preuves %}
+                    <div class="proof-day-card">
+                        <div class="proof-day-top">
+                            <span class="proof-day-title">📅 Jour {{ item.jour }} / {{ camp.duration_days }}</span>
+                            <span class="badge-statut {{ item.statut }}">
+                                {% if item.statut == "validee" %}✅ Validée
+                                {% elif item.statut == "en_attente" %}⏳ En attente de validation
+                                {% elif item.statut == "rejetee" %}❌ Rejetée
+                                {% elif item.statut == "perdue" %}🚫 Clics perdus
+                                {% else %}📸 Preuve à envoyer{% endif %}
+                            </span>
+                        </div>
+
+                        {% if item.statut == "validee" %}
+                            <div class="alert-success-soft">
+                                <i class="bi bi-check-circle-fill me-1"></i>
+                                Vos clics du jour {{ item.jour }} ont été validés et ajoutés à votre portefeuille disponible.
+                            </div>
+
+                        {% elif item.statut == "en_attente" %}
+                            <p class="small text-muted mb-0">Votre capture est en cours de vérification par un administrateur.</p>
+
+                        {% elif item.statut == "perdue" %}
+                            <p class="small text-muted mb-0">Le délai de {{ camp.FENETRE_RATTRAPAGE_HEURES }}h est dépassé pour ce jour. Les clics de cette journée ne peuvent plus être crédités.</p>
+
+                        {% else %}
+                            {% if item.statut == "rejetee" %}
+                                <div class="alert alert-danger py-2 px-3 small mb-2">
+                                    ❌ Rejetée : {{ item.preuve.rejection_reason }}. Veuillez renvoyer une capture.
+                                </div>
+                            {% endif %}
+
+                            {% if item.reclamable %}
+                                <p class="proof-deadline {{ 'calme' if item.heures_restantes > 6 else '' }} mb-2">
+                                    <i class="bi bi-alarm me-1"></i>
+                                    {% if item.heures_restantes > 0 %}
+                                        Il vous reste environ {{ item.heures_restantes }}h pour envoyer cette preuve.
+                                    {% else %}
+                                        Dernières minutes pour envoyer cette preuve !
+                                    {% endif %}
+                                </p>
+                            {% endif %}
+
+                            <form method="POST" action="{{ url_for('envoyer_preuve_partage', share_id=share.id, day_number=item.jour) }}" enctype="multipart/form-data" class="d-flex gap-2">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="file" name="preuve" accept="image/*" required class="form-control form-control-sm">
+                                <button type="submit" class="btn btn-primary btn-sm text-nowrap">Envoyer</button>
+                            </form>
                         {% endif %}
-                        <form method="POST" action="{{ url_for('envoyer_preuve_partage', share_id=share.id, proof_type='fin') }}" enctype="multipart/form-data" class="d-flex gap-2">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <input type="file" name="preuve" accept="image/*" required class="form-control form-control-sm">
-                            <button type="submit" class="btn btn-primary btn-sm text-nowrap">Envoyer</button>
-                        </form>
-                    {% endif %}
-                </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
             </div>
 
             <div class="text-center mt-4">

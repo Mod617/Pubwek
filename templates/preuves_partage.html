@@ -84,8 +84,7 @@
     font-size:.72rem; font-weight:600; padding:.2rem .55rem; border-radius:999px;
   }
   .pf-tag-day{ background:#F1EBFB; color:#6B3FCB; }
-  .pf-tag-debut{ background:#E9F0FE; color:#2255C7; }
-  .pf-tag-fin{ background:#FDF3E2; color:#8A5A0C; }
+  .pf-tag-rattrapage{ background:var(--pf-danger-bg); color:var(--pf-danger); }
 
   .pf-proof-photo{
     position:relative; display:block; background:#EFEDE6;
@@ -171,16 +170,16 @@
   {% else %}
   <div class="pf-grid">
     {% for p in preuves %}
+    {% set camp = p.campaign_share.campaign %}
+    {% set jour_actuel_camp = camp.jour_diffusion_campagne() %}
     <div class="pf-proof-card">
       <div class="pf-proof-top">
         <div class="pf-sharer">{{ p.campaign_share.sharer.pseudo or p.campaign_share.sharer.email }}</div>
-        <div class="pf-campaign">#{{ p.campaign_share.campaign_id }} — {{ p.campaign_share.campaign.promotion_detail or p.campaign_share.campaign.promotion_type }}</div>
+        <div class="pf-campaign">#{{ p.campaign_share.campaign_id }} — {{ camp.promotion_detail or camp.promotion_type }}</div>
         <div class="pf-tags">
           <span class="pf-tag pf-tag-day">Jour {{ p.day_number }}</span>
-          {% if p.proof_type == "debut" %}
-            <span class="pf-tag pf-tag-debut">Début</span>
-          {% else %}
-            <span class="pf-tag pf-tag-fin">Fin</span>
+          {% if p.day_number < jour_actuel_camp %}
+            <span class="pf-tag pf-tag-rattrapage"><i class="bi bi-clock-history"></i> Rattrapage</span>
           {% endif %}
         </div>
       </div>

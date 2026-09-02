@@ -3178,7 +3178,7 @@ def confirm_user(user_id):
     message = f"Bonjour {pseudo_or_name}, votre compte Pubwek a été VALIDÉ ✅."
 
     if user.whatsapp_number:
-        numero_propre = re.sub(r"\D", "", user.whatsapp_number)
+        numero_propre = numero_pour_wa_me(user.whatsapp_number)
         if numero_propre:
             encoded = urllib.parse.quote(message)
             wa_link = f"https://wa.me/{numero_propre}?text={encoded}"
@@ -3223,7 +3223,7 @@ def refuse_user(user_id):
     )
 
     if whatsapp:
-        numero_propre = re.sub(r"\D", "", whatsapp)
+        numero_propre = numero_pour_wa_me(whatsapp)
         if numero_propre:
             message = "Bonjour, votre demande d'inscription Pubwek a été REFUSÉE."
             encoded = urllib.parse.quote(message)
@@ -3283,11 +3283,13 @@ def contacter_partageur_verification(user_id):
     )
 
     if user.whatsapp_number:
-        # 🔒 Sécurité : le numéro WhatsApp est nettoyé pour ne garder que les chiffres.
-        # Il est inséré directement dans le chemin de l'URL (pas dans la query string),
-        # donc s'il contenait des caractères imprévus (espaces, "/", "?", balises...),
-        # cela pourrait casser ou détourner le lien. On élimine ce risque à la source.
-        numero_propre = re.sub(r"\D", "", user.whatsapp_number)
+        # 🔒 Sécurité : le numéro WhatsApp est nettoyé pour ne garder que les chiffres,
+        # et débarrassé du "01" pour rester compatible avec l'indexation WhatsApp
+        # (voir numero_pour_wa_me). Il est inséré directement dans le chemin de
+        # l'URL (pas dans la query string), donc s'il contenait des caractères
+        # imprévus (espaces, "/", "?", balises...), cela pourrait casser ou
+        # détourner le lien. On élimine ce risque à la source.
+        numero_propre = numero_pour_wa_me(user.whatsapp_number)
 
         if not numero_propre:
             flash(

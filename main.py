@@ -2694,6 +2694,59 @@ def partager_campagne_partageur(campaign_id):
 # ==========================================
 # 🆕 ROUTE : PAGE D'INSTRUCTIONS POUR PUBLIER LE STATUT
 # ==========================================
+def etats_preuves_partage(share, camp):
+    """Construit, pour l'affichage, l'état de la preuve de fin de journée
+    pour chaque jour de diffusion déjà entamé (du jour 1 au jour courant).
+
+    Un jour reste actionnable (formulaire d'envoi affiché) tant qu'il n'a pas
+    de preuve validée ET qu'il est encore dans la fenêtre de rattrapage de
+    Campaign.FENETRE_RATTRAPAGE_HEURES. Passé ce délai sans validation, le
+    jour est marqué "perdue" : les clics de ce jour ne seront plus jamais
+    crédités.
+
+    Retourne une liste de dicts (un par jour), du plus ancien au plus récent :
+    {"jour", "preuve", "statut", "reclamable", "deadline", "heures_restantes"}
+    """
+    jour_actuel = camp.jour_diffusion_campagne()
+    preuves = {
+        p.day_number: p
+        for p in CampaignShareProof.query.filter_by(campaign_share_id=share.id).all()
+    }
+
+    maintenant = datetime.utcnow()
+    jours = []
+
+    for jour in range(1, jour_actuel + 1):
+        preuve = preuves.get(jour)
+        reclamable = camp.jour_encore_reclamable(jour, maintenant)
+        deadline = camp.date_limite_preuve(jour)
+        validee = bool(preuve and preuve.status == "validee")
+
+        if validee:
+            statut = "validee"
+        elif not reclamable:
+            statut = "perdue"
+        elif preuve and preuve.status == "en_attente":
+            statut = "en_attente"
+        elif preuve and preuve.status == "rejetee":
+            statut = "rejetee"
+        else:
+            statut = "a_envoyer"
+
+        heures_restantes = max(0, int((deadline - maintenant).total_seconds() // 3600)) if reclamable else 0
+
+        jours.append({
+            "jour": jour,
+            "preuve": preuve,
+            "statut": statut,
+            "reclamable": reclamable,
+            "deadline": deadline,
+            "heures_restantes": heures_restantes,
+        })
+
+    return jours
+
+
 @app.route("/partageur/instructions_partage/<int:campaign_id>")
 @login_required
 def instructions_partage(campaign_id):
@@ -2716,14 +2769,10 @@ def instructions_partage(campaign_id):
     lien_whatsapp_tracking = url_for("tracking_redirect_whatsapp", token=share.tracking_token, _external=True) if camp.whatsapp_number else None
     lien_site_tracking = url_for("tracking_redirect_site", token=share.tracking_token, _external=True) if camp.website_url else None
 
-    # 🆕 Preuves du jour de diffusion en cours
+    # 🆕 État des preuves de fin de journée, pour chaque jour déjà entamé,
+    # avec gestion de la fenêtre de rattrapage de 48h.
     jour_actuel = camp.jour_diffusion_campagne()
-    preuve_debut = CampaignShareProof.query.filter_by(
-        campaign_share_id=share.id, day_number=jour_actuel, proof_type="debut"
-    ).first()
-    preuve_fin = CampaignShareProof.query.filter_by(
-        campaign_share_id=share.id, day_number=jour_actuel, proof_type="fin"
-    ).first()
+    jours_preuves = etats_preuves_partage(share, camp)
 
     return render_template(
         "instructions_partage.html",
@@ -2733,9 +2782,8 @@ def instructions_partage(campaign_id):
         lien_whatsapp_tracking=lien_whatsapp_tracking,
         lien_site_tracking=lien_site_tracking,
         jour_actuel=jour_actuel,
-        preuve_debut=preuve_debut,
-        preuve_fin=preuve_fin,
-    ) 
+        jours_preuves=jours_preuves,
+    )
 
 
 # ==========================================

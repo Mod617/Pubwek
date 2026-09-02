@@ -589,6 +589,16 @@ class CampaignShare(db.Model):
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
+    # =========================================================================
+    # 🆕 SUIVI DES RAPPELS DE PREUVE URGENTS
+    #
+    # Liste de numéros de jour (séparés par des virgules, ex: "1,3") pour
+    # lesquels l'alerte "deadline proche" a déjà été envoyée à ce partageur.
+    # Évite de le notifier plusieurs fois du même rappel à chaque passage de
+    # la tâche périodique qui scanne les preuves en attente.
+    # =========================================================================
+    jours_rappel_urgent_envoyes = db.Column(db.Text, nullable=True)
+
     campaign = db.relationship(
         "Campaign",
         backref=db.backref("campaign_shares", lazy=True, cascade="all, delete-orphan")
@@ -603,6 +613,19 @@ class CampaignShare(db.Model):
     __table_args__ = (
         UniqueConstraint("campaign_id", "sharer_id", name="uq_campaign_share_unique"),
     )
+
+    def rappel_urgent_deja_envoye(self, jour):
+        """Le rappel urgent a-t-il déjà été envoyé pour ce jour précis ?"""
+        if not self.jours_rappel_urgent_envoyes:
+            return False
+        return str(jour) in self.jours_rappel_urgent_envoyes.split(",")
+
+    def marquer_rappel_urgent_envoye(self, jour):
+        """Enregistre que le rappel urgent vient d'être envoyé pour ce jour."""
+        jours = set(self.jours_rappel_urgent_envoyes.split(",")) if self.jours_rappel_urgent_envoyes else set()
+        jours.discard("")
+        jours.add(str(jour))
+        self.jours_rappel_urgent_envoyes = ",".join(sorted(jours, key=int))
 
     def __repr__(self):
         return f"<CampaignShare campaign_id={self.campaign_id} sharer_id={self.sharer_id}>"

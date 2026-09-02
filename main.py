@@ -556,13 +556,7 @@ if not app.config.get("RESEND_API_KEY"):
         "changer_mot_de_passe.py."
     )
 
-# Lancement du nettoyage automatique des fichiers anciens
-with app.app_context():
-    lancer_nettoyage_periodique(app, app.config["UPLOAD_FOLDER"])
 
-# 🆕 Lancement du rappel automatique des preuves de fin de journée en retard
-with app.app_context():
-    lancer_rappels_preuves_periodique(app)
 
 @app.route('/sw.js')
 def service_worker():
@@ -5096,6 +5090,10 @@ def reset_password(token):
            
 
 
+# Lancement du nettoyage automatique des fichiers anciens
+with app.app_context():
+    lancer_nettoyage_periodique(app, app.config["UPLOAD_FOLDER"])
+
 # 🆕 Lancement du rappel automatique des preuves de fin de journée en retard
 with app.app_context():
     lancer_rappels_preuves_periodique(app)
@@ -5104,6 +5102,7 @@ with app.app_context():
 # =========================================================================
 # 🚀 Point d'entrée
 # =========================================================================
+
 if __name__ == "__main__":
     # FIX: debug=False en production. Pour dev local uniquement, passez DEBUG=true en variable d'env.
     debug_mode = os.environ.get("FLASK_DEBUG", "false").lower() == "true"

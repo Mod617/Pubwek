@@ -162,6 +162,44 @@
     color: #888;
   }
 
+  .section-title {
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 2.25rem 0 1rem;
+  }
+
+  .badge-clic-valide {
+    background: #e6f7ee;
+    color: #0f6b4c;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.78rem;
+    padding: 0.35rem 0.7rem;
+  }
+  .badge-clic-faux {
+    background: #fbeae8;
+    color: #c6493d;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.78rem;
+    padding: 0.35rem 0.7rem;
+  }
+  .motif-cell {
+    font-size: 0.82rem;
+    color: #92650b;
+  }
+
+  .clics-detail-scroll {
+    max-height: 560px;
+    overflow-y: auto;
+  }
+  .clics-detail-note {
+    font-size: 0.82rem;
+    color: #888;
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid #f0f0f0;
+  }
+
   @media (max-width: 768px) {
     .page-header {
       padding: 1.5rem;
@@ -311,28 +349,22 @@
 
     <!-- Résumé partageurs / clics -->
     <div class="row mb-4">
-        <div class="col-6 col-md-3 mb-3">
+        <div class="col-6 col-md-4 mb-3">
             <div class="summary-card">
                 <div class="text-muted">Nombre de partageurs</div>
                 <div class="h3 fw-bold text-dark mb-0">{{ partageurs | length }}</div>
             </div>
         </div>
-        <div class="col-6 col-md-3 mb-3">
+        <div class="col-6 col-md-4 mb-3">
             <div class="summary-card">
-                <div class="text-muted">Total de clics comptabilisés</div>
-                <div class="h3 fw-bold text-primary mb-0">{{ "{:,}".format(total_clics) }}</div>
+                <div class="text-muted">Clics valides (facturables)</div>
+                <div class="h3 fw-bold text-success mb-0">{{ "{:,}".format(total_clics_valides) }}</div>
             </div>
         </div>
-        <div class="col-6 col-md-3 mb-3">
+        <div class="col-6 col-md-4 mb-3">
             <div class="summary-card">
-                <div class="text-muted">Clics WhatsApp</div>
-                <div class="h3 fw-bold text-success mb-0">{{ "{:,}".format(total_clics_whatsapp) }}</div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3 mb-3">
-            <div class="summary-card">
-                <div class="text-muted">Clics Site web</div>
-                <div class="h3 fw-bold text-info mb-0">{{ "{:,}".format(total_clics_site) }}</div>
+                <div class="text-muted">Clics frauduleux (bloqués)</div>
+                <div class="h3 fw-bold text-danger mb-0">{{ "{:,}".format(total_clics_frauduleux) }}</div>
             </div>
         </div>
     </div>
@@ -347,8 +379,9 @@
                         <tr>
                             <th class="ps-3">Pseudo</th>
                             <th>Email</th>
-                            <th><i class="bi bi-whatsapp me-1"></i>Clics WhatsApp</th>
-                            <th><i class="bi bi-globe me-1"></i>Clics Site web</th>
+                            <th><i class="bi bi-whatsapp me-1"></i>Clics WhatsApp valides</th>
+                            <th><i class="bi bi-globe me-1"></i>Clics Site valides</th>
+                            <th><i class="bi bi-shield-exclamation me-1"></i>Clics frauduleux</th>
                             <th class="pe-3">A partagé le</th>
                         </tr>
                     </thead>
@@ -359,16 +392,23 @@
                                 <i class="bi bi-person-circle text-secondary me-2"></i>{{ p.pseudo }}
                             </td>
                             <td class="text-muted small" data-label="Email">{{ p.email }}</td>
-                            <td data-label="Clics WhatsApp">
-                                {% if p.clics_whatsapp %}
-                                <span class="badge bg-success">{{ "{:,}".format(p.clics_whatsapp) }} clic{{ 's' if p.clics_whatsapp != 1 else '' }}</span>
+                            <td data-label="Clics WhatsApp valides">
+                                {% if p.clics_whatsapp_valides %}
+                                <span class="badge bg-success">{{ "{:,}".format(p.clics_whatsapp_valides) }} clic{{ 's' if p.clics_whatsapp_valides != 1 else '' }}</span>
                                 {% else %}
                                 <span class="text-muted small">—</span>
                                 {% endif %}
                             </td>
-                            <td data-label="Clics Site web">
-                                {% if p.clics_site %}
-                                <span class="badge bg-info text-dark">{{ "{:,}".format(p.clics_site) }} clic{{ 's' if p.clics_site != 1 else '' }}</span>
+                            <td data-label="Clics Site valides">
+                                {% if p.clics_site_valides %}
+                                <span class="badge bg-info text-dark">{{ "{:,}".format(p.clics_site_valides) }} clic{{ 's' if p.clics_site_valides != 1 else '' }}</span>
+                                {% else %}
+                                <span class="text-muted small">—</span>
+                                {% endif %}
+                            </td>
+                            <td data-label="Clics frauduleux">
+                                {% if p.clics_frauduleux %}
+                                <span class="badge bg-danger">{{ "{:,}".format(p.clics_frauduleux) }} bloqué{{ 's' if p.clics_frauduleux != 1 else '' }}</span>
                                 {% else %}
                                 <span class="text-muted small">—</span>
                                 {% endif %}
@@ -381,6 +421,59 @@
             </div>
             {% else %}
             <p class="empty-state mb-0">Aucun partageur n'a encore pris cette campagne.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 🆕 Détail clic par clic -->
+    <h4 class="section-title"><i class="bi bi-list-ul me-2"></i>Détail des clics</h4>
+    <div class="card table-card">
+        <div class="card-body p-0">
+            {% if clics_detail %}
+            <div class="clics-detail-scroll">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle responsive-table">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Heure</th>
+                                <th>Partageur</th>
+                                <th>Lien</th>
+                                <th>Statut</th>
+                                <th class="pe-3">Motif (si bloqué)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in clics_detail %}
+                            <tr>
+                                <td class="ps-3 text-muted small" data-label="Heure">{{ c.heure }}</td>
+                                <td class="fw-bold" data-label="Partageur">{{ c.pseudo }}</td>
+                                <td data-label="Lien">
+                                    {% if c.link_type == "whatsapp" %}
+                                        <i class="bi bi-whatsapp text-success me-1"></i>WhatsApp
+                                    {% else %}
+                                        <i class="bi bi-globe text-info me-1"></i>Site web
+                                    {% endif %}
+                                </td>
+                                <td data-label="Statut">
+                                    {% if c.is_paid %}
+                                        <span class="badge-clic-valide"><i class="bi bi-check-circle-fill me-1"></i>Valide</span>
+                                    {% else %}
+                                        <span class="badge-clic-faux"><i class="bi bi-x-circle-fill me-1"></i>Bloqué</span>
+                                    {% endif %}
+                                </td>
+                                <td class="pe-3 motif-cell" data-label="Motif">{{ c.motif or "—" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="clics-detail-note">
+                <i class="bi bi-info-circle me-1"></i>
+                Affichage limité aux 300 clics les plus récents. Les totaux ci-dessus portent sur l'ensemble des clics de la campagne.
+            </div>
+            {% else %}
+            <p class="empty-state mb-0">Aucun clic enregistré pour le moment sur cette campagne.</p>
             {% endif %}
         </div>
     </div>

@@ -2445,6 +2445,26 @@ def verifier_droits_admin(permission_requise=None):
 # ==========================================
 # 🆕 ROUTE ADMIN : SUIVI COMPLET D'UNE CAMPAGNE VALIDÉE
 # ==========================================
+# =========================================================================
+# 🆕 LIBELLÉS LISIBLES DES MOTIFS DE REJET ANTI-FRAUDE
+#
+# Traduit les codes techniques stockés dans CampaignClick.rejection_reason
+# en phrases compréhensibles pour l'admin, sans dupliquer la logique.
+# À placer à côté des constantes MOTIF_* déjà définies dans main.py.
+# =========================================================================
+MOTIFS_REJET_LIBELLES = {
+    MOTIF_CAMPAGNE_INACTIVE: "Campagne inactive au moment du clic",
+    MOTIF_ROBOT: "Agent automatique détecté (robot, aperçu de lien WhatsApp...)",
+    MOTIF_SANS_IP: "Adresse IP manquante",
+    MOTIF_AUTO_CLIC: "Le partageur a cliqué sur son propre lien",
+    MOTIF_QUOTA_JOUR: "Quota journalier de la campagne déjà atteint",
+    MOTIF_DOUBLON_IP: "Cet appareil a déjà été payé sur ce partage",
+    MOTIF_RAFALE: "Délai anti-rafale non respecté (clics trop rapprochés)",
+    MOTIF_PLAFOND_PARTAGE: "Plafond quotidien de ce partage atteint",
+    MOTIF_PLAFOND_IP: "Plafond quotidien de cette adresse IP atteint",
+}
+
+
 @app.route("/admin/campagne/<int:campaign_id>/suivi")
 @login_required
 def admin_suivi_campagne(campaign_id):
@@ -2459,14 +2479,14 @@ def admin_suivi_campagne(campaign_id):
         flash("Le suivi détaillé n'est disponible que pour les campagnes payées et validées. ⚠️", "warning")
         return redirect(url_for("admin_validate"))
 
-    # 1️⃣ Liste des partageurs de cette campagne (pseudo + date + id du CampaignShare)
+    # 1️⃣ Liste des partageurs de cette campagne (pseudo + email + date + id du CampaignShare)
     shares = (
         db.session.query(
             CampaignShare.id,
             CampaignShare.sharer_id,
             CampaignShare.created_at,
             User.pseudo,
-            User.email  # 🆕 l'admin, contrairement à l'annonceur, peut voir l'email pour modération
+            User.email
         )
         .join(User, User.id == CampaignShare.sharer_id)
         .filter(CampaignShare.campaign_id == campaign_id)
@@ -2474,54 +2494,85 @@ def admin_suivi_campagne(campaign_id):
     )
 
     partageurs = []
-    total_clics_whatsapp = 0
-    total_clics_site = 0
+    total_clics_valides = 0
+    total_clics_frauduleux = 0
+    clics_detail = []
 
     if shares:
         share_ids = [s.id for s in shares]
+        shares_par_id = {s.id: s for s in shares}
 
-        # 2️⃣ Comptage des clics, par CampaignShare et par type de lien.
-        #     Le comptage des « vues » qui se trouvait ici lisait la table View,
-        #     jamais alimentée : il renvoyait toujours zéro. Retiré.
+        # 2️⃣ Comptage des clics par partage, type de lien ET validité —
+        # les clics frauduleux ne sont plus mélangés aux clics valides.
         clics_bruts = (
             db.session.query(
                 CampaignClick.campaign_share_id,
                 CampaignClick.link_type,
+                CampaignClick.is_paid,
                 func.count(CampaignClick.id)
             )
             .filter(CampaignClick.campaign_share_id.in_(share_ids))
-            .group_by(CampaignClick.campaign_share_id, CampaignClick.link_type)
+            .group_by(CampaignClick.campaign_share_id, CampaignClick.link_type, CampaignClick.is_paid)
             .all()
         )
 
         clics_par_share = {}
-        for share_id, link_type, nb in clics_bruts:
-            clics_par_share.setdefault(share_id, {"whatsapp": 0, "website": 0})
-            clics_par_share[share_id][link_type] = nb
+        for share_id, link_type, is_paid, nb in clics_bruts:
+            entry = clics_par_share.setdefault(share_id, {
+                "whatsapp_valides": 0, "whatsapp_faux": 0,
+                "site_valides": 0, "site_faux": 0,
+            })
+            suffixe_type = "whatsapp" if link_type == "whatsapp" else "site"
+            suffixe_validite = "valides" if is_paid else "faux"
+            entry[f"{suffixe_type}_{suffixe_validite}"] = nb
 
-        # 3️⃣ Construction de la liste exploitable par le gabarit
         for s in shares:
-            clics = clics_par_share.get(s.id, {"whatsapp": 0, "website": 0})
+            c = clics_par_share.get(s.id, {"whatsapp_valides": 0, "whatsapp_faux": 0, "site_valides": 0, "site_faux": 0})
+            total_valides = c["whatsapp_valides"] + c["site_valides"]
+            total_faux = c["whatsapp_faux"] + c["site_faux"]
             partageurs.append({
                 "pseudo": s.pseudo or "Partageur anonyme",
                 "email": s.email,
-                "clics_whatsapp": clics["whatsapp"],
-                "clics_site": clics["website"],
-                "total_clics": clics["whatsapp"] + clics["website"],
+                "clics_whatsapp_valides": c["whatsapp_valides"],
+                "clics_site_valides": c["site_valides"],
+                "clics_frauduleux": total_faux,
+                "total_clics_valides": total_valides,
                 "partage_le": s.created_at.strftime("%d/%m/%Y %H:%M") if s.created_at else None,
             })
 
-        partageurs.sort(key=lambda p: p["total_clics"], reverse=True)
-        total_clics_whatsapp = sum(p["clics_whatsapp"] for p in partageurs)
-        total_clics_site = sum(p["clics_site"] for p in partageurs)
+        partageurs.sort(key=lambda p: p["total_clics_valides"], reverse=True)
+        total_clics_valides = sum(p["total_clics_valides"] for p in partageurs)
+        total_clics_frauduleux = sum(p["clics_frauduleux"] for p in partageurs)
+
+        # 3️⃣ Détail clic par clic (les 300 plus récents) pour audit fin :
+        # partageur, heure, type de lien, vrai/faux, motif précis du rejet.
+        # Les totaux ci-dessus restent exacts sur l'ensemble des clics, cette
+        # liste ne sert qu'à l'inspection détaillée.
+        clics_bruts_detail = (
+            CampaignClick.query
+            .filter(CampaignClick.campaign_share_id.in_(share_ids))
+            .order_by(CampaignClick.clicked_at.desc())
+            .limit(300)
+            .all()
+        )
+        for c in clics_bruts_detail:
+            s = shares_par_id.get(c.campaign_share_id)
+            clics_detail.append({
+                "pseudo": (s.pseudo or "Partageur anonyme") if s else "Inconnu",
+                "heure": c.clicked_at.strftime("%d/%m/%Y %H:%M:%S") if c.clicked_at else "—",
+                "link_type": c.link_type,
+                "is_paid": c.is_paid,
+                "motif": MOTIFS_REJET_LIBELLES.get(c.rejection_reason, c.rejection_reason) if not c.is_paid else None,
+                "ip": c.ip,
+            })
 
     return render_template(
         "admin_suivi_campagne.html",
         campaign=camp,
         partageurs=partageurs,
-        total_clics=total_clics_whatsapp + total_clics_site,
-        total_clics_whatsapp=total_clics_whatsapp,
-        total_clics_site=total_clics_site
+        total_clics_valides=total_clics_valides,
+        total_clics_frauduleux=total_clics_frauduleux,
+        clics_detail=clics_detail,
     )
 
 

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vérification de document — Pubwek</title>
+<style>
+    body {
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        background-color: #FAF9F5;
+        color: #12261F;
+        margin: 0;
+        padding: 40px 16px;
+        display: flex;
+        justify-content: center;
+    }
+    .card {
+        background: #fff;
+        max-width: 480px;
+        width: 100%;
+        border-radius: 8px;
+        padding: 32px 28px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    .status {
+        text-align: center;
+        padding: 18px;
+        border-radius: 6px;
+        margin-bottom: 24px;
+        font-weight: bold;
+    }
+    .status.ok { background: #E7F5EC; color: #137445; }
+    .status.fail { background: #FBEAE8; color: #B8362B; }
+    h1 { font-size: 18px; color: #0F6B4C; margin-bottom: 4px; }
+    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #E7E3D8; font-size: 13px; }
+    .row .label { color: #6E7A73; }
+    .row .value { font-weight: bold; }
+    .brandmark { color: #0F6B4C; font-weight: bold; }
+    .footer { text-align: center; margin-top: 20px; font-size: 11px; color: #6E7A73; }
+</style>
+</head>
+<body>
+<div class="card">
+    <h1><span class="brandmark">Pubwek</span> — Vérification de document</h1>
+
+    {% if not trouve %}
+        <div class="status fail">❌ Document introuvable</div>
+        <p style="font-size:13px; color:#6E7A73;">
+            Aucun document ne correspond à ce code. Ce PDF n'a peut-être pas été émis
+            par Pubwek, ou le lien est incorrect.
+        </p>
+    {% elif not integre %}
+        <div class="status fail">⚠️ Intégrité non confirmée</div>
+        <p style="font-size:13px; color:#6E7A73;">
+            Ce code existe mais son enregistrement semble corrompu. Contactez le support Pubwek.
+        </p>
+    {% else %}
+        <div class="status ok">✅ Document authentique</div>
+        <div class="row"><span class="label">Type de document</span><span class="value">{{ type_libelle }}</span></div>
+        <div class="row"><span class="label">Titulaire</span><span class="value">{{ nom_affiche }}</span></div>
+        <div class="row"><span class="label">Montant de référence</span><span class="value">{{ "{:,.0f}".format(montant_reference) }} FCFA</span></div>
+        <div class="row"><span class="label">Nombre de lignes</span><span class="value">{{ nb_lignes }}</span></div>
+        <div class="row"><span class="label">Émis le</span><span class="value">{{ date_generation }}</span></div>
+        <div class="row"><span class="label">Code de vérification</span><span class="value" style="font-family:'Courier New',monospace; font-size:11px;">{{ doc_uuid }}</span></div>
+    {% endif %}
+
+    <div class="footer">Cette page confirme l'authenticité d'un document émis par la plateforme Pubwek.</div>
+</div>
+</body>
+</html>

@@ -98,6 +98,36 @@ class IPAddress(db.Model):
     views = db.relationship("View", backref="ip_relation", lazy=True)
     user_sessions = db.relationship("UserSession", backref="ip_relation", lazy=True)
 
+import uuid as uuidlib
+
+class DocumentCertification(db.Model):
+    """Preuve d'authenticité d'un document PDF généré par la plateforme.
+
+    Chaque PDF émis (retraits, transactions...) a une ligne ici, créée au
+    moment de la génération. L'UUID est imprimé sur le PDF (QR code + code
+    court) et permet à quiconque de vérifier les données réelles du document
+    sur /verifier/<uuid>, indépendamment du contenu du fichier PDF lui-même.
+    """
+    __tablename__ = "document_certifications"
+
+    id = db.Column(db.Integer, primary_key=True)
+    doc_uuid = db.Column(db.String(36), unique=True, nullable=False, index=True,
+                          default=lambda: str(uuidlib.uuid4()))
+    doc_type = db.Column(db.String(50), nullable=False)   # "retraits" ou "transactions"
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+
+    # Données figées au moment de la génération (jamais modifiées après coup)
+    montant_reference = db.Column(db.Float, nullable=False)
+    nb_lignes = db.Column(db.Integer, nullable=False)
+
+    # Empreinte HMAC calculée sur les champs ci-dessus : détecte toute
+    # altération de CETTE ligne elle-même (pas seulement du PDF).
+    signature = db.Column(db.String(64), nullable=False)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    user = db.relationship("User")
+
 
 # =========================================================================
 # 🧍 MODÈLES MÉTIERS ET SESSIONS UTILISATEURS

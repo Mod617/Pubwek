@@ -1770,9 +1770,9 @@ def generer_pdf_depuis_template(template_name, contexte, nom_fichier, certificat
 
     Si certification_info est fourni (dict avec doc_type, user, montant_reference,
     nb_lignes), une ligne DocumentCertification est créée AVANT le rendu, et son
-    UUID + son URL de vérification sont injectés dans le contexte du template
-    sous doc_uuid / doc_verification_url — pour que le cachet visuel (QR code)
-    puisse s'en servir.
+    UUID + son URL de vérification + son QR code sont injectés dans le contexte
+    du template sous doc_uuid / doc_verification_url / doc_qr_code — pour que le
+    cachet visuel puisse s'en servir.
     """
     if certification_info:
         certification = creer_certification(
@@ -1781,11 +1781,13 @@ def generer_pdf_depuis_template(template_name, contexte, nom_fichier, certificat
             montant_reference=certification_info["montant_reference"],
             nb_lignes=certification_info["nb_lignes"],
         )
-        contexte = dict(contexte)  # copie pour ne pas muter l'appelant
-        contexte["doc_uuid"] = certification.doc_uuid
-        contexte["doc_verification_url"] = url_for(
+        verification_url = url_for(
             "verifier_document", doc_uuid=certification.doc_uuid, _external=True
         )
+        contexte = dict(contexte)  # copie pour ne pas muter l'appelant
+        contexte["doc_uuid"] = certification.doc_uuid
+        contexte["doc_verification_url"] = verification_url
+        contexte["doc_qr_code"] = generer_qr_code_base64(verification_url)
 
     html_rendu = render_template(template_name, **contexte)
 
@@ -1801,6 +1803,9 @@ def generer_pdf_depuis_template(template_name, contexte, nom_fichier, certificat
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = f"attachment; filename={nom_fichier}"
     return response
+
+
+
 
 DOCUMENT_SIGNING_SECRET = os.environ.get("DOCUMENT_SIGNING_SECRET")
 

@@ -1441,27 +1441,33 @@ def resoumettre_campagne(campaign_id):
         camp.provinces = ",".join(provinces_list)
     camp.communes = ",".join(communes_list) if communes_list else None
 
-    # 3️⃣ Objectif de clics / durée
-    target_views_raw = request.form.get("whatsapp_views")
-    duration_days_raw = request.form.get("duration_days")
+    # =====================================================================
+    # 🆕 3️⃣ Objectif de clics / durée — modifiables UNIQUEMENT si la
+    # campagne n'a pas encore été payée. Une fois payée, ces valeurs sont
+    # verrouillées : les modifier changerait le prix réel sans jamais
+    # redemander de paiement complémentaire à l'annonceur.
+    # =====================================================================
+    if not camp.paid:
+        target_views_raw = request.form.get("whatsapp_views")
+        duration_days_raw = request.form.get("duration_days")
 
-    if target_views_raw:
-        try:
-            camp.target_whatsapp_views = int(target_views_raw)
-        except ValueError:
-            flash("Objectif de clics invalide. ⚠️", "danger")
-            return redirect(url_for("mes_campagnes"))
+        if target_views_raw:
+            try:
+                camp.target_whatsapp_views = int(target_views_raw)
+            except ValueError:
+                flash("Objectif de clics invalide. ⚠️", "danger")
+                return redirect(url_for("mes_campagnes"))
 
-    if duration_days_raw:
-        try:
-            duration_days = int(duration_days_raw)
-        except ValueError:
-            flash("Durée invalide. ⚠️", "danger")
-            return redirect(url_for("mes_campagnes"))
-        if duration_days < 1 or duration_days > 30:
-            flash("La durée de diffusion doit être comprise entre 1 et 30 jours maximum. ⚠️", "danger")
-            return redirect(url_for("mes_campagnes"))
-        camp.duration_days = duration_days
+        if duration_days_raw:
+            try:
+                duration_days = int(duration_days_raw)
+            except ValueError:
+                flash("Durée invalide. ⚠️", "danger")
+                return redirect(url_for("mes_campagnes"))
+            if duration_days < 1 or duration_days > 30:
+                flash("La durée de diffusion doit être comprise entre 1 et 30 jours maximum. ⚠️", "danger")
+                return redirect(url_for("mes_campagnes"))
+            camp.duration_days = duration_days
 
     # 4️⃣ Numéro WhatsApp / site web
     whatsapp_number = request.form.get("whatsapp_number", "").strip()
@@ -1497,11 +1503,28 @@ def resoumettre_campagne(campaign_id):
         cout_par_clic_base = config.cost_per_click_video
 
     elif camp.display_option == "B":
+        # 🆕 Nombre de photos AVANT tout remplacement — sert de plafond si la
+        # campagne est déjà payée (voir plus bas).
+        nombre_photos_originales = len(camp.media_files.split(",")) if camp.media_files else 0
+
         fichiers_recus = [f for f in request.files.getlist("media_files") if f and f.filename]
         if fichiers_recus:
             if len(fichiers_recus) > 25:
                 flash("Trop de fichiers. Maximum autorisé : 25.", "danger")
                 return redirect(url_for("mes_campagnes"))
+
+            # 🆕 Campagne déjà payée : le coût par clic dépend du nombre de
+            # photos pour cette option — impossible d'en ajouter davantage
+            # sans re-facturer, donc on plafonne au nombre payé initialement.
+            if camp.paid and len(fichiers_recus) > nombre_photos_originales:
+                flash(
+                    f"Cette campagne est déjà payée : vous ne pouvez pas mettre plus de "
+                    f"{nombre_photos_originales} photo(s), le nombre payé initialement. "
+                    f"Vous pouvez en mettre autant ou moins. ⚠️",
+                    "danger"
+                )
+                return redirect(url_for("mes_campagnes"))
+
             noms_fichiers = []
             for fichier in fichiers_recus:
                 ok, err = valider_image(fichier)
@@ -1518,24 +1541,34 @@ def resoumettre_campagne(campaign_id):
             camp.media_files = ",".join(noms_fichiers)
             nombre_fichiers = len(noms_fichiers)
         else:
-            nombre_fichiers = len(camp.media_files.split(",")) if camp.media_files else 1
+            nombre_fichiers = nombre_photos_originales or 1
         cout_par_clic_base = config.cost_per_click_photo * nombre_fichiers
 
     else:  # Option C : texte seul, aucun média
         cout_par_clic_base = config.cost_per_click_text
 
-    # 6️⃣ Recalcul du coût total (les paramètres ont pu changer)
-    base_clicks_cost = camp.target_whatsapp_views * cout_par_clic_base
-    commission_percentage = config.commission_rate / 100.0
-    total_commission = base_clicks_cost * commission_percentage
-    camp.total_cost = round(base_clicks_cost + total_commission, 2)
+    # =====================================================================
+    # 🆕 6️⃣ Recalcul du coût total — UNIQUEMENT si la campagne n'est pas
+    # encore payée. Une fois payée, l'objectif de clics et la durée sont
+    # verrouillés (section 3), et le nombre de photos ne peut que rester
+    # identique ou diminuer (section 5) : le prix ne peut donc plus changer,
+    # on ne le recalcule pas pour éviter tout écart avec ce qui a été payé.
+    # =====================================================================
+    if not camp.paid:
+        base_clicks_cost = camp.target_whatsapp_views * cout_par_clic_base
+        commission_percentage = config.commission_rate / 100.0
+        total_commission = base_clicks_cost * commission_percentage
+        camp.total_cost = round(base_clicks_cost + total_commission, 2)
+
     camp.views_per_day = int(camp.target_whatsapp_views / camp.duration_days) if camp.duration_days > 0 else camp.target_whatsapp_views
     camp.end_date = datetime.utcnow() + timedelta(days=camp.duration_days)
 
     # 🆕 6bis️⃣ Réinitialisation complète du quota journalier
-    # Les paramètres (objectif de clics, durée) ont pu changer : on repart sur une diffusion fraîche.
-    # whatsapp_views (compteur global) n'est PAS remis à zéro s'il y avait déjà des clics comptés
-    # avant le rejet, pour ne pas perdre les clics déjà livrés et payés par l'annonceur.
+    # Les paramètres (objectif de clics, durée) ont pu changer si la campagne
+    # n'était pas payée : on repart sur une diffusion fraîche. whatsapp_views
+    # (compteur global) n'est PAS remis à zéro s'il y avait déjà des clics
+    # comptés avant le rejet, pour ne pas perdre les clics déjà livrés et
+    # payés par l'annonceur.
     camp.views_today = 0
     camp.current_day_number = 0
     camp.last_quota_date = None

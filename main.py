@@ -1176,6 +1176,10 @@ def mes_campagnes():
         flash("Accès réservé aux annonceurs. 🚫", "danger")
         return redirect(url_for("index"))
 
+    # 🆕 Configuration des tarifs, nécessaire pour l'estimation en temps réel
+    # du coût dans la modal de correction (uniquement pour les campagnes non payées)
+    config = SystemConfig.get_config()
+
     # Récupération de toutes les campagnes de l'utilisateur connecté
     user_campaigns = Campaign.query.filter_by(user_id=current_user.id).order_by(Campaign.created_at.desc()).all()
 
@@ -1193,7 +1197,8 @@ def mes_campagnes():
         en_attente=en_attente,
         en_cours=en_cours,
         terminees=terminees,
-        departements_communes=DEPARTEMENTS_COMMUNES
+        departements_communes=DEPARTEMENTS_COMMUNES,
+        config=config
     )
 
 

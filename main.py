@@ -1736,10 +1736,29 @@ def mes_transactions():
 # ==========================================
 
 
-def generer_pdf_depuis_template(template_name, contexte, nom_fichier):
+def generer_pdf_depuis_template(template_name, contexte, nom_fichier, certification_info=None):
     """
     Génère un PDF à partir d'un template Jinja2 et le retourne en téléchargement.
+
+    Si certification_info est fourni (dict avec doc_type, user, montant_reference,
+    nb_lignes), une ligne DocumentCertification est créée AVANT le rendu, et son
+    UUID + son URL de vérification sont injectés dans le contexte du template
+    sous doc_uuid / doc_verification_url — pour que le cachet visuel (QR code)
+    puisse s'en servir.
     """
+    if certification_info:
+        certification = creer_certification(
+            doc_type=certification_info["doc_type"],
+            user=certification_info["user"],
+            montant_reference=certification_info["montant_reference"],
+            nb_lignes=certification_info["nb_lignes"],
+        )
+        contexte = dict(contexte)  # copie pour ne pas muter l'appelant
+        contexte["doc_uuid"] = certification.doc_uuid
+        contexte["doc_verification_url"] = url_for(
+            "verifier_document", doc_uuid=certification.doc_uuid, _external=True
+        )
+
     html_rendu = render_template(template_name, **contexte)
 
     buffer = BytesIO()

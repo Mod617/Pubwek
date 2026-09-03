@@ -1755,6 +1755,37 @@ def generer_pdf_depuis_template(template_name, contexte, nom_fichier):
     response.headers["Content-Disposition"] = f"attachment; filename={nom_fichier}"
     return response
 
+DOCUMENT_SIGNING_SECRET = os.environ.get("DOCUMENT_SIGNING_SECRET")
+
+def _signer_certification(doc_type, user_id, montant_reference, nb_lignes, created_at_iso):
+    """HMAC-SHA256 sur les champs figés — détecte toute altération de la ligne."""
+    if not DOCUMENT_SIGNING_SECRET:
+        raise RuntimeError("DOCUMENT_SIGNING_SECRET doit être défini en variable d'environnement.")
+    message = f"{doc_type}|{user_id}|{montant_reference:.2f}|{nb_lignes}|{created_at_iso}"
+    return hmac.new(
+        DOCUMENT_SIGNING_SECRET.encode("utf-8"),
+        message.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+
+def creer_certification(doc_type, user, montant_reference, nb_lignes):
+    """Crée et enregistre la certification d'un document généré. Retourne l'objet."""
+    created_at = datetime.utcnow()
+    signature = _signer_certification(doc_type, user.id, montant_reference, nb_lignes, created_at.isoformat())
+
+    certification = DocumentCertification(
+        doc_type=doc_type,
+        user_id=user.id,
+        montant_reference=montant_reference,
+        nb_lignes=nb_lignes,
+        signature=signature,
+        created_at=created_at,
+    )
+    db.session.add(certification)
+    db.session.commit()
+    return certification
+
 
 # ==========================================
 # 🆕 ROUTE : EXPORT PDF — MES RETRAITS (PARTAGEUR)

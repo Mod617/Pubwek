@@ -195,6 +195,26 @@
     color: var(--ink) !important;
     border-radius: 8px !important;
   }
+
+  /* ---------- 🆕 Champs verrouillés (campagne déjà payée) ---------- */
+  .mescamp-wrap .champ-verrouille-note {
+    background: var(--amber-tint);
+    color: #8a6420;
+    border: 1px solid #ecd7ae;
+    border-radius: 9px;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+  .mescamp-wrap .form-control:disabled,
+  .mescamp-wrap .form-select:disabled {
+    background: var(--slate-tint) !important;
+    color: var(--ink-soft) !important;
+    cursor: not-allowed;
+  }
 </style>
 
 <div class="mescamp-wrap">
@@ -221,6 +241,7 @@
             {% for campaign in refusees %}
             {% set provinces_actuelles = campaign.provinces.split(',') if campaign.provinces and campaign.provinces != "Toutes" else [] %}
             {% set communes_actuelles = campaign.communes.split(',') if campaign.communes else [] %}
+            {% set nombre_photos_actuelles = campaign.media_files.split(',') | length if campaign.media_files else 0 %}
             <div class="col-md-6 mb-3">
                 <div class="card border-danger shadow-sm">
                     <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
@@ -310,7 +331,15 @@
                                     <div class="mb-3 bg-light p-3 rounded border">
                                         <label class="form-label fw-bold">📸 Remplacer les photos (optionnel)</label>
                                         <input type="file" name="media_files" class="form-control" multiple accept="image/*">
-                                        <div class="form-text text-muted">Laissez vide pour garder les photos actuelles. Maximum 25 photos.</div>
+                                        {% if campaign.paid %}
+                                            <div class="form-text text-muted">
+                                                Laissez vide pour garder les photos actuelles. Cette campagne est déjà payée :
+                                                vous pouvez en mettre <strong>{{ nombre_photos_actuelles }} au maximum</strong>
+                                                (autant ou moins que le nombre payé initialement).
+                                            </div>
+                                        {% else %}
+                                            <div class="form-text text-muted">Laissez vide pour garder les photos actuelles. Maximum 25 photos.</div>
+                                        {% endif %}
                                         {% if campaign.media_files %}
                                             <div class="d-flex flex-wrap gap-2 mt-2">
                                                 {% for f in campaign.media_files.split(',') %}
@@ -341,20 +370,34 @@
                                     <div class="form-text text-muted">Décochez tout pour cibler toutes les zones.</div>
                                 </div>
 
-                                <!-- Objectif de clics / durée -->
+                                <!-- 🆕 Objectif de clics / durée — verrouillés si la campagne est déjà payée -->
                                 <div class="row mb-3">
                                     <div class="col-md-6 mb-2">
                                         <label class="form-label fw-bold">🚀 Objectif de clics</label>
-                                        <input type="number" name="whatsapp_views" class="form-control" min="100" step="50" value="{{ campaign.target_whatsapp_views }}" required>
+                                        <input type="number" name="whatsapp_views" class="form-control" min="100" step="50"
+                                               value="{{ campaign.target_whatsapp_views }}"
+                                               {% if campaign.paid %}disabled{% else %}required{% endif %}>
                                     </div>
                                     <div class="col-md-6 mb-2">
                                         <label class="form-label fw-bold">⏳ Durée (Jours)</label>
-                                        <select name="duration_days" class="form-select">
+                                        <select name="duration_days" class="form-select" {% if campaign.paid %}disabled{% endif %}>
                                             {% for jour in range(1, 31) %}
                                                 <option value="{{ jour }}" {% if campaign.duration_days == jour %}selected{% endif %}>{{ jour }} jour{{ 's' if jour > 1 else '' }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
+                                    {% if campaign.paid %}
+                                    <div class="col-12">
+                                        <div class="champ-verrouille-note">
+                                            <i class="fas fa-lock mt-1"></i>
+                                            <div>
+                                                <strong>Verrouillé :</strong> cette campagne est déjà payée. L'objectif de clics et la
+                                                durée ne peuvent plus être modifiés, car cela changerait le montant facturé.
+                                                Vous pouvez corriger tout le reste (contenu, zones, contact).
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
                                 </div>
 
                                 <!-- Contact -->

@@ -1,6 +1,8 @@
 import os
 import re
 import io
+import qrcode
+import base64
 import hmac
 import hashlib
 import uuid
@@ -839,6 +841,32 @@ def peut_acceder_au_fichier(user, safe_filename):
                     return True
 
     return False
+
+import qrcode
+import base64
+
+def generer_qr_code_base64(url):
+    """Génère un QR code pointant vers l'URL donnée, encodé en base64 PNG.
+
+    xhtml2pdf ne sait pas charger d'images externes de façon fiable (pas de
+    navigateur, pas de JS) : on injecte donc directement les octets de
+    l'image dans le HTML via data:image/png;base64,... — aucune requête
+    réseau nécessaire au moment du rendu du PDF.
+    """
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=6,
+        border=2,
+    )
+    qr.add_data(url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="#0F6B4C", back_color="white")
+
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    encoded = base64.b64encode(buffer.getvalue()).decode("ascii")
+    return f"data:image/png;base64,{encoded}"
 
 
 @app.route("/uploads/<path:filename>")

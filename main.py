@@ -2635,6 +2635,58 @@ def admin_suivi_campagne(campaign_id):
     )
 
 
+# ==========================================
+# 🔒 ROUTE PUBLIQUE : VÉRIFICATION D'UN DOCUMENT CERTIFIÉ
+# ==========================================
+@app.route("/verifier/<doc_uuid>")
+def verifier_document(doc_uuid):
+    """Page publique de vérification d'authenticité d'un PDF Pubwek.
+
+    Accessible sans connexion : c'est le principe même du cachet électronique,
+    quiconque possède le PDF (donc l'UUID imprimé dessus) doit pouvoir vérifier
+    que le document n'a pas été altéré, sans avoir de compte Pubwek.
+
+    On ne réaffiche jamais l'email ou le téléphone complet du titulaire : la
+    vérification confirme l'authenticité, elle n'a pas vocation à exposer les
+    données personnelles de l'utilisateur à qui que ce soit tombant sur le PDF.
+    """
+    certification = DocumentCertification.query.filter_by(doc_uuid=doc_uuid).first()
+
+    if not certification:
+        return render_template("verifier_document.html", trouve=False), 404
+
+    # Recalcul de la signature à partir des données stockées : si quelqu'un a
+    # modifié directement la ligne en base (accès DB compromis), la signature
+    # recalculée ne correspondra plus à celle enregistrée.
+    signature_attendue = _signer_certification(
+        certification.doc_type,
+        certification.user_id,
+        certification.montant_reference,
+        certification.nb_lignes,
+        certification.created_at.isoformat(),
+    )
+    integre = hmac.compare_digest(signature_attendue, certification.signature)
+
+    titulaire = certification.user
+    nom_affiche = (titulaire.company_name or titulaire.pseudo or "Utilisateur Pubwek") if titulaire else "Utilisateur introuvable"
+
+    libelles_type = {
+        "retraits": "Fiche de retraits & mouvements de portefeuille",
+        "transactions": "Fiche de transactions & paiements de campagnes",
+    }
+
+    return render_template(
+        "verifier_document.html",
+        trouve=True,
+        integre=integre,
+        doc_uuid=certification.doc_uuid,
+        type_libelle=libelles_type.get(certification.doc_type, certification.doc_type),
+        nom_affiche=nom_affiche,
+        montant_reference=certification.montant_reference,
+        nb_lignes=certification.nb_lignes,
+        date_generation=certification.created_at.strftime("%d/%m/%Y à %H:%M"),
+    )
+
 
 @app.route("/admin/settings", methods=["GET", "POST"])
 @login_required

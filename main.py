@@ -1841,7 +1841,13 @@ def mes_retraits_pdf():
                 "solde_actuel": current_user.wallet_balance or 0.0,
                 "date_generation": datetime.utcnow().strftime("%d/%m/%Y à %H:%M"),
             },
-            f"pubwek_retraits_{current_user.id}.pdf"
+            f"pubwek_retraits_{current_user.id}.pdf",
+            certification_info={
+                "doc_type": "retraits",
+                "user": current_user,
+                "montant_reference": current_user.wallet_balance or 0.0,
+                "nb_lignes": len(demandes) + len(mouvements),
+            },
         )
     except ValueError:
         flash("Impossible de générer le PDF pour le moment. Réessayez. ⚠️", "danger")
@@ -1875,7 +1881,13 @@ def mes_transactions_pdf():
                 "total_paye": total_paye,
                 "date_generation": datetime.utcnow().strftime("%d/%m/%Y à %H:%M"),
             },
-            f"pubwek_transactions_{current_user.id}.pdf"
+            f"pubwek_transactions_{current_user.id}.pdf",
+            certification_info={
+                "doc_type": "transactions",
+                "user": current_user,
+                "montant_reference": total_paye,
+                "nb_lignes": len(transactions),
+            },
         )
     except ValueError:
         flash("Impossible de générer le PDF pour le moment. Réessayez. ⚠️", "danger")

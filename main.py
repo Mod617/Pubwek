@@ -4862,31 +4862,6 @@ def mes_retraits():
         minimum_retrait=config.minimum_withdrawal_amount
     )  
 
-# ==========================================
-# 🆕 UTILITAIRE : GÉNÉRATION PDF À PARTIR D'UN TEMPLATE HTML
-# ==========================================
-
-
-def generer_pdf_depuis_template(template_name, contexte, nom_fichier):
-    """
-    Génère un PDF à partir d'un template Jinja2 et le retourne en téléchargement.
-    """
-    html_rendu = render_template(template_name, **contexte)
-
-    buffer = BytesIO()
-    resultat = pisa.CreatePDF(html_rendu, dest=buffer, encoding="utf-8")
-
-    if resultat.err:
-        logger.error("Erreur génération PDF (%s) : %d erreur(s)", nom_fichier, resultat.err)
-        raise ValueError("Erreur lors de la génération du PDF.")
-
-    buffer.seek(0)
-    response = make_response(buffer.read())
-    response.headers["Content-Type"] = "application/pdf"
-    response.headers["Content-Disposition"] = f"attachment; filename={nom_fichier}"
-    return response
-
-
 
 # ==========================================
 # 🆕 GESTION DES SOUS-ADMINS — RÉSERVÉ AU SUPER-ADMIN UNIQUEMENT

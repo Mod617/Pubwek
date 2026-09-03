@@ -8,7 +8,6 @@
 # valider_video() rejette TOUT téléversement de vidéo par un annonceur. Sur
 # Railway, il est installé via nixpacks.toml (voir ce fichier à la racine).
 # =============================================================================
-
 # --- Cœur Flask --------------------------------------------------------------
 Flask==2.3.3
 Flask-SQLAlchemy==3.1.1
@@ -18,34 +17,30 @@ Flask-Bcrypt==1.0.1
 Flask-Limiter==3.5.0
 Flask-Talisman==1.1.0
 email-validator==2.1.0.post1
-
 # --- Configuration -----------------------------------------------------------
 python-dotenv==1.0.1
-
 # --- Serveur et base de données de production --------------------------------
 gunicorn==21.2.0
 psycopg2-binary==2.9.12
-
 # --- Appels HTTP (FedaPay) ---------------------------------------------------
 requests==2.31.0
-
 # --- Sécurité : nettoyage des saisies utilisateur ---------------------------
 bleach==6.4.0
-
 # --- Stockage des compteurs de limitation de débit ---------------------------
 # Utilisé par Flask-Limiter quand REDIS_URL est défini. Sans cette variable,
 # le comptage se fait en mémoire et la limite ne tient plus dès qu'il y a
 # plusieurs workers gunicorn.
 redis==5.0.8
-
 # --- Export PDF (relevés de transactions et de retraits) --------------------
 xhtml2pdf==0.2.16
-
+# --- Cachet électronique : génération des QR codes de vérification ----------
+# Utilisé par generer_qr_code_base64() pour produire le QR imprimé sur chaque
+# PDF certifié (DocumentCertification / route /verifier/<uuid>).
+qrcode[pil]==7.4.2
 # --- Traitement des images ---------------------------------------------------
 # Sert à valider réellement le contenu des images téléversées (PIL.Image.open),
 # pas seulement leur extension.
 Pillow==11.1.0
-
 # Retirés avec la génération vidéo (Creatomate / diaporama) :
 #   moviepy, numpy  — montage du diaporama
 #   celery          — file d'attente du rendu

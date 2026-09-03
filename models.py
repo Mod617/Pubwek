@@ -114,7 +114,7 @@ class DocumentCertification(db.Model):
     doc_uuid = db.Column(db.String(36), unique=True, nullable=False, index=True,
                           default=lambda: str(uuidlib.uuid4()))
     doc_type = db.Column(db.String(50), nullable=False)   # "retraits" ou "transactions"
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
 
     # Données figées au moment de la génération (jamais modifiées après coup)
     montant_reference = db.Column(db.Float, nullable=False)

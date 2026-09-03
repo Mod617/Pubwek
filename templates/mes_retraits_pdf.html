@@ -140,9 +140,53 @@
         padding: 8px 0;
     }
 
+    /* ---------- Cachet de certification ---------- */
+    .cachet {
+        margin-top: 30px;
+        padding-top: 16px;
+        border-top: 1px solid #E7E3D8;
+        display: table;
+        width: 100%;
+    }
+    .cachet .qr-cell {
+        display: table-cell;
+        width: 70px;
+        vertical-align: middle;
+    }
+    .cachet .qr-cell img {
+        width: 62px;
+        height: 62px;
+        border: 1px solid #E7E3D8;
+        padding: 3px;
+        background: #ffffff;
+    }
+    .cachet .info-cell {
+        display: table-cell;
+        vertical-align: middle;
+        padding-left: 14px;
+    }
+    .cachet .info-cell .titre {
+        color: #0F6B4C;
+        font-weight: bold;
+        font-size: 9.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 3px;
+    }
+    .cachet .info-cell .code {
+        font-family: 'Courier New', monospace;
+        font-size: 8.5px;
+        color: #12261F;
+        margin-bottom: 2px;
+    }
+    .cachet .info-cell .instructions {
+        font-size: 8px;
+        color: #6E7A73;
+    }
+
     /* ---------- Footer ---------- */
     .footer {
-        margin-top: 34px;
+        margin-top: 14px;
         padding-top: 10px;
         border-top: 1px solid #E7E3D8;
         font-size: 8px;
@@ -256,6 +300,22 @@
     </table>
     {% else %}
     <p class="empty">Aucun mouvement enregistré.</p>
+    {% endif %}
+
+    {% if doc_uuid %}
+    <div class="cachet">
+        <div class="qr-cell">
+            <img src="{{ doc_qr_code }}" alt="QR de vérification">
+        </div>
+        <div class="info-cell">
+            <div class="titre">✓ Document certifié Pubwek</div>
+            <div class="code">Code : {{ doc_uuid }}</div>
+            <div class="instructions">
+                Scannez ce QR code ou rendez-vous sur pubwek.com/verifier/{{ doc_uuid }}
+                pour vérifier l'authenticité de ce document.
+            </div>
+        </div>
+    </div>
     {% endif %}
 
     <div class="footer">

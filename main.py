@@ -1635,6 +1635,24 @@ def resoumettre_campagne(campaign_id):
         # Jamais payée : doit repasser par le paiement AVANT de revenir dans la file d'attente admin
         camp.status = "non_payee"
         camp.payment_status = "unpaid"
+
+        # =================================================================
+        # 🆕 🐞 FIX CRITIQUE : le montant a pu changer (objectif de clics ou
+        # durée modifiés ci-dessus). Une transaction FedaPay a son montant
+        # figé dès sa création : si une ancienne transaction "pending" pour
+        # cette campagne existe encore, payer_campagne() la réutiliserait
+        # telle quelle — l'annonceur paierait alors l'ANCIEN montant, pas le
+        # nouveau. On invalide donc toute transaction pending existante pour
+        # forcer la création d'une transaction fraîche, au bon montant.
+        # =================================================================
+        anciennes_transactions_pending = Transaction.query.filter_by(
+            campaign_id=camp.id,
+            transaction_type="campaign_payment",
+            status="pending"
+        ).all()
+        for tx in anciennes_transactions_pending:
+            tx.status = "canceled"
+
         db.session.commit()
 
         flash("Vos corrections ont été enregistrées. Veuillez maintenant procéder au paiement pour envoyer votre campagne à l'administration. 💳", "info")

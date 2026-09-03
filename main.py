@@ -58,6 +58,7 @@ from models import (
     Transaction,
     UploadedFile,
     CampaignShareProof,
+    DocumentCertification,
     User,
     UserSubscription,
     WalletTransaction,

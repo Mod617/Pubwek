@@ -3357,6 +3357,130 @@ def autoriser_remboursement_admin(campaign_id):
 
 
 
+# ==========================================
+# 🆕 ROUTE ADMIN : LISTE DES DEMANDES DE REMBOURSEMENT (CAMPAGNES)
+# ==========================================
+@app.route("/admin/remboursements")
+@login_required
+def admin_remboursements():
+    verifier_droits_admin("valider_campagnes")
+
+    demandes = RefundRequest.query.order_by(RefundRequest.created_at.desc()).all()
+
+    # Association manuelle campagne + annonceur pour l'affichage
+    for d in demandes:
+        d.demandeur = db.session.get(User, d.user_id)
+        # camp déjà disponible via d.campaign (relation définie sur le modèle)
+
+    en_attente = [d for d in demandes if d.status == "pending"]
+    traitees = [d for d in demandes if d.status != "pending"]
+
+    return render_template(
+        "admin_remboursements.html",
+        en_attente=en_attente,
+        traitees=traitees
+    )
+
+
+# ==========================================
+# 🆕 ROUTE ADMIN : MARQUER UN REMBOURSEMENT COMME TRAITÉ (virement effectué)
+# ==========================================
+@app.route("/admin/remboursements/<int:refund_id>/traiter", methods=["POST"])
+@login_required
+@limiter.limit("60 per hour")
+def traiter_remboursement(refund_id):
+    verifier_droits_admin("valider_campagnes")
+
+    demande = db.session.get(RefundRequest, refund_id)
+    if not demande:
+        flash("Demande de remboursement introuvable. ⚠️", "danger")
+        return redirect(url_for("admin_remboursements"))
+
+    if demande.status != "pending":
+        flash("Cette demande a déjà été traitée. ⚠️", "warning")
+        return redirect(url_for("admin_remboursements"))
+
+    note = request.form.get("admin_note", "").strip()
+
+    demande.status = "processed"
+    demande.admin_notes = bleach.clean(note) if note else "Virement effectué."
+    demande.updated_at = datetime.utcnow()
+
+    db.session.add(Notification(
+        user_id=demande.user_id,
+        title="Remboursement effectué ✅",
+        message=(
+            f"Le remboursement de votre campagne #{demande.campaign_id} a été effectué avec succès. "
+            f"Merci de vérifier la réception sur votre moyen de paiement."
+        ),
+        category="success",
+        link=url_for("mes_campagnes"),
+        is_read=False
+    ))
+    db.session.commit()
+
+    logger.info(
+        "[REMBOURSEMENT] Demande #%d marquée comme traitée par admin id=%d",
+        refund_id, current_user.id
+    )
+    flash(f"Remboursement #{demande.id} marqué comme traité. Le partageur a été notifié. ✅", "success")
+    return redirect(url_for("admin_remboursements"))
+
+
+# ==========================================
+# 🆕 ROUTE ADMIN : REFUSER UNE DEMANDE DE REMBOURSEMENT
+# ==========================================
+@app.route("/admin/remboursements/<int:refund_id>/refuser", methods=["POST"])
+@login_required
+@limiter.limit("60 per hour")
+def refuser_remboursement(refund_id):
+    verifier_droits_admin("valider_campagnes")
+
+    demande = db.session.get(RefundRequest, refund_id)
+    if not demande:
+        flash("Demande de remboursement introuvable. ⚠️", "danger")
+        return redirect(url_for("admin_remboursements"))
+
+    if demande.status != "pending":
+        flash("Cette demande a déjà été traitée. ⚠️", "warning")
+        return redirect(url_for("admin_remboursements"))
+
+    motif = request.form.get("admin_note", "").strip()
+    if not motif:
+        flash("Veuillez indiquer un motif de refus. ⚠️", "warning")
+        return redirect(url_for("admin_remboursements"))
+
+    demande.status = "rejected"
+    demande.admin_notes = bleach.clean(motif)
+    demande.updated_at = datetime.utcnow()
+
+    # 🆕 On redonne à l'annonceur la possibilité de refaire une demande
+    # (avec de bonnes coordonnées cette fois) plutôt que de le bloquer.
+    camp = db.session.get(Campaign, demande.campaign_id)
+    if camp:
+        camp.can_claim_refund = True
+        camp.status = "rejete"  # sort de "remboursement_demande" pour redébloquer les boutons
+
+    db.session.add(Notification(
+        user_id=demande.user_id,
+        title="Demande de remboursement refusée ⚠️",
+        message=(
+            f"Votre demande de remboursement pour la campagne #{demande.campaign_id} a été refusée. "
+            f"Motif : {motif}. Vous pouvez soumettre une nouvelle demande depuis votre espace."
+        ),
+        category="warning",
+        link=url_for("mes_campagnes"),
+        is_read=False
+    ))
+    db.session.commit()
+
+    logger.info(
+        "[REMBOURSEMENT] Demande #%d refusée par admin id=%d (motif: %s)",
+        refund_id, current_user.id, motif
+    )
+    flash("Demande de remboursement refusée. L'annonceur a été notifié. ✅", "success")
+    return redirect(url_for("admin_remboursements"))
+
 
 
 

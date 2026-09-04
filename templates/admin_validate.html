@@ -601,7 +601,15 @@
                             </div>
 
                         {% elif camp.admin_status == "rejected" or camp.status == "rejete" %}
-                            {% if camp.can_claim_refund %}
+                            {# 🆕 🐞 FIX anomalie n°3 : distinction des 3 états possibles pour une
+                               campagne refusée, au lieu de ne tester que can_claim_refund.
+                               Sans ce check en premier, une demande déjà envoyée par l'annonceur
+                               (qui repasse can_claim_refund à False) faisait réapparaître le
+                               bouton "Autoriser Remboursement" comme si de rien n'était. #}
+                            {% if camp.status == "remboursement_demande" %}
+                                <span class="badge bg-secondary d-block mb-1">⏳ Demande de remboursement reçue</span>
+                                <small class="text-muted d-block">Coordonnées transmises par l'annonceur — à traiter sous 48h.</small>
+                            {% elif camp.can_claim_refund %}
                                 <span class="badge bg-info text-dark">💰 Remboursement débloqué</span>
                             {% else %}
                                 <form action="{{ url_for('autoriser_remboursement_admin', campaign_id=camp.id) }}" method="POST" class="d-inline">

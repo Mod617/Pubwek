@@ -3446,6 +3446,9 @@ def traiter_remboursement(refund_id):
 # ==========================================
 # 🆕 ROUTE ADMIN : REFUSER UNE DEMANDE DE REMBOURSEMENT
 # ==========================================
+# ==========================================
+# 🆕 ROUTE ADMIN : REFUSER UNE DEMANDE DE REMBOURSEMENT
+# ==========================================
 @app.route("/admin/remboursements/<int:refund_id>/refuser", methods=["POST"])
 @login_required
 @limiter.limit("60 per hour")
@@ -3470,19 +3473,24 @@ def refuser_remboursement(refund_id):
     demande.admin_notes = bleach.clean(motif)
     demande.updated_at = datetime.utcnow()
 
-    # 🆕 On redonne à l'annonceur la possibilité de refaire une demande
-    # (avec de bonnes coordonnées cette fois) plutôt que de le bloquer.
+    # 🐞 FIX : can_claim_refund repasse à False (pas True) — c'est à l'admin
+    # de recliquer explicitement sur "Autoriser Remboursement" avant que
+    # l'annonceur ne revoie le bouton de demande. On sort simplement du statut
+    # "remboursement_demande" pour redébloquer la correction de la campagne ;
+    # le motif du refus, lui, reste lisible sur mes_campagnes.html via
+    # campaign.derniere_demande_remboursement.admin_notes.
     camp = db.session.get(Campaign, demande.campaign_id)
     if camp:
-        camp.can_claim_refund = True
-        camp.status = "rejete"  # sort de "remboursement_demande" pour redébloquer les boutons
+        camp.can_claim_refund = False
+        camp.status = "rejete"
 
     db.session.add(Notification(
         user_id=demande.user_id,
         title="Demande de remboursement refusée ⚠️",
         message=(
             f"Votre demande de remboursement pour la campagne #{demande.campaign_id} a été refusée. "
-            f"Motif : {motif}. Vous pouvez soumettre une nouvelle demande depuis votre espace."
+            f"Motif : {motif}. Vous pouvez soumettre une nouvelle demande une fois que "
+            f"l'administration aura de nouveau activé le remboursement."
         ),
         category="warning",
         link=url_for("mes_campagnes"),

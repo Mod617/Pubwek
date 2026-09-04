@@ -230,6 +230,17 @@
     font-family: 'Fraunces', serif;
     font-size: 1.05rem;
   }
+
+  /* ---------- 🆕 Alerte "demande de remboursement refusée" ---------- */
+  .mescamp-wrap .refund-refuse-note {
+    background: var(--amber-tint);
+    border: 1px solid #ecd7ae;
+    color: #8a6420;
+    border-radius: 8px;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.82rem;
+    margin-bottom: 0.75rem;
+  }
 </style>
 
 <div class="mescamp-wrap">
@@ -293,6 +304,21 @@
                             maximum). Cette campagne ne peut plus être corrigée tant que la demande est en cours.
                         </div>
                         {% else %}
+
+                        <!-- 🆕 🐞 FIX : si la dernière demande de remboursement de cette
+                             campagne a été REFUSÉE par l'admin, le motif doit être visible
+                             ici — pas seulement dans le centre de notifications, que
+                             l'annonceur ne consulte pas forcément. -->
+                        {% if campaign.derniere_demande_remboursement and campaign.derniere_demande_remboursement.status == "rejected" %}
+                        <div class="refund-refuse-note">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <strong>Votre précédente demande de remboursement a été refusée :</strong>
+                            {{ campaign.derniere_demande_remboursement.admin_notes or "Motif non précisé par l'administration." }}
+                            Vous pourrez soumettre une nouvelle demande une fois que l'administration aura de
+                            nouveau activé le remboursement pour cette campagne.
+                        </div>
+                        {% endif %}
+
                         <div class="d-flex flex-wrap gap-2 mt-3">
                             <!-- Bouton pour ouvrir la modal de correction -->
                             <button type="button" class="btn btn-sm btn-warning fw-bold flex-grow-1" data-bs-toggle="modal" data-bs-target="#editModal{{ campaign.id }}">

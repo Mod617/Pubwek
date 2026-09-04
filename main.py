@@ -3065,7 +3065,11 @@ def refuse_campaign(campaign_id):
     camp.admin_status = "rejected"
     camp.status = "rejete"            # Statut principal harmonisé pour mes_campagnes
     camp.rejection_reason = reason
-    camp.can_claim_refund = camp.paid  # 🐞 FIX : remboursement possible UNIQUEMENT si un paiement a réellement été effectué
+    # 🆕 🐞 FIX : le remboursement n'est JAMAIS débloqué automatiquement au
+    # refus, même si la campagne est payée. C'est une action distincte et
+    # volontaire de l'admin (voir autoriser_remboursement_admin) — avant
+    # cette action, l'annonceur ne doit voir aucun bouton de remboursement.
+    camp.can_claim_refund = False
     # 2. Création de la notification interne pour l'annonceur
     nom_campagne = camp.promotion_detail or f"#{camp.id}"
     notif_msg = f"Votre campagne '{nom_campagne}' a été refusée pour le motif suivant : {reason}."

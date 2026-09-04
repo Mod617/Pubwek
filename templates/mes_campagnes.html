@@ -283,6 +283,16 @@
 
                         <hr>
 
+                        <!-- 🆕 Une demande de remboursement est en cours : plus aucune action
+                             possible sur cette campagne tant qu'elle n'est pas traitée par l'admin. -->
+                        {% if campaign.status == "remboursement_demande" %}
+                        <div class="alert alert-info small mb-0 w-100">
+                            <i class="fas fa-hourglass-half me-1"></i>
+                            <strong>Remboursement en cours de traitement.</strong> Votre demande a été transmise
+                            à l'administration ; vous serez notifié(e) une fois le virement effectué (sous 48h
+                            maximum). Cette campagne ne peut plus être corrigée tant que la demande est en cours.
+                        </div>
+                        {% else %}
                         <div class="d-flex flex-wrap gap-2 mt-3">
                             <!-- Bouton pour ouvrir la modal de correction -->
                             <button type="button" class="btn btn-sm btn-warning fw-bold flex-grow-1" data-bs-toggle="modal" data-bs-target="#editModal{{ campaign.id }}">
@@ -298,11 +308,12 @@
                                 <button class="btn btn-sm btn-light text-muted fw-bold w-100" disabled>💰 Aucun paiement effectué</button>
                             </span>
                             {% else %}
-                            <span class="d-inline-block flex-grow-1" tabindex="0" data-bs-toggle="tooltip" title="Si les corrections ne conviennent pas, contactez le support pour activer l'option de remboursement.">
+                            <span class="d-inline-block flex-grow-1" tabindex="0" data-bs-toggle="tooltip" title="Le remboursement n'a pas encore été autorisé par l'administration. Vous pouvez encore corriger et resoumettre votre campagne.">
                                 <button class="btn btn-sm btn-light text-muted fw-bold w-100" disabled>💰 Remboursement non activé</button>
                             </span>
                             {% endif %}
                         </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

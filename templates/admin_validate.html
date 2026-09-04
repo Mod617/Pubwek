@@ -233,6 +233,12 @@
             </a>
             {% endif %}
 
+            {% if current_user.role == "admin" or current_user.has_permission("valider_campagnes") %}
+            <a href="{{ url_for('admin_remboursements') }}" class="btn action-btn action-btn-success">
+                <i class="bi bi-cash-coin me-1"></i> 💸 Demandes de remboursement
+            </a>
+            {% endif %}
+
             {% if current_user.role == "admin" or current_user.has_permission("voir_transactions") %}
             <a href="{{ url_for('admin_transactions_globales') }}" class="btn action-btn action-btn-outline-dark">
                 <i class="bi bi-journal-text me-1"></i> 🧾 Registre des transactions

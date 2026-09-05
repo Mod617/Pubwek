@@ -494,6 +494,54 @@
   }
   .pw-testi-role { font-size: 0.76rem; color: var(--ink-soft); }
 
+  /* ================= FAQ ================= */
+  .pw-faq-wrap { max-width: 800px; margin: 0 auto; padding: 3.5rem 1.5rem 1rem; }
+  .pw-faq-list { display: flex; flex-direction: column; gap: 0.8rem; }
+
+  .pw-faq-item {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .pw-faq-item[open] { border-color: var(--emerald); }
+
+  .pw-faq-item summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 1.1rem 1.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    font-weight: 600;
+    font-size: 0.98rem;
+    color: var(--ink);
+  }
+  .pw-faq-item summary::-webkit-details-marker { display: none; }
+
+  .pw-faq-icon {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--emerald-tint);
+    color: var(--emerald-dark);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: transform .25s ease, background .25s ease, color .25s ease;
+  }
+  .pw-faq-item[open] .pw-faq-icon {
+    transform: rotate(45deg);
+    background: var(--emerald);
+    color: #fff;
+  }
+
+  .pw-faq-answer {
+    padding: 0 1.3rem 1.2rem;
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+    line-height: 1.6;
+  }
+
   /* ================= FINAL CTA ================= */
   .pw-final-cta {
     max-width: 1180px;
@@ -665,6 +713,70 @@
     </div>
   </section>
 
+  <!-- ============ FAQ ============ -->
+  <section class="pw-faq-wrap pw-reveal">
+    <div class="pw-section-head">
+      <h2>Questions fréquentes</h2>
+      <p>Tout ce qu'il faut savoir avant de se lancer sur Pubwek.</p>
+    </div>
+    <div class="pw-faq-list">
+      <details class="pw-faq-item" open>
+        <summary>
+          Combien coûte l'inscription sur Pubwek ?
+          <span class="pw-faq-icon"><i class="bi bi-plus-lg"></i></span>
+        </summary>
+        <div class="pw-faq-answer">
+          L'inscription est gratuite, que vous soyez annonceur ou partageur. Les annonceurs paient uniquement pour les clics réels générés par leur campagne ; les partageurs ne paient jamais rien pour diffuser des annonces.
+        </div>
+      </details>
+      <details class="pw-faq-item">
+        <summary>
+          Quel est le délai pour retirer mes gains ?
+          <span class="pw-faq-icon"><i class="bi bi-plus-lg"></i></span>
+        </summary>
+        <div class="pw-faq-answer">
+          Les retraits vers Mobile Money sont traités rapidement, généralement en quelques minutes après la demande, dès que le seuil minimum de retrait est atteint.
+        </div>
+      </details>
+      <details class="pw-faq-item">
+        <summary>
+          Quelles zones sont couvertes par Pubwek ?
+          <span class="pw-faq-icon"><i class="bi bi-plus-lg"></i></span>
+        </summary>
+        <div class="pw-faq-answer">
+          Pubwek couvre déjà Cotonou, Porto-Novo, Parakou, Abomey-Calavi, Bohicon et Ouidah, avec un ciblage possible par commune. De nouvelles zones sont ajoutées régulièrement selon la demande.
+        </div>
+      </details>
+      <details class="pw-faq-item">
+        <summary>
+          Comment sont comptés les clics d'un partageur ?
+          <span class="pw-faq-icon"><i class="bi bi-plus-lg"></i></span>
+        </summary>
+        <div class="pw-faq-answer">
+          Chaque partageur reçoit un lien de suivi personnel à intégrer dans son statut. Seuls les clics réels et uniques sur ce lien sont comptabilisés et crédités, ce qui garantit un système juste pour tout le monde.
+        </div>
+      </details>
+      <details class="pw-faq-item">
+        <summary>
+          Ai-je besoin d'un grand nombre de contacts WhatsApp ?
+          <span class="pw-faq-icon"><i class="bi bi-plus-lg"></i></span>
+        </summary>
+        <div class="pw-faq-answer">
+          Non, ce n'est pas obligatoire. Même avec un nombre modeste de contacts, vos statuts génèrent des vues et des clics réguliers. Plus vous êtes actif, plus vos gains augmentent naturellement.
+        </div>
+      </details>
+      <details class="pw-faq-item">
+        <summary>
+          Puis-je annuler ou modifier ma campagne en cours ?
+          <span class="pw-faq-icon"><i class="bi bi-plus-lg"></i></span>
+        </summary>
+        <div class="pw-faq-answer">
+          Oui, une campagne peut être mise en pause, modifiée ou arrêtée à tout moment depuis votre tableau de bord annonceur, sans engagement de durée minimum.
+        </div>
+      </details>
+    </div>
+  </section>
+
   <!-- ============ CTA FINAL ============ -->
   <div class="pw-final-cta pw-reveal">
     <h2>Prêt à commencer ?</h2>
@@ -810,6 +922,18 @@
   const track = document.getElementById("pwTestiTrack");
   const tout = avis.concat(avis); // dupliqué une fois pour boucler sans coupure visible
   tout.forEach(function (a) { track.appendChild(carte(a)); });
+
+  // ---- FAQ: un seul accordéon ouvert à la fois ----
+  const faqItems = document.querySelectorAll(".pw-faq-item");
+  faqItems.forEach(function (item) {
+    item.addEventListener("toggle", function () {
+      if (item.open) {
+        faqItems.forEach(function (autre) {
+          if (autre !== item) autre.open = false;
+        });
+      }
+    });
+  });
 
   // ---- Reveal on scroll: un fade-up discret par section ----
   const cibles = document.querySelectorAll(".pw-reveal");

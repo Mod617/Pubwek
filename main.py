@@ -1189,17 +1189,9 @@ def mes_campagnes():
     # Tri par catégories pour l'affichage dans l'interface HTML
     refusees = [c for c in user_campaigns if c.status == "rejete" or c.admin_status == "rejected"]
 
-    # 🆕 🐞 FIX : dernière demande de remboursement liée à chaque campagne
-    # refusée (s'il y en a une), pour pouvoir afficher son motif de refus
-    # éventuel directement sur la carte de la campagne — sinon l'annonceur
-    # ne le voit jamais s'il ne consulte pas ses notifications.
-    for c in refusees:
-        c.derniere_demande_remboursement = (
-            RefundRequest.query
-            .filter_by(campaign_id=c.id)
-            .order_by(RefundRequest.created_at.desc())
-            .first()
-        )
+    # 🆕 Le motif de refus de la DEMANDE de remboursement (distinct du rejet de
+    # la campagne) vit désormais directement sur Campaign.refund_rejection_reason
+    # — plus besoin d'aller rechercher le dernier RefundRequest ici.
 
     non_payees = [c for c in user_campaigns if (not c.paid or c.status == "non_payee") and c.status != "rejete"]
     en_attente = [c for c in user_campaigns if c.paid and (c.status == "en_attente" or not c.validated) and c.status != "rejete"]

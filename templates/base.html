@@ -29,97 +29,122 @@
   <!-- ✅ Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-  <!-- ✅ Google Fonts -->
+  <!-- ✅ Google Fonts — alignées sur l'identité utilisée dans le reste de l'app -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 
   <!-- ✅ CSS personnalisé -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
   <style>
     :root {
-      --pw-green-1: #2ecc71;
-      --pw-green-2: #27ae60;
-      --pw-dark: #1a1a2e;
-      --pw-dark-2: #33334d;
+      --pw-paper:        #F5F3ED;
+      --pw-paper-raised: #FFFFFF;
+      --pw-ink:          #1B2A2E;
+      --pw-ink-soft:     #5B6B6C;
+      --pw-line:         #E3DFD3;
+      --pw-emerald:      #2F6F5E;
+      --pw-emerald-dark: #1F4F42;
+      --pw-emerald-tint: #E7F0EC;
+      --pw-amber:        #B8842E;
+      --pw-amber-tint:   #F8EEDD;
+      --pw-clay:         #B0483C;
     }
 
     body {
       font-family: 'Inter', -apple-system, sans-serif;
-      background: #fafcfb;
+      background: var(--pw-paper);
+      color: var(--pw-ink);
     }
 
     h1, h2, h3, h4, h5, h6, .navbar-brand {
-      font-family: 'Poppins', 'Inter', sans-serif;
+      font-family: 'Fraunces', serif;
     }
 
     /* ===== NAVBAR ===== */
     .navbar-pubwek {
-      background: linear-gradient(135deg, var(--pw-dark) 0%, var(--pw-dark-2) 100%) !important;
-      padding-top: 0.85rem;
-      padding-bottom: 0.85rem;
-      box-shadow: 0 2px 16px rgba(0, 0, 0, 0.15);
+      background: var(--pw-paper-raised) !important;
+      border-bottom: 1px solid var(--pw-line);
+      padding-top: 0.9rem;
+      padding-bottom: 0.9rem;
+      transition: box-shadow .2s ease;
+    }
+    .navbar-pubwek.pw-scrolled {
+      box-shadow: 0 4px 18px rgba(27,42,46,0.08);
     }
 
     .navbar-pubwek .navbar-brand {
-      font-weight: 700;
-      font-size: 1.35rem;
-      letter-spacing: 0.3px;
-    }
-
-    .navbar-pubwek .navbar-brand img {
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+      font-weight: 600;
+      font-size: 1.4rem;
+      letter-spacing: 0.2px;
+      color: var(--pw-ink) !important;
     }
 
     .navbar-pubwek .nav-link {
+      font-family: 'Inter', sans-serif;
       font-weight: 500;
       font-size: 0.92rem;
       padding: 0.55rem 0.9rem !important;
-      border-radius: 8px;
+      border-radius: 999px;
       transition: background 0.2s ease, color 0.2s ease;
-      color: rgba(255,255,255,0.85) !important;
+      color: var(--pw-ink-soft) !important;
+      position: relative;
     }
 
     .navbar-pubwek .nav-link:hover {
-      background: rgba(255,255,255,0.08);
-      color: #fff !important;
+      background: var(--pw-emerald-tint);
+      color: var(--pw-emerald-dark) !important;
     }
 
-    .navbar-pubwek .nav-link.text-warning {
-      color: #f1c40f !important;
+    /* 🆕 Lien de la page active, mis en évidence */
+    .navbar-pubwek .nav-link.pw-active {
+      background: var(--pw-emerald-tint);
+      color: var(--pw-emerald-dark) !important;
+      font-weight: 600;
     }
 
-    .navbar-pubwek .nav-link.text-warning:hover {
-      background: rgba(241, 196, 15, 0.12);
+    .navbar-pubwek .nav-link.text-warning,
+    .navbar-pubwek .nav-link.pw-admin-link {
+      color: var(--pw-amber) !important;
+      font-weight: 600;
+    }
+    .navbar-pubwek .nav-link.pw-admin-link:hover {
+      background: var(--pw-amber-tint);
+    }
+    .navbar-pubwek .nav-link.pw-admin-link.pw-active {
+      background: var(--pw-amber-tint);
+      color: var(--pw-amber) !important;
     }
 
     .navbar-pubwek .nav-link[href*="logout"] {
-      background: rgba(231, 76, 60, 0.12);
-      color: #ff8a80 !important;
+      background: transparent;
+      color: var(--pw-clay) !important;
       margin-left: 0.25rem;
     }
-
     .navbar-pubwek .nav-link[href*="logout"]:hover {
-      background: rgba(231, 76, 60, 0.22);
+      background: #F6E7E3;
     }
 
     .navbar-toggler {
       border: none !important;
       box-shadow: none !important;
     }
+    .navbar-toggler-icon {
+      filter: invert(15%) sepia(10%) saturate(500%);
+    }
 
     /* ===== FLASH MESSAGES ===== */
     main .alert {
       border: none;
       border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+      box-shadow: 0 4px 16px rgba(27,42,46,0.06);
       font-size: 0.92rem;
     }
 
     /* ===== FOOTER ===== */
     footer.footer-pubwek {
-      background: linear-gradient(135deg, var(--pw-dark) 0%, var(--pw-dark-2) 100%) !important;
+      background: var(--pw-ink) !important;
       position: relative;
       overflow: hidden;
     }
@@ -129,16 +154,14 @@
       position: absolute;
       top: 0; left: 0; right: 0;
       height: 3px;
-      background: linear-gradient(90deg, var(--pw-green-1), var(--pw-green-2), var(--pw-green-1));
-    }
-
-    footer.footer-pubwek img {
-      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+      background: linear-gradient(90deg, var(--pw-emerald), var(--pw-amber), var(--pw-emerald));
     }
 
     footer.footer-pubwek .footer-tagline {
       font-size: 0.85rem;
       color: rgba(255,255,255,0.55);
+      font-family: 'IBM Plex Mono', monospace;
+      letter-spacing: 0.02em;
     }
 
     footer.footer-pubwek .social-label {
@@ -164,7 +187,7 @@
     }
 
     footer.footer-pubwek .footer-links a:hover {
-      color: var(--pw-green-1) !important;
+      color: var(--pw-emerald) !important;
     }
 
     footer.footer-pubwek hr {
@@ -174,7 +197,7 @@
     /* ===== MODALS CGU / CONFIDENTIALITÉ ===== */
     #modalCGU .modal-header,
     #modalPrivacy .modal-header {
-      background: linear-gradient(135deg, var(--pw-dark) 0%, var(--pw-dark-2) 100%) !important;
+      background: var(--pw-ink) !important;
       border: none;
     }
 
@@ -191,7 +214,7 @@
     }
 
     #forceTermsModal .modal-header {
-      background: linear-gradient(135deg, var(--pw-dark) 0%, var(--pw-dark-2) 100%) !important;
+      background: var(--pw-ink) !important;
     }
 
     #forceTermsModal .modal-body h4 {
@@ -199,31 +222,31 @@
     }
 
     #forceTermsModal .modal-body h6 {
-      color: #333;
+      color: var(--pw-ink);
     }
 
     #forceTermsModal .alert-warning {
       border: none;
       border-radius: 10px;
-      background: #fff8ec;
-      color: #92650b;
+      background: var(--pw-amber-tint);
+      color: #8a6420;
     }
 
     #forceTermsModal .form-check-input:checked {
-      background-color: var(--pw-green-2);
-      border-color: var(--pw-green-2);
+      background-color: var(--pw-emerald);
+      border-color: var(--pw-emerald);
     }
 
     #btnConfirmTerms {
-      background: linear-gradient(135deg, var(--pw-green-1), var(--pw-green-2));
+      background: var(--pw-emerald);
       border: none;
       border-radius: 50px;
       font-size: 1rem;
-      transition: opacity 0.2s ease;
+      transition: background 0.2s ease;
     }
 
     #btnConfirmTerms:not(:disabled):hover {
-      opacity: 0.9;
+      background: var(--pw-emerald-dark);
     }
 
     #btnConfirmTerms:disabled {
@@ -234,7 +257,7 @@
       .navbar-pubwek .navbar-collapse {
         margin-top: 0.75rem;
         padding-top: 0.5rem;
-        border-top: 1px solid rgba(255,255,255,0.1);
+        border-top: 1px solid var(--pw-line);
       }
       .navbar-pubwek .nav-link[href*="logout"] {
         margin-left: 0;
@@ -247,7 +270,7 @@
 <body class="d-flex flex-column min-vh-100">
 
   <!-- ✅ Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark navbar-pubwek mb-4">
+  <nav class="navbar navbar-expand-lg navbar-light navbar-pubwek mb-4" id="pwNavbar">
     <div class="container-fluid">
       <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
         <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Pubwek" height="40" class="me-2">
@@ -264,18 +287,18 @@
             <!-- Dashboard selon le rôle -->
             {% if current_user.role == "annonceur" %}
               <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('dashboard_annonceur') }}">
+                <a class="nav-link {{ 'pw-active' if request.endpoint == 'dashboard_annonceur' }}" href="{{ url_for('dashboard_annonceur') }}">
                   <i class="fa-solid fa-bullhorn me-1"></i>Dashboard Annonceur
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('mes_campagnes') }}">
+                <a class="nav-link {{ 'pw-active' if request.endpoint == 'mes_campagnes' }}" href="{{ url_for('mes_campagnes') }}">
                   <i class="fa-solid fa-layer-group me-1"></i>Mes Campagnes
                 </a>
               </li>
             {% elif current_user.role == "partageur" %}
               <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('dashboard_partageur') }}">
+                <a class="nav-link {{ 'pw-active' if request.endpoint == 'dashboard_partageur' }}" href="{{ url_for('dashboard_partageur') }}">
                   <i class="fa-solid fa-link me-1"></i>Dashboard Partageur
                 </a>
               </li>
@@ -284,7 +307,7 @@
             <!-- Accès Admin -->
             {% if current_user.role == "admin" %}
               <li class="nav-item">
-                <a class="nav-link text-warning fw-bold" href="{{ url_for('admin_validate') }}">
+                <a class="nav-link pw-admin-link fw-bold {{ 'pw-active' if request.endpoint == 'admin_validate' }}" href="{{ url_for('admin_validate') }}">
                   <i class="fa-solid fa-gear me-1"></i>Panneau Admin
                 </a>
               </li>
@@ -300,13 +323,13 @@
           {% else %}
             <!-- Liens publics -->
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('login') }}">Connexion</a>
+              <a class="nav-link {{ 'pw-active' if request.endpoint == 'login' }}" href="{{ url_for('login') }}">Connexion</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('register', role='annonceur') }}">Inscription Annonceur</a>
+              <a class="nav-link {{ 'pw-active' if request.endpoint == 'register' and request.view_args.get('role') == 'annonceur' }}" href="{{ url_for('register', role='annonceur') }}">Inscription Annonceur</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('register', role='partageur') }}">Inscription Partageur</a>
+              <a class="nav-link {{ 'pw-active' if request.endpoint == 'register' and request.view_args.get('role') == 'partageur' }}" href="{{ url_for('register', role='partageur') }}">Inscription Partageur</a>
             </li>
           {% endif %}
         </ul>
@@ -374,7 +397,7 @@
 
           <h6 class="fw-bold mt-3">Article 5 – Tarifs, Paiements et Politiques de Remboursement</h6>
           <p class="small mb-1"><strong>5.1. Traitement des Paiements :</strong> Tous les paiements sur la plateforme PUBWEK sont effectués en Francs CFA (XOF) via la passerelle de paiement sécurisée FedaPay (MTN Mobile Money Bénin, Moov Money Bénin, Celtiis Cash Bénin, Cartes VISA / Mastercard). PUBWEK ne collecte et ne stocke jamais directement vos données bancaires ou codes secrets Mobile Money.</p>
-          <p class="small"><strong>5.2. Absence de Droit de Rétractation / Non-Remboursement :</strong> Conformément au Code du Numérique du Bénin (Loi n° 2017-20) encadrant les services numériques exécutés immédiatement, aucun remboursement ne sera accordé une fois qu'une campagne a été créditée/lancée ou qu'un Pass Abonnement Vidéo a été souscrit.</p>
+          <p class="small"><strong>5.2. Politique de Remboursement :</strong> Une campagne payée peut faire l'objet d'un remboursement uniquement si elle n'a <u>jamais été diffusée aux Partageurs</u> — c'est-à-dire lorsqu'elle a été refusée par l'administration après vérification et que l'Annonceur, après correction, estime ne pas pouvoir résoudre le motif du refus. Dans ce cas uniquement, l'Annonceur peut soumettre une demande de remboursement, examinée puis validée par l'administration avant tout virement. <strong>Dès qu'une campagne a été validée et partagée par au moins un Partageur, elle est considérée comme diffusée et ne peut plus faire l'objet d'aucun remboursement</strong>, conformément au Code du Numérique du Bénin (Loi n° 2017-20) encadrant les services numériques exécutés immédiatement.</p>
 
           <h6 class="fw-bold mt-3">Article 6 – Portefeuille, Gains et Retraits des Partageurs (Ambassadeurs)</h6>
           <p class="small mb-1"><strong>6.1. Rémunération et Portefeuille Interne :</strong> Chaque Partageur dispose d'un portefeuille virtuel interne sur la plateforme. Chaque clic valide généré via son lien de partage crédite automatiquement un montant fixe sur son portefeuille. De même, les commissions attribuées dans le cadre du programme de parrainage (prime sur la première campagne payée et validée d'un filleul) sont directement versées sur ce même portefeuille.</p>
@@ -456,8 +479,8 @@
           <h6 class="fw-bold">Article 4 – Campagnes Publicitaires & Facturation au Clic</h6>
           <p class="small">Facturation au clic généré avec tarifs différenciés par format (vidéo, image, texte) configurés par l'admin. Répartition automatique des clics sur la durée choisie (1 à 30 jours) avec quotas journaliers. Diffusion ciblée sur les 12 départements du Bénin.</p>
 
-          <h6 class="fw-bold">Article 5 – Tarifs & Paiements (FedaPay)</h6>
-          <p class="small">Paiements en FCFA via MTN MoMo, Moov Money, Celtiis et Cartes bancaires. Aucun remboursement après le lancement d'une campagne.</p>
+          <h6 class="fw-bold">Article 5 – Tarifs, Paiements (FedaPay) & Remboursement</h6>
+          <p class="small">Paiements en FCFA via MTN MoMo, Moov Money, Celtiis et Cartes bancaires. <strong>Une campagne payée ne peut être remboursée que si elle n'a jamais été diffusée aux Partageurs</strong> (campagne refusée par l'administration et jugée non corrigeable par l'Annonceur), après examen et validation de l'administration. Dès qu'un Partageur a commencé à diffuser la campagne, aucun remboursement n'est plus possible.</p>
 
           <h6 class="fw-bold">Article 6 – Portefeuille, Gains & Retraits (Partageurs)</h6>
           <p class="small">Crédit automatique sur le portefeuille interne pour chaque clic valide et commission de parrainage. Dès quota journalier atteint, liberté de retirer la publication du statut. Seuil de retrait fixé par défaut à 500 FCFA (une seule demande active). Traitement automatique ou manuel avec preuve enregistrée (capture) ; recrédit du portefeuille en cas de rejet.</p>
@@ -582,6 +605,17 @@
   }
   </script>
   {% endif %}
+
+  <!-- 🆕 Léger effet d'ombre sur la navbar après un petit scroll -->
+  <script>
+    (function () {
+      const nav = document.getElementById('pwNavbar');
+      if (!nav) return;
+      window.addEventListener('scroll', function () {
+        nav.classList.toggle('pw-scrolled', window.scrollY > 8);
+      });
+    })();
+  </script>
 
   <!-- ✅ Script d'enregistrement du Service Worker pour la PWA -->
   <script>

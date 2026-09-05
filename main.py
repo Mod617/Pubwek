@@ -3474,24 +3474,26 @@ def refuser_remboursement(refund_id):
     demande.admin_notes = bleach.clean(motif)
     demande.updated_at = datetime.utcnow()
 
-    # 🐞 FIX : can_claim_refund repasse à False (pas True) — c'est à l'admin
-    # de recliquer explicitement sur "Autoriser Remboursement" avant que
-    # l'annonceur ne revoie le bouton de demande. On sort simplement du statut
-    # "remboursement_demande" pour redébloquer la correction de la campagne ;
-    # le motif du refus, lui, reste lisible sur mes_campagnes.html via
-    # campaign.derniere_demande_remboursement.admin_notes.
+    # 🆕 L'annonceur peut renvoyer directement une demande corrigée, sans
+    # qu'un admin doive recliquer sur "Autoriser le remboursement" — sinon
+    # ça double le travail de l'admin pour une simple faute de saisie
+    # (mauvais numéro, mauvais moyen de paiement). can_claim_refund repasse
+    # donc à True immédiatement, et refund_status="rejected" affiche le motif
+    # + le bouton "Corriger et renvoyer la demande" (voir mes_campagnes.html).
+    # camp.status (contenu de la campagne) n'est PLUS touché ici : le parcours
+    # remboursement est désormais entièrement indépendant.
     camp = db.session.get(Campaign, demande.campaign_id)
     if camp:
-        camp.can_claim_refund = False
-        camp.status = "rejete"
+        camp.can_claim_refund = True
+        camp.refund_status = "rejected"
+        camp.refund_rejection_reason = bleach.clean(motif)
 
     db.session.add(Notification(
         user_id=demande.user_id,
         title="Demande de remboursement refusée ⚠️",
         message=(
             f"Votre demande de remboursement pour la campagne #{demande.campaign_id} a été refusée. "
-            f"Motif : {motif}. Vous pouvez soumettre une nouvelle demande une fois que "
-            f"l'administration aura de nouveau activé le remboursement."
+            f"Motif : {motif}. Merci de corriger vos coordonnées et de renvoyer votre demande."
         ),
         category="warning",
         link=url_for("mes_campagnes"),
@@ -3503,7 +3505,7 @@ def refuser_remboursement(refund_id):
         "[REMBOURSEMENT] Demande #%d refusée par admin id=%d (motif: %s)",
         refund_id, current_user.id, motif
     )
-    flash("Demande de remboursement refusée. L'annonceur a été notifié. ✅", "success")
+    flash("Demande de remboursement refusée. L'annonceur a été notifié et peut renvoyer une demande corrigée. ✅", "success")
     return redirect(url_for("admin_remboursements"))
 
 

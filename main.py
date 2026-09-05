@@ -3423,6 +3423,14 @@ def traiter_remboursement(refund_id):
     demande.admin_notes = bleach.clean(note) if note else "Virement effectué."
     demande.updated_at = datetime.utcnow()
 
+    # 🆕 Répercussion sur la campagne : c'est ce message qui s'affichera en
+    # vert sur mes_campagnes.html, et le parcours remboursement est clos.
+    camp = db.session.get(Campaign, demande.campaign_id)
+    if camp:
+        camp.refund_status = "processed"
+        camp.refund_processed_note = demande.admin_notes
+        camp.can_claim_refund = False
+
     db.session.add(Notification(
         user_id=demande.user_id,
         title="Remboursement effectué ✅",

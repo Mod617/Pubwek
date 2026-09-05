@@ -2269,9 +2269,12 @@ def reclamer_remboursement(campaign_id):
         flash("Aucun remboursement n'est possible : cette campagne n'a jamais été payée. ⚠️", "warning")
         return redirect(url_for("mes_campagnes"))
 
-    # Vérification de l'autorisation de remboursement
-    if not camp.can_claim_refund:
-        flash("L'option de remboursement n'est pas autorisée pour cette campagne. Veuillez contacter le support. ⚠️", "warning")
+    # 🆕 Vérification de l'autorisation de remboursement : soit c'est une
+    # première demande (l'admin vient d'autoriser), soit c'est un renvoi
+    # après le refus d'une demande précédente — dans les deux cas, l'annonceur
+    # peut soumettre. Toute autre valeur (None, "requested", "processed") bloque.
+    if camp.refund_status not in ("available", "rejected"):
+        flash("L'option de remboursement n'est pas (ou plus) disponible pour cette campagne. ⚠️", "warning")
         return redirect(url_for("mes_campagnes"))
 
     phone_number = request.form.get("refund_phone", "").strip()
@@ -2286,10 +2289,6 @@ def reclamer_remboursement(campaign_id):
     clean_method = bleach.clean(payment_method)
     payment_info = f"Moyen : {clean_method} | Numéro : {clean_phone}"
 
-    # Enregistrement de la demande. La garde `if 'RefundRequest' in globals()`
-    # qui entourait ce bloc etait toujours fausse (le modele n'etait pas
-    # importe) : les coordonnees de remboursement saisies n'etaient ecrites
-    # nulle part.
     refund_req = RefundRequest(
         campaign_id=camp.id,
         user_id=current_user.id,
@@ -2311,10 +2310,11 @@ def reclamer_remboursement(campaign_id):
             is_read=False
         ))
 
-    # --- MISE À JOUR DES STATUTS ---
-    camp.status = "remboursement_demande"  # Permet un filtrage clair dans mes_campagnes
+    # --- MISE À JOUR DU PARCOURS REMBOURSEMENT (dédié, distinct de camp.status) ---
+    camp.refund_status = "requested"        # 🆕 remplace l'ancien camp.status = "remboursement_demande"
     camp.payment_status = "refund_requested"
-    camp.can_claim_refund = False         # Désactive le bouton pour éviter les demandes multiples
+    camp.can_claim_refund = False           # Désactive le bouton pour éviter les demandes multiples
+    camp.refund_rejection_reason = None     # 🆕 nettoie un éventuel ancien motif de refus affiché
 
     db.session.commit()
 
@@ -2324,7 +2324,7 @@ def reclamer_remboursement(campaign_id):
     )
 
     flash("Votre demande de remboursement a bien été transmise. Le virement sera effectué sous 48 heures au maximum. ⏳", "success")
-    return redirect(url_for("mes_campagnes")) 
+    return redirect(url_for("mes_campagnes"))
 
 
 

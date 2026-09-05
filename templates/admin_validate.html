@@ -607,16 +607,26 @@
                             </div>
 
                         {% elif camp.admin_status == "rejected" or camp.status == "rejete" %}
-                            {# 🆕 🐞 FIX anomalie n°3 : distinction des 3 états possibles pour une
-                               campagne refusée, au lieu de ne tester que can_claim_refund.
-                               Sans ce check en premier, une demande déjà envoyée par l'annonceur
-                               (qui repasse can_claim_refund à False) faisait réapparaître le
-                               bouton "Autoriser Remboursement" comme si de rien n'était. #}
-                            {% if camp.status == "remboursement_demande" %}
+                            {# =========================================================
+                               🆕 PARCOURS REMBOURSEMENT — piloté par camp.refund_status,
+                               indépendant de camp.status (voir mes_campagnes.html côté
+                               annonceur pour la logique symétrique).
+                               ========================================================= #}
+                            {% if camp.refund_status == "processed" %}
+                                <span class="badge bg-success d-block mb-1">✅ Remboursement traité</span>
+                                <small class="text-muted d-block">Virement effectué manuellement.</small>
+                            {% elif camp.refund_status == "requested" %}
                                 <span class="badge bg-secondary d-block mb-1">⏳ Demande de remboursement reçue</span>
                                 <small class="text-muted d-block">Coordonnées transmises par l'annonceur — à traiter sous 48h.</small>
-                            {% elif camp.can_claim_refund %}
+                                <a href="{{ url_for('admin_remboursements') }}" class="btn btn-sm btn-outline-dark fw-bold mt-1">
+                                    Traiter la demande
+                                </a>
+                            {% elif camp.refund_status == "rejected" %}
+                                <span class="badge bg-warning text-dark d-block mb-1">🔁 Demande refusée</span>
+                                <small class="text-muted d-block">En attente d'une nouvelle demande corrigée de l'annonceur (pas besoin de réautoriser).</small>
+                            {% elif camp.refund_status == "available" %}
                                 <span class="badge bg-info text-dark">💰 Remboursement débloqué</span>
+                                <small class="text-muted d-block mt-1">En attente que l'annonceur soumette ses coordonnées.</small>
                             {% else %}
                                 <form action="{{ url_for('autoriser_remboursement_admin', campaign_id=camp.id) }}" method="POST" class="d-inline">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

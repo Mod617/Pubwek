@@ -20,6 +20,7 @@
     --amber-tint:   #F8EEDD;
     --clay:         #B0483C;
     --slate-tint:   #EFEDE4;
+    --wa-green:     #25D366;
 
     background: var(--paper);
     margin: -1.5rem calc(50% - 50vw) 0;
@@ -167,46 +168,55 @@
   .pw-btn-outline { background: var(--paper-raised); color: var(--ink); border-color: var(--line); }
   .pw-btn-outline:hover { border-color: var(--emerald); color: var(--emerald-dark); transform: translateY(-2px); }
 
-  /* ---- Phone mockup: vrai statut WhatsApp ---- */
+  /* ============================================================
+     PHONE MOCKUP — visualiseur de statut WhatsApp aussi fidèle
+     que possible : croix, avatar, nom, heure, partager, menu,
+     barre de progression façon story, texture photo, compteur
+     de vues placé comme dans l'appli, barre de réponse réelle.
+     ============================================================ */
   .pw-hero-phone {
     position: relative;
     width: 244px;
-    height: 496px;
-    background: var(--ink);
-    border-radius: 36px;
-    padding: 10px;
-    box-shadow: 0 30px 60px -20px rgba(27,42,46,0.35), 0 0 0 1px rgba(27,42,46,0.06);
+    height: 500px;
+    background: #000;
+    border-radius: 38px;
+    padding: 9px;
+    box-shadow:
+      0 30px 60px -20px rgba(27,42,46,0.4),
+      0 0 0 1.5px rgba(0,0,0,0.9),
+      0 0 0 3px rgba(255,255,255,0.06);
   }
   .pw-hero-phone::before {
     content: "";
     position: absolute;
-    top: 10px; left: 50%; transform: translateX(-50%);
-    width: 74px; height: 18px;
-    background: var(--ink);
+    top: 9px; left: 50%; transform: translateX(-50%);
+    width: 76px; height: 20px;
+    background: #000;
     border-radius: 0 0 14px 14px;
-    z-index: 4;
+    z-index: 5;
   }
   .pw-phone-screen {
     position: relative;
     width: 100%; height: 100%;
-    border-radius: 28px;
+    border-radius: 30px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    background: #111;
   }
 
   .pw-status-progress {
     position: absolute;
-    top: 10px; left: 12px; right: 12px;
+    top: 9px; left: 8px; right: 8px;
     display: flex;
     gap: 4px;
-    z-index: 3;
+    z-index: 4;
   }
   .pw-status-progress span {
     flex: 1;
-    height: 3px;
+    height: 2.5px;
     border-radius: 2px;
-    background: rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.32);
     overflow: hidden;
   }
   .pw-status-progress span::after {
@@ -218,42 +228,59 @@
     border-radius: 2px;
   }
   .pw-status-progress span.done::after { width: 100%; }
-  .pw-status-progress span.active::after { width: 100%; animation: pw-progress 3.6s linear; }
+  .pw-status-progress span.active::after { width: 100%; animation: pw-progress 4.2s linear; }
   @keyframes pw-progress { from { width: 0%; } to { width: 100%; } }
 
+  /* En-tête réaliste : croix, avatar+nom+heure, partager, menu */
   .pw-status-header {
     position: absolute;
-    top: 26px; left: 12px; right: 12px;
+    top: 20px; left: 10px; right: 10px;
     display: flex;
     align-items: center;
-    gap: 0.55rem;
-    z-index: 3;
+    gap: 0.5rem;
+    z-index: 4;
   }
-  .pw-status-avatar {
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1rem;
-    background: #fff;
-    border: 2px solid rgba(255,255,255,0.7);
+  .pw-status-close {
+    color: rgba(255,255,255,0.92);
+    font-size: 0.95rem;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
     flex-shrink: 0;
   }
-  .pw-status-who { line-height: 1.2; overflow: hidden; }
+  .pw-status-avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.95rem;
+    background: #fff;
+    border: 2px solid rgba(255,255,255,0.75);
+    flex-shrink: 0;
+  }
+  .pw-status-who { line-height: 1.15; overflow: hidden; flex: 1; min-width: 0; }
   .pw-status-name {
     color: #fff;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 600;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.45);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   .pw-status-time {
     color: rgba(255,255,255,0.75);
-    font-size: 0.68rem;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    font-size: 0.65rem;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.45);
+  }
+  .pw-status-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    color: rgba(255,255,255,0.92);
+    font-size: 0.88rem;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    flex-shrink: 0;
   }
 
+  /* Visuel plein écran, avec grain photo pour un rendu "vraie photo" */
   .pw-status-visual {
     flex: 1;
     position: relative;
@@ -267,79 +294,101 @@
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(120% 90% at 15% 0%, rgba(255,255,255,0.16), transparent 60%),
-      linear-gradient(0deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.05) 42%, transparent 62%);
+      radial-gradient(125% 90% at 18% 0%, rgba(255,255,255,0.18), transparent 58%),
+      linear-gradient(0deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.08) 40%, transparent 60%);
+    z-index: 1;
+  }
+  .pw-status-visual::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    opacity: 0.5;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
   .pw-status-emoji {
     position: absolute;
-    top: 44%; left: 50%;
+    top: 42%; left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 4.4rem;
-    filter: drop-shadow(0 12px 18px rgba(0,0,0,0.25));
-    opacity: 0.94;
+    font-size: 4.2rem;
+    filter: drop-shadow(0 12px 18px rgba(0,0,0,0.3));
+    opacity: 0.95;
+    z-index: 1;
   }
   .pw-status-body {
     position: relative;
-    z-index: 2;
-    padding: 0 1.05rem 0.9rem;
+    z-index: 3;
+    padding: 0 1rem 0.7rem;
     width: 100%;
   }
-  .pw-status-badge-row {
-    display: flex;
-    gap: 0.4rem;
-    margin-bottom: 0.6rem;
-  }
-  .pw-status-chip {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.62rem;
-    letter-spacing: 0.02em;
-    color: #fff;
-    background: rgba(0,0,0,0.32);
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(255,255,255,0.18);
-    padding: 0.28rem 0.55rem;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    white-space: nowrap;
-  }
-  .pw-status-chip.pw-chip-amber { color: #2a1e0c; background: var(--amber); border-color: var(--amber); }
   .pw-status-text {
-    font-size: 0.95rem;
-    line-height: 1.42;
+    font-size: 0.93rem;
+    line-height: 1.4;
     font-weight: 600;
     color: #fff;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.35);
-    margin-bottom: 0.85rem;
-    min-height: 3.6em;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    margin-bottom: 0.55rem;
+    min-height: 3.4em;
   }
-  .pw-status-reply {
+
+  /* Ligne "vu par" à l'emplacement réel de WhatsApp, juste au-dessus du champ de réponse */
+  .pw-status-meta-row {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background: rgba(255,255,255,0.14);
-    backdrop-filter: blur(6px);
-    border: 1px solid rgba(255,255,255,0.28);
-    border-radius: 999px;
-    padding: 0.55rem 0.6rem 0.55rem 0.95rem;
-    color: rgba(255,255,255,0.85);
-    font-size: 0.78rem;
+    margin-bottom: 0.55rem;
   }
-  .pw-status-reply i {
-    margin-left: auto;
+  .pw-status-views-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.68rem;
+    color: rgba(255,255,255,0.85);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+  .pw-status-clics-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.64rem;
+    color: #2a1e0c;
+    background: var(--amber);
+    padding: 0.18rem 0.5rem;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+
+  /* Barre de réponse fidèle à WhatsApp : appareil photo, champ, micro */
+  .pw-status-reply {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    background: rgba(255,255,255,0.13);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 999px;
+    padding: 0.5rem 0.5rem 0.5rem 0.85rem;
+    color: rgba(255,255,255,0.8);
+    font-size: 0.76rem;
+  }
+  .pw-status-reply .pw-reply-camera { font-size: 0.95rem; color: rgba(255,255,255,0.8); flex-shrink: 0; }
+  .pw-status-reply .pw-reply-text { flex: 1; }
+  .pw-status-reply .pw-reply-send {
     width: 26px; height: 26px;
     border-radius: 50%;
-    background: var(--emerald);
+    background: var(--wa-green);
     color: #fff;
     display: flex; align-items: center; justify-content: center;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
+    flex-shrink: 0;
   }
 
   .pw-phone-dots {
-    position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    position: absolute; bottom: 7px; left: 50%; transform: translateX(-50%);
     display: flex; gap: 6px;
-    z-index: 3;
+    z-index: 4;
   }
   .pw-phone-dots span {
     width: 6px; height: 6px; border-radius: 50%;
@@ -637,30 +686,38 @@
       </div>
     </div>
 
-    <!-- Animated phone: vrai statut WhatsApp avec vues, clics, réponse rapide -->
+    <!-- Mockup fidèle à un vrai statut WhatsApp -->
     <div class="pw-hero-phone" aria-hidden="true">
       <div class="pw-phone-screen" id="pwPhoneScreen">
         <div class="pw-status-progress" id="pwStatusProgress"></div>
+
         <div class="pw-status-header">
+          <i class="bi bi-x-lg pw-status-close"></i>
           <div class="pw-status-avatar" id="pwStatusAvatar">🛍️</div>
           <div class="pw-status-who">
             <div class="pw-status-name" id="pwStatusName">Le Bon Goût — Cotonou</div>
             <div class="pw-status-time" id="pwStatusTime">à l'instant</div>
           </div>
+          <div class="pw-status-header-actions">
+            <i class="bi bi-reply-fill"></i>
+            <i class="bi bi-three-dots-vertical"></i>
+          </div>
         </div>
+
         <div class="pw-status-visual" id="pwStatusVisual">
           <div class="pw-status-emoji" id="pwStatusEmoji">🍲</div>
           <div class="pw-status-body">
-            <div class="pw-status-badge-row">
-              <span class="pw-status-chip"><i class="bi bi-eye-fill"></i> <span id="pwStatusViews">1 284</span> vues</span>
-              <span class="pw-status-chip pw-chip-amber"><i class="bi bi-lightning-fill"></i> <span id="pwStatusClicks">+32</span> clics</span>
-            </div>
             <div class="pw-status-text" id="pwStatusText">
               Nouveau menu disponible dès aujourd'hui, livraison rapide sur tout Cotonou !
             </div>
+            <div class="pw-status-meta-row">
+              <span class="pw-status-views-pill"><i class="bi bi-eye-fill"></i> <span id="pwStatusViews">1 284</span> vues</span>
+              <span class="pw-status-clics-pill"><i class="bi bi-lightning-fill"></i> <span id="pwStatusClicks">+32</span> clics</span>
+            </div>
             <div class="pw-status-reply">
-              Répondre au statut...
-              <i class="bi bi-send-fill"></i>
+              <i class="bi bi-camera-fill pw-reply-camera"></i>
+              <span class="pw-reply-text">Répondre au statut...</span>
+              <span class="pw-reply-send"><i class="bi bi-mic-fill"></i></span>
             </div>
           </div>
         </div>
@@ -829,31 +886,43 @@
 (function () {
   const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // ---- Phone hero: rotation d'exemples de statuts réalistes ----
+  // ---- Phone hero : 6 exemples avec des accroches pensées pour retenir l'attention ----
   const exemples = [
     {
       nom: "Le Bon Goût — Cotonou", avatar: "🍲", emoji: "🍲",
       gradient: "linear-gradient(160deg, #7a3b23 0%, #b8642f 55%, #d98c3f 100%)",
       vues: "1 284", clics: "+32",
-      texte: "Nouveau menu disponible dès aujourd'hui, livraison rapide sur tout Cotonou !"
+      texte: "🔥 Aujourd'hui seulement : nouveau menu + livraison offerte dès 5 000 FCFA !"
     },
     {
       nom: "Adjara Mode — Porto-Novo", avatar: "👗", emoji: "👗",
       gradient: "linear-gradient(160deg, #5a2340 0%, #93315c 55%, #c14f7c 100%)",
       vues: "2 037", clics: "+58",
-      texte: "Collection de rentrée disponible — tailles S à XXL, paiement à la livraison."
+      texte: "✨ La collection dont tout le monde parle est enfin là. Elle part vite."
     },
     {
       nom: "Plomberie Express — Parakou", avatar: "🔧", emoji: "🔧",
       gradient: "linear-gradient(160deg, #1c3d52 0%, #2a5f7a 55%, #3f88a8 100%)",
       vues: "864", clics: "+21",
-      texte: "Besoin d'un plombier rapide et sérieux ? Contactez-nous, on répond sous 10 min."
+      texte: "🚰 Fuite d'eau ? On est chez vous en moins de 30 min, 7j/7."
     },
     {
       nom: "Éclat Beauté — Abomey-Calavi", avatar: "💅", emoji: "💅",
       gradient: "linear-gradient(160deg, #4a1f4a 0%, #7d3470 55%, #a8508f 100%)",
       vues: "1 590", clics: "+44",
-      texte: "Institut de beauté : -20% cette semaine sur toutes les prestations."
+      texte: "💅 Derniers jours : -20% sur toutes les prestations avant la fin du mois."
+    },
+    {
+      nom: "TechZone — Bohicon", avatar: "📱", emoji: "📱",
+      gradient: "linear-gradient(160deg, #1f2937 0%, #374151 55%, #4b5563 100%)",
+      vues: "3 102", clics: "+76",
+      texte: "📱 Smartphones reconditionnés garantis 6 mois, à partir de 45 000 FCFA."
+    },
+    {
+      nom: "Chez Léa Traiteur — Ouidah", avatar: "🎉", emoji: "🎉",
+      gradient: "linear-gradient(160deg, #6b2b2b 0%, #a34a3a 55%, #c96a4d 100%)",
+      vues: "1 748", clics: "+39",
+      texte: "🎉 Votre événement mérite un traiteur qui ne déçoit jamais. Devis gratuit en 5 min."
     }
   ];
 
@@ -879,7 +948,7 @@
   });
 
   let idx = 0;
-  const DUREE = 3800;
+  const DUREE = 4200;
 
   function afficherExemple(i) {
     const ex = exemples[i];

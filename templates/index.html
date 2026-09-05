@@ -1,139 +1,508 @@
 {% extends "base.html" %}
+
 {% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
 <style>
-  .hero {
-    text-align: center;
-    padding: 60px 20px 40px;
-    background: linear-gradient(135deg, #f0f9ff 0%, #e8f5e9 100%);
-    border-radius: 16px;
-    margin-bottom: 3rem;
+  .pw-home {
+    --paper:        #F5F3ED;
+    --paper-raised: #FFFFFF;
+    --ink:          #1B2A2E;
+    --ink-soft:     #5B6B6C;
+    --line:         #E3DFD3;
+    --emerald:      #2F6F5E;
+    --emerald-dark: #1F4F42;
+    --emerald-tint: #E7F0EC;
+    --amber:        #B8842E;
+    --amber-tint:   #F8EEDD;
+    --clay:         #B0483C;
+    --slate-tint:   #EFEDE4;
+
+    background: var(--paper);
+    margin: -1.5rem calc(50% - 50vw) 0;
+    padding: 0 calc(50vw - 50%) 4rem;
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+    overflow-x: hidden;
   }
 
-  .hero h1 {
-    font-size: 2.75rem;
-    font-weight: 700;
-    color: #1a1a2e;
-    margin-bottom: 1rem;
-  }
+  .pw-home h1, .pw-home h2, .pw-home h3 { font-family: 'Fraunces', serif; }
 
-  .hero .lead {
-    font-size: 1.15rem;
-    color: #444;
-    max-width: 700px;
+  /* ================= HERO ================= */
+  .pw-hero {
+    max-width: 1180px;
     margin: 0 auto;
-    line-height: 1.6;
+    padding: 4.5rem 1.5rem 3rem;
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 3rem;
+    align-items: center;
+  }
+  @media (max-width: 900px) {
+    .pw-hero { grid-template-columns: 1fr; padding-top: 3rem; text-align: center; }
+    .pw-hero-phone { order: -1; margin: 0 auto; }
   }
 
-  .cards-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2rem;
-    justify-content: center;
-  }
-
-  .role-card {
-    flex: 1 1 320px;
-    max-width: 420px;
-    background: #fff;
-    padding: 2.5rem 2rem;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    text-align: center;
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-    border: 1px solid #eee;
-  }
-
-  .role-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-  }
-
-  .role-card .icon {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .role-card h2 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-bottom: 0.75rem;
-    color: #1a1a2e;
-  }
-
-  .role-card p {
-    color: #666;
-    margin-bottom: 1.75rem;
-    line-height: 1.5;
-  }
-
-  .role-card .btn {
-    padding: 0.7rem 1.8rem;
-    border-radius: 50px;
-    font-weight: 600;
-    border: none;
-    text-decoration: none;
+  .pw-eyebrow-mono {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.74rem;
+    letter-spacing: 0.1em;
+    color: var(--emerald-dark);
+    background: var(--emerald-tint);
     display: inline-block;
-    transition: opacity 0.2s ease;
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    margin-bottom: 1.4rem;
   }
 
-  .role-card .btn:hover {
+  .pw-hero h1 {
+    font-size: clamp(2.2rem, 4.4vw, 3.4rem);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    margin-bottom: 1.2rem;
+    color: var(--ink);
+  }
+
+  .pw-hero p.pw-lead {
+    font-size: 1.1rem;
+    color: var(--ink-soft);
+    max-width: 46ch;
+    line-height: 1.65;
+    margin-bottom: 2rem;
+  }
+  @media (max-width: 900px) { .pw-hero p.pw-lead { margin-left: auto; margin-right: auto; } }
+
+  .pw-cta-row { display: flex; gap: 0.9rem; flex-wrap: wrap; }
+  @media (max-width: 900px) { .pw-cta-row { justify-content: center; } }
+
+  .pw-btn {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 0.85rem 1.7rem;
+    border-radius: 999px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid transparent;
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+  }
+  .pw-btn-solid { background: var(--emerald); color: #fff; box-shadow: 0 6px 18px rgba(47,111,94,0.28); }
+  .pw-btn-solid:hover { background: var(--emerald-dark); transform: translateY(-2px); color: #fff; }
+  .pw-btn-outline { background: var(--paper-raised); color: var(--ink); border-color: var(--line); }
+  .pw-btn-outline:hover { border-color: var(--emerald); color: var(--emerald-dark); transform: translateY(-2px); }
+
+  /* ---- Phone mockup: the one bold, orchestrated animated moment ---- */
+  .pw-hero-phone {
+    position: relative;
+    width: 230px;
+    height: 468px;
+    background: var(--ink);
+    border-radius: 34px;
+    padding: 10px;
+    box-shadow: 0 30px 60px -20px rgba(27,42,46,0.35), 0 0 0 1px rgba(27,42,46,0.06);
+  }
+  .pw-hero-phone::before {
+    content: "";
+    position: absolute;
+    top: 10px; left: 50%; transform: translateX(-50%);
+    width: 70px; height: 18px;
+    background: var(--ink);
+    border-radius: 0 0 14px 14px;
+    z-index: 3;
+  }
+  .pw-phone-screen {
+    position: relative;
+    width: 100%; height: 100%;
+    background: linear-gradient(165deg, #0d1a17 0%, #16302a 55%, #1c3d34 100%);
+    border-radius: 26px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 1.4rem 1.1rem;
+  }
+  .pw-status-ring {
+    position: absolute; top: 22px; left: 18px;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: conic-gradient(var(--amber) 0deg 300deg, rgba(255,255,255,0.15) 300deg 360deg);
+    padding: 3px;
+  }
+  .pw-status-ring span {
+    display: block; width: 100%; height: 100%; border-radius: 50%;
+    background: var(--emerald-tint);
+    font-size: 1.1rem; display: flex; align-items: center; justify-content: center;
+  }
+  .pw-status-card {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
+    padding: 1rem 1rem 1.1rem;
+    color: #fff;
+    min-height: 118px;
+  }
+  .pw-status-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    color: var(--amber);
+    margin-bottom: 0.5rem;
     opacity: 0.9;
   }
+  .pw-status-text {
+    font-size: 0.92rem;
+    line-height: 1.4;
+    font-weight: 500;
+    min-height: 3.9em;
+  }
+  .pw-status-cta {
+    margin-top: 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #16302a;
+    background: #fff;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+  }
+  .pw-phone-dots {
+    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 6px;
+  }
+  .pw-phone-dots span {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    transition: background .3s ease, width .3s ease;
+  }
+  .pw-phone-dots span.active { background: var(--amber); width: 16px; border-radius: 4px; }
 
-  .btn-annonceur {
-    background: linear-gradient(135deg, #2ecc71, #27ae60);
+  /* ================= STEPS ================= */
+  .pw-steps-wrap { max-width: 1180px; margin: 0 auto; padding: 3.5rem 1.5rem 1rem; }
+  .pw-section-head { text-align: center; margin-bottom: 2.6rem; }
+  .pw-section-head h2 { font-size: clamp(1.6rem, 2.6vw, 2.1rem); font-weight: 600; margin-bottom: 0.6rem; }
+  .pw-section-head p { color: var(--ink-soft); max-width: 52ch; margin: 0 auto; }
+
+  .pw-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+  @media (max-width: 860px) { .pw-steps { grid-template-columns: 1fr; } }
+
+  .pw-step {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 1.8rem 1.6rem;
+    position: relative;
+  }
+  .pw-step-num {
+    font-family: 'Fraunces', serif;
+    font-size: 2.4rem;
+    font-weight: 600;
+    color: var(--emerald-tint);
+    -webkit-text-stroke: 1.5px var(--emerald);
+    line-height: 1;
+    margin-bottom: 0.9rem;
+  }
+  .pw-step h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
+  .pw-step p { color: var(--ink-soft); font-size: 0.92rem; line-height: 1.55; margin: 0; }
+
+  /* ================= ROLE CARDS ================= */
+  .pw-roles-wrap { max-width: 1180px; margin: 0 auto; padding: 3.5rem 1.5rem 1rem; }
+  .pw-roles {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.75rem;
+  }
+  @media (max-width: 760px) { .pw-roles { grid-template-columns: 1fr; } }
+
+  .pw-role-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 2.4rem 2.2rem;
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .pw-role-card:hover { transform: translateY(-4px); box-shadow: 0 16px 32px rgba(27,42,46,0.08); }
+  .pw-role-card.annonceur { border-top: 3px solid var(--emerald); }
+  .pw-role-card.partageur { border-top: 3px solid var(--amber); }
+
+  .pw-role-icon {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1.3rem;
+  }
+  .pw-role-card.annonceur .pw-role-icon { background: var(--emerald-tint); color: var(--emerald-dark); }
+  .pw-role-card.partageur .pw-role-icon { background: var(--amber-tint); color: var(--amber); }
+
+  .pw-role-card h3 { font-size: 1.35rem; font-weight: 600; margin-bottom: 0.6rem; }
+  .pw-role-card p { color: var(--ink-soft); line-height: 1.6; margin-bottom: 1.6rem; }
+
+  /* ================= TESTIMONIALS ================= */
+  .pw-testi-wrap { max-width: 1180px; margin: 0 auto; padding: 3.5rem 1.5rem 1rem; }
+  .pw-testi-track-outer {
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  }
+  .pw-testi-track {
+    display: flex;
+    gap: 1.25rem;
+    width: max-content;
+    animation: pw-scroll 34s linear infinite;
+  }
+  .pw-testi-track:hover { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) {
+    .pw-testi-track { animation: none; }
+  }
+  @keyframes pw-scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  .pw-testi-card {
+    flex: 0 0 320px;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 1.5rem 1.6rem;
+  }
+  .pw-testi-stars { color: var(--amber); font-size: 0.85rem; margin-bottom: 0.7rem; letter-spacing: 2px; }
+  .pw-testi-quote { font-size: 0.92rem; color: var(--ink); line-height: 1.55; margin-bottom: 1.1rem; }
+  .pw-testi-person { display: flex; align-items: center; gap: 0.7rem; }
+  .pw-testi-avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--emerald-tint); color: var(--emerald-dark);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 0.95rem;
+  }
+  .pw-testi-name { font-weight: 600; font-size: 0.86rem; color: var(--ink); }
+  .pw-testi-role { font-size: 0.76rem; color: var(--ink-soft); }
+
+  /* ================= FINAL CTA ================= */
+  .pw-final-cta {
+    max-width: 1180px;
+    margin: 4rem auto 0;
+    padding: 3rem 2rem;
+    background: linear-gradient(135deg, var(--emerald) 0%, var(--emerald-dark) 100%);
+    border-radius: 22px;
+    text-align: center;
     color: #fff;
   }
+  .pw-final-cta h2 { color: #fff; font-size: clamp(1.5rem, 2.6vw, 2rem); margin-bottom: 0.7rem; }
+  .pw-final-cta p { color: rgba(255,255,255,0.8); max-width: 48ch; margin: 0 auto 1.6rem; }
+  .pw-final-cta .pw-btn-solid { background: var(--amber); box-shadow: none; }
+  .pw-final-cta .pw-btn-solid:hover { background: #a5761f; }
+  .pw-final-cta .pw-btn-outline { background: transparent; border-color: rgba(255,255,255,0.35); color: #fff; }
+  .pw-final-cta .pw-btn-outline:hover { border-color: #fff; color: #fff; }
 
-  .btn-partageur {
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    color: #fff;
-  }
-
-  @media (max-width: 576px) {
-    .hero {
-      padding: 40px 16px 30px;
-    }
-    .hero h1 {
-      font-size: 2rem;
-    }
-    .hero .lead {
-      font-size: 1rem;
-    }
-    .role-card {
-      padding: 2rem 1.5rem;
-    }
-  }
+  /* Scroll reveal (single orchestrated fade-up, not per-card noise) */
+  .pw-reveal { opacity: 0; transform: translateY(16px); transition: opacity .6s ease, transform .6s ease; }
+  .pw-reveal.pw-in { opacity: 1; transform: translateY(0); }
 </style>
 
-<div class="hero">
-  <h1>Bienvenue sur Pubwek</h1>
-  <p class="lead">
-    Pubwek est une plateforme qui connecte les <strong>entreprises</strong> du Bénin
-    et les <strong>partageurs</strong> qui font la promotion des produits sur des statuts
-    WhatsApp.
-  </p>
-</div>
+<div class="pw-home">
 
-<div class="cards-row">
-  <!-- Section Annonceurs -->
-  <div class="role-card">
-    <div class="icon">🏢</div>
-    <h2>Annonceurs</h2>
-    <p>Publiez vos produits et touchez plus de clients grâce aux partageurs.</p>
-    <a href="{{ url_for('register', role='annonceur') }}" class="btn btn-annonceur">
-      Je suis un annonceur
-    </a>
+  <!-- ============ HERO ============ -->
+  <section class="pw-hero">
+    <div>
+      <span class="pw-eyebrow-mono">FAIT POUR LE BÉNIN 🇧🇯</span>
+      <h1>Votre statut WhatsApp peut faire vendre.</h1>
+      <p class="pw-lead">
+        Pubwek connecte les entreprises béninoises qui veulent être vues à des milliers
+        de partageurs qui diffusent leurs annonces sur leur statut WhatsApp — et sont payés au clic.
+      </p>
+      <div class="pw-cta-row">
+        <a href="{{ url_for('register', role='annonceur') }}" class="pw-btn pw-btn-solid">
+          <i class="bi bi-megaphone-fill"></i> Lancer une campagne
+        </a>
+        <a href="{{ url_for('register', role='partageur') }}" class="pw-btn pw-btn-outline">
+          <i class="bi bi-whatsapp"></i> Devenir partageur
+        </a>
+      </div>
+    </div>
+
+    <!-- Animated phone: rotating WhatsApp status examples -->
+    <div class="pw-hero-phone" aria-hidden="true">
+      <div class="pw-phone-screen">
+        <div class="pw-status-ring"><span>🛍️</span></div>
+        <div class="pw-status-card">
+          <div class="pw-status-tag" id="pwStatusTag">RESTAURANT · COTONOU</div>
+          <div class="pw-status-text" id="pwStatusText">
+            🔥 Nouveau menu disponible dès aujourd'hui, livraison rapide sur tout Cotonou !
+          </div>
+          <div class="pw-status-cta"><i class="bi bi-whatsapp"></i> Commander</div>
+        </div>
+      </div>
+      <div class="pw-phone-dots" id="pwPhoneDots"></div>
+    </div>
+  </section>
+
+  <!-- ============ COMMENT ÇA MARCHE ============ -->
+  <section class="pw-steps-wrap pw-reveal">
+    <div class="pw-section-head">
+      <h2>Comment ça marche</h2>
+      <p>Trois étapes, du lancement d'une campagne jusqu'au paiement des partageurs.</p>
+    </div>
+    <div class="pw-steps">
+      <div class="pw-step">
+        <div class="pw-step-num">01</div>
+        <h3>L'annonceur crée sa campagne</h3>
+        <p>Texte, photos ou courte vidéo, zone de diffusion et objectif de clics — en quelques minutes.</p>
+      </div>
+      <div class="pw-step">
+        <div class="pw-step-num">02</div>
+        <h3>Les partageurs diffusent</h3>
+        <p>Chaque partageur publie l'annonce sur son statut WhatsApp avec son lien personnel de suivi.</p>
+      </div>
+      <div class="pw-step">
+        <div class="pw-step-num">03</div>
+        <h3>Les clics sont récompensés</h3>
+        <p>Chaque clic réel généré crédite le partageur, et fait avancer la visibilité de l'annonceur.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RÔLES ============ -->
+  <section class="pw-roles-wrap pw-reveal">
+    <div class="pw-roles">
+      <div class="pw-role-card annonceur">
+        <div class="pw-role-icon"><i class="bi bi-shop"></i></div>
+        <h3>Vous avez une entreprise</h3>
+        <p>Touchez de nouveaux clients dans votre zone grâce à un réseau de partageurs actifs sur WhatsApp — sans budget publicitaire complexe à gérer.</p>
+        <a href="{{ url_for('register', role='annonceur') }}" class="pw-btn pw-btn-solid">Je suis un annonceur</a>
+      </div>
+      <div class="pw-role-card partageur">
+        <div class="pw-role-icon"><i class="bi bi-phone-vibrate"></i></div>
+        <h3>Vous voulez gagner de l'argent</h3>
+        <p>Partagez des annonces sur votre statut WhatsApp et soyez payé pour chaque clic réel généré. Retirez vos gains vers Mobile Money.</p>
+        <a href="{{ url_for('register', role='partageur') }}" class="pw-btn pw-btn-outline">Je suis un partageur</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ AVIS CLIENTS ============ -->
+  <section class="pw-testi-wrap pw-reveal">
+    <div class="pw-section-head">
+      <h2>Ce qu'ils en disent</h2>
+      <p>Des annonceurs et des partageurs qui utilisent déjà Pubwek au quotidien.</p>
+    </div>
+    <div class="pw-testi-track-outer">
+      <div class="pw-testi-track" id="pwTestiTrack">
+        <!-- Le JS duplique ce contenu une fois pour boucler sans coupure -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CTA FINAL ============ -->
+  <div class="pw-final-cta pw-reveal">
+    <h2>Prêt à commencer ?</h2>
+    <p>Que vous soyez une entreprise ou à la recherche d'un revenu complémentaire, Pubwek se lance en quelques minutes.</p>
+    <div class="pw-cta-row" style="justify-content:center;">
+      <a href="{{ url_for('register', role='annonceur') }}" class="pw-btn pw-btn-solid">Lancer une campagne</a>
+      <a href="{{ url_for('register', role='partageur') }}" class="pw-btn pw-btn-outline">Devenir partageur</a>
+    </div>
   </div>
 
-  <!-- Section Partageurs -->
-  <div class="role-card">
-    <div class="icon">📲</div>
-    <h2>Partageurs</h2>
-    <p>Partagez des produits et gagnez de l'argent selon les clics que vous générez.</p>
-    <a href="{{ url_for('register', role='partageur') }}" class="btn btn-partageur">
-      Je suis un partageur
-    </a>
-  </div>
 </div>
+
+<script>
+(function () {
+  // ---- Phone hero: rotate through a few example statuses ----
+  const exemples = [
+    { tag: "RESTAURANT · COTONOU", text: "🔥 Nouveau menu disponible dès aujourd'hui, livraison rapide sur tout Cotonou !" },
+    { tag: "MODE · PORTO-NOVO", text: "✨ Collection de rentrée disponible — tailles S à XXL, paiement à la livraison." },
+    { tag: "SERVICE · PARAKOU", text: "📲 Besoin d'un plombier rapide et sérieux ? Contactez-nous, on répond sous 10 min." },
+    { tag: "BEAUTÉ · ABOMEY-CALAVI", text: "💅 Institut de beauté : -20% cette semaine sur toutes les prestations." }
+  ];
+  const tagEl = document.getElementById("pwStatusTag");
+  const textEl = document.getElementById("pwStatusText");
+  const dotsWrap = document.getElementById("pwPhoneDots");
+
+  exemples.forEach((_, i) => {
+    const dot = document.createElement("span");
+    if (i === 0) dot.classList.add("active");
+    dotsWrap.appendChild(dot);
+  });
+
+  let idx = 0;
+  function afficherExemple(i) {
+    tagEl.style.opacity = 0;
+    textEl.style.opacity = 0;
+    setTimeout(function () {
+      tagEl.textContent = exemples[i].tag;
+      textEl.textContent = exemples[i].text;
+      tagEl.style.transition = "opacity .35s ease";
+      textEl.style.transition = "opacity .35s ease";
+      tagEl.style.opacity = 1;
+      textEl.style.opacity = 1;
+    }, 220);
+
+    Array.from(dotsWrap.children).forEach(function (d, di) {
+      d.classList.toggle("active", di === i);
+    });
+  }
+
+  setInterval(function () {
+    idx = (idx + 1) % exemples.length;
+    afficherExemple(idx);
+  }, 3600);
+
+  // ---- Testimonials: build cards then duplicate once for a seamless loop ----
+  // ⚠️ PLACEHOLDER — à remplacer par de vrais avis de clients avant mise en ligne.
+  const avis = [
+    { nom: "Chantal A.", role: "Gérante, restaurant à Cotonou", texte: "En une semaine, j'ai eu plus de demandes sur WhatsApp qu'en un mois de bouche-à-oreille." },
+    { nom: "Firmin K.", role: "Partageur, Porto-Novo", texte: "Je partage 2-3 annonces par jour sur mon statut et je retire mes gains chaque semaine." },
+    { nom: "Rosine D.", role: "Boutique de mode, Abomey-Calavi", texte: "Simple à lancer, et je vois exactement combien de clics chaque partageur m'apporte." },
+    { nom: "Ibrahim S.", role: "Partageur, Parakou", texte: "Ça complète bien mes revenus, et le retrait vers Mobile Money est rapide." },
+    { nom: "Léa M.", role: "Institut de beauté, Cotonou", texte: "Le ciblage par commune m'a permis de toucher exactement mon quartier." }
+  ];
+
+  function initiale(nom) { return nom.trim().charAt(0).toUpperCase(); }
+
+  function carte(a) {
+    const div = document.createElement("div");
+    div.className = "pw-testi-card";
+    div.innerHTML =
+      '<div class="pw-testi-stars">★★★★★</div>' +
+      '<p class="pw-testi-quote">« ' + a.texte + ' »</p>' +
+      '<div class="pw-testi-person">' +
+        '<div class="pw-testi-avatar">' + initiale(a.nom) + '</div>' +
+        '<div><div class="pw-testi-name">' + a.nom + '</div><div class="pw-testi-role">' + a.role + '</div></div>' +
+      '</div>';
+    return div;
+  }
+
+  const track = document.getElementById("pwTestiTrack");
+  const tout = avis.concat(avis); // dupliqué une fois pour boucler sans coupure visible
+  tout.forEach(function (a) { track.appendChild(carte(a)); });
+
+  // ---- Reveal on scroll: one quiet fade-up per section, not per card ----
+  const cibles = document.querySelectorAll(".pw-reveal");
+  if ("IntersectionObserver" in window) {
+    const obs = new IntersectionObserver(function (entrees) {
+      entrees.forEach(function (entree) {
+        if (entree.isIntersecting) {
+          entree.target.classList.add("pw-in");
+          obs.unobserve(entree.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    cibles.forEach(function (el) { obs.observe(el); });
+  } else {
+    cibles.forEach(function (el) { el.classList.add("pw-in"); });
+  }
+})();
+</script>
 {% endblock %}

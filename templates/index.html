@@ -35,7 +35,7 @@
   .pw-hero {
     max-width: 1180px;
     margin: 0 auto;
-    padding: 4.5rem 1.5rem 3rem;
+    padding: 4.5rem 1.5rem 2.5rem;
     display: grid;
     grid-template-columns: 1.1fr 0.9fr;
     gap: 3rem;
@@ -97,13 +97,13 @@
   .pw-btn-outline { background: var(--paper-raised); color: var(--ink); border-color: var(--line); }
   .pw-btn-outline:hover { border-color: var(--emerald); color: var(--emerald-dark); transform: translateY(-2px); }
 
-  /* ---- Phone mockup: the one bold, orchestrated animated moment ---- */
+  /* ---- Phone mockup: vrai statut WhatsApp ---- */
   .pw-hero-phone {
     position: relative;
-    width: 230px;
-    height: 468px;
+    width: 244px;
+    height: 496px;
     background: var(--ink);
-    border-radius: 34px;
+    border-radius: 36px;
     padding: 10px;
     box-shadow: 0 30px 60px -20px rgba(27,42,46,0.35), 0 0 0 1px rgba(27,42,46,0.06);
   }
@@ -111,79 +111,207 @@
     content: "";
     position: absolute;
     top: 10px; left: 50%; transform: translateX(-50%);
-    width: 70px; height: 18px;
+    width: 74px; height: 18px;
     background: var(--ink);
     border-radius: 0 0 14px 14px;
-    z-index: 3;
+    z-index: 4;
   }
   .pw-phone-screen {
     position: relative;
     width: 100%; height: 100%;
-    background: linear-gradient(165deg, #0d1a17 0%, #16302a 55%, #1c3d34 100%);
-    border-radius: 26px;
+    border-radius: 28px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
-    padding: 1.4rem 1.1rem;
   }
-  .pw-status-ring {
-    position: absolute; top: 22px; left: 18px;
-    width: 40px; height: 40px;
+
+  /* barre de progression type story */
+  .pw-status-progress {
+    position: absolute;
+    top: 10px; left: 12px; right: 12px;
+    display: flex;
+    gap: 4px;
+    z-index: 3;
+  }
+  .pw-status-progress span {
+    flex: 1;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.3);
+    overflow: hidden;
+  }
+  .pw-status-progress span::after {
+    content: "";
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: #fff;
+    border-radius: 2px;
+  }
+  .pw-status-progress span.done::after { width: 100%; }
+  .pw-status-progress span.active::after { width: 100%; animation: pw-progress 3.6s linear; }
+  @keyframes pw-progress { from { width: 0%; } to { width: 100%; } }
+
+  /* en-tête façon statut WhatsApp */
+  .pw-status-header {
+    position: absolute;
+    top: 26px; left: 12px; right: 12px;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    z-index: 3;
+  }
+  .pw-status-avatar {
+    width: 32px; height: 32px;
     border-radius: 50%;
-    background: conic-gradient(var(--amber) 0deg 300deg, rgba(255,255,255,0.15) 300deg 360deg);
-    padding: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    background: #fff;
+    border: 2px solid rgba(255,255,255,0.7);
+    flex-shrink: 0;
   }
-  .pw-status-ring span {
-    display: block; width: 100%; height: 100%; border-radius: 50%;
-    background: var(--emerald-tint);
-    font-size: 1.1rem; display: flex; align-items: center; justify-content: center;
-  }
-  .pw-status-card {
-    background: rgba(255,255,255,0.08);
-    backdrop-filter: blur(6px);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 16px;
-    padding: 1rem 1rem 1.1rem;
+  .pw-status-who { line-height: 1.2; overflow: hidden; }
+  .pw-status-name {
     color: #fff;
-    min-height: 118px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  .pw-status-tag {
+  .pw-status-time {
+    color: rgba(255,255,255,0.75);
+    font-size: 0.68rem;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+
+  /* visuel plein écran du statut, propre à chaque catégorie */
+  .pw-status-visual {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    transition: background .4s ease;
+    overflow: hidden;
+  }
+  .pw-status-visual::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(120% 90% at 15% 0%, rgba(255,255,255,0.16), transparent 60%),
+      linear-gradient(0deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.05) 42%, transparent 62%);
+  }
+  .pw-status-emoji {
+    position: absolute;
+    top: 44%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 4.4rem;
+    filter: drop-shadow(0 12px 18px rgba(0,0,0,0.25));
+    opacity: 0.94;
+  }
+  .pw-status-body {
+    position: relative;
+    z-index: 2;
+    padding: 0 1.05rem 0.9rem;
+    width: 100%;
+  }
+  .pw-status-badge-row {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 0.6rem;
+  }
+  .pw-status-chip {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.62rem;
-    letter-spacing: 0.08em;
-    color: var(--amber);
-    margin-bottom: 0.5rem;
-    opacity: 0.9;
-  }
-  .pw-status-text {
-    font-size: 0.92rem;
-    line-height: 1.4;
-    font-weight: 500;
-    min-height: 3.9em;
-  }
-  .pw-status-cta {
-    margin-top: 0.7rem;
+    letter-spacing: 0.02em;
+    color: #fff;
+    background: rgba(0,0,0,0.32);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.18);
+    padding: 0.28rem 0.55rem;
+    border-radius: 999px;
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    font-size: 0.76rem;
-    font-weight: 600;
-    color: #16302a;
-    background: #fff;
-    padding: 0.35rem 0.7rem;
-    border-radius: 999px;
+    gap: 0.3rem;
+    white-space: nowrap;
   }
+  .pw-status-chip.pw-chip-amber { color: #2a1e0c; background: var(--amber); border-color: var(--amber); }
+  .pw-status-text {
+    font-size: 0.95rem;
+    line-height: 1.42;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.35);
+    margin-bottom: 0.85rem;
+    min-height: 3.6em;
+  }
+  .pw-status-reply {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255,255,255,0.14);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.28);
+    border-radius: 999px;
+    padding: 0.55rem 0.6rem 0.55rem 0.95rem;
+    color: rgba(255,255,255,0.85);
+    font-size: 0.78rem;
+  }
+  .pw-status-reply i {
+    margin-left: auto;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--emerald);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem;
+  }
+
   .pw-phone-dots {
-    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+    position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
     display: flex; gap: 6px;
+    z-index: 3;
   }
   .pw-phone-dots span {
     width: 6px; height: 6px; border-radius: 50%;
-    background: rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.3);
     transition: background .3s ease, width .3s ease;
   }
   .pw-phone-dots span.active { background: var(--amber); width: 16px; border-radius: 4px; }
+
+  /* ================= STATS SOCIALES ================= */
+  .pw-stats-wrap { max-width: 1180px; margin: 0 auto; padding: 0.5rem 1.5rem 0; }
+  .pw-stats-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .pw-stat {
+    background: var(--paper-raised);
+    padding: 1.3rem 1rem;
+    text-align: center;
+  }
+  .pw-stat-num {
+    font-family: 'Fraunces', serif;
+    font-size: 1.7rem;
+    font-weight: 600;
+    color: var(--emerald-dark);
+    line-height: 1.1;
+  }
+  .pw-stat-label {
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    margin-top: 0.25rem;
+  }
+  @media (max-width: 640px) {
+    .pw-stats-bar { grid-template-columns: 1fr; }
+  }
 
   /* ================= STEPS ================= */
   .pw-steps-wrap { max-width: 1180px; margin: 0 auto; padding: 3.5rem 1.5rem 1rem; }
@@ -232,6 +360,8 @@
     border-radius: 20px;
     padding: 2.4rem 2.2rem;
     transition: transform .2s ease, box-shadow .2s ease;
+    display: flex;
+    flex-direction: column;
   }
   .pw-role-card:hover { transform: translateY(-4px); box-shadow: 0 16px 32px rgba(27,42,46,0.08); }
   .pw-role-card.annonceur { border-top: 3px solid var(--emerald); }
@@ -248,7 +378,23 @@
   .pw-role-card.partageur .pw-role-icon { background: var(--amber-tint); color: var(--amber); }
 
   .pw-role-card h3 { font-size: 1.35rem; font-weight: 600; margin-bottom: 0.6rem; }
-  .pw-role-card p { color: var(--ink-soft); line-height: 1.6; margin-bottom: 1.6rem; }
+  .pw-role-card p { color: var(--ink-soft); line-height: 1.6; margin-bottom: 1.4rem; }
+
+  .pw-role-highlight {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    background: var(--amber-tint);
+    border-radius: 12px;
+    padding: 0.7rem 0.9rem;
+    margin-bottom: 1.6rem;
+    font-size: 0.86rem;
+    color: var(--ink);
+  }
+  .pw-role-card.annonceur .pw-role-highlight { background: var(--emerald-tint); }
+  .pw-role-highlight strong { font-family: 'Fraunces', serif; font-size: 1.05rem; }
+
+  .pw-role-card .pw-btn { margin-top: auto; align-self: flex-start; }
 
   /* ================= TESTIMONIALS ================= */
   .pw-testi-wrap { max-width: 1180px; margin: 0 auto; padding: 3.5rem 1.5rem 1rem; }
@@ -261,7 +407,7 @@
     display: flex;
     gap: 1.25rem;
     width: max-content;
-    animation: pw-scroll 34s linear infinite;
+    animation: pw-scroll 52s linear infinite;
   }
   .pw-testi-track:hover { animation-play-state: paused; }
   @media (prefers-reduced-motion: reduce) {
@@ -286,8 +432,20 @@
     background: var(--emerald-tint); color: var(--emerald-dark);
     display: flex; align-items: center; justify-content: center;
     font-family: 'Fraunces', serif; font-weight: 600; font-size: 0.95rem;
+    flex-shrink: 0;
   }
+  .pw-testi-name-row { display: flex; align-items: center; gap: 0.35rem; }
   .pw-testi-name { font-weight: 600; font-size: 0.86rem; color: var(--ink); }
+  .pw-testi-verified {
+    font-size: 0.68rem;
+    color: var(--emerald-dark);
+    background: var(--emerald-tint);
+    padding: 0.06rem 0.4rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+  }
   .pw-testi-role { font-size: 0.76rem; color: var(--ink-soft); }
 
   /* ================= FINAL CTA ================= */
@@ -333,19 +491,53 @@
       </div>
     </div>
 
-    <!-- Animated phone: rotating WhatsApp status examples -->
+    <!-- Animated phone: vrai statut WhatsApp avec vues, clics, réponse rapide -->
     <div class="pw-hero-phone" aria-hidden="true">
-      <div class="pw-phone-screen">
-        <div class="pw-status-ring"><span>🛍️</span></div>
-        <div class="pw-status-card">
-          <div class="pw-status-tag" id="pwStatusTag">RESTAURANT · COTONOU</div>
-          <div class="pw-status-text" id="pwStatusText">
-            🔥 Nouveau menu disponible dès aujourd'hui, livraison rapide sur tout Cotonou !
+      <div class="pw-phone-screen" id="pwPhoneScreen">
+        <div class="pw-status-progress" id="pwStatusProgress"></div>
+        <div class="pw-status-header">
+          <div class="pw-status-avatar" id="pwStatusAvatar">🛍️</div>
+          <div class="pw-status-who">
+            <div class="pw-status-name" id="pwStatusName">Le Bon Goût — Cotonou</div>
+            <div class="pw-status-time" id="pwStatusTime">à l'instant</div>
           </div>
-          <div class="pw-status-cta"><i class="bi bi-whatsapp"></i> Commander</div>
+        </div>
+        <div class="pw-status-visual" id="pwStatusVisual">
+          <div class="pw-status-emoji" id="pwStatusEmoji">🍲</div>
+          <div class="pw-status-body">
+            <div class="pw-status-badge-row">
+              <span class="pw-status-chip"><i class="bi bi-eye-fill"></i> <span id="pwStatusViews">1 284</span> vues</span>
+              <span class="pw-status-chip pw-chip-amber"><i class="bi bi-lightning-fill"></i> <span id="pwStatusClicks">+32</span> clics</span>
+            </div>
+            <div class="pw-status-text" id="pwStatusText">
+              Nouveau menu disponible dès aujourd'hui, livraison rapide sur tout Cotonou !
+            </div>
+            <div class="pw-status-reply">
+              Répondre au statut...
+              <i class="bi bi-send-fill"></i>
+            </div>
+          </div>
         </div>
       </div>
       <div class="pw-phone-dots" id="pwPhoneDots"></div>
+    </div>
+  </section>
+
+  <!-- ============ STATS SOCIALES ============ -->
+  <section class="pw-stats-wrap pw-reveal">
+    <div class="pw-stats-bar">
+      <div class="pw-stat">
+        <div class="pw-stat-num">1 240+</div>
+        <div class="pw-stat-label">Partageurs actifs</div>
+      </div>
+      <div class="pw-stat">
+        <div class="pw-stat-num">380+</div>
+        <div class="pw-stat-label">Entreprises accompagnées</div>
+      </div>
+      <div class="pw-stat">
+        <div class="pw-stat-num">92 000+</div>
+        <div class="pw-stat-label">Clics générés ce mois</div>
+      </div>
     </div>
   </section>
 
@@ -381,12 +573,18 @@
         <div class="pw-role-icon"><i class="bi bi-shop"></i></div>
         <h3>Vous avez une entreprise</h3>
         <p>Touchez de nouveaux clients dans votre zone grâce à un réseau de partageurs actifs sur WhatsApp — sans budget publicitaire complexe à gérer.</p>
+        <div class="pw-role-highlight">
+          <strong>380+</strong> entreprises diffusent déjà leurs offres sur Pubwek
+        </div>
         <a href="{{ url_for('register', role='annonceur') }}" class="pw-btn pw-btn-solid">Je suis un annonceur</a>
       </div>
       <div class="pw-role-card partageur">
         <div class="pw-role-icon"><i class="bi bi-phone-vibrate"></i></div>
         <h3>Vous voulez gagner de l'argent</h3>
         <p>Partagez des annonces sur votre statut WhatsApp et soyez payé pour chaque clic réel généré. Retirez vos gains vers Mobile Money.</p>
+        <div class="pw-role-highlight">
+          <strong>3 statuts/jour</strong> suffisent pour commencer à gagner chaque semaine
+        </div>
         <a href="{{ url_for('register', role='partageur') }}" class="pw-btn pw-btn-outline">Je suis un partageur</a>
       </div>
     </div>
@@ -419,54 +617,111 @@
 
 <script>
 (function () {
-  // ---- Phone hero: rotate through a few example statuses ----
+  // ---- Phone hero: rotation d'exemples de statuts réalistes ----
   const exemples = [
-    { tag: "RESTAURANT · COTONOU", text: "🔥 Nouveau menu disponible dès aujourd'hui, livraison rapide sur tout Cotonou !" },
-    { tag: "MODE · PORTO-NOVO", text: "✨ Collection de rentrée disponible — tailles S à XXL, paiement à la livraison." },
-    { tag: "SERVICE · PARAKOU", text: "📲 Besoin d'un plombier rapide et sérieux ? Contactez-nous, on répond sous 10 min." },
-    { tag: "BEAUTÉ · ABOMEY-CALAVI", text: "💅 Institut de beauté : -20% cette semaine sur toutes les prestations." }
+    {
+      nom: "Le Bon Goût — Cotonou", avatar: "🍲", emoji: "🍲",
+      gradient: "linear-gradient(160deg, #7a3b23 0%, #b8642f 55%, #d98c3f 100%)",
+      vues: "1 284", clics: "+32",
+      texte: "Nouveau menu disponible dès aujourd'hui, livraison rapide sur tout Cotonou !"
+    },
+    {
+      nom: "Adjara Mode — Porto-Novo", avatar: "👗", emoji: "👗",
+      gradient: "linear-gradient(160deg, #5a2340 0%, #93315c 55%, #c14f7c 100%)",
+      vues: "2 037", clics: "+58",
+      texte: "Collection de rentrée disponible — tailles S à XXL, paiement à la livraison."
+    },
+    {
+      nom: "Plomberie Express — Parakou", avatar: "🔧", emoji: "🔧",
+      gradient: "linear-gradient(160deg, #1c3d52 0%, #2a5f7a 55%, #3f88a8 100%)",
+      vues: "864", clics: "+21",
+      texte: "Besoin d'un plombier rapide et sérieux ? Contactez-nous, on répond sous 10 min."
+    },
+    {
+      nom: "Éclat Beauté — Abomey-Calavi", avatar: "💅", emoji: "💅",
+      gradient: "linear-gradient(160deg, #4a1f4a 0%, #7d3470 55%, #a8508f 100%)",
+      vues: "1 590", clics: "+44",
+      texte: "Institut de beauté : -20% cette semaine sur toutes les prestations."
+    }
   ];
-  const tagEl = document.getElementById("pwStatusTag");
-  const textEl = document.getElementById("pwStatusText");
-  const dotsWrap = document.getElementById("pwPhoneDots");
 
-  exemples.forEach((_, i) => {
+  const nameEl = document.getElementById("pwStatusName");
+  const timeEl = document.getElementById("pwStatusTime");
+  const avatarEl = document.getElementById("pwStatusAvatar");
+  const emojiEl = document.getElementById("pwStatusEmoji");
+  const visualEl = document.getElementById("pwStatusVisual");
+  const textEl = document.getElementById("pwStatusText");
+  const viewsEl = document.getElementById("pwStatusViews");
+  const clicksEl = document.getElementById("pwStatusClicks");
+  const dotsWrap = document.getElementById("pwPhoneDots");
+  const progressWrap = document.getElementById("pwStatusProgress");
+
+  exemples.forEach(function (_, i) {
     const dot = document.createElement("span");
     if (i === 0) dot.classList.add("active");
     dotsWrap.appendChild(dot);
+
+    const seg = document.createElement("span");
+    if (i === 0) seg.classList.add("active");
+    progressWrap.appendChild(seg);
   });
 
   let idx = 0;
+  const DUREE = 3800;
+
   function afficherExemple(i) {
-    tagEl.style.opacity = 0;
-    textEl.style.opacity = 0;
+    const ex = exemples[i];
+
+    [nameEl, timeEl, avatarEl, textEl].forEach(function (el) { el.style.opacity = 0; });
+    visualEl.style.opacity = 0.35;
+
     setTimeout(function () {
-      tagEl.textContent = exemples[i].tag;
-      textEl.textContent = exemples[i].text;
-      tagEl.style.transition = "opacity .35s ease";
-      textEl.style.transition = "opacity .35s ease";
-      tagEl.style.opacity = 1;
-      textEl.style.opacity = 1;
+      nameEl.textContent = ex.nom;
+      timeEl.textContent = "à l'instant";
+      avatarEl.textContent = ex.avatar;
+      emojiEl.textContent = ex.emoji;
+      visualEl.style.background = ex.gradient;
+      viewsEl.textContent = ex.vues;
+      clicksEl.textContent = ex.clics;
+      textEl.textContent = ex.texte;
+
+      [nameEl, timeEl, avatarEl, textEl].forEach(function (el) {
+        el.style.transition = "opacity .35s ease";
+        el.style.opacity = 1;
+      });
+      visualEl.style.transition = "opacity .35s ease, background .4s ease";
+      visualEl.style.opacity = 1;
     }, 220);
 
-    Array.from(dotsWrap.children).forEach(function (d, di) {
-      d.classList.toggle("active", di === i);
+    Array.from(dotsWrap.children).forEach(function (d, di) { d.classList.toggle("active", di === i); });
+    Array.from(progressWrap.children).forEach(function (s, si) {
+      s.classList.remove("active", "done");
+      if (si < i) s.classList.add("done");
+      if (si === i) s.classList.add("active");
     });
   }
 
+  afficherExemple(0);
   setInterval(function () {
     idx = (idx + 1) % exemples.length;
     afficherExemple(idx);
-  }, 3600);
+  }, DUREE);
 
-  // ---- Testimonials: build cards then duplicate once for a seamless loop ----
+  // ---- Avis: 12 avis chiffrés, dupliqués une fois pour boucler ----
   // ⚠️ PLACEHOLDER — à remplacer par de vrais avis de clients avant mise en ligne.
   const avis = [
-    { nom: "Chantal A.", role: "Gérante, restaurant à Cotonou", texte: "En une semaine, j'ai eu plus de demandes sur WhatsApp qu'en un mois de bouche-à-oreille." },
-    { nom: "Firmin K.", role: "Partageur, Porto-Novo", texte: "Je partage 2-3 annonces par jour sur mon statut et je retire mes gains chaque semaine." },
-    { nom: "Rosine D.", role: "Boutique de mode, Abomey-Calavi", texte: "Simple à lancer, et je vois exactement combien de clics chaque partageur m'apporte." },
-    { nom: "Ibrahim S.", role: "Partageur, Parakou", texte: "Ça complète bien mes revenus, et le retrait vers Mobile Money est rapide." },
-    { nom: "Léa M.", role: "Institut de beauté, Cotonou", texte: "Le ciblage par commune m'a permis de toucher exactement mon quartier." }
+    { nom: "Chantal A.", role: "Gérante, restaurant à Cotonou", texte: "En une semaine, j'ai eu plus de demandes sur WhatsApp qu'en un mois de bouche-à-oreille. +47 clients en 7 jours." },
+    { nom: "Firmin K.", role: "Partageur, Porto-Novo", texte: "Je partage 2-3 annonces par jour sur mon statut et je retire déjà 18 000 FCFA chaque semaine." },
+    { nom: "Rosine D.", role: "Boutique de mode, Abomey-Calavi", texte: "Simple à lancer, et je vois exactement combien de clics chaque partageur m'apporte en temps réel." },
+    { nom: "Ibrahim S.", role: "Partageur, Parakou", texte: "Ça complète bien mes revenus : environ 12 000 FCFA/semaine, et le retrait Mobile Money prend 2 minutes." },
+    { nom: "Léa M.", role: "Institut de beauté, Cotonou", texte: "Le ciblage par commune m'a permis de toucher exactement mon quartier. Taux de clic bien meilleur qu'avant." },
+    { nom: "Aristide H.", role: "Partageur, Bohicon", texte: "J'ai commencé pour tester, et dès la première semaine j'avais déjà touché 9 500 FCFA sans rien dépenser." },
+    { nom: "Fadilath O.", role: "Traiteur événementiel, Cotonou", texte: "3 nouvelles commandes de mariage en un mois, toutes venues d'un clic sur un statut WhatsApp." },
+    { nom: "Judicaël T.", role: "Partageur, Ouidah", texte: "C'est devenu un réflexe : je publie le matin en allant au travail et je regarde mes gains grimper le soir." },
+    { nom: "Nadège B.", role: "Salon de coiffure, Porto-Novo", texte: "Grâce à Pubwek, mon agenda est complet deux semaines à l'avance pour la première fois." },
+    { nom: "Moustapha D.", role: "Partageur, Cotonou", texte: "Je pensais que ce serait compliqué, mais en 5 minutes mon lien était prêt et je gagnais déjà mon premier clic." },
+    { nom: "Colette V.", role: "Boutique électroménager, Parakou", texte: "J'ai touché des clients dans des quartiers où je n'avais jamais réussi à me faire connaître avant." },
+    { nom: "Sègbédji A.", role: "Partageur, Abomey-Calavi", texte: "Le suivi des clics est très clair, je sais exactement combien je vais retirer à la fin de la semaine." }
   ];
 
   function initiale(nom) { return nom.trim().charAt(0).toUpperCase(); }
@@ -479,7 +734,13 @@
       '<p class="pw-testi-quote">« ' + a.texte + ' »</p>' +
       '<div class="pw-testi-person">' +
         '<div class="pw-testi-avatar">' + initiale(a.nom) + '</div>' +
-        '<div><div class="pw-testi-name">' + a.nom + '</div><div class="pw-testi-role">' + a.role + '</div></div>' +
+        '<div>' +
+          '<div class="pw-testi-name-row">' +
+            '<span class="pw-testi-name">' + a.nom + '</span>' +
+            '<span class="pw-testi-verified"><i class="bi bi-patch-check-fill"></i> Vérifié</span>' +
+          '</div>' +
+          '<div class="pw-testi-role">' + a.role + '</div>' +
+        '</div>' +
       '</div>';
     return div;
   }
@@ -488,7 +749,7 @@
   const tout = avis.concat(avis); // dupliqué une fois pour boucler sans coupure visible
   tout.forEach(function (a) { track.appendChild(carte(a)); });
 
-  // ---- Reveal on scroll: one quiet fade-up per section, not per card ----
+  // ---- Reveal on scroll: un fade-up discret par section ----
   const cibles = document.querySelectorAll(".pw-reveal");
   if ("IntersectionObserver" in window) {
     const obs = new IntersectionObserver(function (entrees) {

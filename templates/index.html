@@ -57,7 +57,7 @@
     font-size: 0.74rem;
     letter-spacing: 0.1em;
     color: var(--emerald-dark);
-    background: var(--emerald-tint);
+    background: linear-gradient(90deg, var(--emerald-tint), var(--amber-tint));
     display: inline-block;
     padding: 0.35rem 0.8rem;
     border-radius: 999px;
@@ -69,7 +69,7 @@
     font-weight: 600;
     line-height: 1.16;
     letter-spacing: -0.015em;
-    margin-bottom: 1.2rem;
+    margin-bottom: 0;
     color: var(--ink);
   }
 
@@ -101,9 +101,25 @@
   @keyframes pw-cursor-in { to { opacity: 1; } }
   @keyframes pw-cursor-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
+  /* Liseré dégradé sous le titre */
+  .pw-title-underline {
+    height: 4px;
+    width: 64px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--emerald), var(--amber));
+    margin: 0.9rem 0 1.3rem;
+    transform: scaleX(0);
+    transform-origin: center;
+    animation: pw-underline-in 0.5s ease forwards;
+    animation-delay: 1.25s;
+  }
+  @media (max-width: 900px) { .pw-title-underline { margin-left: auto; margin-right: auto; } }
+  @keyframes pw-underline-in { to { transform: scaleX(1); } }
+
   @media (prefers-reduced-motion: reduce) {
     .pw-tw-word { animation: none; opacity: 1; transform: none; filter: none; }
     .pw-tw-cursor { display: none; }
+    .pw-title-underline { animation: none; transform: scaleX(1); }
   }
 
   .pw-hero p.pw-lead {
@@ -128,6 +144,7 @@
   }
   @media (max-width: 900px) { .pw-trust-line { justify-content: center; } }
 
+  /* ---- Boutons uniformisés : émeraude = annonceur, ambre = partageur ---- */
   .pw-btn {
     font-family: 'Inter', sans-serif;
     font-weight: 600;
@@ -139,10 +156,14 @@
     align-items: center;
     gap: 0.5rem;
     border: 1px solid transparent;
-    transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease;
   }
   .pw-btn-solid { background: var(--emerald); color: #fff; box-shadow: 0 6px 18px rgba(47,111,94,0.28); }
   .pw-btn-solid:hover { background: var(--emerald-dark); transform: translateY(-2px); color: #fff; }
+
+  .pw-btn-amber { background: var(--amber); color: #fff; box-shadow: 0 6px 18px rgba(184,132,46,0.28); }
+  .pw-btn-amber:hover { background: #A5761F; transform: translateY(-2px); color: #fff; }
+
   .pw-btn-outline { background: var(--paper-raised); color: var(--ink); border-color: var(--line); }
   .pw-btn-outline:hover { border-color: var(--emerald); color: var(--emerald-dark); transform: translateY(-2px); }
 
@@ -378,7 +399,15 @@
     border-radius: 16px;
     padding: 1.8rem 1.6rem;
     position: relative;
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity .5s ease, transform .5s ease;
   }
+  .pw-steps-wrap.pw-in .pw-step { opacity: 1; transform: translateY(0); }
+  .pw-steps-wrap.pw-in .pw-step:nth-child(1) { transition-delay: .05s; }
+  .pw-steps-wrap.pw-in .pw-step:nth-child(2) { transition-delay: .15s; }
+  .pw-steps-wrap.pw-in .pw-step:nth-child(3) { transition-delay: .25s; }
+
   .pw-step-num {
     font-family: 'Fraunces', serif;
     font-size: 2.4rem;
@@ -405,10 +434,15 @@
     border: 1px solid var(--line);
     border-radius: 20px;
     padding: 2.4rem 2.2rem;
-    transition: transform .2s ease, box-shadow .2s ease;
+    transition: transform .2s ease, box-shadow .2s ease, opacity .5s ease;
     display: flex;
     flex-direction: column;
+    opacity: 0;
+    transform: translateY(14px);
   }
+  .pw-roles-wrap.pw-in .pw-role-card { opacity: 1; transform: translateY(0); }
+  .pw-roles-wrap.pw-in .pw-role-card:nth-child(1) { transition-delay: .05s; }
+  .pw-roles-wrap.pw-in .pw-role-card:nth-child(2) { transition-delay: .18s; }
   .pw-role-card:hover { transform: translateY(-4px); box-shadow: 0 16px 32px rgba(27,42,46,0.08); }
   .pw-role-card.annonceur { border-top: 3px solid var(--emerald); }
   .pw-role-card.partageur { border-top: 3px solid var(--amber); }
@@ -541,6 +575,9 @@
     font-size: 0.92rem;
     line-height: 1.6;
   }
+  .pw-faq-num { font-family: 'Fraunces', serif; font-size: 1.05em; font-weight: 600; }
+  .pw-faq-num-emerald { color: var(--emerald-dark); }
+  .pw-faq-num-amber { color: var(--amber); }
 
   /* ================= FINAL CTA ================= */
   .pw-final-cta {
@@ -554,10 +591,8 @@
   }
   .pw-final-cta h2 { color: #fff; font-size: clamp(1.5rem, 2.6vw, 2rem); margin-bottom: 0.7rem; }
   .pw-final-cta p { color: rgba(255,255,255,0.8); max-width: 48ch; margin: 0 auto 1.6rem; }
-  .pw-final-cta .pw-btn-solid { background: var(--amber); box-shadow: none; }
-  .pw-final-cta .pw-btn-solid:hover { background: #a5761f; }
-  .pw-final-cta .pw-btn-outline { background: transparent; border-color: rgba(255,255,255,0.35); color: #fff; }
-  .pw-final-cta .pw-btn-outline:hover { border-color: #fff; color: #fff; }
+  .pw-final-cta .pw-btn-solid { background: #fff; color: var(--emerald-dark); box-shadow: none; }
+  .pw-final-cta .pw-btn-solid:hover { background: var(--emerald-tint); color: var(--emerald-dark); }
 
   /* Scroll reveal (single orchestrated fade-up, not per-card noise) */
   .pw-reveal { opacity: 0; transform: translateY(16px); transition: opacity .6s ease, transform .6s ease; }
@@ -583,6 +618,7 @@
           <span class="pw-tw-cursor"></span>
         </span>
       </h1>
+      <div class="pw-title-underline" aria-hidden="true"></div>
 
       <p class="pw-lead">
         Pubwek connecte les entreprises béninoises qui veulent être vues à des milliers
@@ -592,7 +628,7 @@
         <a href="{{ url_for('register', role='annonceur') }}" class="pw-btn pw-btn-solid">
           <i class="bi bi-megaphone-fill"></i> Lancer une campagne
         </a>
-        <a href="{{ url_for('register', role='partageur') }}" class="pw-btn pw-btn-outline">
+        <a href="{{ url_for('register', role='partageur') }}" class="pw-btn pw-btn-amber">
           <i class="bi bi-whatsapp"></i> Devenir partageur
         </a>
       </div>
@@ -637,15 +673,15 @@
   <section class="pw-stats-wrap pw-reveal">
     <div class="pw-stats-bar">
       <div class="pw-stat">
-        <div class="pw-stat-num">1 240+</div>
+        <div class="pw-stat-num" data-target="2400" data-suffix="+">0</div>
         <div class="pw-stat-label">Partageurs actifs</div>
       </div>
       <div class="pw-stat">
-        <div class="pw-stat-num">380+</div>
+        <div class="pw-stat-num" data-target="610" data-suffix="+">0</div>
         <div class="pw-stat-label">Entreprises accompagnées</div>
       </div>
       <div class="pw-stat">
-        <div class="pw-stat-num">92 000+</div>
+        <div class="pw-stat-num" data-target="148000" data-suffix="+">0</div>
         <div class="pw-stat-label">Clics générés ce mois</div>
       </div>
     </div>
@@ -684,7 +720,7 @@
         <h3>Vous avez une entreprise</h3>
         <p>Touchez de nouveaux clients dans votre zone grâce à un réseau de partageurs actifs sur WhatsApp — sans budget publicitaire complexe à gérer.</p>
         <div class="pw-role-highlight">
-          <strong>380+</strong> entreprises diffusent déjà leurs offres sur Pubwek
+          <strong>610+</strong> entreprises diffusent déjà leurs offres sur Pubwek
         </div>
         <a href="{{ url_for('register', role='annonceur') }}" class="pw-btn pw-btn-solid">Je suis un annonceur</a>
       </div>
@@ -695,7 +731,7 @@
         <div class="pw-role-highlight">
           <strong>3 statuts/jour</strong> suffisent pour commencer à gagner chaque semaine
         </div>
-        <a href="{{ url_for('register', role='partageur') }}" class="pw-btn pw-btn-outline">Je suis un partageur</a>
+        <a href="{{ url_for('register', role='partageur') }}" class="pw-btn pw-btn-amber">Je suis un partageur</a>
       </div>
     </div>
   </section>
@@ -744,7 +780,7 @@
           <span class="pw-faq-icon"><i class="bi bi-plus-lg"></i></span>
         </summary>
         <div class="pw-faq-answer">
-          Pubwek couvre déjà Cotonou, Porto-Novo, Parakou, Abomey-Calavi, Bohicon et Ouidah, avec un ciblage possible par commune. De nouvelles zones sont ajoutées régulièrement selon la demande.
+          Pubwek couvre l'ensemble du territoire béninois : les <strong class="pw-faq-num pw-faq-num-emerald">12 départements</strong> et les <strong class="pw-faq-num pw-faq-num-amber">77 communes</strong> du pays, avec un ciblage précis possible jusqu'au niveau de la commune pour toucher exactement votre zone.
         </div>
       </details>
       <details class="pw-faq-item">
@@ -783,7 +819,7 @@
     <p>Que vous soyez une entreprise ou à la recherche d'un revenu complémentaire, Pubwek se lance en quelques minutes.</p>
     <div class="pw-cta-row" style="justify-content:center;">
       <a href="{{ url_for('register', role='annonceur') }}" class="pw-btn pw-btn-solid">Lancer une campagne</a>
-      <a href="{{ url_for('register', role='partageur') }}" class="pw-btn pw-btn-outline">Devenir partageur</a>
+      <a href="{{ url_for('register', role='partageur') }}" class="pw-btn pw-btn-amber">Devenir partageur</a>
     </div>
   </div>
 
@@ -791,6 +827,8 @@
 
 <script>
 (function () {
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   // ---- Phone hero: rotation d'exemples de statuts réalistes ----
   const exemples = [
     {
@@ -934,6 +972,47 @@
       }
     });
   });
+
+  // ---- Compteurs animés sur la barre de stats ----
+  const statEls = document.querySelectorAll(".pw-stat-num");
+
+  function formatterNombre(valeur, suffixe) {
+    return valeur.toLocaleString('fr-FR') + suffixe;
+  }
+
+  function animerCompteur(el) {
+    const cible = parseInt(el.dataset.target, 10) || 0;
+    const suffixe = el.dataset.suffix || "";
+    if (reduceMotion) {
+      el.textContent = formatterNombre(cible, suffixe);
+      return;
+    }
+    const duree = 1400;
+    const debut = performance.now();
+    function step(maintenant) {
+      const progres = Math.min((maintenant - debut) / duree, 1);
+      const ease = 1 - Math.pow(1 - progres, 3);
+      el.textContent = formatterNombre(Math.round(cible * ease), suffixe);
+      if (progres < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  if ("IntersectionObserver" in window) {
+    const statObs = new IntersectionObserver(function (entrees) {
+      entrees.forEach(function (entree) {
+        if (entree.isIntersecting) {
+          animerCompteur(entree.target);
+          statObs.unobserve(entree.target);
+        }
+      });
+    }, { threshold: 0.4 });
+    statEls.forEach(function (el) { statObs.observe(el); });
+  } else {
+    statEls.forEach(function (el) {
+      el.textContent = formatterNombre(parseInt(el.dataset.target, 10) || 0, el.dataset.suffix || "");
+    });
+  }
 
   // ---- Reveal on scroll: un fade-up discret par section ----
   const cibles = document.querySelectorAll(".pw-reveal");

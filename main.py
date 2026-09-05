@@ -3350,6 +3350,7 @@ def autoriser_remboursement_admin(campaign_id):
 
     # Activation de la possibilité pour l'annonceur de demander son remboursement
     camp.can_claim_refund = True
+    camp.refund_status = "available"  # 🆕 démarre le parcours dédié remboursement
 
     # Notification interne pour l'annonceur
     db.session.add(Notification(

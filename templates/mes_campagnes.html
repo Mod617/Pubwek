@@ -294,42 +294,65 @@
 
                         <hr>
 
-                        <!-- 🆕 Une demande de remboursement est en cours : plus aucune action
-                             possible sur cette campagne tant qu'elle n'est pas traitée par l'admin. -->
-                        {% if campaign.status == "remboursement_demande" %}
+                        <!-- =====================================================
+                             🆕 PARCOURS REMBOURSEMENT — piloté par campaign.refund_status,
+                             totalement indépendant de campaign.status (contenu campagne).
+                             ===================================================== -->
+
+                        {% if campaign.refund_status == "processed" %}
+                        <!-- Remboursement traité manuellement : message final en vert -->
+                        <div class="alert alert-success small mb-0 w-100">
+                            <i class="fas fa-check-circle me-1"></i>
+                            <strong>Remboursement effectué.</strong>
+                            {{ campaign.refund_processed_note or "Le virement a été effectué avec succès." }}
+                        </div>
+
+                        {% elif campaign.refund_status == "requested" %}
+                        <!-- Demande envoyée, en attente de décision admin : aucune action possible -->
                         <div class="alert alert-info small mb-0 w-100">
                             <i class="fas fa-hourglass-half me-1"></i>
                             <strong>Remboursement en cours de traitement.</strong> Votre demande a été transmise
                             à l'administration ; vous serez notifié(e) une fois le virement effectué (sous 48h
                             maximum). Cette campagne ne peut plus être corrigée tant que la demande est en cours.
                         </div>
-                        {% else %}
 
-                        <!-- 🆕 🐞 FIX : si la dernière demande de remboursement de cette
-                             campagne a été REFUSÉE par l'admin, le motif doit être visible
-                             ici — pas seulement dans le centre de notifications, que
-                             l'annonceur ne consulte pas forcément. -->
-                        {% if campaign.derniere_demande_remboursement and campaign.derniere_demande_remboursement.status == "rejected" %}
+                        {% elif campaign.refund_status == "rejected" %}
+                        <!-- 🆕 Demande refusée par l'admin (coordonnées invalides, etc.) :
+                             uniquement le bouton de renvoi de la demande, PAS "Corriger &
+                             Resoumettre" — l'annonceur doit juste corriger ses coordonnées. -->
                         <div class="refund-refuse-note">
                             <i class="fas fa-info-circle me-1"></i>
-                            <strong>Votre précédente demande de remboursement a été refusée :</strong>
-                            {{ campaign.derniere_demande_remboursement.admin_notes or "Motif non précisé par l'administration." }}
-                            Vous pourrez soumettre une nouvelle demande une fois que l'administration aura de
-                            nouveau activé le remboursement pour cette campagne.
+                            <strong>Votre demande de remboursement a été refusée :</strong>
+                            {{ campaign.refund_rejection_reason or "Motif non précisé par l'administration." }}
+                            Merci de corriger vos coordonnées ci-dessous et de renvoyer votre demande.
                         </div>
-                        {% endif %}
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-danger fw-bold flex-grow-1" data-bs-toggle="modal" data-bs-target="#refundModal{{ campaign.id }}">
+                                💰 Corriger et renvoyer la demande
+                            </button>
+                        </div>
 
+                        {% elif campaign.can_claim_refund %}
+                        <!-- Admin vient d'autoriser (refund_status == "available") : les deux
+                             choix sont proposés à l'annonceur. -->
                         <div class="d-flex flex-wrap gap-2 mt-3">
-                            <!-- Bouton pour ouvrir la modal de correction -->
+                            <button type="button" class="btn btn-sm btn-warning fw-bold flex-grow-1" data-bs-toggle="modal" data-bs-target="#editModal{{ campaign.id }}">
+                                ✏️ Corriger & Resoumettre
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger fw-bold flex-grow-1" data-bs-toggle="modal" data-bs-target="#refundModal{{ campaign.id }}">
+                                💰 Demander le remboursement (48h max)
+                            </button>
+                        </div>
+
+                        {% else %}
+                        <!-- Rejet initial, remboursement pas encore autorisé par l'admin :
+                             seule la correction du contenu est possible. -->
+                        <div class="d-flex flex-wrap gap-2 mt-3">
                             <button type="button" class="btn btn-sm btn-warning fw-bold flex-grow-1" data-bs-toggle="modal" data-bs-target="#editModal{{ campaign.id }}">
                                 ✏️ Corriger & Resoumettre
                             </button>
 
-                            {% if campaign.can_claim_refund and campaign.paid %}
-                            <button type="button" class="btn btn-sm btn-outline-danger fw-bold flex-grow-1" data-bs-toggle="modal" data-bs-target="#refundModal{{ campaign.id }}">
-                                💰 Demander le remboursement (48h max)
-                            </button>
-                            {% elif not campaign.paid %}
+                            {% if not campaign.paid %}
                             <span class="d-inline-block flex-grow-1" tabindex="0" data-bs-toggle="tooltip" title="Cette campagne n'a jamais été payée, aucun remboursement n'est applicable.">
                                 <button class="btn btn-sm btn-light text-muted fw-bold w-100" disabled>💰 Aucun paiement effectué</button>
                             </span>

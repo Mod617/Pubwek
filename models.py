@@ -495,6 +495,33 @@ class Campaign(db.Model):
     rejection_reason = db.Column(db.Text, nullable=True)
     can_claim_refund = db.Column(db.Boolean, default=False)
 
+    # =========================================================================
+    # 🆕 💸 SUIVI DÉDIÉ DU PARCOURS DE REMBOURSEMENT
+    #
+    # Indépendant de `status` (qui décrit l'état du CONTENU de la campagne :
+    # non_payee / active / terminee / rejete...). refund_status ne décrit que
+    # l'état de la démarche de remboursement, pour éviter que les deux se
+    # marchent dessus dans les templates.
+    #
+    # Valeurs possibles :
+    #   None        -> jamais concerné par un remboursement
+    #   "available" -> admin a autorisé le remboursement, annonceur n'a pas
+    #                  encore soumis sa demande
+    #   "requested" -> demande envoyée par l'annonceur, en attente de décision admin
+    #   "rejected"  -> admin a refusé LA DEMANDE (coordonnées invalides, etc.) ;
+    #                  l'annonceur peut renvoyer directement une demande corrigée,
+    #                  sans repasser par une nouvelle autorisation admin
+    #   "processed" -> remboursement viré manuellement par l'admin, terminé
+    # =========================================================================
+    refund_status = db.Column(db.String(20), nullable=True, index=True)
+
+    # Motif du refus de LA DEMANDE de remboursement (distinct de rejection_reason,
+    # qui concerne le refus de la CAMPAGNE elle-même par l'admin)
+    refund_rejection_reason = db.Column(db.Text, nullable=True)
+
+    # Message final affiché en vert une fois le remboursement traité manuellement
+    refund_processed_note = db.Column(db.Text, nullable=True)
+
     # --- 🆕 Partage manuel de la campagne validée aux partageurs ciblés ---
     shared_to_partageurs = db.Column(db.Boolean, default=False)  # Empêche les doublons de partage
     shared_at = db.Column(db.DateTime, nullable=True)  # Horodatage du partage

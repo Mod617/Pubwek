@@ -3435,26 +3435,58 @@ def traiter_remboursement(refund_id):
         flash("Cette demande a déjà été traitée. ⚠️", "warning")
         return redirect(url_for("admin_remboursements"))
 
-    note = request.form.get("admin_note", "").strip()
+    camp = db.session.get(Campaign, demande.campaign_id)
+    if not camp:
+        flash("Campagne associée introuvable. ⚠️", "danger")
+        return redirect(url_for("admin_remboursements"))
 
+    montant_rembourse = camp.total_cost
+
+    # =====================================================================
+    # 🆕 Crédit automatique du portefeuille — plus de virement manuel ni de
+    # preuve à uploader. Verrou sur la ligne utilisateur (même principe que
+    # demander_retrait) : un double-clic ou deux workers simultanés ne
+    # doivent jamais créditer deux fois le même remboursement.
+    # =====================================================================
+    annonceur = (
+        db.session.query(User)
+        .filter_by(id=demande.user_id)
+        .with_for_update()
+        .first()
+    )
+    if not annonceur:
+        flash("Compte de l'annonceur introuvable. ⚠️", "danger")
+        return redirect(url_for("admin_remboursements"))
+
+    annonceur.wallet_balance = (annonceur.wallet_balance or 0.0) + montant_rembourse
+
+    db.session.add(WalletTransaction(
+        user_id=annonceur.id,
+        amount=montant_rembourse,
+        balance_after=annonceur.wallet_balance,
+        transaction_type="refund_credit",
+        description=f"Remboursement de la campagne #{camp.id} crédité sur le portefeuille"
+    ))
+
+    note = request.form.get("admin_note", "").strip()
     demande.status = "processed"
-    demande.admin_notes = bleach.clean(note) if note else "Virement effectué."
+    demande.admin_notes = bleach.clean(note) if note else (
+        f"{montant_rembourse:,.0f} FCFA crédités sur le portefeuille Pubwek de l'annonceur."
+    )
     demande.updated_at = datetime.utcnow()
 
-    # 🆕 Répercussion sur la campagne : c'est ce message qui s'affichera en
-    # vert sur mes_campagnes.html, et le parcours remboursement est clos.
-    camp = db.session.get(Campaign, demande.campaign_id)
-    if camp:
-        camp.refund_status = "processed"
-        camp.refund_processed_note = demande.admin_notes
-        camp.can_claim_refund = False
+    # Répercussion sur la campagne : message affiché en vert sur mes_campagnes.html
+    camp.refund_status = "processed"
+    camp.refund_processed_note = demande.admin_notes
+    camp.can_claim_refund = False
 
     db.session.add(Notification(
         user_id=demande.user_id,
-        title="Remboursement effectué ✅",
+        title="Remboursement crédité 💰",
         message=(
-            f"Le remboursement de votre campagne #{demande.campaign_id} a été effectué avec succès. "
-            f"Merci de vérifier la réception sur votre moyen de paiement."
+            f"Le remboursement de {montant_rembourse:,.0f} FCFA pour votre campagne #{camp.id} "
+            f"a été crédité sur votre portefeuille Pubwek. Vous pouvez l'utiliser pour lancer une "
+            f"nouvelle campagne ou demander un retrait vers votre Mobile Money."
         ),
         category="success",
         link=url_for("mes_campagnes"),
@@ -3463,10 +3495,10 @@ def traiter_remboursement(refund_id):
     db.session.commit()
 
     logger.info(
-        "[REMBOURSEMENT] Demande #%d marquée comme traitée par admin id=%d",
-        refund_id, current_user.id
+        "[REMBOURSEMENT] Demande #%d créditée sur le portefeuille de l'annonceur id=%d (montant=%.2f) par admin id=%d",
+        refund_id, annonceur.id, montant_rembourse, current_user.id
     )
-    flash(f"Remboursement #{demande.id} marqué comme traité. Le partageur a été notifié. ✅", "success")
+    flash(f"Remboursement #{demande.id} : {montant_rembourse:,.0f} FCFA crédités sur le portefeuille de l'annonceur. ✅", "success")
     return redirect(url_for("admin_remboursements"))
 
 

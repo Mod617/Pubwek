@@ -85,6 +85,41 @@
   }
   .pubwek-wrap .style-bio-text { color: var(--ink-soft) !important; }
 
+  /* ---------- 🆕 Wallet card (portefeuille annonceur) ---------- */
+  .pubwek-wrap .wallet-card {
+    border: 1px solid var(--line) !important;
+    border-radius: 18px !important;
+    box-shadow: 0 1px 2px rgba(27,42,46,0.05) !important;
+    background: linear-gradient(135deg, var(--ink) 0%, #24393D 100%) !important;
+    color: #fff;
+  }
+  .pubwek-wrap .wallet-card .wallet-label {
+    font-family: 'IBM Plex Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.65);
+  }
+  .pubwek-wrap .wallet-card .wallet-amount {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    color: var(--amber);
+    font-size: 2rem;
+  }
+  .pubwek-wrap .wallet-card .btn-wallet-action {
+    background: var(--emerald) !important;
+    border: none !important;
+    border-radius: 999px !important;
+    font-weight: 700;
+    color: #fff;
+  }
+  .pubwek-wrap .wallet-card .btn-wallet-action:hover { background: var(--emerald-dark) !important; }
+  .pubwek-wrap .wallet-card .btn-wallet-action:disabled { background: rgba(255,255,255,0.15) !important; color: rgba(255,255,255,0.5); }
+  .pubwek-wrap .wallet-card .wallet-note {
+    color: rgba(255,255,255,0.55);
+    font-size: 0.8rem;
+  }
+
   /* ---------- Section heading ---------- */
   .pubwek-wrap h2.mb-4.text-center {
     font-family: 'Fraunces', serif;
@@ -297,6 +332,79 @@
           </div>
         </div>
 
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 🆕 MON PORTEFEUILLE — solde disponible + retrait des crédits de remboursement -->
+  <!-- ========================================== -->
+  <div class="card p-4 shadow-sm mb-4 wallet-card">
+    <div class="row align-items-center">
+      <div class="col-md-7 mb-3 mb-md-0">
+        <div class="wallet-label mb-1">💼 Mon Portefeuille</div>
+        <div class="wallet-amount">{{ "{:,.0f}".format(current_user.wallet_balance or 0.0) }} XOF</div>
+        <div class="wallet-note mt-2">
+          Ce solde provient des remboursements de campagnes crédités par l'administration.
+          Vous pouvez le retirer vers Mobile Money, ou l'utiliser pour couvrir une future campagne.
+        </div>
+      </div>
+      <div class="col-md-5 text-md-end">
+        {% if demande_retrait_en_cours %}
+          <button class="btn btn-wallet-action" disabled>⏳ Retrait déjà en cours</button>
+          <div class="wallet-note mt-2">Votre demande précédente est en attente de traitement.</div>
+        {% elif (current_user.wallet_balance or 0.0) < config.minimum_withdrawal_amount %}
+          <button class="btn btn-wallet-action" disabled>💸 Demander un retrait</button>
+          <div class="wallet-note mt-2">Minimum de retrait : {{ "{:,.0f}".format(config.minimum_withdrawal_amount) }} XOF.</div>
+        {% else %}
+          <button type="button" class="btn btn-wallet-action" data-bs-toggle="modal" data-bs-target="#walletWithdrawModal">
+            💸 Demander un retrait
+          </button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL : Demande de retrait du portefeuille -->
+  <div class="modal fade" id="walletWithdrawModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form action="{{ url_for('demander_retrait') }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="modal-header bg-dark text-white">
+            <h5 class="modal-title fw-bold">💸 Retirer mon portefeuille</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p class="small text-muted mb-3">
+              Solde disponible : <strong>{{ "{:,.0f}".format(current_user.wallet_balance or 0.0) }} XOF</strong>
+              — minimum de retrait : {{ "{:,.0f}".format(config.minimum_withdrawal_amount) }} XOF.
+            </p>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Montant à retirer (XOF)</label>
+              <input type="number" name="amount" class="form-control" min="{{ config.minimum_withdrawal_amount }}"
+                     max="{{ current_user.wallet_balance or 0.0 }}" step="1" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Moyen de réception</label>
+              <select name="payout_channel" class="form-select" required>
+                <option value="MTN Mobile Money">MTN Mobile Money</option>
+                <option value="Moov Money">Moov Money</option>
+                <option value="Celtiis Cash">Celtiis Cash</option>
+                <option value="Wave">Wave</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Numéro de téléphone</label>
+              <input type="tel" name="payout_phone" class="form-control" placeholder="+229XXXXXXXX"
+                     value="{{ current_user.whatsapp_number or '' }}" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button type="submit" class="btn btn-success fw-bold">Confirmer le retrait</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>

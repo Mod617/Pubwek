@@ -522,6 +522,16 @@ class Campaign(db.Model):
     # Message final affiché en vert une fois le remboursement traité manuellement
     refund_processed_note = db.Column(db.Text, nullable=True)
 
+    # =========================================================================
+    # 🆕 SUIVI DES RESOUMISSIONS APRÈS REJET
+    #
+    # Permet à l'admin de distinguer, dans un tableau séparé et trié par ordre
+    # d'envoi, les campagnes qui reviennent après correction d'un rejet, des
+    # nouvelles campagnes jamais encore soumises.
+    # =========================================================================
+    is_resubmission = db.Column(db.Boolean, default=False, nullable=False)
+    resubmitted_at = db.Column(db.DateTime, nullable=True, index=True)
+
     # --- 🆕 Partage manuel de la campagne validée aux partageurs ciblés ---
     shared_to_partageurs = db.Column(db.Boolean, default=False)  # Empêche les doublons de partage
     shared_at = db.Column(db.DateTime, nullable=True)  # Horodatage du partage

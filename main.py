@@ -1623,6 +1623,12 @@ def resoumettre_campagne(campaign_id):
     camp.is_active = False
     camp.admin_status = "pending_review"
 
+    # 🆕 Marquage de la resoumission — permet à l'admin de distinguer cette
+    # campagne des nouvelles jamais encore soumises, et de la trier par ordre
+    # d'envoi dans un tableau dédié.
+    camp.is_resubmission = True
+    camp.resubmitted_at = datetime.utcnow()
+
     # 🐞 FIX : le paiement réel (camp.paid) décide seul du prochain statut — jamais une supposition
     if camp.paid:
         # Déjà payée avant son rejet (refusée pour un motif de contenu) : repart direct en file d'attente admin

@@ -4830,9 +4830,16 @@ def tracking_redirect_site(token):
 @login_required
 @limiter.limit("10 per hour")
 def demander_retrait():
-    if current_user.role != "partageur":
-        flash("Accès réservé aux partageurs. 🚫", "danger")
+    # 🆕 Ouvert aux partageurs (gains de clics/parrainage) ET aux annonceurs
+    # (crédits de remboursement) : les deux partagent le même portefeuille
+    # (User.wallet_balance) et le même circuit de retrait manuel.
+    if current_user.role not in ("partageur", "annonceur"):
+        flash("Accès réservé aux partageurs et annonceurs. 🚫", "danger")
         return redirect(url_for("index"))
+
+    # 🆕 Redirection vers le bon tableau de bord selon le rôle, à chaque
+    # retour de cette fonction (succès ou erreur).
+    dashboard_retour = "dashboard_partageur" if current_user.role == "partageur" else "dashboard_annonceur"
 
     from models import SystemConfig, WithdrawalRequest, WalletTransaction
     config = SystemConfig.get_config()
@@ -4846,24 +4853,24 @@ def demander_retrait():
         montant = float(montant_raw)
     except (ValueError, TypeError):
         flash("Montant invalide. ⚠️", "danger")
-        return redirect(url_for("dashboard_partageur"))
+        return redirect(url_for(dashboard_retour))
 
     if montant <= 0:
         flash("Le montant du retrait doit être positif. ⚠️", "danger")
-        return redirect(url_for("dashboard_partageur"))
+        return redirect(url_for(dashboard_retour))
 
     if montant < config.minimum_withdrawal_amount:
         flash(f"Le montant minimum de retrait est de {config.minimum_withdrawal_amount:.0f} FCFA. ⚠️", "warning")
-        return redirect(url_for("dashboard_partageur"))
+        return redirect(url_for(dashboard_retour))
 
     # 2️⃣ Validation des coordonnées de réception
     if payout_channel not in ["MTN Mobile Money", "Moov Money", "Celtiis Cash", "Wave"]:
         flash("Moyen de réception invalide. ⚠️", "danger")
-        return redirect(url_for("dashboard_partageur"))
+        return redirect(url_for(dashboard_retour))
 
     if not re.match(r"^\+?[0-9]{7,15}$", payout_phone):
         flash("Numéro de téléphone invalide. Utilisez un format international (ex: +22960000000).", "danger")
-        return redirect(url_for("dashboard_partageur"))
+        return redirect(url_for(dashboard_retour))
 
     # 3️⃣ Verrouillage de la ligne utilisateur pour toute la durée de l'opération.
     #
@@ -4874,20 +4881,20 @@ def demander_retrait():
     #
     # SELECT ... FOR UPDATE est actif sur PostgreSQL (la base de production) et
     # sans effet sur SQLite, où l'écriture est de toute façon sérialisée.
-    partageur = (
+    utilisateur = (
         db.session.query(User)
         .filter_by(id=current_user.id)
         .with_for_update()
         .first()
     )
-    if partageur is None:
+    if utilisateur is None:
         flash("Compte introuvable. ⚠️", "danger")
-        return redirect(url_for("dashboard_partageur"))
+        return redirect(url_for(dashboard_retour))
 
-    current_balance = partageur.wallet_balance or 0.0
+    current_balance = utilisateur.wallet_balance or 0.0
     if montant > current_balance:
         flash(f"Solde insuffisant. Votre solde disponible est de {current_balance:.0f} FCFA. ⚠️", "danger")
-        return redirect(url_for("dashboard_partageur"))
+        return redirect(url_for(dashboard_retour))
 
     # 4️⃣ Vérification qu'il n'y a pas déjà une demande en cours (évite le double retrait du même argent)
     demande_en_cours = WithdrawalRequest.query.filter_by(
@@ -4895,16 +4902,16 @@ def demander_retrait():
     ).first()
     if demande_en_cours:
         flash("Vous avez déjà une demande de retrait en attente de traitement. Veuillez patienter. ⏳", "warning")
-        return redirect(url_for("dashboard_partageur"))
+        return redirect(url_for(dashboard_retour))
 
     try:
         # 5️⃣ Débit immédiat du portefeuille (le montant est "réservé" pour ce retrait)
-        partageur.wallet_balance = current_balance - montant
+        utilisateur.wallet_balance = current_balance - montant
 
         db.session.add(WalletTransaction(
             user_id=current_user.id,
             amount=-montant,
-            balance_after=partageur.wallet_balance,
+            balance_after=utilisateur.wallet_balance,
             transaction_type="withdrawal",
             description=f"Demande de retrait vers {payout_channel} ({payout_phone})"
         ))
@@ -4934,8 +4941,8 @@ def demander_retrait():
         db.session.commit()
 
         logger.info(
-            "[RETRAIT] Demande créée par user_id=%d, montant=%.2f, id_demande=%d",
-            current_user.id, montant, demande.id
+            "[RETRAIT] Demande créée par user_id=%d (role=%s), montant=%.2f, id_demande=%d",
+            current_user.id, current_user.role, montant, demande.id
         )
 
         flash(f"Votre demande de retrait de {montant:.0f} FCFA a été envoyée. Elle sera traitée sous peu. ✅", "success")
@@ -4945,7 +4952,7 @@ def demander_retrait():
         logger.error("Erreur lors de la demande de retrait (user %d) : %s", current_user.id, e)
         flash("Une erreur est survenue lors de votre demande. Réessayez. ⚠️", "danger")
 
-    return redirect(url_for("dashboard_partageur"))
+    return redirect(url_for(dashboard_retour))
 
 # ==========================================
 # 🆕 ROUTE ADMIN : LISTE DES DEMANDES DE RETRAIT

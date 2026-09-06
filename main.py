@@ -2891,18 +2891,38 @@ def admin_validate():
                 u.whatsapp_message = ""
 
     campaigns = []
+    campagnes_resoumises = []  # 🆕
     if peut_voir_campagnes:
         campaigns = Campaign.query.order_by(Campaign.created_at.desc()).all()
         for camp in campaigns:
+            camp.annonceur = db.session.get(User, camp.user_id)
+
+        # =====================================================================
+        # 🆕 Campagnes resoumises après correction, en attente de revalidation.
+        # Triées par ordre d'envoi (FIFO) : la première renvoyée doit être la
+        # première traitée par l'admin, pour ne pas faire attendre indéfiniment
+        # un annonceur qui a déjà corrigé sa campagne.
+        # =====================================================================
+        campagnes_resoumises = (
+            Campaign.query
+            .filter(
+                Campaign.is_resubmission.is_(True),
+                Campaign.admin_status == "pending_review",
+            )
+            .order_by(Campaign.resubmitted_at.asc())
+            .all()
+        )
+        for camp in campagnes_resoumises:
             camp.annonceur = db.session.get(User, camp.user_id)
 
     return render_template(
         "admin_validate.html",
         users=users,
         campaigns=campaigns,
+        campagnes_resoumises=campagnes_resoumises,  # 🆕
         peut_voir_utilisateurs=peut_voir_utilisateurs,
         peut_voir_campagnes=peut_voir_campagnes
-    )    
+    )  
 
 
 

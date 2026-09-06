@@ -2467,11 +2467,19 @@ def dashboard_annonceur():
     # L'annonceur voit uniquement ses campagnes
     campaigns = Campaign.query.filter_by(user_id=current_user.id).order_by(Campaign.created_at.desc()).all()
 
+    # 🆕 Portefeuille : une demande de retrait est-elle déjà en cours de
+    # traitement ? Sert à désactiver le bouton de demande côté template,
+    # même logique que dashboard_partageur.
+    demande_retrait_en_cours = WithdrawalRequest.query.filter_by(
+        user_id=current_user.id, status="pending"
+    ).first() is not None
+
     return render_template(
         "dashboard_annonceur.html",
         campaigns=campaigns,
         config=config,
-        departements_communes=DEPARTEMENTS_COMMUNES
+        departements_communes=DEPARTEMENTS_COMMUNES,
+        demande_retrait_en_cours=demande_retrait_en_cours  # 🆕
     )
 
 

@@ -66,6 +66,12 @@
     margin: 2rem 0 1.25rem;
   }
 
+  /* 🆕 Titre distinct pour le tableau des resoumissions, pour bien le
+     différencier visuellement du tableau principal des campagnes */
+  .section-title.resub-title {
+    color: #b8842e;
+  }
+
   .table-card {
     background: #fff;
     border-radius: 16px;
@@ -75,12 +81,22 @@
     overflow: hidden;
   }
 
+  /* 🆕 Bordure distinctive pour la carte des resoumissions */
+  .table-card.resub-card {
+    border: 2px solid #f8eedd;
+  }
+
   .table-card table {
     margin-bottom: 0;
   }
 
   .table-card thead tr {
     background: #1a1a2e !important;
+  }
+
+  /* 🆕 En-tête ambre pour distinguer visuellement le tableau des resoumissions */
+  .table-card.resub-card thead tr {
+    background: #b8842e !important;
   }
 
   .table-card thead th {
@@ -429,6 +445,121 @@
         </div>
     {% endif %}
 
+    <!-- ========================================== -->
+    <!-- 🆕 TABLEAU DÉDIÉ : CAMPAGNES RESOUMISES APRÈS CORRECTION -->
+    <!-- Trié par ordre d'envoi (la plus ancienne resoumission en premier),  -->
+    <!-- pour ne jamais faire attendre indéfiniment un annonceur qui a déjà  -->
+    <!-- corrigé sa campagne suite à un rejet.                              -->
+    <!-- ========================================== -->
+    {% if peut_voir_campagnes %}
+    <h4 class="section-title resub-title">🔄 Campagnes resoumises après correction ({{ campagnes_resoumises | length }})</h4>
+    <div class="table-card resub-card">
+    <div class="table-responsive">
+        <table class="table table-striped align-middle mb-0 responsive-table">
+            <thead class="text-white text-center">
+                <tr>
+                    <th>ID</th>
+                    <th>Annonceur</th>
+                    <th>Type</th>
+                    <th>Détail & Texte</th>
+                    <th>Renvoyée le</th>
+                    <th>Coût total</th>
+                    <th>Statut paiement</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for camp in campagnes_resoumises %}
+                <tr>
+                    <td class="text-center fw-bold" data-label="ID">#{{ camp.id }}</td>
+                    <td data-label="Annonceur">
+                        {% if camp.annonceur %}
+                            <div>{{ camp.annonceur.email }}</div>
+                        {% else %}
+                            <span class="text-muted">Utilisateur supprimé</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center" data-label="Type">
+                        <span class="text-capitalize d-block">{{ camp.promotion_type }}</span>
+                        {% if camp.display_option == "A" %}
+                            <span class="badge bg-success mt-1">🎬 Vidéo</span>
+                        {% elif camp.display_option == "B" %}
+                            <span class="badge bg-primary mt-1">📸 Multi-Statuts</span>
+                        {% elif camp.display_option == "C" %}
+                            <span class="badge bg-secondary mt-1">📝 Texte seul</span>
+                        {% endif %}
+                    </td>
+                    <td data-label="Détail & Texte">
+                        <strong>Détail :</strong> {{ camp.promotion_detail or "-" }}<br>
+                        <small class="text-muted"><strong>Statut WhatsApp :</strong> {{ camp.description or "-" }}</small>
+                    </td>
+                    <td class="text-center" data-label="Renvoyée le">
+                        {% if camp.resubmitted_at %}
+                            {{ camp.resubmitted_at.strftime("%d/%m/%Y %H:%M") }}
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center fw-bold text-success" data-label="Coût total">{{ "{:,.0f}".format(camp.total_cost) }} XOF</td>
+                    <td class="text-center" data-label="Statut paiement">
+                        {% if camp.paid %}
+                            <span class="badge bg-success">💰 Déjà payée</span>
+                        {% else %}
+                            <span class="badge bg-danger">⚠️ Non payée</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center" data-label="Actions">
+                        <div class="d-flex flex-column gap-1 align-items-center">
+                            <form action="{{ url_for('validate_campaign', campaign_id=camp.id) }}" method="POST" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-success">Valider ✅</button>
+                            </form>
+                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModalResub{{ camp.id }}">
+                                Refuser ❌
+                            </button>
+                        </div>
+
+                        <!-- MODALE dédiée (id distinct du tableau principal, même campagne pouvant y apparaître aussi) -->
+                        <div class="modal fade" id="rejectModalResub{{ camp.id }}" tabindex="-1" aria-hidden="true">
+                          <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                              <form action="{{ url_for('refuse_campaign', campaign_id=camp.id) }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="modal-header bg-danger text-white">
+                                  <h5 class="modal-title">Refuser la campagne #{{ camp.id }}</h5>
+                                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body text-start">
+                                  <label for="rejection_reason_resub{{ camp.id }}" class="form-label fw-bold">
+                                    Motif du refus <span class="text-danger">*</span>
+                                  </label>
+                                  <textarea name="rejection_reason" id="rejection_reason_resub{{ camp.id }}" class="form-control" rows="4"
+                                            placeholder="Ex : la vidéo dépasse 30 secondes, veuillez la raccourcir avant de relancer." required></textarea>
+                                  <small class="text-muted d-block mt-1">Ce motif sera envoyé à l'annonceur pour qu'il puisse corriger et relancer sa campagne.</small>
+                                </div>
+                                <div class="modal-footer">
+                                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                  <button type="submit" class="btn btn-danger fw-bold">Confirmer le refus ❌</button>
+                                </div>
+                              </form>
+                            </div>
+                          </div>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="8" class="empty-row text-center text-muted py-3">
+                        Aucune campagne resoumise en attente pour le moment.
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    </div>
+    {% endif %}
+
     <!-- 🆕 TABLEAU 2 : GESTION DES CAMPAGNES — visible uniquement si permission accordée -->
     {% if peut_voir_campagnes %}
     <h4 class="section-title">Campagnes publicitaires (WhatsApp)</h4>
@@ -564,6 +695,9 @@
                                 <span class="badge bg-success">💰 Déjà payée</span>
                             {% else %}
                                 <span class="badge bg-danger">⚠️ Non payée</span>
+                            {% endif %}
+                            {% if camp.is_resubmission %}
+                                <span class="badge bg-warning text-dark mt-1" title="Cette campagne a été corrigée et renvoyée après un rejet">🔄 Resoumise</span>
                             {% endif %}
                         {% endif %}
                     </td>

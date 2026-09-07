@@ -5367,10 +5367,11 @@ PERMISSIONS_DISPONIBLES = {
     "valider_utilisateurs": "Valider / refuser les inscriptions",
     "valider_campagnes": "Valider / refuser les campagnes",
     "suivre_campagnes": "Suivre la progression des campagnes",
+    "valider_preuves_partage": "Valider les preuves de fin de journée des partageurs",
+    "gerer_remboursements": "Autoriser, valider et refuser les remboursements",
     "gerer_retraits": "Traiter les demandes de retrait",
     "voir_transactions": "Consulter le registre des transactions",
     "configurer_tarifs": "Configurer les tarifs et commissions",
-    "configurer_video": "Configurer l'option génération vidéo",
 }
 
 

@@ -1774,11 +1774,6 @@ def resoumettre_campagne(campaign_id):
     camp.end_date = datetime.utcnow() + timedelta(days=camp.duration_days)
 
     # 🆕 6bis️⃣ Réinitialisation complète du quota journalier
-    # Les paramètres (objectif de clics, durée) ont pu changer si la campagne
-    # n'était pas payée : on repart sur une diffusion fraîche. whatsapp_views
-    # (compteur global) n'est PAS remis à zéro s'il y avait déjà des clics
-    # comptés avant le rejet, pour ne pas perdre les clics déjà livrés et
-    # payés par l'annonceur.
     camp.views_today = 0
     camp.current_day_number = 0
     camp.last_quota_date = None
@@ -1803,17 +1798,13 @@ def resoumettre_campagne(campaign_id):
         camp.status = "en_attente"
         db.session.commit()
 
-        admins = User.query.filter_by(role="admin").all()
-        for admin in admins:
-            notif = Notification(
-                user_id=admin.id,
-                title="Campagne corrigée 🔄",
-                message=f"L'annonceur a soumis les corrections pour la campagne #{camp.id}.",
-                category="warning",
-                link=url_for("admin_validate"),
-                is_read=False
-            )
-            db.session.add(notif)
+        notifier_admins_avec_permission(
+            "valider_campagnes",
+            "Campagne corrigée 🔄",
+            f"L'annonceur a soumis les corrections pour la campagne #{camp.id}.",
+            category="warning",
+            link=url_for("admin_validate"),
+        )
         db.session.commit()
 
         flash("Vos corrections ont été enregistrées. La campagne a été renvoyée à l'administration pour validation. 🚀", "success")

@@ -3612,7 +3612,7 @@ def admin_remboursements():
 @login_required
 @limiter.limit("60 per hour")
 def traiter_remboursement(refund_id):
-    verifier_droits_admin("valider_campagnes")
+    verifier_droits_admin("gerer_remboursements")
 
     demande = db.session.get(RefundRequest, refund_id)
     if not demande:
@@ -3633,7 +3633,7 @@ def traiter_remboursement(refund_id):
     # =====================================================================
     # 🆕 Crédit automatique du portefeuille — plus de virement manuel ni de
     # preuve à uploader. Verrou sur la ligne utilisateur (même principe que
-    # demander_retrait) : un double-clic ou deux workers simultanés ne
+    # demander_retrait). un double-clic ou deux workers simultanés ne
     # doivent jamais créditer deux fois le même remboursement.
     # =====================================================================
     annonceur = (

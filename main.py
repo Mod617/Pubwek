@@ -5678,6 +5678,133 @@ def reset_password(token):
     return render_template("reset_password.html", token=token)
 
 
+# =========================================================================
+# 🔔 NOTIFICATIONS PUSH (Web Push) — abonnement, désabonnement, envoi
+# =========================================================================
+
+from pywebpush import webpush, WebPushException
+
+VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY")
+VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY")
+VAPID_CLAIM_EMAIL = os.environ.get("VAPID_CLAIM_EMAIL")
+
+
+@app.route("/push/vapid-public-key")
+@login_required
+def push_vapid_public_key():
+    """Fournit la clé publique VAPID au front, pour PushManager.subscribe()."""
+    if not VAPID_PUBLIC_KEY:
+        return jsonify({"error": "Notifications push non configurées."}), 503
+    return jsonify({"publicKey": VAPID_PUBLIC_KEY})
+
+
+@app.route("/push/subscribe", methods=["POST"])
+@login_required
+def push_subscribe():
+    """
+    Enregistre (ou met à jour) l'abonnement push envoyé par le navigateur
+    après acceptation de la permission de notification par l'utilisateur.
+    """
+    data = request.get_json(silent=True) or {}
+    endpoint = data.get("endpoint")
+    keys = data.get("keys") or {}
+    p256dh = keys.get("p256dh")
+    auth = keys.get("auth")
+
+    if not endpoint or not p256dh or not auth:
+        return jsonify({"success": False, "error": "Abonnement incomplet."}), 400
+
+    existant = PushSubscription.query.filter_by(endpoint=endpoint).first()
+    if existant:
+        # Un même endpoint réabonné (ex: après désinstall/réinstall) est
+        # rattaché au compte actuellement connecté, et ses clés rafraîchies.
+        existant.user_id = current_user.id
+        existant.p256dh = p256dh
+        existant.auth = auth
+        existant.user_agent = (request.headers.get("User-Agent") or "")[:255]
+    else:
+        db.session.add(PushSubscription(
+            user_id=current_user.id,
+            endpoint=endpoint,
+            p256dh=p256dh,
+            auth=auth,
+            user_agent=(request.headers.get("User-Agent") or "")[:255],
+        ))
+
+    db.session.commit()
+    return jsonify({"success": True})
+
+
+@app.route("/push/unsubscribe", methods=["POST"])
+@login_required
+def push_unsubscribe():
+    """Supprime l'abonnement d'un endpoint (l'utilisateur a désactivé les notifs)."""
+    data = request.get_json(silent=True) or {}
+    endpoint = data.get("endpoint")
+
+    if not endpoint:
+        return jsonify({"success": False, "error": "Endpoint manquant."}), 400
+
+    PushSubscription.query.filter_by(endpoint=endpoint, user_id=current_user.id).delete()
+    db.session.commit()
+    return jsonify({"success": True})
+
+
+def envoyer_push(user, title, message, link=None):
+    """
+    Envoie une notification push réelle à TOUS les abonnements actifs de
+    cet utilisateur (plusieurs appareils possibles). Best-effort : une
+    erreur d'envoi (abonnement expiré, navigateur ayant révoqué l'accès...)
+    ne doit jamais casser le flux métier qui l'a déclenchée.
+
+    Un abonnement qui répond 404/410 (expiré côté navigateur) est supprimé
+    silencieusement : il ne sert plus à rien de réessayer dessus.
+    """
+    if not (VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY and VAPID_CLAIM_EMAIL):
+        return  # Notifications push non configurées, on ignore simplement
+
+    abonnements = PushSubscription.query.filter_by(user_id=user.id).all()
+    if not abonnements:
+        return
+
+    payload = json.dumps({
+        "title": title,
+        "body": message,
+        "url": link or "/",
+    })
+
+    for abo in abonnements:
+        try:
+            webpush(
+                subscription_info={
+                    "endpoint": abo.endpoint,
+                    "keys": {"p256dh": abo.p256dh, "auth": abo.auth},
+                },
+                data=payload,
+                vapid_private_key=VAPID_PRIVATE_KEY,
+                vapid_claims={"sub": VAPID_CLAIM_EMAIL},
+            )
+            abo.last_used_at = datetime.utcnow()
+        except WebPushException as e:
+            statut = getattr(e.response, "status_code", None)
+            if statut in (404, 410):
+                # Abonnement expiré ou révoqué côté navigateur : inutile de le garder
+                db.session.delete(abo)
+            else:
+                logger.warning(
+                    "[PUSH] Échec d'envoi (user_id=%d, statut=%s) : %s",
+                    user.id, statut, e
+                )
+        except Exception as e:
+            logger.warning("[PUSH] Erreur inattendue (user_id=%d) : %s", user.id, e)
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        logger.error("[PUSH] Erreur commit après envoi : %s", e)
+        db.session.rollback()
+
+
 
 
 

@@ -377,7 +377,7 @@
                         {% endif %}
                     </td>
                     <td class="text-center small font-monospace" data-label="ID FedaPay">{{ t.fedapay_transaction_id or "—" }}</td>
-                    <td class="text-center small text-muted" data-label="Date">{{ t.created_at.strftime("%d/%m/%Y %H:%M") if t.created_at else "-" }}</td>
+                    <td class="text-center small text-muted" data-label="Date">{{ t.created_at | heure_locale if t.created_at else "-" }}</td>
                 </tr>
                 {% else %}
                 <tr>
@@ -466,7 +466,7 @@
                             <span class="text-muted small">—</span>
                         {% endif %}
                     </td>
-                    <td class="text-center small text-muted" data-label="Date">{{ d.requested_at.strftime("%d/%m/%Y %H:%M") if d.requested_at else "-" }}</td>
+                    <td class="text-center small text-muted" data-label="Date">{{ d.requested_at | heure_locale if d.requested_at else "-" }}</td>
                 </tr>
                 {% else %}
                 <tr>

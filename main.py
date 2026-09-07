@@ -2099,6 +2099,9 @@ def mes_retraits_pdf():
 # ==========================================
 # 🆕 ROUTE : EXPORT PDF — MES TRANSACTIONS (ANNONCEUR)
 # ==========================================
+# ==========================================
+# 🆕 ROUTE : EXPORT PDF — MES TRANSACTIONS (ANNONCEUR)
+# ==========================================
 @app.route("/annonceur/mes-transactions/pdf")
 @login_required
 def mes_transactions_pdf():
@@ -2121,7 +2124,7 @@ def mes_transactions_pdf():
                 "user": current_user,
                 "transactions": transactions,
                 "total_paye": total_paye,
-                "date_generation": datetime.utcnow().strftime("%d/%m/%Y à %H:%M"),
+                "date_generation": heure_locale(datetime.utcnow(), "%d/%m/%Y à %H:%M"),
             },
             f"pubwek_transactions_{current_user.id}.pdf",
             certification_info={

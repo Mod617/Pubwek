@@ -248,7 +248,7 @@
         <tbody>
             {% for d in demandes %}
             <tr>
-                <td>{{ d.requested_at.strftime("%d/%m/%Y %H:%M") if d.requested_at else "-" }}</td>
+                <td>{{ d.requested_at | heure_locale if d.requested_at else "-" }}</td>
                 <td class="amount-cell">{{ "{:,.0f}".format(d.amount) }} FCFA</td>
                 <td>{{ d.payout_channel }}</td>
                 <td>
@@ -259,7 +259,7 @@
                 </td>
                 <td>
                     {% if d.status == "rejected" and d.admin_note %}{{ d.admin_note }}
-                    {% elif d.status == "paid" and d.processed_at %}Payé le {{ d.processed_at.strftime("%d/%m/%Y") }}
+                    {% elif d.status == "paid" and d.processed_at %}Payé le {{ d.processed_at | heure_locale("%d/%m/%Y") }}
                     {% else %}—{% endif %}
                 </td>
             </tr>
@@ -284,7 +284,7 @@
         <tbody>
             {% for m in mouvements %}
             <tr>
-                <td>{{ m.created_at.strftime("%d/%m/%Y %H:%M") if m.created_at else "-" }}</td>
+                <td>{{ m.created_at | heure_locale if m.created_at else "-" }}</td>
                 <td>
                     {% if m.transaction_type == "click_reward" %}Clic
                     {% elif m.transaction_type == "referral_reward" %}Parrainage

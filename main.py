@@ -1344,6 +1344,87 @@ def campagne_en_attente():
 # ==========================================
 # ROUTE : PAYER / RELANCER PAIEMENT CAMPAGNE
 # ==========================================
+def _lancer_paiement_fedapay(camp, montant):
+    """Crée (ou réutilise) une transaction FedaPay pour le montant donné et
+    redirige vers le lien de paiement. Factorisé pour être appelé aussi bien
+    pour un paiement intégral que pour le complément après utilisation
+    partielle du portefeuille.
+    """
+    existing = (
+        Transaction.query.filter_by(
+            campaign_id=camp.id,
+            transaction_type="campaign_payment",
+            status="pending"
+        )
+        .order_by(Transaction.created_at.desc())
+        .first()
+    )
+
+    # 🆕 Une transaction pending n'est réutilisée QUE si son montant correspond
+    # exactement à ce qu'il reste à payer maintenant — sinon le montant est
+    # obsolète (ex : une partie vient d'être couverte par le portefeuille).
+    if existing and existing.fedapay_transaction_id and existing.amount == montant:
+        try:
+            lien = generer_lien_paiement(existing.fedapay_transaction_id)
+            if lien:
+                return redirect(lien)
+        except Exception as e:
+            logger.warning("Réutilisation transaction impossible, création d'une nouvelle : %s", e)
+
+    reference = f"CAMP-{camp.id}-{uuid.uuid4().hex[:10]}"
+
+    try:
+        fedapay_tx = creer_transaction(
+            montant=montant,
+            description=f"Paiement campagne #{camp.id} - {camp.promotion_detail or camp.promotion_type}",
+            metadata={
+                "type": "campaign_payment",
+                "campaign_id": str(camp.id),
+                "user_id": str(current_user.id),
+                "reference": reference,
+            },
+            customer_email=current_user.email,
+            customer_phone=current_user.whatsapp_number,
+        )
+
+        if isinstance(fedapay_tx, dict):
+            tx_id = fedapay_tx.get("id")
+        elif hasattr(fedapay_tx, "id"):
+            tx_id = fedapay_tx.id
+        else:
+            tx_id = fedapay_tx
+
+        if not tx_id:
+            raise ValueError("ID de transaction FedaPay introuvable dans la réponse.")
+
+        lien_paiement = generer_lien_paiement(tx_id)
+        if not lien_paiement:
+            raise ValueError("Impossible de générer le lien de paiement.")
+
+    except Exception as e:
+        logger.error("Erreur création paiement FedaPay (campagne %d) : %s", camp.id, e)
+        flash("Impossible de générer le paiement pour le moment. Réessayez. ⚠️", "danger")
+        return redirect(url_for("mes_campagnes"))
+
+    transaction = Transaction(
+        user_id=current_user.id,
+        campaign_id=camp.id,
+        reference=reference,
+        fedapay_transaction_id=str(tx_id),
+        amount=montant,
+        currency="XOF",
+        transaction_type="campaign_payment",
+        status="pending",
+    )
+    db.session.add(transaction)
+    db.session.commit()
+
+    return redirect(lien_paiement)
+
+
+# ==========================================
+# ROUTE : PAYER / RELANCER PAIEMENT CAMPAGNE
+# ==========================================
 @app.route("/dashboard/annonceur/campagne/<int:campaign_id>/payer", methods=["GET"])
 @login_required
 def payer_campagne(campaign_id):
@@ -1366,78 +1447,129 @@ def payer_campagne(campaign_id):
         flash("Montant de la campagne invalide. ⚠️", "danger")
         return redirect(url_for("mes_campagnes"))
 
-    # Réutilise une transaction 'pending' existante si elle existe déjà pour cette campagne
-    existing = (
-        Transaction.query.filter_by(
-            campaign_id=camp.id,
-            transaction_type="campaign_payment",
-            status="pending"
-        )
-        .order_by(Transaction.created_at.desc())
-        .first()
-    )
-
-    if existing and existing.fedapay_transaction_id:
-        try:
-            lien = generer_lien_paiement(existing.fedapay_transaction_id)
-            if lien:
-                return redirect(lien)
-        except Exception as e:
-            logger.warning("Réutilisation transaction impossible, création d'une nouvelle : %s", e)
-
-    reference = f"CAMP-{camp.id}-{uuid.uuid4().hex[:10]}"
-
-    try:
-        fedapay_tx = creer_transaction(
-            montant=camp.total_cost,
-            description=f"Paiement campagne #{camp.id} - {camp.promotion_detail or camp.promotion_type}",
-            metadata={
-                "type": "campaign_payment",
-                "campaign_id": str(camp.id),
-                "user_id": str(current_user.id),
-                "reference": reference,
-            },
-            customer_email=current_user.email,
-            customer_phone=current_user.whatsapp_number,
+    # =====================================================================
+    # 🆕 Portefeuille : si un solde existe, on propose à l'annonceur de
+    # l'utiliser — jamais automatiquement, il choisit sur une page dédiée.
+    # =====================================================================
+    solde_wallet = current_user.wallet_balance or 0.0
+    if solde_wallet > 0:
+        montant_utilisable = min(solde_wallet, camp.total_cost)
+        reste_a_payer = round(camp.total_cost - montant_utilisable, 2)
+        return render_template(
+            "confirmer_paiement_wallet.html",
+            campaign=camp,
+            solde_wallet=solde_wallet,
+            montant_utilisable=montant_utilisable,
+            reste_a_payer=reste_a_payer,
         )
 
-        # Extraction sécurisée de l'ID FedaPay
-        if isinstance(fedapay_tx, dict):
-            tx_id = fedapay_tx.get("id")
-        elif hasattr(fedapay_tx, "id"):
-            tx_id = fedapay_tx.id
-        else:
-            tx_id = fedapay_tx
+    # Pas de solde disponible : comportement inchangé, paiement intégral via FedaPay
+    return _lancer_paiement_fedapay(camp, camp.total_cost)
 
-        if not tx_id:
-            raise ValueError("ID de transaction FedaPay introuvable dans la réponse.")
 
-        lien_paiement = generer_lien_paiement(tx_id)
+# ==========================================
+# 🆕 ROUTE : CONFIRMATION D'UTILISATION DU PORTEFEUILLE POUR PAYER
+# ==========================================
+@app.route("/dashboard/annonceur/campagne/<int:campaign_id>/payer/confirmer", methods=["POST"])
+@login_required
+def confirmer_paiement_wallet(campaign_id):
+    if current_user.role != "annonceur":
+        flash("Accès refusé 🚫", "danger")
+        return redirect(url_for("index"))
 
-        if not lien_paiement:
-            raise ValueError("Impossible de générer le lien de paiement.")
-
-    except Exception as e:
-        logger.error("Erreur création paiement FedaPay (campagne %d) : %s", camp.id, e)
-        flash("Impossible de générer le paiement pour le moment. Réessayez. ⚠️", "danger")
+    camp = db.session.get(Campaign, campaign_id)
+    if not camp or camp.user_id != current_user.id:
+        flash("Campagne introuvable. ⚠️", "danger")
         return redirect(url_for("mes_campagnes"))
 
-    # Enregistrement de la nouvelle transaction en attente
-    transaction = Transaction(
-        user_id=current_user.id,
-        campaign_id=camp.id,
-        reference=reference,
-        fedapay_transaction_id=str(tx_id),
-        amount=camp.total_cost,
-        currency="XOF",
-        transaction_type="campaign_payment",
-        status="pending",
+    if camp.paid or camp.payment_status == "paid" or camp.status == "active":
+        flash("Cette campagne est déjà payée et traitée. ✅", "info")
+        return redirect(url_for("mes_campagnes"))
+
+    utiliser_wallet = request.form.get("utiliser_wallet") == "on"
+
+    if not utiliser_wallet:
+        # L'annonceur a décliné : paiement intégral via FedaPay, comme avant.
+        return _lancer_paiement_fedapay(camp, camp.total_cost)
+
+    # =====================================================================
+    # 🆕 Verrou sur la ligne utilisateur pour débiter le portefeuille en
+    # toute sécurité (même principe que demander_retrait).
+    # =====================================================================
+    utilisateur = (
+        db.session.query(User)
+        .filter_by(id=current_user.id)
+        .with_for_update()
+        .first()
     )
-    
-    db.session.add(transaction)
+    if utilisateur is None:
+        flash("Compte introuvable. ⚠️", "danger")
+        return redirect(url_for("mes_campagnes"))
+
+    solde_actuel = utilisateur.wallet_balance or 0.0
+    montant_wallet = min(solde_actuel, camp.total_cost)
+
+    if montant_wallet <= 0:
+        flash("Votre solde est insuffisant pour être appliqué. Redirection vers le paiement classique. ⚠️", "warning")
+        return _lancer_paiement_fedapay(camp, camp.total_cost)
+
+    utilisateur.wallet_balance = solde_actuel - montant_wallet
+    db.session.add(WalletTransaction(
+        user_id=utilisateur.id,
+        amount=-montant_wallet,
+        balance_after=utilisateur.wallet_balance,
+        transaction_type="campaign_payment",
+        description=f"Utilisation du portefeuille pour le paiement de la campagne #{camp.id}"
+    ))
     db.session.commit()
 
-    return redirect(lien_paiement)
+    reste_a_payer = round(camp.total_cost - montant_wallet, 2)
+
+    if reste_a_payer <= 0:
+        # =================================================================
+        # 🆕 Le portefeuille couvre l'intégralité du coût : la campagne est
+        # marquée payée immédiatement, sans passer par FedaPay.
+        # =================================================================
+        camp.paid = True
+        camp.payment_status = "paid"
+        if camp.admin_status == "approved" or camp.validated:
+            camp.is_active = True
+            camp.status = "active"
+        else:
+            camp.is_active = False
+            camp.status = "en_attente"
+
+        reference = f"CAMP-{camp.id}-WALLET-{uuid.uuid4().hex[:10]}"
+        db.session.add(Transaction(
+            user_id=current_user.id,
+            campaign_id=camp.id,
+            reference=reference,
+            fedapay_transaction_id=None,
+            amount=montant_wallet,
+            currency="XOF",
+            transaction_type="campaign_payment",
+            status="approved",
+        ))
+        db.session.commit()
+
+        logger.info(
+            "[PAIEMENT] Campagne #%d payée intégralement via le portefeuille (user_id=%d, montant=%.2f)",
+            camp.id, current_user.id, montant_wallet
+        )
+        flash(
+            f"Paiement effectué avec {montant_wallet:,.0f} XOF de votre portefeuille ! "
+            f"Votre campagne a été transmise pour validation. 🎉",
+            "success"
+        )
+        return redirect(url_for("mes_campagnes"))
+
+    # 🆕 Le portefeuille couvre une partie seulement : le reste passe par FedaPay
+    flash(
+        f"{montant_wallet:,.0f} XOF déduits de votre portefeuille. "
+        f"Complétez le paiement des {reste_a_payer:,.0f} XOF restants.",
+        "info"
+    )
+    return _lancer_paiement_fedapay(camp, reste_a_payer)
 
 
 @app.route("/annonceur/campaign/<int:campaign_id>/resoumettre", methods=["POST"])

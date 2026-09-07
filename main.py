@@ -5805,6 +5805,45 @@ def envoyer_push(user, title, message, link=None):
         db.session.rollback()
 
 
+def envoyer_notification(user, title, message, category="info", link=None):
+    """
+    Point d'entrée unique pour notifier un utilisateur : crée la Notification
+    en base (visible dans l'app, comportement inchangé) ET envoie le push
+    réel (visible même app fermée). À utiliser à la place de tout
+    `db.session.add(Notification(...))` direct.
+    Ne fait volontairement AUCUN commit : l'appelant garde le contrôle de
+    sa transaction, exactement comme avant avec db.session.add().
+    """
+    notif = Notification(
+        user_id=user.id,
+        title=title,
+        message=message,
+        category=category,
+        link=link,
+        is_read=False
+    )
+    db.session.add(notif)
+    envoyer_push(user, title, message, link=link)
+    return notif
+
+
+def notifier_admins_avec_permission(permission, title, message, category="info", link=None):
+    """
+    Notifie le super-admin (toujours concerné, comme verifier_droits_admin)
+    et chaque sous-admin actif ayant EXPLICITEMENT `permission` — jamais un
+    sous-admin qui ne l'a pas, même s'il a accès à la page d'accueil admin.
+    """
+    destinataires = User.query.filter(
+        db.or_(
+            User.role == "admin",
+            db.and_(User.role == "sous_admin", User.is_active_admin.is_(True))
+        )
+    ).all()
+    for u in destinataires:
+        if u.has_permission(permission):
+            envoyer_notification(u, title, message, category=category, link=link)
+
+
 
 
 

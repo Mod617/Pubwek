@@ -157,7 +157,7 @@
                         <small class="text-muted">{{ d.campaign.rejection_reason if d.campaign else "-" }}</small>
                     </td>
                     <td class="text-center" data-label="Demandé le">
-                        {{ d.created_at.strftime("%d/%m/%Y %H:%M") if d.created_at else "-" }}
+                        {{ d.created_at | heure_locale if d.created_at else "-" }}
                     </td>
                     <td class="text-center" data-label="Actions">
                         <div class="d-flex flex-column gap-1 align-items-center">
@@ -266,7 +266,7 @@
                         <small class="text-muted">{{ d.admin_notes or "-" }}</small>
                     </td>
                     <td class="text-center" data-label="Traité le">
-                        {{ d.updated_at.strftime("%d/%m/%Y %H:%M") if d.updated_at else "-" }}
+                        {{ d.updated_at | heure_locale if d.updated_at else "-" }}
                     </td>
                 </tr>
             {% else %}

@@ -3386,18 +3386,17 @@ def validate_campaign(campaign_id):
                 ))
 
                 # 🆕 Notification au parrain
-                db.session.add(Notification(
-                    user_id=parrain.id,
-                    title="Gain de parrainage crédité 🎁",
-                    message=(
+                envoyer_notification(
+                    parrain,
+                    "Gain de parrainage crédité 🎁",
+                    (
                         f"Vous avez gagné {gain_parrain:.0f} FCFA suite au lancement de la première "
                         f"campagne de votre filleul {annonceur.pseudo or annonceur.email} ! "
                         f"Ce montant a été ajouté à votre portefeuille."
                     ),
                     category="success",
                     link=url_for("mes_retraits"),
-                    is_read=False
-                ))
+                )
 
                 parrain_notifie_str = f" (Parrain {parrain.pseudo or parrain.email} récompensé de {gain_parrain:.0f} FCFA)"
                 logger.info(
@@ -3410,15 +3409,13 @@ def validate_campaign(campaign_id):
                 annonceur.has_launched_first_campaign = True
 
         # 🆕 Notification interne pour l'annonceur
-        notif = Notification(
-            user_id=annonceur.id,
-            title="Campagne validée ✅",
-            message=f"Votre campagne « {camp.promotion_detail or f'#{camp.id}'} » a été validée et est maintenant active !",
+        envoyer_notification(
+            annonceur,
+            "Campagne validée ✅",
+            f"Votre campagne « {camp.promotion_detail or f'#{camp.id}'} » a été validée et est maintenant active !",
             category="success",
             link=url_for("mes_campagnes"),
-            is_read=False
         )
-        db.session.add(notif)
 
     db.session.commit()
 

@@ -2048,6 +2048,9 @@ def creer_certification(doc_type, user, montant_reference, nb_lignes):
 # ==========================================
 # 🆕 ROUTE : EXPORT PDF — MES RETRAITS (PARTAGEUR)
 # ==========================================
+# ==========================================
+# 🆕 ROUTE : EXPORT PDF — MES RETRAITS (PARTAGEUR)
+# ==========================================
 @app.route("/partageur/mes-retraits/pdf")
 @login_required
 def mes_retraits_pdf():
@@ -2078,7 +2081,7 @@ def mes_retraits_pdf():
                 "demandes": demandes,
                 "mouvements": mouvements,
                 "solde_actuel": current_user.wallet_balance or 0.0,
-                "date_generation": datetime.utcnow().strftime("%d/%m/%Y à %H:%M"),
+                "date_generation": heure_locale(datetime.utcnow(), "%d/%m/%Y à %H:%M"),
             },
             f"pubwek_retraits_{current_user.id}.pdf",
             certification_info={

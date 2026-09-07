@@ -3543,7 +3543,7 @@ def partager_campagne_admin(campaign_id):
 @login_required
 @limiter.limit("60 per hour")
 def autoriser_remboursement_admin(campaign_id):
-    verifier_droits_admin("valider_campagnes")
+    verifier_droits_admin("gerer_remboursements")
 
     camp = db.session.get(Campaign, campaign_id)
     if not camp:

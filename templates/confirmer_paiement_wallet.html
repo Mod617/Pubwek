@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+
+<style>
+  .pubwek-wrap {
+    --paper:        #F5F3ED;
+    --paper-raised: #FFFFFF;
+    --ink:          #1B2A2E;
+    --ink-soft:     #5B6B6C;
+    --line:         #E3DFD3;
+    --emerald:      #2F6F5E;
+    --emerald-dark: #1F4F42;
+    --emerald-tint: #E7F0EC;
+    --amber:        #B8842E;
+    --amber-tint:   #F8EEDD;
+    --slate-tint:   #EFEDE4;
+
+    background: var(--paper);
+    padding: 2.5rem 1.25rem 4rem;
+    margin: -1.5rem calc(50% - 50vw) 0;
+    padding-left: calc(1.25rem + (50vw - 50%));
+    padding-right: calc(1.25rem + (50vw - 50%));
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  .pubwek-wrap .container { max-width: 640px; }
+
+  .pubwek-wrap h2.page-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    color: var(--ink);
+    text-align: center;
+    margin-bottom: 1.75rem;
+  }
+
+  .pubwek-wrap .payment-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 0 1px 2px rgba(27,42,46,0.05);
+    padding: 2rem;
+  }
+
+  .pubwek-wrap .campaign-summary {
+    background: var(--slate-tint);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  .pubwek-wrap .campaign-summary .label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+  }
+  .pubwek-wrap .campaign-summary .amount {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--ink);
+  }
+
+  .pubwek-wrap .wallet-option {
+    border: 2px solid var(--line);
+    border-radius: 14px;
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    transition: border-color .15s ease, background .15s ease;
+    cursor: pointer;
+  }
+  .pubwek-wrap .wallet-option.active {
+    border-color: var(--emerald);
+    background: var(--emerald-tint);
+  }
+  .pubwek-wrap .wallet-option .form-check-label {
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .pubwek-wrap .wallet-option .wallet-balance-line {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    margin-top: 0.3rem;
+  }
+
+  .pubwek-wrap .breakdown-box {
+    background: linear-gradient(135deg, var(--ink) 0%, #24393D 100%);
+    color: #fff;
+    border-radius: 12px;
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  .pubwek-wrap .breakdown-box .line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.88rem;
+    padding: 0.25rem 0;
+  }
+  .pubwek-wrap .breakdown-box .line.total {
+    border-top: 1px solid rgba(255,255,255,0.2);
+    margin-top: 0.4rem;
+    padding-top: 0.6rem;
+    font-weight: 700;
+    color: var(--amber);
+    font-family: 'Fraunces', serif;
+    font-size: 1.1rem;
+  }
+  .pubwek-wrap .breakdown-box .line .value-wallet { color: var(--emerald); font-weight: 600; }
+
+  .pubwek-wrap .btn-confirm {
+    background: var(--emerald) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-weight: 700;
+    padding: 0.75rem 1rem;
+  }
+  .pubwek-wrap .btn-confirm:hover { background: var(--emerald-dark) !important; }
+
+  .pubwek-wrap .btn-skip {
+    background: transparent !important;
+    border: 1px solid var(--line) !important;
+    color: var(--ink-soft) !important;
+    border-radius: 12px !important;
+    font-weight: 600;
+  }
+</style>
+
+<div class="pubwek-wrap">
+<div class="container mt-5">
+
+  <h2 class="page-title">💳 Finaliser le paiement</h2>
+
+  <div class="payment-card">
+
+    <div class="campaign-summary">
+      <div class="label">Campagne #{{ campaign.id }}</div>
+      <div class="mb-1">{{ campaign.promotion_type | capitalize }} — {{ campaign.promotion_detail }}</div>
+      <div class="label mt-2">Montant total dû</div>
+      <div class="amount">{{ "{:,.0f}".format(campaign.total_cost) }} XOF</div>
+    </div>
+
+    <form action="{{ url_for('confirmer_paiement_wallet', campaign_id=campaign.id) }}" method="POST" id="walletPaymentForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <label class="wallet-option d-block" id="walletOptionBox" for="utiliser_wallet">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="utiliser_wallet" id="utiliser_wallet" checked>
+          <label class="form-check-label" for="utiliser_wallet">
+            💼 Utiliser mon portefeuille pour ce paiement
+          </label>
+        </div>
+        <div class="wallet-balance-line">
+          Solde disponible : {{ "{:,.0f}".format(solde_wallet) }} XOF
+          — jusqu'à {{ "{:,.0f}".format(montant_utilisable) }} XOF seront appliqués à cette campagne.
+        </div>
+      </label>
+
+      <div class="breakdown-box">
+        <div class="line">
+          <span>Montant total de la campagne</span>
+          <span>{{ "{:,.0f}".format(campaign.total_cost) }} XOF</span>
+        </div>
+        <div class="line" id="ligneWallet">
+          <span>Payé depuis le portefeuille</span>
+          <span class="value-wallet">− {{ "{:,.0f}".format(montant_utilisable) }} XOF</span>
+        </div>
+        <div class="line total">
+          <span id="labelReste">Reste à payer via FedaPay</span>
+          <span id="valeurReste">{{ "{:,.0f}".format(reste_a_payer) }} XOF</span>
+        </div>
+      </div>
+
+      <div class="d-grid gap-2">
+        <button type="submit" class="btn btn-confirm text-white" id="btnConfirmer">
+          {% if reste_a_payer <= 0 %}
+            ✅ Payer {{ "{:,.0f}".format(montant_utilisable) }} XOF avec mon portefeuille
+          {% else %}
+            🚀 Continuer — {{ "{:,.0f}".format(reste_a_payer) }} XOF via FedaPay
+          {% endif %}
+        </button>
+        <a href="{{ url_for('mes_campagnes') }}" class="btn btn-skip text-center">Annuler</a>
+      </div>
+    </form>
+
+  </div>
+</div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const checkbox = document.getElementById("utiliser_wallet");
+  const box = document.getElementById("walletOptionBox");
+  const ligneWallet = document.getElementById("ligneWallet");
+  const labelReste = document.getElementById("labelReste");
+  const valeurReste = document.getElementById("valeurReste");
+  const btnConfirmer = document.getElementById("btnConfirmer");
+
+  const totalCost = {{ campaign.total_cost | float }};
+  const montantUtilisable = {{ montant_utilisable | float }};
+  const resteAvecWallet = {{ reste_a_payer | float }};
+
+  function formatXOF(n) {
+    return new Intl.NumberFormat("fr-FR").format(Math.round(n));
+  }
+
+  function majAffichage() {
+    if (checkbox.checked) {
+      box.classList.add("active");
+      ligneWallet.style.display = "flex";
+      labelReste.textContent = resteAvecWallet <= 0 ? "Reste à payer" : "Reste à payer via FedaPay";
+      valeurReste.textContent = formatXOF(resteAvecWallet) + " XOF";
+      btnConfirmer.textContent = resteAvecWallet <= 0
+        ? "✅ Payer " + formatXOF(montantUtilisable) + " XOF avec mon portefeuille"
+        : "🚀 Continuer — " + formatXOF(resteAvecWallet) + " XOF via FedaPay";
+    } else {
+      box.classList.remove("active");
+      ligneWallet.style.display = "none";
+      labelReste.textContent = "Reste à payer via FedaPay";
+      valeurReste.textContent = formatXOF(totalCost) + " XOF";
+      btnConfirmer.textContent = "🚀 Continuer — " + formatXOF(totalCost) + " XOF via FedaPay";
+    }
+  }
+
+  checkbox.addEventListener("change", majAffichage);
+  majAffichage();
+});
+</script>
+{% endblock %}

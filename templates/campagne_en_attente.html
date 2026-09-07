@@ -363,7 +363,7 @@
                 <td class="cell-detail">{{ c.promotion_detail or "—" }}</td>
                 <td class="cell-provinces">{{ c.provinces }}</td>
                 <td class="cell-cost">{{ "{:,.0f}".format(c.total_cost).replace(",", " ") }} XOF</td>
-                <td class="cell-date">{{ c.created_at.strftime("%d/%m/%Y à %H:%M") }}</td>
+                <td class="cell-date">{{ c.created_at | heure_locale("%d/%m/%Y à %H:%M") }}</td>
                 <td>
                   {{ status_badge(c.status) }}
                   {{ pipeline_track(c.status) }}
@@ -413,7 +413,7 @@
           </div>
           <div class="m-row">
             <span class="m-row-label">Créée le</span>
-            <span class="m-row-value">{{ c.created_at.strftime("%d/%m/%Y à %H:%M") }}</span>
+            <span class="m-row-value">{{ c.created_at | heure_locale("%d/%m/%Y à %H:%M") }}</span>
           </div>
 
           <div class="m-action">

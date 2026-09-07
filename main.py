@@ -2461,17 +2461,15 @@ def reclamer_remboursement(campaign_id):
     )
     db.session.add(refund_req)
 
-    # Notification aux administrateurs : sans elle, personne n'est prévenu
-    # qu'un virement est à effectuer.
-    for admin in User.query.filter_by(role="admin").all():
-        db.session.add(Notification(
-            user_id=admin.id,
-            title="Remboursement à traiter 💸",
-            message=f"L'annonceur de la campagne #{camp.id} a transmis ses coordonnées de remboursement.",
-            category="warning",
-            link=url_for("admin_validate"),
-            is_read=False
-        ))
+    # Notification aux administrateurs habilités : sans elle, personne n'est
+    # prévenu qu'un virement est à effectuer.
+    notifier_admins_avec_permission(
+        "gerer_remboursements",
+        "Remboursement à traiter 💸",
+        f"L'annonceur de la campagne #{camp.id} a transmis ses coordonnées de remboursement.",
+        category="warning",
+        link=url_for("admin_validate"),
+    )
 
     # --- MISE À JOUR DU PARCOURS REMBOURSEMENT (dédié, distinct de camp.status) ---
     camp.refund_status = "requested"        # 🆕 remplace l'ancien camp.status = "remboursement_demande"

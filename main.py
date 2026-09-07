@@ -2925,6 +2925,9 @@ def admin_suivi_campagne(campaign_id):
 # ==========================================
 # 🔒 ROUTE PUBLIQUE : VÉRIFICATION D'UN DOCUMENT CERTIFIÉ
 # ==========================================
+# ==========================================
+# 🔒 ROUTE PUBLIQUE : VÉRIFICATION D'UN DOCUMENT CERTIFIÉ
+# ==========================================
 @app.route("/verifier/<doc_uuid>")
 def verifier_document(doc_uuid):
     """Page publique de vérification d'authenticité d'un PDF Pubwek.
@@ -2971,7 +2974,7 @@ def verifier_document(doc_uuid):
         nom_affiche=nom_affiche,
         montant_reference=certification.montant_reference,
         nb_lignes=certification.nb_lignes,
-        date_generation=certification.created_at.strftime("%d/%m/%Y à %H:%M"),
+        date_generation=heure_locale(certification.created_at, "%d/%m/%Y à %H:%M"),
     )
 
 

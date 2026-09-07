@@ -775,6 +775,47 @@ class UploadedFile(db.Model):
     def __repr__(self):
         return f"<UploadedFile {self.filename} owner_id={self.owner_id}>"
 
+# =========================================================================
+# 🔔 ABONNEMENTS AUX NOTIFICATIONS PUSH (Web Push — alertes même app fermée)
+# =========================================================================
+
+class PushSubscription(db.Model):
+    """
+    Abonnement Web Push d'un navigateur pour un utilisateur donné.
+
+    Un même utilisateur peut avoir plusieurs abonnements actifs (plusieurs
+    appareils/navigateurs) : téléphone + PC, par exemple. Chaque triplet
+    (endpoint, p256dh, auth) est fourni par le navigateur au moment de
+    l'abonnement (PushManager.subscribe) et sert à chiffrer/adresser les
+    messages envoyés depuis le serveur, via pywebpush.
+    """
+    __tablename__ = "push_subscriptions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+
+    # URL unique fournie par le service de push du navigateur (FCM, Mozilla...).
+    # Sert d'identifiant naturel : un même navigateur/appareil ne doit pas
+    # être enregistré deux fois pour le même utilisateur.
+    endpoint = db.Column(db.Text, unique=True, nullable=False)
+
+    # Clés de chiffrement fournies par le navigateur à l'abonnement (norme
+    # Web Push / RFC 8291), nécessaires à pywebpush pour chiffrer le message.
+    p256dh = db.Column(db.String(255), nullable=False)
+    auth = db.Column(db.String(255), nullable=False)
+
+    user_agent = db.Column(db.String(255), nullable=True)  # Informatif : quel navigateur/appareil
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_used_at = db.Column(db.DateTime, nullable=True)  # Mis à jour à chaque envoi réussi
+
+    user = db.relationship(
+        "User",
+        backref=db.backref("push_subscriptions", lazy=True, cascade="all, delete-orphan")
+    )
+
+    def __repr__(self):
+        return f"<PushSubscription user_id={self.user_id} endpoint={self.endpoint[:40]}...>"
+
 
 # =========================================================================
 # 📱 MODÈLE DEVICE ENRICHI (FINGERPRINTING & AUTOMATION DETECTION)

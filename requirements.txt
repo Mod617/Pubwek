@@ -20,10 +20,10 @@ email-validator==2.1.0.post1
 # --- Configuration -----------------------------------------------------------
 python-dotenv==1.0.1
 # --- Serveur et base de données de production --------------------------------
-gunicorn==21.2.0
+gunicorn==22.0.0
 psycopg2-binary==2.9.12
 # --- Appels HTTP (FedaPay) ---------------------------------------------------
-requests==2.31.0
+requests==2.33.0
 # --- Sécurité : nettoyage des saisies utilisateur ---------------------------
 bleach==6.4.0
 # --- Stockage des compteurs de limitation de débit ---------------------------
@@ -32,7 +32,7 @@ bleach==6.4.0
 # plusieurs workers gunicorn.
 redis==5.0.8
 # --- Export PDF (relevés de transactions et de retraits) --------------------
-xhtml2pdf==0.2.16
+xhtml2pdf==0.2.17
 # --- Cachet électronique : génération des QR codes de vérification ----------
 # Utilisé par generer_qr_code_base64() pour produire le QR imprimé sur chaque
 # PDF certifié (DocumentCertification / route /verifier/<uuid>).

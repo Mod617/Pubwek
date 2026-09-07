@@ -262,7 +262,7 @@
                     {% else %}<span class="badge badge-secondary">{{ t.status }}</span>{% endif %}
                 </td>
                 <td class="fedapay-cell">{{ t.fedapay_transaction_id or "—" }}</td>
-                <td>{{ t.created_at.strftime("%d/%m/%Y %H:%M") if t.created_at else "-" }}</td>
+                <td>{{ t.created_at | heure_locale if t.created_at else "-" }}</td>
             </tr>
             {% endfor %}
         </tbody>

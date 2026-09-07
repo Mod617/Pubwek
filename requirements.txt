@@ -37,6 +37,11 @@ xhtml2pdf==0.2.16
 # Utilisé par generer_qr_code_base64() pour produire le QR imprimé sur chaque
 # PDF certifié (DocumentCertification / route /verifier/<uuid>).
 qrcode[pil]==7.4.2
+# --- Notifications push (alertes même app fermée, façon WhatsApp/TikTok) ----
+# Signe et chiffre les messages envoyés aux navigateurs abonnés (norme Web Push,
+# RFC 8291/8292). Utilisé par envoyer_push() pour transmettre les notifications
+# aux endpoints stockés dans PushSubscription.
+pywebpush==2.0.0
 # --- Traitement des images ---------------------------------------------------
 # Sert à valider réellement le contenu des images téléversées (PIL.Image.open),
 # pas seulement leur extension.

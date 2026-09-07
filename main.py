@@ -3284,15 +3284,14 @@ def refuse_campaign(campaign_id):
     # 2. Création de la notification interne pour l'annonceur
     nom_campagne = camp.promotion_detail or f"#{camp.id}"
     notif_msg = f"Votre campagne '{nom_campagne}' a été refusée pour le motif suivant : {reason}."
-    notif = Notification(
-        user_id=camp.user_id,
-        title="Campagne refusée ❌",
-        message=notif_msg,
-        category="danger",
-        link=url_for("mes_campagnes"),
-        is_read=False
-    )
-    db.session.add(notif)
+    if annonceur:
+        envoyer_notification(
+            annonceur,
+            "Campagne refusée ❌",
+            notif_msg,
+            category="danger",
+            link=url_for("mes_campagnes"),
+        )
     db.session.commit()
     logger.warning(
         "[ACTION ADMIN] Campagne #%d refusée (Motif: %s) par admin id=%d", 

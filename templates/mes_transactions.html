@@ -213,7 +213,7 @@
                   <span class="pf-badge pf-badge-other">{{ t.status }}</span>
                 {% endif %}
               </td>
-              <td class="text-muted small">{{ t.created_at.strftime("%d/%m/%Y %H:%M") if t.created_at else "-" }}</td>
+              <td class="text-muted small">{{ t.created_at | heure_locale if t.created_at else "-" }}</td>
             </tr>
             {% endfor %}
           </tbody>

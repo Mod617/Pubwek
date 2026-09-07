@@ -3700,7 +3700,7 @@ def traiter_remboursement(refund_id):
 @login_required
 @limiter.limit("60 per hour")
 def refuser_remboursement(refund_id):
-    verifier_droits_admin("valider_campagnes")
+    verifier_droits_admin("gerer_remboursements")
 
     demande = db.session.get(RefundRequest, refund_id)
     if not demande:

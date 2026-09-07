@@ -3586,7 +3586,7 @@ def autoriser_remboursement_admin(campaign_id):
 @app.route("/admin/remboursements")
 @login_required
 def admin_remboursements():
-    verifier_droits_admin("valider_campagnes")
+    verifier_droits_admin("gerer_remboursements")
 
     demandes = RefundRequest.query.order_by(RefundRequest.created_at.desc()).all()
 

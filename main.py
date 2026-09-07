@@ -4815,9 +4815,7 @@ def valider_preuve_partage(proof_id, decision):
 @app.route("/admin/preuves_partage")
 @login_required
 def admin_preuves_partage():
-    if current_user.role != "admin":
-        flash("Accès refusé 🚫", "danger")
-        return redirect(url_for("index"))
+    verifier_droits_admin("valider_preuves_partage")
 
     campaign_id = request.args.get("campaign_id", type=int)
 

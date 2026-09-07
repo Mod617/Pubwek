@@ -291,7 +291,7 @@
           <tbody>
             {% for d in demandes %}
             <tr>
-              <td class="text-muted">{{ d.requested_at.strftime("%d/%m/%Y %H:%M") if d.requested_at else "-" }}</td>
+              <td class="text-muted">{{ d.requested_at | heure_locale if d.requested_at else "-" }}</td>
               <td class="pf-amount-cell">{{ "{:,.0f}".format(d.amount) }} FCFA</td>
               <td>{{ d.payout_channel }}</td>
               <td>
@@ -307,7 +307,7 @@
                 {% if d.status == "rejected" and d.admin_note %}
                   Motif : {{ d.admin_note }}
                 {% elif d.status == "paid" and d.processed_at %}
-                  Payé le {{ d.processed_at.strftime("%d/%m/%Y") }}
+                  Payé le {{ d.processed_at | heure_locale("%d/%m/%Y") }}
                 {% else %}
                   —
                 {% endif %}
@@ -341,7 +341,7 @@
           <tbody>
             {% for m in mouvements %}
             <tr>
-              <td class="text-muted">{{ m.created_at.strftime("%d/%m/%Y %H:%M") if m.created_at else "-" }}</td>
+              <td class="text-muted">{{ m.created_at | heure_locale if m.created_at else "-" }}</td>
               <td>
                 {% if m.transaction_type == "click_reward" %}
                   <span class="pf-badge pf-badge-click"><i class="bi bi-cursor"></i> Clic</span>

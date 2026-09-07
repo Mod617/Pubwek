@@ -2799,6 +2799,9 @@ def verifier_droits_admin(permission_requise=None):
 
 
 
+# ==========================================
+# 🆕 ROUTE ADMIN : SUIVI COMPLET D'UNE CAMPAGNE VALIDÉE
+# ==========================================
 @app.route("/admin/campagne/<int:campaign_id>/suivi")
 @login_required
 def admin_suivi_campagne(campaign_id):
@@ -2871,7 +2874,7 @@ def admin_suivi_campagne(campaign_id):
                 "clics_site_valides": c["site_valides"],
                 "clics_frauduleux": total_faux,
                 "total_clics_valides": total_valides,
-                "partage_le": s.created_at.strftime("%d/%m/%Y %H:%M") if s.created_at else None,
+                "partage_le": heure_locale(s.created_at) if s.created_at else None,
             })
 
         partageurs.sort(key=lambda p: p["total_clics_valides"], reverse=True)
@@ -2893,7 +2896,7 @@ def admin_suivi_campagne(campaign_id):
             s = shares_par_id.get(c.campaign_share_id)
             clics_detail.append({
                 "pseudo": (s.pseudo or "Partageur anonyme") if s else "Inconnu",
-                "heure": c.clicked_at.strftime("%d/%m/%Y %H:%M:%S") if c.clicked_at else "—",
+                "heure": heure_locale(c.clicked_at, "%d/%m/%Y %H:%M:%S") if c.clicked_at else "—",
                 "link_type": c.link_type,
                 "is_paid": c.is_paid,
                 "motif": MOTIFS_REJET_LIBELLES.get(c.rejection_reason, c.rejection_reason) if not c.is_paid else None,

@@ -5678,37 +5678,7 @@ def reset_password(token):
     return render_template("reset_password.html", token=token)
 
 
-# =========================================================================
-# 🔑 TEMPORAIRE — Génération unique des clés VAPID (notifications push)
-# À supprimer du code juste après avoir copié les 2 clés affichées.
-# Protégée par le mot de passe admin pour éviter qu'un tiers ne la découvre
-# avant que tu aies eu le temps de la retirer.
-# =========================================================================
-@app.route("/generer-cles-vapid-temporaire/<secret>")
-def generer_cles_vapid_temporaire(secret):
-    if secret != os.environ.get("ADMIN_PASSWORD"):
-        abort(404)
-    from py_vapid import Vapid02
-    import base64
 
-    v = Vapid02()
-    v.generate_keys()
-
-    def _b64(key_bytes):
-        return base64.urlsafe_b64encode(key_bytes).rstrip(b"=").decode("utf-8")
-
-    public_raw = v.public_key.public_bytes(
-        encoding=__import__("cryptography.hazmat.primitives.serialization", fromlist=["Encoding"]).Encoding.X962,
-        format=__import__("cryptography.hazmat.primitives.serialization", fromlist=["PublicFormat"]).PublicFormat.UncompressedPoint,
-    )
-    private_raw = v.private_key.private_numbers().private_value.to_bytes(32, "big")
-
-    return (
-        f"<pre>VAPID_PUBLIC_KEY={_b64(public_raw)}\n"
-        f"VAPID_PRIVATE_KEY={_b64(private_raw)}</pre>"
-        f"<p style='color:red;font-weight:bold'>⚠️ Copie ces 2 valeurs MAINTENANT dans les "
-        f"variables d'environnement Railway, puis supprime cette route du code.</p>"
-    )
 
 
 

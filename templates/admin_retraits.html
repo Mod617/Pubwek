@@ -330,7 +330,7 @@
                             {{ d.payout_phone }} <i class="bi bi-whatsapp text-success"></i>
                         </a>
                     </td>
-                    <td class="text-center small text-muted" data-label="Demandée le">{{ d.requested_at.strftime("%d/%m/%Y %H:%M") if d.requested_at else "-" }}</td>
+                    <td class="text-center small text-muted" data-label="Demandée le">{{ d.requested_at | heure_locale if d.requested_at else "-" }}</td>
                     <td class="text-center actions-cell" data-label="Actions" style="min-width: 220px;">
                         <div class="d-flex flex-column gap-2">
                             <!-- Paiement manuel avec preuve -->
@@ -464,7 +464,7 @@
                             <span class="text-muted small">—</span>
                         {% endif %}
                     </td>
-                    <td class="text-center small text-muted" data-label="Traitée le">{{ d.processed_at.strftime("%d/%m/%Y %H:%M") if d.processed_at else "-" }}</td>
+                    <td class="text-center small text-muted" data-label="Traitée le">{{ d.processed_at | heure_locale if d.processed_at else "-" }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

@@ -4734,9 +4734,7 @@ def crediter_clics_du_jour(share, day_number):
 @app.route("/admin/preuve/<int:proof_id>/<decision>", methods=["POST"])
 @login_required
 def valider_preuve_partage(proof_id, decision):
-    if current_user.role != "admin":
-        flash("Accès refusé 🚫", "danger")
-        return redirect(url_for("index"))
+    verifier_droits_admin("valider_preuves_partage")
 
     if decision not in ("valider", "rejeter"):
         abort(404)

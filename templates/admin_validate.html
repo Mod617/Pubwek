@@ -495,7 +495,7 @@
                     </td>
                     <td class="text-center" data-label="Renvoyée le">
                         {% if camp.resubmitted_at %}
-                            {{ camp.resubmitted_at.strftime("%d/%m/%Y %H:%M") }}
+                            {{ camp.resubmitted_at | heure_locale }}
                         {% else %}
                             <span class="text-muted">—</span>
                         {% endif %}

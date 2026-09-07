@@ -341,7 +341,7 @@
                     </div>
 
                     <div class="small text-muted mb-3">
-                        Créé le {{ s.created_at.strftime("%d/%m/%Y") if s.created_at else "-" }}
+                        Créé le {{ s.created_at | heure_locale("%d/%m/%Y") if s.created_at else "-" }}
                         {% if s.createur %} par {{ s.createur.email }}{% endif %}
                     </div>
 

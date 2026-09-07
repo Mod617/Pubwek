@@ -190,7 +190,7 @@
       </a>
 
       <div class="pf-proof-meta">
-        <i class="bi bi-clock"></i> Envoyée le {{ p.submitted_at.strftime("%d/%m/%Y %H:%M") }}
+        <i class="bi bi-clock"></i> Envoyée le {{ p.submitted_at | heure_locale }}
       </div>
 
       <div class="pf-proof-actions">

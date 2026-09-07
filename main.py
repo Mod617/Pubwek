@@ -1246,6 +1246,9 @@ def mes_campagnes():
 # ==========================================
 # ROUTE : PARTAGEURS D'UNE CAMPAGNE (ESPACE ANNONCEUR)
 # ==========================================
+# ==========================================
+# ROUTE : PARTAGEURS D'UNE CAMPAGNE (ESPACE ANNONCEUR)
+# ==========================================
 @app.route("/mes-campagnes/<int:campaign_id>/partageurs")
 @login_required
 def campagne_partageurs(campaign_id):
@@ -1322,7 +1325,7 @@ def campagne_partageurs(campaign_id):
             "clics_whatsapp": clics["whatsapp"],
             "clics_site": clics["website"],
             "total_clics": clics["whatsapp"] + clics["website"],
-            "partage_le": s.created_at.strftime("%d/%m/%Y %H:%M") if s.created_at else None,
+            "partage_le": heure_locale(s.created_at) if s.created_at else None,
         })
 
     # Les partageurs les plus efficaces d'abord

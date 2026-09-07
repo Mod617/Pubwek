@@ -632,6 +632,76 @@
     }
   </script>
 
+  <!-- ✅ Abonnement aux notifications push (uniquement si connecté) -->
+  {% if current_user.is_authenticated %}
+  <script>
+    function urlBase64ToUint8Array(base64String) {
+      const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+      const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    }
+
+    async function abonnerAuxNotificationsPush() {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+        return; // Navigateur non compatible, on ne fait rien silencieusement
+      }
+
+      try {
+        const registration = await navigator.serviceWorker.ready;
+
+        // Déjà abonné ? On ne redemande rien.
+        const abonnementExistant = await registration.pushManager.getSubscription();
+        if (abonnementExistant) {
+          return;
+        }
+
+        // On ne demande la permission qu'après un premier geste utilisateur
+        // implicite (chargement de page authentifiée) — Chrome/Firefox
+        // acceptent cette approche sans interaction directe requise ici.
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          return;
+        }
+
+        const reponseCle = await fetch("/push/vapid-public-key");
+        if (!reponseCle.ok) return;
+        const { publicKey } = await reponseCle.json();
+        if (!publicKey) return;
+
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey),
+        });
+
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        const csrfToken = csrfMeta ? csrfMeta.getAttribute("content") : "";
+
+        await fetch("/push/subscribe", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken,
+          },
+          body: JSON.stringify(subscription),
+        });
+      } catch (error) {
+        console.log("Abonnement push non finalisé :", error);
+      }
+    }
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.ready.then(() => {
+        abonnerAuxNotificationsPush();
+      });
+    }
+  </script>
+  {% endif %}
+
   <!-- ✅ CORRECTIF : bloc scripts manquant, requis pour que annonceur.html (et tout
        autre template enfant) puisse injecter son <script> inline et/ou
        <script src="{{ url_for('static', filename='js/script.js') }}">.

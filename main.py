@@ -36,6 +36,7 @@ from flask_wtf import CSRFProtect
 from markupsafe import Markup, escape
 from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
+from zoneinfo import ZoneInfo
 
 from benin_communes import DEPARTEMENTS_COMMUNES, toutes_les_communes, commune_appartient_a
 
@@ -1163,6 +1164,38 @@ def nouvelle_campagne():
         return redirect(url_for("payer_campagne", campaign_id=new_campaign.id))
 
     return redirect(url_for("dashboard_annonceur"))
+
+
+# =========================================================================
+# 🕐 FUSEAU HORAIRE LOCAL (BÉNIN) — AFFICHAGE UNIQUEMENT
+#
+# Toutes les dates sont stockées en UTC (datetime.utcnow()) : c'est la bonne
+# pratique pour les calculs internes (délais, quotas, fenêtres de rattrapage)
+# qui ne doivent JAMAIS dépendre d'un fuseau horaire. Ce filtre Jinja convertit
+# uniquement à l'AFFICHAGE, sans toucher aux valeurs stockées en base.
+#
+# Le Bénin est en UTC+1 toute l'année (pas de changement d'heure saisonnier),
+# donc Africa/Porto-Novo convient à tout moment.
+# =========================================================================
+FUSEAU_BENIN = ZoneInfo("Africa/Porto-Novo")
+
+
+def heure_locale(dt, fmt="%d/%m/%Y %H:%M"):
+    """Convertit un datetime UTC (naïf, stocké tel quel en base) vers l'heure
+    locale du Bénin et le formate. À utiliser dans les templates via le
+    filtre `| heure_locale` à la place de `.strftime(...)` directement.
+    """
+    if dt is None:
+        return ""
+    if dt.tzinfo is None:
+        # Les datetime stockés par datetime.utcnow() sont "naïfs" (sans fuseau
+        # explicite) mais TOUJOURS en UTC : on le précise avant de convertir,
+        # sinon astimezone() se tromperait de fuseau de départ.
+        dt = dt.replace(tzinfo=ZoneInfo("UTC"))
+    return dt.astimezone(FUSEAU_BENIN).strftime(fmt)
+
+
+app.jinja_env.filters["heure_locale"] = heure_locale
 
 
 

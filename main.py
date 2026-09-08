@@ -4956,23 +4956,23 @@ def _notifier_partageurs_quota_atteint(camp):
     try:
         shares = CampaignShare.query.filter_by(campaign_id=camp.id).all()
         for s in shares:
-            notif = Notification(
-                user_id=s.sharer_id,
-                title="Quota du jour atteint 🎯",
-                message=(
-                    f"Les clics prévus aujourd'hui pour la campagne "
-                    f"« {camp.promotion_detail or camp.promotion_type} » sont atteints. "
-                    f"Vous pouvez retirer votre statut WhatsApp si vous le souhaitez — "
-                    f"vous ne serez pas rémunéré(e) au-delà de ce quota. "
-                    f"N'oubliez surtout pas d'envoyer votre capture de fin de journée : "
-                    f"c'est elle qui permet de faire valider et créditer vos clics du jour. "
-                    f"La diffusion reprendra demain."
-                ),
-                category="warning",
-                link=url_for("instructions_partage", campaign_id=camp.id),
-                is_read=False
-            )
-            db.session.add(notif)
+            partageur = db.session.get(User, s.sharer_id)
+            if partageur:
+                envoyer_notification(
+                    partageur,
+                    "Quota du jour atteint 🎯",
+                    (
+                        f"Les clics prévus aujourd'hui pour la campagne "
+                        f"« {camp.promotion_detail or camp.promotion_type} » sont atteints. "
+                        f"Vous pouvez retirer votre statut WhatsApp si vous le souhaitez — "
+                        f"vous ne serez pas rémunéré(e) au-delà de ce quota. "
+                        f"N'oubliez surtout pas d'envoyer votre capture de fin de journée : "
+                        f"c'est elle qui permet de faire valider et créditer vos clics du jour. "
+                        f"La diffusion reprendra demain."
+                    ),
+                    category="warning",
+                    link=url_for("instructions_partage", campaign_id=camp.id),
+                )
         camp.daily_quota_alert_sent = True
         logger.info("[QUOTA] Alerte quota envoyée à %d partageur(s) pour campagne #%d", len(shares), camp.id)
     except Exception as e:

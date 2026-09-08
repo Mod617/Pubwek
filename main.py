@@ -3141,12 +3141,9 @@ def admin_settings():
 
     return render_template("admin_settings.html", config=config)
 
-
 @app.route("/admin/validate")
 @login_required
 def admin_validate():
-    # 🆕 Accès à la page si l'utilisateur a AU MOINS UNE des deux permissions liées à cette page.
-    # Le filtrage fin de ce qu'il voit réellement se fait juste après.
     if current_user.role == "admin":
         peut_voir_utilisateurs = True
         peut_voir_campagnes = True
@@ -3164,7 +3161,6 @@ def admin_validate():
         )
         abort(403)
 
-    # 🆕 On ne charge et n'envoie au template QUE ce que l'utilisateur a le droit de voir
     users = []
     if peut_voir_utilisateurs:
         users = User.query.order_by(User.created_at.desc()).all()
@@ -3178,43 +3174,45 @@ def admin_validate():
             else:
                 u.whatsapp_message = ""
 
-    campaigns = []
-    campagnes_resoumises = []  # 🆕
-    if peut_voir_campagnes:
-        campaigns = Campaign.query.order_by(Campaign.created_at.desc()).all()
-        for camp in campaigns:
-            camp.annonceur = db.session.get(User, camp.user_id)
+    campaigns_page = None
+    compteurs = {}
+    onglet_actif = request.args.get("tab", "a_valider")
+    if onglet_actif not in ONGLETS_CAMPAGNES:
+        onglet_actif = "a_valider"
+    page = request.args.get("page", 1, type=int)
+    recherche = request.args.get("q", "").strip()
 
-        # =====================================================================
-        # 🆕 Campagnes resoumises après correction, en attente de revalidation.
-        # Triées par ordre d'envoi (FIFO) : la première renvoyée doit être la
-        # première traitée par l'admin, pour ne pas faire attendre indéfiniment
-        # un annonceur qui a déjà corrigé sa campagne.
-        # =====================================================================
-        campagnes_resoumises = (
-            Campaign.query
-            .filter(
-                Campaign.is_resubmission.is_(True),
-                Campaign.admin_status == "pending_review",
-            )
-            .order_by(Campaign.resubmitted_at.asc())
-            .all()
-        )
-        for camp in campagnes_resoumises:
+    if peut_voir_campagnes:
+        # Compteurs de chaque onglet : uniquement des COUNT indexés, jamais un .all()
+        for nom_onglet in ONGLETS_CAMPAGNES:
+            compteurs[nom_onglet] = filtre_onglet_campagne(Campaign.query, nom_onglet).count()
+
+        query = filtre_onglet_campagne(Campaign.query, onglet_actif)
+
+        if recherche:
+            if recherche.isdigit():
+                query = query.filter(Campaign.id == int(recherche))
+            else:
+                terme = f"%{recherche}%"
+                query = query.join(User, User.id == Campaign.user_id).filter(User.email.ilike(terme))
+
+        query = query.order_by(ONGLETS_CAMPAGNES[onglet_actif]["champ_tri"]())
+        campaigns_page = query.paginate(page=page, per_page=25, error_out=False)
+
+        for camp in campaigns_page.items:
             camp.annonceur = db.session.get(User, camp.user_id)
 
     return render_template(
         "admin_validate.html",
         users=users,
-        campaigns=campaigns,
-        campagnes_resoumises=campagnes_resoumises,  # 🆕
+        campaigns_page=campaigns_page,
+        onglets_campagnes=ONGLETS_CAMPAGNES,
+        onglet_actif=onglet_actif,
+        compteurs=compteurs,
+        recherche=recherche,
         peut_voir_utilisateurs=peut_voir_utilisateurs,
-        peut_voir_campagnes=peut_voir_campagnes
-    )  
-
-
-
-
+        peut_voir_campagnes=peut_voir_campagnes,
+    )
 
 
 

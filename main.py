@@ -1206,6 +1206,78 @@ app.jinja_env.filters["heure_locale"] = heure_locale
 # ==========================================
 # ROUTE : MES CAMPAGNES (ESPACE ANNONCEUR)
 # ==========================================
+
+# ==========================================
+# 🆕 CATÉGORISATION DES CAMPAGNES — ESPACE ADMIN (onglets + pagination)
+# ==========================================
+def categorie_admin_campagne(c):
+    """Onglet admin UNIQUE d'une campagne. Même principe que
+    categorie_affichage_campagne() côté annonceur : conditions ordonnées par
+    priorité, le premier cas qui correspond l'emporte — une campagne ne peut
+    jamais apparaître dans deux onglets, ni dans aucun.
+    """
+    if c.is_resubmission and c.admin_status == "pending_review":
+        return "resoumises"
+    if c.admin_status == "rejected":
+        return "rejetees"
+    if c.status == "terminee":
+        return "terminees"
+    if not c.paid:
+        return "non_payees"
+    if c.validated and c.is_active:
+        return "validees"
+    if c.admin_status == "pending_review" and c.paid:
+        return "a_valider"
+
+    logger.warning(
+        "[admin_validate] Campagne #%d dans un état inattendu "
+        "(status=%s, admin_status=%s, paid=%s, validated=%s, is_active=%s)",
+        c.id, c.status, c.admin_status, c.paid, c.validated, c.is_active
+    )
+    return "a_valider"
+
+
+ONGLETS_CAMPAGNES = {
+    "resoumises":  {"label": "🔄 Resoumises",        "champ_tri": lambda: Campaign.resubmitted_at.asc()},
+    "a_valider":   {"label": "🆕 À valider",          "champ_tri": lambda: Campaign.created_at.asc()},
+    "non_payees":  {"label": "⚠️ Non payées",         "champ_tri": lambda: Campaign.created_at.desc()},
+    "validees":    {"label": "✅ Validées / actives", "champ_tri": lambda: Campaign.created_at.desc()},
+    "terminees":   {"label": "🏁 Terminées",          "champ_tri": lambda: Campaign.created_at.desc()},
+    "rejetees":    {"label": "❌ Rejetées",           "champ_tri": lambda: Campaign.created_at.desc()},
+}
+
+
+def filtre_onglet_campagne(query, onglet):
+    """Traduit un nom d'onglet en filtre SQL — reflète EXACTEMENT
+    categorie_admin_campagne(), pour que ce que l'admin voit corresponde
+    toujours à ce que la fonction de classement calculerait.
+    """
+    if onglet == "resoumises":
+        return query.filter(Campaign.is_resubmission.is_(True), Campaign.admin_status == "pending_review")
+    if onglet == "rejetees":
+        return query.filter(
+            Campaign.admin_status == "rejected",
+            db.or_(Campaign.is_resubmission.is_(False), Campaign.admin_status != "pending_review"),
+        )
+    if onglet == "terminees":
+        return query.filter(Campaign.status == "terminee", Campaign.admin_status != "rejected")
+    if onglet == "non_payees":
+        return query.filter(
+            Campaign.paid.is_(False),
+            Campaign.admin_status != "rejected",
+            Campaign.status != "terminee",
+        )
+    if onglet == "validees":
+        return query.filter(Campaign.validated.is_(True), Campaign.is_active.is_(True))
+    # "a_valider" par défaut
+    return query.filter(
+        Campaign.paid.is_(True),
+        Campaign.admin_status == "pending_review",
+        Campaign.is_resubmission.is_(False),
+        Campaign.status != "terminee",
+    )
+
+
 def categorie_affichage_campagne(c):
     """Catégorie d'affichage UNIQUE d'une campagne dans mes_campagnes.
 

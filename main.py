@@ -5041,14 +5041,6 @@ def demander_retrait():
         return redirect(url_for(dashboard_retour))
 
     # 3️⃣ Verrouillage de la ligne utilisateur pour toute la durée de l'opération.
-    #
-    # Sans ce verrou, deux demandes simultanées (double-clic, ou deux workers
-    # gunicorn) pouvaient toutes les deux passer la vérification de solde avant
-    # que l'une ne débite : le même argent partait deux fois. Le verrou les met
-    # en file d'attente, la seconde voit le solde déjà débité.
-    #
-    # SELECT ... FOR UPDATE est actif sur PostgreSQL (la base de production) et
-    # sans effet sur SQLite, où l'écriture est de toute façon sérialisée.
     utilisateur = (
         db.session.query(User)
         .filter_by(id=current_user.id)
@@ -5095,17 +5087,14 @@ def demander_retrait():
         db.session.add(demande)
         db.session.commit()
 
-        # 7️⃣ Notification aux admins
-        admins = User.query.filter_by(role="admin").all()
-        for admin in admins:
-            db.session.add(Notification(
-                user_id=admin.id,
-                title="Nouvelle demande de retrait 💰",
-                message=f"{current_user.pseudo or current_user.email} demande un retrait de {montant:.0f} FCFA.",
-                category="info",
-                link=url_for("admin_retraits"),
-                is_read=False
-            ))
+        # 7️⃣ Notification aux admins habilités
+        notifier_admins_avec_permission(
+            "gerer_retraits",
+            "Nouvelle demande de retrait 💰",
+            f"{current_user.pseudo or current_user.email} demande un retrait de {montant:.0f} FCFA.",
+            category="info",
+            link=url_for("admin_retraits"),
+        )
         db.session.commit()
 
         logger.info(

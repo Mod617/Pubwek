@@ -3534,6 +3534,15 @@ def autoriser_remboursement_admin(campaign_id):
         flash("Campagne introuvable. ⚠️", "danger")
         return redirect(url_for("admin_validate"))
 
+    # 🆕 🐞 FIX : impossible d'autoriser un remboursement sur une campagne
+    # jamais payée. Sans ce contrôle, l'admin pouvait activer can_claim_refund
+    # sur une campagne non payée, et reclamer_remboursement() la bloquait
+    # certes déjà côté annonceur — mais le bouton ne devait jamais être
+    # activable côté admin pour commencer.
+    if not camp.paid:
+        flash("Impossible d'autoriser un remboursement : cette campagne n'a jamais été payée. ⚠️", "warning")
+        return redirect(url_for("admin_validate"))
+
     if camp.admin_status != "rejected" and camp.status != "rejete":
         flash("Seule une campagne rejetée peut faire l'objet d'une autorisation de remboursement. ⚠️", "warning")
         return redirect(url_for("admin_validate"))

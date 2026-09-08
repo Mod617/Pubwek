@@ -761,13 +761,18 @@
                             {% elif camp.refund_status == "available" %}
                                 <span class="badge bg-info text-dark">💰 Remboursement débloqué</span>
                                 <small class="text-muted d-block mt-1">En attente que l'annonceur soumette ses coordonnées.</small>
-                            {% else %}
+                            {% elif camp.paid %}
                                 <form action="{{ url_for('autoriser_remboursement_admin', campaign_id=camp.id) }}" method="POST" class="d-inline">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold">
                                         💰 Autoriser Remboursement
                                     </button>
                                 </form>
+                            {% else %}
+                                {# 🆕 Campagne rejetée mais jamais payée : aucun remboursement
+                                   n'a de sens ici, le bouton ne doit donc jamais apparaître. #}
+                                <span class="badge bg-secondary d-block mb-1">⚠️ Non payée</span>
+                                <small class="text-muted d-block">Aucun remboursement possible : cette campagne n'a jamais été réglée.</small>
                             {% endif %}
                         {% elif camp.validated and not camp.shared_to_partageurs %}
                             <!-- Bouton de partage manuel aux partageurs -->

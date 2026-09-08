@@ -60,6 +60,7 @@ from models import (
     UploadedFile,
     CampaignShareProof,
     DocumentCertification,
+    PushSubscription,
     User,
     UserSubscription,
     WalletTransaction,

@@ -3717,17 +3717,18 @@ def refuser_remboursement(refund_id):
         camp.refund_status = "rejected"
         camp.refund_rejection_reason = bleach.clean(motif)
 
-    db.session.add(Notification(
-        user_id=demande.user_id,
-        title="Demande de remboursement refusée ⚠️",
-        message=(
-            f"Votre demande de remboursement pour la campagne #{demande.campaign_id} a été refusée. "
-            f"Motif : {motif}. Merci de corriger vos coordonnées et de renvoyer votre demande."
-        ),
-        category="warning",
-        link=url_for("mes_campagnes"),
-        is_read=False
-    ))
+    annonceur = db.session.get(User, demande.user_id)
+    if annonceur:
+        envoyer_notification(
+            annonceur,
+            "Demande de remboursement refusée ⚠️",
+            (
+                f"Votre demande de remboursement pour la campagne #{demande.campaign_id} a été refusée. "
+                f"Motif : {motif}. Merci de corriger vos coordonnées et de renvoyer votre demande."
+            ),
+            category="warning",
+            link=url_for("mes_campagnes"),
+        )
     db.session.commit()
 
     logger.info(

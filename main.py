@@ -5266,14 +5266,14 @@ def refuser_retrait(withdrawal_id):
 
         db.session.commit()
 
-        db.session.add(Notification(
-            user_id=demande.user_id,
-            title="Demande de retrait refusée ⚠️",
-            message=f"Votre demande de retrait de {demande.amount:.0f} FCFA a été refusée. Motif : {motif}. Le montant a été recrédité sur votre portefeuille.",
-            category="warning",
-            link=url_for("mes_retraits"),
-            is_read=False
-        ))
+        if partageur:
+            envoyer_notification(
+                partageur,
+                "Demande de retrait refusée ⚠️",
+                f"Votre demande de retrait de {demande.amount:.0f} FCFA a été refusée. Motif : {motif}. Le montant a été recrédité sur votre portefeuille.",
+                category="warning",
+                link=url_for("mes_retraits"),
+            )
         db.session.commit()
 
         logger.info("[RETRAIT] Demande #%d refusée par admin id=%d", demande.id, current_user.id)
@@ -5284,7 +5284,7 @@ def refuser_retrait(withdrawal_id):
         logger.error("Erreur refus retrait #%d : %s", withdrawal_id, e)
         flash("Une erreur est survenue. Réessayez. ⚠️", "danger")
 
-    return redirect(url_for("admin_retraits"))              
+    return redirect(url_for("admin_retraits"))             
           
 
 # ==========================================

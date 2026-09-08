@@ -4748,18 +4748,19 @@ def valider_preuve_partage(proof_id, decision):
         # viennent d'être ajoutés à son portefeuille disponible au retrait.
         if share:
             nom_campagne = camp.promotion_detail or camp.promotion_type if camp else "campagne"
-            db.session.add(Notification(
-                user_id=share.sharer_id,
-                title=f"Clics du jour {preuve.day_number} validés ✅",
-                message=(
-                    f"Votre preuve du jour {preuve.day_number} pour la campagne "
-                    f"« {nom_campagne} » a été validée. {nb} clic(s) pour {montant:.0f} FCFA "
-                    f"ont été ajoutés à votre portefeuille disponible. 💰"
-                ),
-                category="success",
-                link=url_for("mes_retraits"),
-                is_read=False
-            ))
+            partageur = db.session.get(User, share.sharer_id)
+            if partageur:
+                envoyer_notification(
+                    partageur,
+                    f"Clics du jour {preuve.day_number} validés ✅",
+                    (
+                        f"Votre preuve du jour {preuve.day_number} pour la campagne "
+                        f"« {nom_campagne} » a été validée. {nb} clic(s) pour {montant:.0f} FCFA "
+                        f"ont été ajoutés à votre portefeuille disponible. 💰"
+                    ),
+                    category="success",
+                    link=url_for("mes_retraits"),
+                )
             db.session.commit()
 
         flash(f"Preuve validée. {nb} clic(s) crédité(s) pour {montant:.0f} FCFA. ✅", "success")
@@ -4774,19 +4775,20 @@ def valider_preuve_partage(proof_id, decision):
         # perdrait ses clics du jour sans même en être informé.
         if share:
             delai = camp.FENETRE_RATTRAPAGE_HEURES if camp else 48
-            db.session.add(Notification(
-                user_id=share.sharer_id,
-                title=f"Preuve du jour {preuve.day_number} rejetée ⚠️",
-                message=(
-                    f"Votre preuve du jour {preuve.day_number} a été rejetée. "
-                    f"Motif : {preuve.rejection_reason}. Veuillez en renvoyer une nouvelle "
-                    f"avant l'expiration du délai de {delai}h après la fin de ce jour, "
-                    f"sinon les clics de cette journée seront définitivement perdus."
-                ),
-                category="warning",
-                link=url_for("dashboard_partageur"),
-                is_read=False
-            ))
+            partageur = db.session.get(User, share.sharer_id)
+            if partageur:
+                envoyer_notification(
+                    partageur,
+                    f"Preuve du jour {preuve.day_number} rejetée ⚠️",
+                    (
+                        f"Votre preuve du jour {preuve.day_number} a été rejetée. "
+                        f"Motif : {preuve.rejection_reason}. Veuillez en renvoyer une nouvelle "
+                        f"avant l'expiration du délai de {delai}h après la fin de ce jour, "
+                        f"sinon les clics de cette journée seront définitivement perdus."
+                    ),
+                    category="warning",
+                    link=url_for("dashboard_partageur"),
+                )
             db.session.commit()
 
         flash("Preuve rejetée. Le partageur devra en renvoyer une nouvelle. ⚠️", "warning")

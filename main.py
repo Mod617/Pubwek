@@ -3542,14 +3542,15 @@ def autoriser_remboursement_admin(campaign_id):
     camp.refund_status = "available"  # 🆕 démarre le parcours dédié remboursement
 
     # Notification interne pour l'annonceur
-    db.session.add(Notification(
-        user_id=camp.user_id,
-        title="Remboursement disponible 💰",
-        message=f"L'administration a activé l'option de remboursement pour votre campagne #{camp.id}. Vous pouvez désormais soumettre vos coordonnées.",
-        category="info",
-        link=url_for("mes_campagnes"),
-        is_read=False
-    ))
+    annonceur = db.session.get(User, camp.user_id)
+    if annonceur:
+        envoyer_notification(
+            annonceur,
+            "Remboursement disponible 💰",
+            f"L'administration a activé l'option de remboursement pour votre campagne #{camp.id}. Vous pouvez désormais soumettre vos coordonnées.",
+            category="info",
+            link=url_for("mes_campagnes"),
+        )
 
     db.session.commit()
 

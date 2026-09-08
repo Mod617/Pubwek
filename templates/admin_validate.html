@@ -66,24 +66,13 @@
     margin: 2rem 0 1.25rem;
   }
 
-  /* 🆕 Titre distinct pour le tableau des resoumissions, pour bien le
-     différencier visuellement du tableau principal des campagnes */
-  .section-title.resub-title {
-    color: #b8842e;
-  }
-
   .table-card {
     background: #fff;
     border-radius: 16px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
     padding: 0.5rem;
-    margin-bottom: 3rem;
+    margin-bottom: 1.5rem;
     overflow: hidden;
-  }
-
-  /* 🆕 Bordure distinctive pour la carte des resoumissions */
-  .table-card.resub-card {
-    border: 2px solid #f8eedd;
   }
 
   .table-card table {
@@ -92,11 +81,6 @@
 
   .table-card thead tr {
     background: #1a1a2e !important;
-  }
-
-  /* 🆕 En-tête ambre pour distinguer visuellement le tableau des resoumissions */
-  .table-card.resub-card thead tr {
-    background: #b8842e !important;
   }
 
   .table-card thead th {
@@ -239,7 +223,6 @@
     <div class="page-header d-flex flex-column flex-md-row justify-content-between align-items-center">
         <h2 class="mb-0 fw-bold">👨‍💻 Panneau d'administration</h2>
         <div class="mt-3 mt-md-0 d-flex gap-2 flex-wrap justify-content-center">
-            <!-- 🆕 Chaque bouton n'apparaît que si l'utilisateur (admin ou sous-admin) a la permission correspondante -->
             {% if current_user.role == "admin" or current_user.has_permission("configurer_video") %}
             {% endif %}
 
@@ -297,7 +280,6 @@
                     <span class="badge bg-success">✅ Confirmé</span>
                 {% else %}
                     <span class="badge bg-warning text-dark d-block mb-1">⏳ En attente</span>
-                    {# 🆕 Badges de verrouillage du dossier #}
                     {% if not user.contacted_by_id %}
                         <span class="badge bg-light text-dark border">🟢 Libre</span>
                     {% elif user.contacted_by_id == current_user.id %}
@@ -317,18 +299,15 @@
                 {% if user.is_confirmed %}
                     <button class="btn btn-sm btn-secondary" disabled>Déjà validé</button>
                 {% elif user.contacted_by_id and user.contacted_by_id != current_user.id and current_user.role != "admin" %}
-                    {# 🆕 Dossier verrouillé par un autre sous-admin : aucune action possible #}
                     <button class="btn btn-sm btn-secondary" disabled>🚫 Verrouillé</button>
                 {% else %}
                     <div class="d-flex flex-column gap-1 align-items-center">
                         {% if not user.contacted_by_id %}
-                            {# 🆕 Personne n'a encore contacté ce partageur : proposer l'envoi du message de vérification #}
                             <form action="{{ url_for('contacter_partageur_verification', user_id=user.id) }}" method="POST" class="d-inline">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-sm btn-primary">📩 Envoyer message de vérification</button>
                             </form>
                         {% else %}
-                            {# 🆕 Dossier verrouillé sur vous (ou vous êtes l'admin principal) : confirmer/refuser #}
                             <div class="d-flex gap-1 justify-content-center">
                                 <form action="{{ url_for('confirm_user', user_id=user.id) }}" method="POST" class="d-inline">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -351,7 +330,6 @@
         {% set partageurs = users | selectattr("role", "equalto", "partageur") | list %}
         {% set admins = users | rejectattr("role", "equalto", "annonceur") | rejectattr("role", "equalto", "partageur") | list %}
 
-        <!-- 🆕 TABLEAU 1 : ANNONCEURS EN ATTENTE DE VALIDATION -->
         <h4 class="section-title">📢 Annonceurs en attente de validation</h4>
         <div class="table-card">
         <div class="table-responsive">
@@ -382,7 +360,6 @@
         </div>
         </div>
 
-        <!-- 🆕 TABLEAU 2 : PARTAGEURS EN ATTENTE DE VALIDATION -->
         <h4 class="section-title">🤝 Partageurs en attente de validation</h4>
         <div class="table-card">
         <div class="table-responsive">
@@ -413,7 +390,6 @@
         </div>
         </div>
 
-        <!-- 🆕 TABLEAU 3 : ADMINISTRATEURS / SOUS-ADMINS EN ATTENTE DE VALIDATION -->
         <h4 class="section-title">🔑 Administrateurs en attente de validation</h4>
         <div class="table-card">
         <div class="table-responsive">
@@ -446,123 +422,238 @@
     {% endif %}
 
     <!-- ========================================== -->
-    <!-- 🆕 TABLEAU DÉDIÉ : CAMPAGNES RESOUMISES APRÈS CORRECTION -->
-    <!-- Trié par ordre d'envoi (la plus ancienne resoumission en premier),  -->
-    <!-- pour ne jamais faire attendre indéfiniment un annonceur qui a déjà  -->
-    <!-- corrigé sa campagne suite à un rejet.                              -->
+    <!-- 🆕 GESTION DES CAMPAGNES — ONGLETS + PAGINATION -->
     <!-- ========================================== -->
     {% if peut_voir_campagnes %}
-    <h4 class="section-title resub-title">🔄 Campagnes resoumises après correction ({{ campagnes_resoumises | length }})</h4>
-    <div class="table-card resub-card">
-    <div class="table-responsive">
-        <table class="table table-striped align-middle mb-0 responsive-table">
-            <thead class="text-white text-center">
-                <tr>
-                    <th>ID</th>
-                    <th>Annonceur</th>
-                    <th>Type</th>
-                    <th>Détail & Texte</th>
-                    <th>Renvoyée le</th>
-                    <th>Coût total</th>
-                    <th>Statut paiement</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for camp in campagnes_resoumises %}
-                <tr>
-                    <td class="text-center fw-bold" data-label="ID">#{{ camp.id }}</td>
-                    <td data-label="Annonceur">
-                        {% if camp.annonceur %}
-                            <div>{{ camp.annonceur.email }}</div>
-                        {% else %}
-                            <span class="text-muted">Utilisateur supprimé</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-center" data-label="Type">
-                        <span class="text-capitalize d-block">{{ camp.promotion_type }}</span>
-                        {% if camp.display_option == "A" %}
-                            <span class="badge bg-success mt-1">🎬 Vidéo</span>
-                        {% elif camp.display_option == "B" %}
-                            <span class="badge bg-primary mt-1">📸 Multi-Statuts</span>
-                        {% elif camp.display_option == "C" %}
-                            <span class="badge bg-secondary mt-1">📝 Texte seul</span>
-                        {% endif %}
-                    </td>
-                    <td data-label="Détail & Texte">
-                        <strong>Détail :</strong> {{ camp.promotion_detail or "-" }}<br>
-                        <small class="text-muted"><strong>Statut WhatsApp :</strong> {{ camp.description or "-" }}</small>
-                    </td>
-                    <td class="text-center" data-label="Renvoyée le">
-                        {% if camp.resubmitted_at %}
-                            {{ camp.resubmitted_at | heure_locale }}
-                        {% else %}
-                            <span class="text-muted">—</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-center fw-bold text-success" data-label="Coût total">{{ "{:,.0f}".format(camp.total_cost) }} XOF</td>
-                    <td class="text-center" data-label="Statut paiement">
-                        {% if camp.paid %}
-                            <span class="badge bg-success">💰 Déjà payée</span>
-                        {% else %}
-                            <span class="badge bg-danger">⚠️ Non payée</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-center" data-label="Actions">
-                        <div class="d-flex flex-column gap-1 align-items-center">
-                            <form action="{{ url_for('validate_campaign', campaign_id=camp.id) }}" method="POST" class="d-inline">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-sm btn-success">Valider ✅</button>
-                            </form>
-                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModalResub{{ camp.id }}">
-                                Refuser ❌
-                            </button>
-                        </div>
 
-                        <!-- MODALE dédiée (id distinct du tableau principal, même campagne pouvant y apparaître aussi) -->
-                        <div class="modal fade" id="rejectModalResub{{ camp.id }}" tabindex="-1" aria-hidden="true">
-                          <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                              <form action="{{ url_for('refuse_campaign', campaign_id=camp.id) }}" method="POST">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <div class="modal-header bg-danger text-white">
-                                  <h5 class="modal-title">Refuser la campagne #{{ camp.id }}</h5>
-                                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body text-start">
-                                  <label for="rejection_reason_resub{{ camp.id }}" class="form-label fw-bold">
-                                    Motif du refus <span class="text-danger">*</span>
-                                  </label>
-                                  <textarea name="rejection_reason" id="rejection_reason_resub{{ camp.id }}" class="form-control" rows="4"
-                                            placeholder="Ex : la vidéo dépasse 30 secondes, veuillez la raccourcir avant de relancer." required></textarea>
-                                  <small class="text-muted d-block mt-1">Ce motif sera envoyé à l'annonceur pour qu'il puisse corriger et relancer sa campagne.</small>
-                                </div>
-                                <div class="modal-footer">
-                                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                                  <button type="submit" class="btn btn-danger fw-bold">Confirmer le refus ❌</button>
-                                </div>
-                              </form>
-                            </div>
-                          </div>
-                        </div>
-                    </td>
-                </tr>
+    {% macro campaign_row(camp) %}
+    <tr>
+        <td class="text-center fw-bold" data-label="ID">#{{ camp.id }}</td>
+        <td data-label="Annonceur">
+            {% if camp.annonceur %}
+                <div>{{ camp.annonceur.email }}</div>
+                <button type="button" class="btn btn-xs btn-outline-info mt-1 btn-voir-profil" style="font-size: 0.75rem;"
+                        data-company="{{ camp.annonceur.company_name or 'Non spécifié' }}"
+                        data-whatsapp="{{ camp.whatsapp_number or camp.annonceur.whatsapp_number or 'Aucun' }}"
+                        data-slogan="{{ camp.annonceur.profile_slogan or '' }}"
+                        data-bio="{{ camp.annonceur.bio or '' }}"
+                        data-profile="{{ url_for('serve_upload', filename=camp.annonceur.logo if camp.annonceur.logo else camp.annonceur.profile_picture) if (camp.annonceur.logo or camp.annonceur.profile_picture) else '' }}"
+                        data-cover="{{ url_for('serve_upload', filename=camp.annonceur.cover_photo) if camp.annonceur.cover_photo else '' }}">
+                    🔍 Voir Profil
+                </button>
+                {% if camp.website_url %}
+                    <a href="{{ camp.website_url }}" target="_blank" rel="noopener noreferrer"
+                       class="btn btn-xs btn-outline-primary mt-1 d-block" style="font-size: 0.75rem;">
+                        🌐 Voir le site
+                    </a>
+                {% endif %}
             {% else %}
-                <tr>
-                    <td colspan="8" class="empty-row text-center text-muted py-3">
-                        Aucune campagne resoumise en attente pour le moment.
-                    </td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    </div>
-    {% endif %}
+                <span class="text-muted">Utilisateur supprimé</span>
+            {% endif %}
+        </td>
+        <td class="text-center" data-label="Type">
+            <span class="text-capitalize d-block">{{ camp.promotion_type }}</span>
+            {% if camp.display_option == "A" %}
+                <span class="badge bg-success mt-1">🎬 Vidéo</span>
+            {% elif camp.display_option == "B" %}
+                <span class="badge bg-primary mt-1">📸 Multi-Statuts</span>
+            {% elif camp.display_option == "C" %}
+                <span class="badge bg-secondary mt-1">📝 Texte seul</span>
+            {% endif %}
+        </td>
+        <td data-label="Détail & Texte">
+            <strong>Détail :</strong> {{ camp.promotion_detail or "-" }}<br>
+            <small class="text-muted"><strong>Statut WhatsApp :</strong> {{ camp.description or "-" }}</small>
+            {% if camp.is_resubmission %}
+                <br><span class="badge bg-warning text-dark mt-1" title="Resoumise le {{ camp.resubmitted_at | heure_locale if camp.resubmitted_at }}">🔄 Resoumise</span>
+            {% endif %}
+        </td>
+        <td class="text-center" data-label="Zones / Communes">
+            <div>{{ camp.provinces or camp.departments or "Toutes zones" }}</div>
+            {% if camp.communes %}
+                <small class="text-muted d-block mt-1">
+                    <strong>Communes :</strong> {{ camp.communes }}
+                </small>
+            {% endif %}
+        </td>
+        <td class="text-center" data-label="Médias">
+            {% if camp.display_option == "C" %}
+                <span class="text-muted small">📝 Aucun média — annonce textuelle uniquement</span>
+            {% elif camp.media_files %}
+                {% for file in camp.media_files.split(',') %}
+                    {% set file_url = url_for('serve_upload', filename=file) %}
+                    <div class="mb-2">
+                        {% if file.lower().endswith(('.mp4', '.mov', '.avi', '.webm')) %}
+                            <div class="position-relative d-inline-block bg-dark rounded overflow-hidden shadow-sm" style="width: 120px; height: 80px; cursor: pointer;" onclick="showMedia('{{ file_url }}', true)">
+                                <div class="position-absolute top-50 start-50 translate-middle text-white z-3">
+                                    <i class="bi bi-play-circle-fill fs-2 opacity-75"></i>
+                                </div>
+                                <video src="{{ file_url }}" class="w-100 h-100 object-fit-cover opacity-50"></video>
+                            </div>
+                        {% else %}
+                            <img src="{{ file_url }}" width="100" class="rounded shadow-sm object-fit-cover"
+                                 onclick="showMedia('{{ file_url }}', false)" style="cursor:pointer; max-height: 100px;">
+                        {% endif %}
+                        <br>
+                        <a href="{{ file_url }}" download class="btn btn-xs btn-outline-primary mt-1" style="font-size: 0.7rem;">⬇ Télécharger</a>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <span class="text-muted">Aucun média</span>
+            {% endif %}
+        </td>
+        <td class="text-center" data-label="Objectif Clics">
+            <span class="badge bg-info text-dark">
+                {{ camp.target_whatsapp_views if camp.target_whatsapp_views else camp.whatsapp_views }} clics
+            </span>
+        </td>
+        <td class="text-center" data-label="Durée / Progression" style="min-width: 150px;">
+            <div class="fw-bold text-dark">
+                <i class="bi bi-calendar3 me-1"></i>{{ camp.duration_days }} jour{{ 's' if camp.duration_days > 1 else '' }}
+            </div>
+            <div class="text-muted small">
+                ≈ {{ camp.views_per_day }} clics / jour
+            </div>
+            {% if camp.validated and camp.is_active and camp.current_day_number %}
+                <hr class="my-1">
+                <div class="small">
+                    <span class="badge bg-primary">Jour {{ camp.current_day_number }} / {{ camp.duration_days }}</span>
+                </div>
+                <div class="small text-muted mt-1">
+                    {{ camp.views_today or 0 }} / {{ camp.views_per_day }} clics aujourd'hui
+                </div>
+                {% if camp.daily_quota_paused %}
+                    <span class="badge bg-warning text-dark mt-1">⏸️ Quota du jour atteint</span>
+                {% endif %}
+            {% elif camp.validated and not camp.is_active and camp.status == "terminee" %}
+                <span class="badge bg-success mt-1">✅ Diffusion terminée</span>
+            {% endif %}
+        </td>
+        <td class="text-center fw-bold text-success" data-label="Coût total">{{ "{:,.0f}".format(camp.total_cost) }} XOF</td>
+        <td class="text-center" data-label="Statut">
+            {% if camp.validated or camp.admin_status == "approved" %}
+                <span class="badge bg-success">✅ Validée</span>
+            {% elif camp.admin_status == "rejected" or camp.status == "rejete" %}
+                <span class="badge bg-danger">❌ Rejetée</span>
+            {% else %}
+                <span class="badge bg-warning text-dark d-block mb-1">⏳ En attente</span>
+                {% if camp.paid %}
+                    <span class="badge bg-success">💰 Déjà payée</span>
+                {% else %}
+                    <span class="badge bg-danger">⚠️ Non payée</span>
+                {% endif %}
+            {% endif %}
+        </td>
+        <td class="text-center" data-label="Actions">
+            {% if not camp.validated and camp.admin_status != "rejected" and camp.status != "rejete" %}
+                <div class="d-flex flex-column gap-1 align-items-center">
+                    <form action="{{ url_for('validate_campaign', campaign_id=camp.id) }}" method="POST" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-success">Valider ✅</button>
+                    </form>
+                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ camp.id }}">
+                        Refuser ❌
+                    </button>
+                </div>
 
-    <!-- 🆕 TABLEAU 2 : GESTION DES CAMPAGNES — visible uniquement si permission accordée -->
-    {% if peut_voir_campagnes %}
+                <div class="modal fade" id="rejectModal{{ camp.id }}" tabindex="-1" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                      <form action="{{ url_for('refuse_campaign', campaign_id=camp.id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="modal-header bg-danger text-white">
+                          <h5 class="modal-title">Refuser la campagne #{{ camp.id }}</h5>
+                          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-start">
+                          <label for="rejection_reason{{ camp.id }}" class="form-label fw-bold">
+                            Motif du refus <span class="text-danger">*</span>
+                          </label>
+                          <textarea name="rejection_reason" id="rejection_reason{{ camp.id }}" class="form-control" rows="4"
+                                    placeholder="Ex : la vidéo dépasse 30 secondes, veuillez la raccourcir avant de relancer." required></textarea>
+                          <small class="text-muted d-block mt-1">Ce motif sera envoyé à l'annonceur pour qu'il puisse corriger et relancer sa campagne.</small>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                          <button type="submit" class="btn btn-danger fw-bold">Confirmer le refus ❌</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+
+            {% elif camp.admin_status == "rejected" or camp.status == "rejete" %}
+                {% if camp.refund_status == "processed" %}
+                    <span class="badge bg-success d-block mb-1">✅ Remboursement traité</span>
+                    <small class="text-muted d-block">Virement effectué manuellement.</small>
+                {% elif camp.refund_status == "requested" %}
+                    <span class="badge bg-secondary d-block mb-1">⏳ Demande de remboursement reçue</span>
+                    <small class="text-muted d-block">Coordonnées transmises par l'annonceur — à traiter sous 48h.</small>
+                    <a href="{{ url_for('admin_remboursements') }}" class="btn btn-sm btn-outline-dark fw-bold mt-1">
+                        Traiter la demande
+                    </a>
+                {% elif camp.refund_status == "rejected" %}
+                    <span class="badge bg-warning text-dark d-block mb-1">🔁 Demande refusée</span>
+                    <small class="text-muted d-block">En attente d'une nouvelle demande corrigée de l'annonceur (pas besoin de réautoriser).</small>
+                {% elif camp.refund_status == "available" %}
+                    <span class="badge bg-info text-dark">💰 Remboursement débloqué</span>
+                    <small class="text-muted d-block mt-1">En attente que l'annonceur soumette ses coordonnées.</small>
+                {% elif camp.paid %}
+                    <form action="{{ url_for('autoriser_remboursement_admin', campaign_id=camp.id) }}" method="POST" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold">
+                            💰 Autoriser Remboursement
+                        </button>
+                    </form>
+                {% else %}
+                    <span class="badge bg-secondary d-block mb-1">⚠️ Non payée</span>
+                    <small class="text-muted d-block">Aucun remboursement possible : cette campagne n'a jamais été réglée.</small>
+                {% endif %}
+            {% elif camp.validated and not camp.shared_to_partageurs %}
+                <form action="{{ url_for('partager_campagne_admin', campaign_id=camp.id) }}" method="POST" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-primary fw-bold">
+                        📤 Partager aux partageurs
+                    </button>
+                </form>
+            {% elif camp.shared_to_partageurs %}
+                <span class="badge bg-success d-block mb-1">✅ Partagée aux partageurs</span>
+            {% else %}
+                <button class="btn btn-sm btn-secondary" disabled>En cours / Active</button>
+            {% endif %}
+
+            {% if camp.validated %}
+                <a href="{{ url_for('admin_suivi_campagne', campaign_id=camp.id) }}" class="btn btn-sm btn-outline-dark fw-bold d-block mt-1">
+                    📊 Suivre cette campagne
+                </a>
+            {% endif %}
+        </td>
+    </tr>
+    {% endmacro %}
+
     <h4 class="section-title">Campagnes publicitaires (WhatsApp)</h4>
+
+    <ul class="nav nav-tabs mb-3 flex-wrap">
+      {% for nom, info in onglets_campagnes.items() %}
+      <li class="nav-item">
+        <a class="nav-link {{ 'active' if nom == onglet_actif }}"
+           href="{{ url_for('admin_validate', tab=nom, q=recherche) }}">
+          {{ info.label }} <span class="badge bg-secondary ms-1">{{ compteurs.get(nom, 0) }}</span>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+
+    <form method="GET" class="d-flex gap-2 mb-3" style="max-width: 420px;">
+      <input type="hidden" name="tab" value="{{ onglet_actif }}">
+      <input type="text" name="q" value="{{ recherche }}" class="form-control"
+             placeholder="ID de campagne ou email de l'annonceur">
+      <button class="btn btn-outline-dark" type="submit">🔍</button>
+      {% if recherche %}
+        <a href="{{ url_for('admin_validate', tab=onglet_actif) }}" class="btn btn-outline-secondary">✕</a>
+      {% endif %}
+    </form>
+
     <div class="table-card">
     <div class="table-responsive">
         <table class="table table-striped align-middle mb-0 responsive-table">
@@ -582,224 +673,12 @@
                 </tr>
             </thead>
             <tbody>
-            {% for camp in campaigns %}
-                <tr>
-                    <td class="text-center fw-bold" data-label="ID">#{{ camp.id }}</td>
-                    <td data-label="Annonceur">
-                        {% if camp.annonceur %}
-                            <div>{{ camp.annonceur.email }}</div>
-                            <button type="button" class="btn btn-xs btn-outline-info mt-1 btn-voir-profil" style="font-size: 0.75rem;"
-                                    data-company="{{ camp.annonceur.company_name or 'Non spécifié' }}"
-                                    data-whatsapp="{{ camp.whatsapp_number or camp.annonceur.whatsapp_number or 'Aucun' }}"
-                                    data-slogan="{{ camp.annonceur.profile_slogan or '' }}"
-                                    data-bio="{{ camp.annonceur.bio or '' }}"
-                                    data-profile="{{ url_for('serve_upload', filename=camp.annonceur.logo if camp.annonceur.logo else camp.annonceur.profile_picture) if (camp.annonceur.logo or camp.annonceur.profile_picture) else '' }}"
-                                    data-cover="{{ url_for('serve_upload', filename=camp.annonceur.cover_photo) if camp.annonceur.cover_photo else '' }}">
-                                🔍 Voir Profil
-                            </button>
-                            {% if camp.website_url %}
-                                <a href="{{ camp.website_url }}" target="_blank" rel="noopener noreferrer"
-                                   class="btn btn-xs btn-outline-primary mt-1 d-block" style="font-size: 0.75rem;">
-                                    🌐 Voir le site
-                                </a>
-                            {% endif %}
-                        {% else %}
-                            <span class="text-muted">Utilisateur supprimé</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-center" data-label="Type">
-                        <span class="text-capitalize d-block">{{ camp.promotion_type }}</span>
-                        {% if camp.display_option == "A" %}
-                            <span class="badge bg-success mt-1">🎬 Vidéo</span>
-                        {% elif camp.display_option == "B" %}
-                            <span class="badge bg-primary mt-1">📸 Multi-Statuts</span>
-                        {% elif camp.display_option == "C" %}
-                            <span class="badge bg-secondary mt-1">📝 Texte seul</span>
-                        {% endif %}
-                    </td>
-                    <td data-label="Détail & Texte">
-                        <strong>Détail :</strong> {{ camp.promotion_detail or "-" }}<br>
-                        <small class="text-muted"><strong>Statut WhatsApp :</strong> {{ camp.description or "-" }}</small>
-                    </td>
-                    <td class="text-center" data-label="Zones / Communes">
-                        <div>{{ camp.provinces or camp.departments or "Toutes zones" }}</div>
-                        {% if camp.communes %}
-                            <small class="text-muted d-block mt-1">
-                                <strong>Communes :</strong> {{ camp.communes }}
-                            </small>
-                        {% endif %}
-                    </td>
-                    <td class="text-center" data-label="Médias">
-                        {% if camp.display_option == "C" %}
-                            <span class="text-muted small">📝 Aucun média — annonce textuelle uniquement</span>
-                        {% elif camp.media_files %}
-                            {% for file in camp.media_files.split(',') %}
-                                {% set file_url = url_for('serve_upload', filename=file) %}
-                                <div class="mb-2">
-                                    {% if file.lower().endswith(('.mp4', '.mov', '.avi', '.webm')) %}
-                                        <div class="position-relative d-inline-block bg-dark rounded overflow-hidden shadow-sm" style="width: 120px; height: 80px; cursor: pointer;" onclick="showMedia('{{ file_url }}', true)">
-                                            <div class="position-absolute top-50 start-50 translate-middle text-white z-3">
-                                                <i class="bi bi-play-circle-fill fs-2 opacity-75"></i>
-                                            </div>
-                                            <video src="{{ file_url }}" class="w-100 h-100 object-fit-cover opacity-50"></video>
-                                        </div>
-                                    {% else %}
-                                        <img src="{{ file_url }}" width="100" class="rounded shadow-sm object-fit-cover"
-                                             onclick="showMedia('{{ file_url }}', false)" style="cursor:pointer; max-height: 100px;">
-                                    {% endif %}
-                                    <br>
-                                    <a href="{{ file_url }}" download class="btn btn-xs btn-outline-primary mt-1" style="font-size: 0.7rem;">⬇ Télécharger</a>
-                                </div>
-                            {% endfor %}
-                        {% else %}
-                            <span class="text-muted">Aucun média</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-center" data-label="Objectif Clics">
-                        <span class="badge bg-info text-dark">
-                            {{ camp.target_whatsapp_views if camp.target_whatsapp_views else camp.whatsapp_views }} clics
-                        </span>
-                    </td>
-                    <!-- COLONNE DURÉE / PROGRESSION -->
-                    <td class="text-center" data-label="Durée / Progression" style="min-width: 150px;">
-                        <div class="fw-bold text-dark">
-                            <i class="bi bi-calendar3 me-1"></i>{{ camp.duration_days }} jour{{ 's' if camp.duration_days > 1 else '' }}
-                        </div>
-                        <div class="text-muted small">
-                            ≈ {{ camp.views_per_day }} clics / jour
-                        </div>
-                        {% if camp.validated and camp.is_active and camp.current_day_number %}
-                            <hr class="my-1">
-                            <div class="small">
-                                <span class="badge bg-primary">Jour {{ camp.current_day_number }} / {{ camp.duration_days }}</span>
-                            </div>
-                            <div class="small text-muted mt-1">
-                                {{ camp.views_today or 0 }} / {{ camp.views_per_day }} clics aujourd'hui
-                            </div>
-                            {% if camp.daily_quota_paused %}
-                                <span class="badge bg-warning text-dark mt-1">⏸️ Quota du jour atteint</span>
-                            {% endif %}
-                        {% elif camp.validated and not camp.is_active and camp.status == "terminee" %}
-                            <span class="badge bg-success mt-1">✅ Diffusion terminée</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-center fw-bold text-success" data-label="Coût total">{{ "{:,.0f}".format(camp.total_cost) }} XOF</td>
-                    <td class="text-center" data-label="Statut">
-                        {% if camp.validated or camp.admin_status == "approved" %}
-                            <span class="badge bg-success">✅ Validée</span>
-                        {% elif camp.admin_status == "rejected" or camp.status == "rejete" %}
-                            <span class="badge bg-danger">❌ Rejetée</span>
-                        {% else %}
-                            <span class="badge bg-warning text-dark d-block mb-1">⏳ En attente</span>
-                            {% if camp.paid %}
-                                <span class="badge bg-success">💰 Déjà payée</span>
-                            {% else %}
-                                <span class="badge bg-danger">⚠️ Non payée</span>
-                            {% endif %}
-                            {% if camp.is_resubmission %}
-                                <span class="badge bg-warning text-dark mt-1" title="Cette campagne a été corrigée et renvoyée après un rejet">🔄 Resoumise</span>
-                            {% endif %}
-                        {% endif %}
-                    </td>
-                    <td class="text-center" data-label="Actions">
-                        {% if not camp.validated and camp.admin_status != "rejected" and camp.status != "rejete" %}
-                            <div class="d-flex flex-column gap-1 align-items-center">
-                                <form action="{{ url_for('validate_campaign', campaign_id=camp.id) }}" method="POST" class="d-inline">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn btn-sm btn-success">Valider ✅</button>
-                                </form>
-                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ camp.id }}">
-                                    Refuser ❌
-                                </button>
-                            </div>
-
-                            <!-- MODALE : Motif de refus -->
-                            <div class="modal fade" id="rejectModal{{ camp.id }}" tabindex="-1" aria-hidden="true">
-                              <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content">
-                                  <form action="{{ url_for('refuse_campaign', campaign_id=camp.id) }}" method="POST">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <div class="modal-header bg-danger text-white">
-                                      <h5 class="modal-title">Refuser la campagne #{{ camp.id }}</h5>
-                                      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body text-start">
-                                      <label for="rejection_reason{{ camp.id }}" class="form-label fw-bold">
-                                        Motif du refus <span class="text-danger">*</span>
-                                      </label>
-                                      <textarea name="rejection_reason" id="rejection_reason{{ camp.id }}" class="form-control" rows="4"
-                                                placeholder="Ex : la vidéo dépasse 30 secondes, veuillez la raccourcir avant de relancer." required></textarea>
-                                      <small class="text-muted d-block mt-1">Ce motif sera envoyé à l'annonceur pour qu'il puisse corriger et relancer sa campagne.</small>
-                                    </div>
-                                    <div class="modal-footer">
-                                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                                      <button type="submit" class="btn btn-danger fw-bold">Confirmer le refus ❌</button>
-                                    </div>
-                                  </form>
-                                </div>
-                              </div>
-                            </div>
-
-                        {% elif camp.admin_status == "rejected" or camp.status == "rejete" %}
-                            {# =========================================================
-                               🆕 PARCOURS REMBOURSEMENT — piloté par camp.refund_status,
-                               indépendant de camp.status (voir mes_campagnes.html côté
-                               annonceur pour la logique symétrique).
-                               ========================================================= #}
-                            {% if camp.refund_status == "processed" %}
-                                <span class="badge bg-success d-block mb-1">✅ Remboursement traité</span>
-                                <small class="text-muted d-block">Virement effectué manuellement.</small>
-                            {% elif camp.refund_status == "requested" %}
-                                <span class="badge bg-secondary d-block mb-1">⏳ Demande de remboursement reçue</span>
-                                <small class="text-muted d-block">Coordonnées transmises par l'annonceur — à traiter sous 48h.</small>
-                                <a href="{{ url_for('admin_remboursements') }}" class="btn btn-sm btn-outline-dark fw-bold mt-1">
-                                    Traiter la demande
-                                </a>
-                            {% elif camp.refund_status == "rejected" %}
-                                <span class="badge bg-warning text-dark d-block mb-1">🔁 Demande refusée</span>
-                                <small class="text-muted d-block">En attente d'une nouvelle demande corrigée de l'annonceur (pas besoin de réautoriser).</small>
-                            {% elif camp.refund_status == "available" %}
-                                <span class="badge bg-info text-dark">💰 Remboursement débloqué</span>
-                                <small class="text-muted d-block mt-1">En attente que l'annonceur soumette ses coordonnées.</small>
-                            {% elif camp.paid %}
-                                <form action="{{ url_for('autoriser_remboursement_admin', campaign_id=camp.id) }}" method="POST" class="d-inline">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold">
-                                        💰 Autoriser Remboursement
-                                    </button>
-                                </form>
-                            {% else %}
-                                {# 🆕 Campagne rejetée mais jamais payée : aucun remboursement
-                                   n'a de sens ici, le bouton ne doit donc jamais apparaître. #}
-                                <span class="badge bg-secondary d-block mb-1">⚠️ Non payée</span>
-                                <small class="text-muted d-block">Aucun remboursement possible : cette campagne n'a jamais été réglée.</small>
-                            {% endif %}
-                        {% elif camp.validated and not camp.shared_to_partageurs %}
-                            <!-- Bouton de partage manuel aux partageurs -->
-                            <form action="{{ url_for('partager_campagne_admin', campaign_id=camp.id) }}" method="POST" class="d-inline">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-sm btn-primary fw-bold">
-                                    📤 Partager aux partageurs
-                                </button>
-                            </form>
-                        {% elif camp.shared_to_partageurs %}
-                            <span class="badge bg-success d-block mb-1">✅ Partagée aux partageurs</span>
-                        {% else %}
-                            <button class="btn btn-sm btn-secondary" disabled>En cours / Active</button>
-                        {% endif %}
-
-                        <!-- Suivi complet, disponible dès qu'une campagne est validée -->
-                        {% if camp.validated %}
-                            <a href="{{ url_for('admin_suivi_campagne', campaign_id=camp.id) }}" class="btn btn-sm btn-outline-dark fw-bold d-block mt-1">
-                                📊 Suivre cette campagne
-                            </a>
-                        {% endif %}
-                    </td>
-                </tr>
+            {% for camp in campaigns_page.items %}
+                {{ campaign_row(camp) }}
             {% else %}
                 <tr>
                     <td colspan="11" class="empty-row text-center text-muted py-3">
-                        Aucune campagne à afficher pour le moment.
+                        Aucune campagne dans cet onglet{{ " pour cette recherche" if recherche }}.
                     </td>
                 </tr>
             {% endfor %}
@@ -807,6 +686,22 @@
         </table>
     </div>
     </div>
+
+    {% if campaigns_page.pages and campaigns_page.pages > 1 %}
+    <nav class="d-flex justify-content-center flex-wrap gap-2 mb-4">
+      {% if campaigns_page.has_prev %}
+        <a class="btn btn-sm btn-outline-dark" href="{{ url_for('admin_validate', tab=onglet_actif, page=campaigns_page.prev_num, q=recherche) }}">‹ Précédent</a>
+      {% endif %}
+      {% for p in range(1, campaigns_page.pages + 1) %}
+        <a class="btn btn-sm {{ 'btn-dark' if p == campaigns_page.page else 'btn-outline-dark' }}"
+           href="{{ url_for('admin_validate', tab=onglet_actif, page=p, q=recherche) }}">{{ p }}</a>
+      {% endfor %}
+      {% if campaigns_page.has_next %}
+        <a class="btn btn-sm btn-outline-dark" href="{{ url_for('admin_validate', tab=onglet_actif, page=campaigns_page.next_num, q=recherche) }}">Suivant ›</a>
+      {% endif %}
+    </nav>
+    {% endif %}
+
     {% endif %}
 
     <div class="text-center mt-4">
@@ -840,13 +735,11 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body p-0">
-        <!-- Image de Couverture -->
         <div class="position-relative bg-light text-center" style="height: 140px; overflow: hidden;">
             <img id="annCover" src="" alt="Couverture" class="w-100 h-100 object-fit-cover d-none">
             <div id="annCoverPlaceholder" class="w-100 h-100 d-flex align-items-center justify-content-center text-muted bg-secondary bg-opacity-25">
                 <span><i class="bi bi-image me-1"></i> Aucune photo de couverture</span>
             </div>
-            <!-- Photo de Profil -->
             <div class="position-absolute start-3" style="bottom: -35px; z-index: 5;">
                 <img id="annProfile" src="" alt="Profil" class="rounded-circle border border-3 border-white shadow-sm d-none" style="width: 80px; height: 80px; object-fit: cover; background-color: #fff;">
                 <div id="annProfilePlaceholder" class="rounded-circle border border-3 border-white shadow-sm bg-primary text-white d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; font-size: 2rem;">
@@ -854,14 +747,13 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Informations Profil -->
+
         <div class="p-4 pt-5">
             <h4 id="annCompany" class="fw-bold text-dark mb-1"></h4>
             <p id="annSlogan" class="text-muted small mb-3" style="font-style: italic;"></p>
-            
+
             <hr>
-            
+
             <div class="mb-3">
                 <label class="fw-bold text-secondary small text-uppercase d-block">Numéro WhatsApp de la Campagne</label>
                 <span id="annWhatsapp" class="fw-bold text-success" style="font-size: 1.1rem;"></span>
@@ -886,7 +778,7 @@
 function showMedia(url, isVideo = false) {
     const img = document.getElementById('modalImage');
     const vid = document.getElementById('modalVideo');
-    
+
     if (isVideo) {
         vid.src = url;
         vid.classList.remove('d-none');
@@ -897,7 +789,7 @@ function showMedia(url, isVideo = false) {
         img.classList.remove('d-none');
         vid.classList.add('d-none');
     }
-    
+
     const modalEl = document.getElementById('mediaModal');
     const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
     bsModal.show();
@@ -915,7 +807,7 @@ document.addEventListener('click', function(e) {
 
         document.getElementById('annCompany').innerText = companyName;
         document.getElementById('annWhatsapp').innerText = whatsapp;
-        
+
         const sloganEl = document.getElementById('annSlogan');
         if (slogan && slogan !== 'None' && slogan.trim() !== '') {
             sloganEl.innerText = `« ${slogan} »`;

@@ -3495,15 +3495,13 @@ def partager_campagne_admin(campaign_id):
     )
 
     for partageur in partageurs_cibles:
-        notif = Notification(
-            user_id=partageur.id,
-            title=titre_notif,
-            message=message_notif,
+        envoyer_notification(
+            partageur,
+            titre_notif,
+            message_notif,
             category="success",
             link=url_for("dashboard_partageur"),
-            is_read=False
         )
-        db.session.add(notif)
 
     # 4️⃣ Marquage de la campagne comme partagée (empêche les doublons)
     camp.shared_to_partageurs = True
@@ -3516,7 +3514,7 @@ def partager_campagne_admin(campaign_id):
     )
 
     flash(f"Campagne #{camp.id} partagée avec succès à {len(partageurs_cibles)} partageur(s) ! 📤", "success")
-    return redirect(url_for("admin_validate"))   
+    return redirect(url_for("admin_validate"))  
 
 
 

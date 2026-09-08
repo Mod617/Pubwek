@@ -1206,6 +1206,49 @@ app.jinja_env.filters["heure_locale"] = heure_locale
 # ==========================================
 # ROUTE : MES CAMPAGNES (ESPACE ANNONCEUR)
 # ==========================================
+def categorie_affichage_campagne(c):
+    """Catégorie d'affichage UNIQUE d'une campagne dans mes_campagnes.
+
+    Les conditions sont volontairement ordonnées par priorité : le premier
+    cas qui correspond l'emporte, ce qui garantit qu'une campagne n'apparaît
+    jamais dans deux blocs à la fois — même si status/admin_status venaient à
+    diverger (ex: une valeur de status héritée d'une ancienne version du code,
+    que plus aucune route actuelle ne sait produire ni réinterpréter).
+
+    Priorité donnée aux booléens dédiés (paid, validated, is_active) plutôt
+    qu'au texte de status partout où c'est possible : ce sont eux que les
+    routes de paiement/validation mettent à jour de façon systématique et
+    fiable. Le texte de status n'est utilisé que pour les deux états qui
+    n'ont pas de booléen équivalent : "rejete" et "terminee".
+    """
+    if c.status == "rejete" or c.admin_status == "rejected":
+        return "refusees"
+    if c.status == "terminee":
+        return "terminees"
+    if not c.paid:
+        return "non_payees"
+    if not c.validated:
+        return "en_attente"
+    if c.validated and c.is_active:
+        return "en_cours"
+
+    # Filet de sécurité : combinaison non prévue par les règles ci-dessus
+    # (ex: validated=True mais is_active=False sans être "terminee"). Ne doit
+    # normalement jamais se produire avec le code actuel, mais on préfère
+    # ranger une campagne "orpheline" quelque part plutôt que la faire
+    # disparaître silencieusement de l'espace annonceur — et être alerté
+    # dans les logs plutôt que de le découvrir via un utilisateur.
+    logger.warning(
+        "[mes_campagnes] Campagne #%d dans un état inattendu "
+        "(status=%s, admin_status=%s, paid=%s, validated=%s, is_active=%s)",
+        c.id, c.status, c.admin_status, c.paid, c.validated, c.is_active
+    )
+    return "en_attente"
+
+
+# ==========================================
+# ROUTE : MES CAMPAGNES (ESPACE ANNONCEUR)
+# ==========================================
 @app.route("/mes-campagnes")
 @login_required
 def mes_campagnes():
@@ -1220,25 +1263,20 @@ def mes_campagnes():
     # Récupération de toutes les campagnes de l'utilisateur connecté
     user_campaigns = Campaign.query.filter_by(user_id=current_user.id).order_by(Campaign.created_at.desc()).all()
 
-    # Tri par catégories pour l'affichage dans l'interface HTML
-    refusees = [c for c in user_campaigns if c.status == "rejete" or c.admin_status == "rejected"]
-
-    # 🆕 Le motif de refus de la DEMANDE de remboursement (distinct du rejet de
-    # la campagne) vit désormais directement sur Campaign.refund_rejection_reason
-    # — plus besoin d'aller rechercher le dernier RefundRequest ici.
-
-    non_payees = [c for c in user_campaigns if (not c.paid or c.status == "non_payee") and c.status != "rejete"]
-    en_attente = [c for c in user_campaigns if c.paid and (c.status == "en_attente" or not c.validated) and c.status != "rejete"]
-    en_cours = [c for c in user_campaigns if c.paid and c.validated and (c.status == "active" or c.status == "valide") and c.is_active]
-    terminees = [c for c in user_campaigns if c.status == "terminee"]
+    # 🆕 Classement en une seule passe, catégorie exclusive garantie par
+    # categorie_affichage_campagne() : impossible qu'une même campagne
+    # atterrisse dans deux buckets à la fois (voir sa docstring).
+    buckets = {"refusees": [], "non_payees": [], "en_attente": [], "en_cours": [], "terminees": []}
+    for c in user_campaigns:
+        buckets[categorie_affichage_campagne(c)].append(c)
 
     return render_template(
         "mes_campagnes.html",
-        refusees=refusees,
-        non_payees=non_payees,
-        en_attente=en_attente,
-        en_cours=en_cours,
-        terminees=terminees,
+        refusees=buckets["refusees"],
+        non_payees=buckets["non_payees"],
+        en_attente=buckets["en_attente"],
+        en_cours=buckets["en_cours"],
+        terminees=buckets["terminees"],
         departements_communes=DEPARTEMENTS_COMMUNES,
         config=config
     )

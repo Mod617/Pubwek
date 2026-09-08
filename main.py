@@ -3617,7 +3617,7 @@ def traiter_remboursement(refund_id):
     # =====================================================================
     # 🆕 Crédit automatique du portefeuille — plus de virement manuel ni de
     # preuve à uploader. Verrou sur la ligne utilisateur (même principe que
-    # demander_retrait). un double-clic ou deux workers simultanés ne
+    # demander_retrait) : un double-clic ou deux workers simultanés ne
     # doivent jamais créditer deux fois le même remboursement.
     # =====================================================================
     annonceur = (
@@ -3652,18 +3652,17 @@ def traiter_remboursement(refund_id):
     camp.refund_processed_note = demande.admin_notes
     camp.can_claim_refund = False
 
-    db.session.add(Notification(
-        user_id=demande.user_id,
-        title="Remboursement crédité 💰",
-        message=(
+    envoyer_notification(
+        annonceur,
+        "Remboursement crédité 💰",
+        (
             f"Le remboursement de {montant_rembourse:,.0f} FCFA pour votre campagne #{camp.id} "
             f"a été crédité sur votre portefeuille Pubwek. Vous pouvez l'utiliser pour lancer une "
             f"nouvelle campagne ou demander un retrait vers votre Mobile Money."
         ),
         category="success",
         link=url_for("mes_campagnes"),
-        is_read=False
-    ))
+    )
     db.session.commit()
 
     logger.info(

@@ -4898,21 +4898,22 @@ def relancer_rappels_preuves():
                 if share.rappel_urgent_deja_envoye(item["jour"]):
                     continue
 
-                db.session.add(Notification(
-                    user_id=share.sharer_id,
-                    title=f"⏰ Dernière chance pour le jour {item['jour']} !",
-                    message=(
-                        f"Il vous reste environ {item['heures_restantes']}h pour envoyer votre "
-                        f"capture de fin de journée du jour {item['jour']} sur la campagne "
-                        f"« {camp.promotion_detail or camp.promotion_type} ». Passé ce délai, "
-                        f"les clics de cette journée seront définitivement perdus."
-                    ),
-                    category="danger",
-                    link=f"/partageur/instructions_partage/{camp.id}",
-                    is_read=False
-                ))
-                share.marquer_rappel_urgent_envoye(item["jour"])
-                total_alertes += 1
+                partageur = db.session.get(User, share.sharer_id)
+                if partageur:
+                    envoyer_notification(
+                        partageur,
+                        f"⏰ Dernière chance pour le jour {item['jour']} !",
+                        (
+                            f"Il vous reste environ {item['heures_restantes']}h pour envoyer votre "
+                            f"capture de fin de journée du jour {item['jour']} sur la campagne "
+                            f"« {camp.promotion_detail or camp.promotion_type} ». Passé ce délai, "
+                            f"les clics de cette journée seront définitivement perdus."
+                        ),
+                        category="danger",
+                        link=f"/partageur/instructions_partage/{camp.id}",
+                    )
+                    share.marquer_rappel_urgent_envoye(item["jour"])
+                    total_alertes += 1
 
     if total_alertes:
         try:

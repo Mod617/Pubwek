@@ -5187,17 +5187,18 @@ def confirmer_retrait_manuel(withdrawal_id):
         db.session.commit()
 
         # Notification au partageur
-        db.session.add(Notification(
-            user_id=demande.user_id,
-            title="Retrait effectué ✅",
-            message=(
-                f"Votre retrait de {demande.amount:.0f} FCFA a été crédité sur votre "
-                f"{demande.payout_channel} ({demande.payout_phone}). Merci pour vos efforts sur Pubwek ! 🎉"
-            ),
-            category="success",
-            link=url_for("mes_retraits"),
-            is_read=False
-        ))
+        beneficiaire = db.session.get(User, demande.user_id)
+        if beneficiaire:
+            envoyer_notification(
+                beneficiaire,
+                "Retrait effectué ✅",
+                (
+                    f"Votre retrait de {demande.amount:.0f} FCFA a été crédité sur votre "
+                    f"{demande.payout_channel} ({demande.payout_phone}). Merci pour vos efforts sur Pubwek ! 🎉"
+                ),
+                category="success",
+                link=url_for("mes_retraits"),
+            )
         db.session.commit()
 
         logger.info(

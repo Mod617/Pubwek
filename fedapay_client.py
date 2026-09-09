@@ -33,11 +33,18 @@ def _extraire_objet_transaction(data):
     return data
 
 
-def creer_transaction(montant, description, metadata, customer_email=None, customer_phone=None):
+def creer_transaction(montant, description, metadata, customer_email=None, customer_phone=None, callback_url=None):
     """
     Crée une transaction FedaPay (sandbox tant que FEDAPAY_ENV=sandbox).
     `metadata` doit permettre d'identifier plus tard, dans la vérification,
     de quel paiement il s'agit (ex: type='campaign', campaign_id=..., user_id=...).
+
+    `callback_url` : URL vers laquelle FedaPay redirige le navigateur du client
+    une fois le paiement terminé (approuvé, refusé ou annulé). Sans ce champ,
+    FedaPay retombe sur l'URL de callback configurée par défaut sur le compte
+    marchand (dashboard FedaPay) — qui peut ne PAS pointer vers notre route de
+    vérification (paiement_callback), et faire atterrir le client ailleurs
+    (ex: son dashboard) sans jamais déclencher notification ni message flash.
     """
     payload = {
         "description": description,
@@ -45,6 +52,8 @@ def creer_transaction(montant, description, metadata, customer_email=None, custo
         "currency": {"iso": "XOF"},
         "metadata": metadata,
     }
+    if callback_url:
+        payload["callback_url"] = callback_url
     if customer_email or customer_phone:
         payload["customer"] = {}
         if customer_email:

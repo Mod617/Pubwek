@@ -1146,6 +1146,20 @@ class SystemConfig(db.Model):
     # Délai minimal entre deux clics payés sur un même partage (anti-rafale).
     min_seconds_between_paid_clicks = db.Column(db.Integer, default=20)
 
+    # =========================================================================
+    # 🆕 EXIGENCE DE PREUVE DE PARTAGE (capture d'écran de fin de journée)
+    #
+    # True (défaut) : chaque partageur doit envoyer sa capture de fin de
+    # journée avant que ses clics payables ne soient crédités à son
+    # portefeuille — c'est le comportement actuel, inchangé.
+    #
+    # False : les clics payables sont crédités automatiquement, sans preuve
+    # à fournir. Réservé au VRAI super-admin uniquement (jamais un
+    # sous-admin, quelles que soient ses permissions) — voir la route de
+    # bascule dans app.py.
+    # =========================================================================
+    exiger_preuve_partage = db.Column(db.Boolean, default=True, nullable=False)
+
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     @classmethod
@@ -1167,6 +1181,7 @@ class SystemConfig(db.Model):
                 max_paid_clicks_per_share_per_day=50,
                 max_paid_clicks_per_ip_per_day=20,
                 min_seconds_between_paid_clicks=20,
+                exiger_preuve_partage=True,
             )
             db.session.add(config)
             db.session.commit()

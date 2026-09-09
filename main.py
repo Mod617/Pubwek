@@ -3256,6 +3256,7 @@ def admin_validate():
         recherche=recherche,
         peut_voir_utilisateurs=peut_voir_utilisateurs,
         peut_voir_campagnes=peut_voir_campagnes,
+        config_systeme=SystemConfig.get_config(),
     )
 
 

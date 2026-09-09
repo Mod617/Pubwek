@@ -250,6 +250,12 @@
             </a>
             {% endif %}
 
+            {% if current_user.role == "admin" or current_user.has_permission("valider_utilisateurs") %}
+            <a href="{{ url_for('admin_utilisateurs') }}" class="btn action-btn action-btn-outline-dark">
+                <i class="bi bi-people me-1"></i> 👥 Utilisateurs validés
+            </a>
+            {% endif %}
+
             {% if current_user.role == "admin" %}
             <a href="{{ url_for('admin_gestion_sous_admins') }}" class="btn action-btn action-btn-dark">
                 <i class="bi bi-people-fill me-1"></i> 🔑 Gérer les sous-admins

@@ -5984,6 +5984,21 @@ def push_unsubscribe():
     db.session.commit()
     return jsonify({"success": True})
 
+# ==========================================
+# 🆕 ROUTE : MARQUER TOUTES LES NOTIFICATIONS COMME LUES
+# Appelée en arrière-plan (fetch JS) dès que l'utilisateur ouvre la cloche
+# de notifications — partageur, annonceur ou admin/sous-admin, peu importe
+# le rôle, puisque le système Notification est commun à tous.
+# ==========================================
+@app.route("/notifications/marquer-lues", methods=["POST"])
+@login_required
+def marquer_notifications_lues():
+    Notification.query.filter_by(user_id=current_user.id, is_read=False).update(
+        {"is_read": True}
+    )
+    db.session.commit()
+    return jsonify({"success": True})
+
 
 def envoyer_push(user, title, message, link=None):
     """

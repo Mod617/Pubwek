@@ -2748,12 +2748,26 @@ def dashboard_annonceur():
         user_id=current_user.id, status="pending"
     ).first() is not None
 
+    # =========================================================================
+    # 🆕 NOTIFICATIONS DE L'ANNONCEUR — même principe que dashboard_partageur.
+    # =========================================================================
+    notifications = (
+        Notification.query
+        .filter_by(user_id=current_user.id)
+        .order_by(Notification.created_at.desc())
+        .limit(20)
+        .all()
+    )
+    notifications_non_lues = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
+
     return render_template(
         "dashboard_annonceur.html",
         campaigns=campaigns,
         config=config,
         departements_communes=DEPARTEMENTS_COMMUNES,
-        demande_retrait_en_cours=demande_retrait_en_cours  # 🆕
+        demande_retrait_en_cours=demande_retrait_en_cours,  # 🆕
+        notifications=notifications,
+        notifications_non_lues=notifications_non_lues,
     )
 
 

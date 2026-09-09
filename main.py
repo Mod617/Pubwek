@@ -529,6 +529,29 @@ with app.app_context():
     db.create_all()
 
 with app.app_context():
+    db.create_all()
+
+# 🆕 Migration légère : ajoute les colonnes manquantes sur une table déjà
+# existante. db.create_all() ne modifie jamais une table qui existe déjà,
+# il ne crée que les tables absentes — sans ce bloc, verified_at/raw_response
+# resteraient absentes de la base malgré leur présence dans le modèle Python,
+# et l'AttributeError reviendrait exactement à l'identique.
+with app.app_context():
+    from sqlalchemy import text
+    try:
+        db.session.execute(text(
+            "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS verified_at TIMESTAMP"
+        ))
+        db.session.execute(text(
+            "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS raw_response JSON"
+        ))
+        db.session.commit()
+        logger.info("Migration transactions.verified_at / raw_response vérifiée.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Erreur migration colonnes transactions : %s", e)
+
+with app.app_context():
     # FIX: Les deux variables sont obligatoires — aucune valeur par défaut codée en dur
     admin_email = os.environ.get("ADMIN_EMAIL")
     admin_password = os.environ.get("ADMIN_PASSWORD")

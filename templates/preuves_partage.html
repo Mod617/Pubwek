@@ -86,6 +86,20 @@
   .pf-tag-day{ background:#F1EBFB; color:#6B3FCB; }
   .pf-tag-rattrapage{ background:var(--pf-danger-bg); color:var(--pf-danger); }
 
+  /* 🆕 Compteur de clics du jour, affiché à côté de la preuve */
+  .pf-clics-box{
+    padding: .85rem 1.15rem; border-bottom: 1px solid var(--pf-line);
+    display:flex; align-items:center; justify-content:space-between; gap:.5rem;
+    background:#FAFAF6;
+  }
+  .pf-clics-label{ font-size:.78rem; color:var(--pf-muted); font-weight:600; }
+  .pf-clics-value{
+    font-family:'JetBrains Mono', monospace; font-weight:700; font-size:1.05rem;
+    color: var(--pf-ink); display:flex; align-items:center; gap:.35rem;
+  }
+  .pf-clics-value.pf-clics-suspect{ color: var(--pf-danger); }
+  .pf-clics-value .bi{ font-size:.9rem; }
+
   .pf-proof-photo{
     position:relative; display:block; background:#EFEDE6;
     aspect-ratio: 4 / 3; overflow:hidden;
@@ -183,6 +197,24 @@
           {% endif %}
         </div>
       </div>
+
+      <!-- 🆕 Nombre de clics payables obtenus ce jour-là, comparé au rythme
+           moyen attendu de la campagne (views_per_day), pour repérer un
+           écart suspect directement à côté de la capture -->
+      {% set rythme_attendu = camp.views_per_day or 0 %}
+      {% set clics_suspects = rythme_attendu > 0 and p.nb_clics_payables_jour > rythme_attendu * 1.2 %}
+      <div class="pf-clics-box">
+        <span class="pf-clics-label"><i class="bi bi-cursor-fill"></i> Clics obtenus ce jour</span>
+        <span class="pf-clics-value{{ ' pf-clics-suspect' if clics_suspects }}">
+          {% if clics_suspects %}<i class="bi bi-exclamation-triangle-fill"></i>{% endif %}
+          {{ p.nb_clics_payables_jour }}
+        </span>
+      </div>
+      {% if rythme_attendu > 0 %}
+      <div class="pf-clics-box" style="border-top: none; padding-top: 0; background: transparent;">
+        <span class="pf-clics-label" style="font-weight: 400;">Rythme attendu : ≈ {{ rythme_attendu }} clics/jour</span>
+      </div>
+      {% endif %}
 
       <a href="{{ url_for('serve_upload', filename=p.filename) }}" target="_blank" class="pf-proof-photo">
         <img src="{{ url_for('serve_upload', filename=p.filename) }}" alt="Capture de preuve">

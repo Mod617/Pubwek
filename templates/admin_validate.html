@@ -257,6 +257,22 @@
             {% endif %}
 
             {% if current_user.role == "admin" %}
+            <form action="{{ url_for('toggle_preuve_partage') }}" method="POST" class="d-inline"
+                  onsubmit="return confirm('{{ 'Désactiver' if config_systeme.exiger_preuve_partage else 'Réactiver' }} l\'exigence de preuve de partage ? {{ 'Tous les clics en attente seront crédités immédiatement.' if config_systeme.exiger_preuve_partage else '' }}');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {% if config_systeme.exiger_preuve_partage %}
+                    <button type="submit" class="btn action-btn action-btn-success">
+                        <i class="bi bi-shield-check me-1"></i> 🛡️ Preuve exigée (cliquer pour désactiver)
+                    </button>
+                {% else %}
+                    <button type="submit" class="btn action-btn action-btn-danger">
+                        <i class="bi bi-shield-x me-1"></i> ⚠️ Preuve désactivée (cliquer pour réactiver)
+                    </button>
+                {% endif %}
+            </form>
+            {% endif %}
+
+            {% if current_user.role == "admin" %}
             <a href="{{ url_for('admin_gestion_sous_admins') }}" class="btn action-btn action-btn-dark">
                 <i class="bi bi-people-fill me-1"></i> 🔑 Gérer les sous-admins
             </a>

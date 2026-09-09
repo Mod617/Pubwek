@@ -819,14 +819,31 @@ def peut_acceder_au_fichier(user, safe_filename):
     """Détermine si `user` a le droit de télécharger `safe_filename`.
 
     Règles, de la plus large à la plus restrictive :
-      1. L'administrateur accède à tout (modération des campagnes).
-      2. Le propriétaire déclaré du fichier y accède.
-      3. Un partageur accède aux médias d'une campagne qu'il a acceptée de
+      1. L'administrateur (super-admin) accède à tout.
+      2. 🆕 Un sous-admin actif ayant une permission de modération liée aux
+         fichiers (campagnes, utilisateurs, preuves de partage) accède à tout
+         également — sans cela, il ne peut pas voir les médias qu'il doit
+         justement valider ou rejeter.
+      3. Le propriétaire déclaré du fichier y accède.
+      4. Un partageur accède aux médias d'une campagne qu'il a acceptée de
          diffuser, ou d'une campagne active qui cible sa zone.
-      4. Tout le reste est refusé.
+      5. Tout le reste est refusé.
     """
     if user.role == "admin":
         return True
+
+    # 🆕 Sous-admin actif avec une permission de modération : accès aux
+    # fichiers nécessaires à l'exercice de cette permission (campagnes à
+    # valider/suivre, inscriptions à vérifier, preuves de partage à juger).
+    if user.role == "sous_admin" and user.is_active_admin:
+        permissions_donnant_acces_fichiers = (
+            "valider_campagnes",
+            "suivre_campagnes",
+            "valider_utilisateurs",
+            "valider_preuves_partage",
+        )
+        if any(user.has_permission(p) for p in permissions_donnant_acces_fichiers):
+            return True
 
     enreg = UploadedFile.query.filter_by(filename=safe_filename).first()
     if enreg and enreg.owner_id == user.id:

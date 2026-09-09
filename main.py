@@ -3144,6 +3144,8 @@ def admin_settings():
 @app.route("/admin/validate")
 @login_required
 def admin_validate():
+    # 🆕 Accès à la page si l'utilisateur a AU MOINS UNE des deux permissions liées à cette page.
+    # Le filtrage fin de ce qu'il voit réellement se fait juste après.
     if current_user.role == "admin":
         peut_voir_utilisateurs = True
         peut_voir_campagnes = True
@@ -3161,9 +3163,12 @@ def admin_validate():
         )
         abort(403)
 
+    # 🆕 On ne charge et n'envoie au template QUE ce que l'utilisateur a le droit de voir
     users = []
     if peut_voir_utilisateurs:
-        users = User.query.order_by(User.created_at.desc()).all()
+        # 🆕 Filtre : uniquement les comptes NON confirmés — file d'attente d'action.
+        # Les comptes déjà validés se consultent désormais sur /admin/utilisateurs.
+        users = User.query.filter_by(is_confirmed=False).order_by(User.created_at.desc()).all()
         for u in users:
             if u.whatsapp_number:
                 u.whatsapp_message = urllib.parse.quote(
@@ -3212,6 +3217,68 @@ def admin_validate():
         recherche=recherche,
         peut_voir_utilisateurs=peut_voir_utilisateurs,
         peut_voir_campagnes=peut_voir_campagnes,
+    )
+
+
+# ==========================================
+# 🆕 ROUTE ADMIN : CONSULTATION DES UTILISATEURS VALIDÉS (onglets + pagination)
+# ==========================================
+ONGLETS_UTILISATEURS = {
+    "annonceurs": {"label": "📢 Annonceurs", "role": "annonceur"},
+    "partageurs": {"label": "🤝 Partageurs", "role": "partageur"},
+}
+
+
+@app.route("/admin/utilisateurs")
+@login_required
+def admin_utilisateurs():
+    # Même logique de permission que /admin/validate : le super-admin voit
+    # tout, un sous-admin doit avoir la permission "valider_utilisateurs".
+    if current_user.role == "admin":
+        pass
+    elif current_user.role == "sous_admin" and current_user.is_active_admin:
+        if not current_user.has_permission("valider_utilisateurs"):
+            abort(403)
+    else:
+        abort(403)
+
+    onglet_actif = request.args.get("tab", "annonceurs")
+    if onglet_actif not in ONGLETS_UTILISATEURS:
+        onglet_actif = "annonceurs"
+    page = request.args.get("page", 1, type=int)
+    recherche = request.args.get("q", "").strip()
+
+    role_cible = ONGLETS_UTILISATEURS[onglet_actif]["role"]
+
+    # Compteurs de chaque onglet — uniquement des COUNT, jamais un .all()
+    compteurs = {}
+    for nom_onglet, info in ONGLETS_UTILISATEURS.items():
+        compteurs[nom_onglet] = User.query.filter_by(
+            role=info["role"], is_confirmed=True
+        ).count()
+
+    query = User.query.filter_by(role=role_cible, is_confirmed=True)
+
+    if recherche:
+        terme = f"%{recherche}%"
+        query = query.filter(
+            db.or_(
+                User.email.ilike(terme),
+                User.pseudo.ilike(terme),
+                User.company_name.ilike(terme),
+            )
+        )
+
+    query = query.order_by(User.created_at.desc())
+    users_page = query.paginate(page=page, per_page=25, error_out=False)
+
+    return render_template(
+        "admin_utilisateurs.html",
+        users_page=users_page,
+        onglets_utilisateurs=ONGLETS_UTILISATEURS,
+        onglet_actif=onglet_actif,
+        compteurs=compteurs,
+        recherche=recherche,
     )
 
 

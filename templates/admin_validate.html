@@ -222,7 +222,37 @@
 <div class="container">
     <div class="page-header d-flex flex-column flex-md-row justify-content-between align-items-center">
         <h2 class="mb-0 fw-bold">👨‍💻 Panneau d'administration</h2>
-        <div class="mt-3 mt-md-0 d-flex gap-2 flex-wrap justify-content-center">
+        <div class="mt-3 mt-md-0 d-flex gap-2 flex-wrap justify-content-center align-items-center">
+            <!-- 🆕 Cloche de notifications -->
+            <div class="dropdown" id="notifDropdownWrapper">
+                <button class="btn btn-light position-relative shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-bell-fill fs-5"></i>
+                    {% if notifications_non_lues > 0 %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            {{ notifications_non_lues }}
+                        </span>
+                    {% endif %}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg p-2" style="width: 340px; max-height: 400px; overflow-y: auto;">
+                    <li><h6 class="dropdown-header">Notifications</h6></li>
+                    {% for notif in notifications %}
+                        <li>
+                            <a class="dropdown-item small py-2 {{ 'fw-bold' if not notif.is_read else 'text-muted' }}" href="{{ notif.link or '#' }}">
+                                <div class="d-flex align-items-start gap-2">
+                                    <span class="badge bg-{{ notif.category }} mt-1">&nbsp;</span>
+                                    <div>
+                                        <div>{{ notif.title }}</div>
+                                        <div class="text-muted" style="font-size: 0.75rem;">{{ notif.message }}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li><span class="dropdown-item-text text-muted small">Aucune notification pour le moment.</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
             {% if current_user.role == "admin" or current_user.has_permission("configurer_video") %}
             {% endif %}
 
@@ -878,6 +908,30 @@ document.getElementById('mediaModal').addEventListener('hidden.bs.modal', functi
     if (vid) {
         vid.pause();
         vid.src = "";
+    }
+});
+
+// 🆕 Marque les notifications comme lues dès l'ouverture de la cloche
+document.addEventListener('DOMContentLoaded', function () {
+    const notifWrapper = document.getElementById('notifDropdownWrapper');
+    if (notifWrapper) {
+        notifWrapper.addEventListener('shown.bs.dropdown', function () {
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+            fetch('/notifications/marquer-lues', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken }
+            }).then(function () {
+                const badge = notifWrapper.querySelector('.badge.bg-danger');
+                if (badge) badge.remove();
+                notifWrapper.querySelectorAll('.dropdown-item.fw-bold').forEach(function (item) {
+                    item.classList.remove('fw-bold');
+                    item.classList.add('text-muted');
+                });
+            }).catch(function (err) {
+                console.error('Erreur lors du marquage des notifications :', err);
+            });
+        });
     }
 });
 </script>

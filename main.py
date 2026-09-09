@@ -3260,6 +3260,19 @@ def admin_validate():
         for camp in campaigns_page.items:
             camp.annonceur = db.session.get(User, camp.user_id)
 
+    # =========================================================================
+    # 🆕 NOTIFICATIONS DE L'ADMIN/SOUS-ADMIN — même principe que dashboard_partageur
+    # et dashboard_annonceur.
+    # =========================================================================
+    notifications = (
+        Notification.query
+        .filter_by(user_id=current_user.id)
+        .order_by(Notification.created_at.desc())
+        .limit(20)
+        .all()
+    )
+    notifications_non_lues = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
+
     return render_template(
         "admin_validate.html",
         users=users,
@@ -3271,6 +3284,8 @@ def admin_validate():
         peut_voir_utilisateurs=peut_voir_utilisateurs,
         peut_voir_campagnes=peut_voir_campagnes,
         config_systeme=SystemConfig.get_config(),
+        notifications=notifications,
+        notifications_non_lues=notifications_non_lues,
     )
 
 

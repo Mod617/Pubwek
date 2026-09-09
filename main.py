@@ -2265,10 +2265,6 @@ def _statut_fedapay(details):
     return getattr(details, "status", None)
 
 
-
-
-
-
 def appliquer_paiement_confirme(transaction, details=None):
     """Applique les effets métier d'un paiement approuvé. Idempotent.
 
@@ -2296,6 +2292,39 @@ def appliquer_paiement_confirme(transaction, details=None):
             else:
                 camp.is_active = False
                 camp.status = "en_attente"  # Passe en attente de modération admin
+
+            # =================================================================
+            # 🆕 Notification systématique à l'annonceur — indépendante du
+            # chemin emprunté (webhook OU retour navigateur). Sans ceci, un
+            # paiement confirmé uniquement via webhook (cas fréquent en mobile
+            # money, quand le client ferme l'onglet après le SMS de
+            # confirmation) ne générait AUCUNE trace visible côté annonceur :
+            # ni cloche, ni push, ni message. Il ne savait le découvrir qu'en
+            # retournant consulter sa liste de campagnes de lui-même.
+            # =================================================================
+            annonceur = db.session.get(User, camp.user_id)
+            if annonceur:
+                nom_campagne = camp.promotion_detail or camp.promotion_type or f"#{camp.id}"
+                if camp.is_active:
+                    titre = "Paiement confirmé — Campagne active ✅"
+                    message = (
+                        f"Votre paiement de {transaction.amount:,.0f} FCFA pour la campagne "
+                        f"« {nom_campagne} » a été confirmé. Elle est déjà validée et diffusée."
+                    )
+                else:
+                    titre = "Paiement confirmé 💳"
+                    message = (
+                        f"Votre paiement de {transaction.amount:,.0f} FCFA pour la campagne "
+                        f"« {nom_campagne} » a été confirmé. Elle est maintenant transmise à "
+                        f"l'administration pour validation."
+                    )
+                envoyer_notification(
+                    annonceur,
+                    titre,
+                    message,
+                    category="success",
+                    link=url_for("mes_campagnes"),
+                )
         return "campagne"
 
     # Les abonnements vidéo ont été retirés du produit. Une transaction de ce

@@ -2377,7 +2377,18 @@ def paiement_callback():
 
     # Si la transaction a déjà été traitée (webhook plus rapide, ou rechargement)
     if transaction.status == "approved" and transaction.verified_at:
-        flash("Votre paiement a déjà été validé avec succès ! ✅", "success")
+        # 🆕 Même lien direct que ci-dessous, pour le cas où le webhook a
+        # déjà tout traité avant que l'annonceur ne revienne sur cette page.
+        if transaction.campaign_id:
+            flash(
+                Markup(
+                    'Votre paiement a déjà été validé avec succès ! ✅ '
+                    '<a href="{link}" class="btn btn-sm btn-success ms-2">Voir ma campagne</a>'
+                ).format(link=url_for("mes_campagnes", _anchor=f"campagne-{transaction.campaign_id}")),
+                "success"
+            )
+        else:
+            flash("Votre paiement a déjà été validé avec succès ! ✅", "success")
         return redirect(url_for("mes_campagnes"))
 
     # 2. Vérification côté serveur via verifier_transaction()
@@ -2390,7 +2401,30 @@ def paiement_callback():
             db.session.commit()
 
             if resultat == "campagne":
-                flash("Paiement effectué avec succès ! Votre campagne a été transmise pour validation. 🎉", "success")
+                camp = db.session.get(Campaign, transaction.campaign_id) if transaction.campaign_id else None
+                if camp:
+                    # 🆕 Message enrichi : montant, référence campagne, lien
+                    # direct vers elle (ancre) plutôt qu'un renvoi générique
+                    # vers toute la liste — l'annonceur n'a plus à la chercher.
+                    nom_campagne = camp.promotion_detail or camp.promotion_type or f"#{camp.id}"
+                    suite = (
+                        "Elle est déjà validée et diffusée. 🎉" if camp.is_active
+                        else "Elle est maintenant transmise à l'administration pour validation."
+                    )
+                    flash(
+                        Markup(
+                            'Paiement de {montant} FCFA confirmé pour « {nom} » ✅ {suite} '
+                            '<a href="{link}" class="btn btn-sm btn-success ms-2">Voir ma campagne</a>'
+                        ).format(
+                            montant=f"{transaction.amount:,.0f}",
+                            nom=escape(nom_campagne),
+                            suite=suite,
+                            link=url_for("mes_campagnes", _anchor=f"campagne-{camp.id}"),
+                        ),
+                        "success"
+                    )
+                else:
+                    flash("Paiement effectué avec succès ! Votre campagne a été transmise pour validation. 🎉", "success")
             elif resultat == "abonnement":
                 flash("Félicitations ! Votre abonnement de génération vidéo est actif. 🚀", "success")
             else:

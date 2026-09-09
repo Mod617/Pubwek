@@ -318,6 +318,16 @@ class Transaction(db.Model):
     # "pending", "approved", "canceled", "declined"
     status = db.Column(db.String(20), default="pending", nullable=False, index=True)
 
+    # 🆕 Horodatage de la vérification réelle auprès de FedaPay (verifier_transaction()).
+    # Sert à distinguer une transaction "approved" déjà pleinement traitée d'une
+    # transaction dont le statut vient d'être copié sans vérification. Utilisé par
+    # appliquer_paiement_confirme() pour l'idempotence (webhook vs retour navigateur).
+    verified_at = db.Column(db.DateTime, nullable=True)
+
+    # 🆕 Réponse brute renvoyée par FedaPay lors de la vérification, conservée pour
+    # audit/litige (ex: préciser le moyen de paiement utilisé, l'opérateur mobile money).
+    raw_response = db.Column(db.JSON, nullable=True)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
     user = db.relationship("User", backref=db.backref("transactions", lazy=True, cascade="all, delete-orphan"))

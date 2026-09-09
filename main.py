@@ -5052,6 +5052,23 @@ def admin_preuves_partage():
 
     camp_filtree = db.session.get(Campaign, campaign_id) if campaign_id else None
 
+    # =====================================================================
+    # 🆕 Nombre de clics payables du jour, pour chaque preuve — affiché
+    # directement à côté de la capture d'écran, pour que l'admin puisse
+    # comparer en un coup d'œil "nombre de vues déclarées sur le statut" vs
+    # "nombre de clics obtenus" sans naviguer vers une autre page.
+    # =====================================================================
+    for preuve in preuves:
+        preuve.nb_clics_payables_jour = (
+            CampaignClick.query
+            .filter(
+                CampaignClick.campaign_share_id == preuve.campaign_share_id,
+                CampaignClick.day_number == preuve.day_number,
+                CampaignClick.is_paid.is_(True),
+            )
+            .count()
+        )
+
     return render_template("preuves_partage.html", preuves=preuves, camp_filtree=camp_filtree)
 
 

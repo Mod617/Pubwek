@@ -275,7 +275,7 @@
         </div>
         <div class="d-flex align-items-center gap-3">
             <!-- 🆕 Cloche de notifications -->
-            <div class="dropdown">
+            <div class="dropdown" id="notifDropdownWrapper">
                 <button class="btn btn-light position-relative shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-bell-fill fs-5"></i>
                     {% if notifications_non_lues > 0 %}
@@ -524,5 +524,29 @@ function copyReferralLink() {
         console.error('Erreur lors de la copie : ', err);
     });
 }
+
+// 🆕 Marque les notifications comme lues dès l'ouverture de la cloche
+document.addEventListener('DOMContentLoaded', function () {
+    const notifWrapper = document.getElementById('notifDropdownWrapper');
+    if (notifWrapper) {
+        notifWrapper.addEventListener('shown.bs.dropdown', function () {
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+            fetch('/notifications/marquer-lues', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken }
+            }).then(function () {
+                const badge = notifWrapper.querySelector('.badge.bg-danger');
+                if (badge) badge.remove();
+                notifWrapper.querySelectorAll('.dropdown-item.fw-bold').forEach(function (item) {
+                    item.classList.remove('fw-bold');
+                    item.classList.add('text-muted');
+                });
+            }).catch(function (err) {
+                console.error('Erreur lors du marquage des notifications :', err);
+            });
+        });
+    }
+});
 </script>
 {% endblock %}

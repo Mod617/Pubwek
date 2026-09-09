@@ -1532,6 +1532,11 @@ def _lancer_paiement_fedapay(camp, montant):
             },
             customer_email=current_user.email,
             customer_phone=current_user.whatsapp_number,
+            # 🆕 Sans ceci, FedaPay utilise l'URL de callback par défaut du
+            # compte marchand, qui ne pointe pas forcément vers notre route
+            # de vérification. _external=True génère une URL absolue
+            # (https://...), obligatoire car FedaPay est hors de notre site.
+            callback_url=url_for("paiement_callback", _external=True),
         )
 
         if isinstance(fedapay_tx, dict):

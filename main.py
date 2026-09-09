@@ -4667,7 +4667,9 @@ def enregistrer_clic(share, camp, link_type):
     """Enregistre un clic. Le clic est marqué payable ou non selon les
     garde-fous anti-fraude, mais l'argent n'est versé qu'après validation,
     par un admin, des preuves (captures d'écran) du jour de diffusion
-    concerné — voir crediter_clics_du_jour().
+    concerné — voir crediter_clics_du_jour(). Sauf si l'exigence de preuve
+    est désactivée globalement (SystemConfig.exiger_preuve_partage), auquel
+    cas le crédit est immédiat.
     Ne lève jamais : le visiteur doit être redirigé quoi qu'il arrive, un
     incident de journalisation ne doit pas casser le parcours du client final.
     """
@@ -4694,9 +4696,10 @@ def enregistrer_clic(share, camp, link_type):
         if payable:
             camp.whatsapp_views = (camp.whatsapp_views or 0) + 1
             camp.views_today = (camp.views_today or 0) + 1
-            # Si les preuves du jour sont déjà validées (clic tardif après
-            # validation admin), on crédite immédiatement ce clic-là.
-            if preuve_jour_validee(share.id, jour):
+            # 🆕 Crédit immédiat si l'exigence de preuve est désactivée
+            # globalement, OU si la preuve du jour est déjà validée (clic
+            # tardif après validation admin).
+            if not config.exiger_preuve_partage or preuve_jour_validee(share.id, jour):
                 sharer = db.session.get(User, share.sharer_id)
                 recompense = recompense_pour(camp, config)
                 if sharer and recompense > 0:

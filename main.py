@@ -3141,6 +3141,45 @@ def admin_settings():
 
     return render_template("admin_settings.html", config=config)
 
+# ==========================================
+# 🆕 ROUTE : BASCULE DE L'EXIGENCE DE PREUVE DE PARTAGE
+# Réservée au VRAI super-admin uniquement (jamais un sous-admin, quelles que
+# soient ses permissions) — voir verifier_super_admin_strict().
+# ==========================================
+@app.route("/admin/toggle-preuve-partage", methods=["POST"])
+@login_required
+def toggle_preuve_partage():
+    verifier_super_admin_strict()
+
+    config = SystemConfig.get_config()
+    etait_active = config.exiger_preuve_partage
+    config.exiger_preuve_partage = not etait_active
+    db.session.commit()
+
+    if etait_active and not config.exiger_preuve_partage:
+        # ON -> OFF : on débloque immédiatement tout ce qui était en attente
+        nb, montant = crediter_tous_les_clics_en_attente()
+        db.session.commit()
+        logger.warning(
+            "[ACTION SUPER-ADMIN] Exigence de preuve de partage DÉSACTIVÉE par admin id=%d — "
+            "%d clic(s) en attente crédités pour %.2f FCFA.",
+            current_user.id, nb, montant
+        )
+        flash(
+            f"Exigence de preuve désactivée. {nb} clic(s) en attente ont été crédités "
+            f"immédiatement pour un total de {montant:,.0f} FCFA. ✅",
+            "success"
+        )
+    else:
+        logger.warning(
+            "[ACTION SUPER-ADMIN] Exigence de preuve de partage RÉACTIVÉE par admin id=%d.",
+            current_user.id
+        )
+        flash("Exigence de preuve de partage réactivée. Les nouveaux clics attendront à nouveau une preuve validée. ✅", "success")
+
+    return redirect(url_for("admin_validate"))
+
+
 @app.route("/admin/validate")
 @login_required
 def admin_validate():

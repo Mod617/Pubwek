@@ -72,11 +72,25 @@
   /* ---------- Card shell (generic) ---------- */
   .mescamp-wrap .card {
     border-radius: 14px !important;
-    transition: transform .12s ease, box-shadow .12s ease;
+    transition: transform .12s ease, box-shadow .12s ease, outline-color .3s ease;
   }
   .mescamp-wrap .card:hover { transform: translateY(-2px); }
   .mescamp-wrap .card-title { font-family: 'Fraunces', serif; font-weight: 600 !important; }
   .mescamp-wrap .card-text.text-muted { color: var(--ink-soft) !important; }
+
+  /* ---------- 🆕 Surlignage de la carte ciblée par une ancre (#campagne-ID) ---------- */
+  /* Déclenché automatiquement par le navigateur via :target, aucun JS requis.
+     Utilisé notamment au retour d'un paiement FedaPay (lien "Voir ma campagne"). */
+  .mescamp-wrap .card:target {
+    outline: 3px solid var(--emerald);
+    outline-offset: 3px;
+    animation: campagneCibleeFade 3s ease-out forwards;
+  }
+  @keyframes campagneCibleeFade {
+    0%   { outline-color: var(--emerald); }
+    70%  { outline-color: var(--emerald); }
+    100% { outline-color: transparent; }
+  }
 
   /* ---------- Refusées ---------- */
   .mescamp-wrap .card.border-danger { border: 1px solid var(--clay-tint) !important; border-top: 3px solid var(--clay) !important; }
@@ -269,7 +283,7 @@
             {% set communes_actuelles = campaign.communes.split(',') if campaign.communes else [] %}
             {% set nombre_photos_actuelles = campaign.media_files.split(',') | length if campaign.media_files else 0 %}
             <div class="col-md-6 mb-3">
-                <div class="card border-danger shadow-sm">
+                <div id="campagne-{{ campaign.id }}" class="card border-danger shadow-sm">
                     <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
                         <span class="fw-bold">Campagne #{{ campaign.id }}</span>
                         <span class="badge bg-white text-danger">Refusée</span>
@@ -565,7 +579,7 @@
         <div class="row">
             {% for campaign in non_payees %}
             <div class="col-md-6 mb-3">
-                <div class="card border-warning shadow-sm">
+                <div id="campagne-{{ campaign.id }}" class="card border-warning shadow-sm">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <h5 class="card-title fw-bold mb-0">{{ campaign.promotion_type | capitalize }} - {{ campaign.promotion_detail }}</h5>
@@ -598,7 +612,7 @@
     <div class="row mb-4">
         {% for campaign in en_attente %}
         <div class="col-md-6 mb-3">
-            <div class="card border-warning shadow-sm">
+            <div id="campagne-{{ campaign.id }}" class="card border-warning shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title fw-bold">{{ campaign.promotion_type | capitalize }} - {{ campaign.promotion_detail }}</h5>
                     <p class="card-text text-muted small">{{ campaign.description }}</p>
@@ -625,7 +639,7 @@
     <div class="row mb-4">
         {% for campaign in en_cours %}
         <div class="col-md-6 mb-3">
-            <div class="card border-primary shadow-sm">
+            <div id="campagne-{{ campaign.id }}" class="card border-primary shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title fw-bold">{{ campaign.promotion_type | capitalize }} - {{ campaign.promotion_detail }}</h5>
                     <p class="card-text text-muted small">{{ campaign.description }}</p>
@@ -676,7 +690,7 @@
     <div class="row mb-4">
         {% for campaign in terminees %}
         <div class="col-md-6 mb-3">
-            <div class="card border-success shadow-sm">
+            <div id="campagne-{{ campaign.id }}" class="card border-success shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title fw-bold">{{ campaign.promotion_type | capitalize }} - {{ campaign.promotion_detail }}</h5>
                     <p class="card-text text-muted small">{{ campaign.description }}</p>

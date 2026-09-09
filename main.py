@@ -4622,52 +4622,6 @@ def preuve_jour_validee(campaign_share_id, day_number):
     return validees >= 2
 
 
-def crediter_clics_du_jour(share, day_number):
-    """Verse la récompense de tous les clics payables et non encore
-    rémunérés de ce partage, pour ce jour de diffusion. Appelée uniquement
-    quand les deux preuves du jour viennent d'être validées.
-    Retourne (nombre_de_clics_credites, montant_total_verse).
-    """
-    camp = share.campaign
-    config = SystemConfig.get_config()
-    clics = (
-        CampaignClick.query
-        .filter(
-            CampaignClick.campaign_share_id == share.id,
-            CampaignClick.day_number == day_number,
-            CampaignClick.is_paid.is_(True),
-            CampaignClick.rewarded_at.is_(None),
-        )
-        .all()
-    )
-    if not clics:
-        return 0, 0.0
-
-    sharer = db.session.get(User, share.sharer_id)
-    maintenant = datetime.utcnow()
-    total = 0.0
-
-    for click in clics:
-        recompense = recompense_pour(camp, config)
-        if sharer and recompense > 0:
-            sharer.wallet_balance = (sharer.wallet_balance or 0.0) + recompense
-            db.session.add(WalletTransaction(
-                user_id=sharer.id,
-                amount=recompense,
-                balance_after=sharer.wallet_balance,
-                transaction_type="click_reward",
-                campaign_click_id=click.id,
-                description=(
-                    f"Clic généré sur la campagne #{camp.id} (jour {day_number}) "
-                    f"({camp.promotion_detail or camp.promotion_type})"
-                ),
-            ))
-            total += recompense
-        click.rewarded_at = maintenant
-
-    return len(clics), total
-
-
 
 
 def enregistrer_clic(share, camp, link_type):
@@ -4898,6 +4852,65 @@ def crediter_clics_du_jour(share, day_number):
         click.rewarded_at = maintenant
 
     return len(clics), total
+
+def crediter_tous_les_clics_en_attente():
+    """Crédite immédiatement TOUS les clics payables encore en attente de
+    preuve (rewarded_at IS NULL), toutes campagnes et tous partages confondus.
+
+    Appelée uniquement lors du basculement de l'exigence de preuve de ON vers
+    OFF : ces clics étaient bloqués en attendant une preuve qui n'est
+    désormais plus requise — ils ne doivent jamais rester bloqués
+    indéfiniment (voir toggle_preuve_partage()).
+
+    Retourne (nombre_de_clics_credites, montant_total_verse).
+    """
+    config = SystemConfig.get_config()
+    clics = (
+        CampaignClick.query
+        .filter(
+            CampaignClick.is_paid.is_(True),
+            CampaignClick.rewarded_at.is_(None),
+        )
+        .all()
+    )
+    if not clics:
+        return 0, 0.0
+
+    maintenant = datetime.utcnow()
+    total = 0.0
+    nb = 0
+    shares_cache = {}
+
+    for click in clics:
+        share = shares_cache.get(click.campaign_share_id)
+        if share is None:
+            share = db.session.get(CampaignShare, click.campaign_share_id)
+            shares_cache[click.campaign_share_id] = share
+        if not share:
+            click.rewarded_at = maintenant  # évite de re-scanner ce clic orphelin indéfiniment
+            continue
+
+        camp = share.campaign
+        sharer = db.session.get(User, share.sharer_id)
+        recompense = recompense_pour(camp, config)
+        if sharer and recompense > 0:
+            sharer.wallet_balance = (sharer.wallet_balance or 0.0) + recompense
+            db.session.add(WalletTransaction(
+                user_id=sharer.id,
+                amount=recompense,
+                balance_after=sharer.wallet_balance,
+                transaction_type="click_reward",
+                campaign_click_id=click.id,
+                description=(
+                    f"Clic généré sur la campagne #{camp.id} (jour {click.day_number}) "
+                    f"— crédité automatiquement suite à la désactivation de l'exigence de preuve"
+                ),
+            ))
+            total += recompense
+            nb += 1
+        click.rewarded_at = maintenant
+
+    return nb, total
 
 
 @app.route("/admin/preuve/<int:proof_id>/<decision>", methods=["POST"])

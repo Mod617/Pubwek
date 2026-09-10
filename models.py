@@ -29,6 +29,47 @@ class DeviceCluster(db.Model):
     devices = db.relationship("Device", backref="cluster", lazy=True)
 
 
+# =========================================================================
+# 📬 MESSAGES DE CONTACT (formulaire public "Nous contacter")
+# =========================================================================
+
+class ContactMessage(db.Model):
+    """
+    Message envoyé via le formulaire public de contact (visiteurs, annonceurs
+    ou partageurs). Stocké en base pour ne jamais perdre un message même en
+    cas de souci d'envoi d'email — l'email via Resend n'est qu'une notification.
+    """
+    __tablename__ = "contact_messages"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # L'auteur n'est pas forcément connecté : on garde toujours nom/email
+    # saisis dans le formulaire, et on rattache le compte si connecté.
+    name = db.Column(db.String(150), nullable=False)
+    email = db.Column(db.String(120), nullable=False, index=True)
+    subject = db.Column(db.String(200), nullable=True)
+    message = db.Column(db.Text, nullable=False)
+
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
+
+    ip = db.Column(db.String(45), nullable=True)  # traçabilité / anti-spam
+
+    # "nouveau" (jamais lu) | "traite" (répondu / classé par un admin)
+    status = db.Column(db.String(20), default="nouveau", nullable=False, index=True)
+
+    admin_notes = db.Column(db.Text, nullable=True)  # note interne, jamais visible du visiteur
+    processed_by_admin_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    processed_at = db.Column(db.DateTime, nullable=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    user = db.relationship("User", foreign_keys=[user_id])
+    processed_by = db.relationship("User", foreign_keys=[processed_by_admin_id])
+
+    def __repr__(self):
+        return f"<ContactMessage #{self.id} {self.email} status={self.status}>"
+
+
 class AccountDeletionRequest(db.Model):
     """
     Demande de suppression de compte soumise par un annonceur ou un partageur.

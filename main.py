@@ -5807,7 +5807,8 @@ PERMISSIONS_DISPONIBLES = {
     "gerer_retraits": "Traiter les demandes de retrait",
     "voir_transactions": "Consulter le registre des transactions",
     "configurer_tarifs": "Configurer les tarifs et commissions",
-    "gerer_suppressions_compte": "Traiter les demandes de suppression de compte",  # 🆕
+    "gerer_suppressions_compte": "Traiter les demandes de suppression de compte",
+    "gerer_contacts": "Consulter et traiter les messages de contact",  # 🆕
 }
 
 

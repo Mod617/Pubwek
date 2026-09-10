@@ -132,12 +132,9 @@ login_manager = LoginManager()
 # rend la limite inoperante des qu'il y a plus d'un processus.
 limiter = Limiter(
     get_remote_address,
-    default_limits=["200 per day", "50 per hour"],
+    default_limits=["10000 per day", "1000 per hour"],
     storage_uri=os.getenv("REDIS_URL", "memory://"),
     strategy="fixed-window",
-    # Si Redis devient indisponible, on bascule sur un comptage en memoire au
-    # lieu de laisser remonter l'erreur : sans cela, une panne Redis
-    # transformerait chaque page du site en erreur 500.
     in_memory_fallback_enabled=True,
     swallow_errors=True,
 )

@@ -6528,7 +6528,7 @@ def envoyer_email_contact_async(app, contact_msg_id):
 
 
 @app.route("/contact", methods=["GET", "POST"])
-@limiter.limit("5 per hour")
+@limiter.limit("5 per hour", methods=["POST"])
 def contact():
     if request.method == "POST":
         name = bleach.clean(request.form.get("name", "").strip())

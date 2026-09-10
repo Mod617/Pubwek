@@ -6247,6 +6247,131 @@ def marquer_notifications_lues():
     return jsonify({"success": True})
 
 
+# ==========================================
+# 🆕 ROUTE ADMIN : LISTE DES DEMANDES DE SUPPRESSION DE COMPTE
+# ==========================================
+@app.route("/admin/suppressions-compte")
+@login_required
+def admin_suppressions_compte():
+    verifier_droits_admin("gerer_suppressions_compte")
+
+    demandes = AccountDeletionRequest.query.order_by(AccountDeletionRequest.created_at.desc()).all()
+
+    for d in demandes:
+        d.demandeur = db.session.get(User, d.user_id)
+
+    en_attente = [d for d in demandes if d.status == "pending"]
+    traitees = [d for d in demandes if d.status != "pending"]
+
+    return render_template(
+        "admin_suppressions_compte.html",
+        en_attente=en_attente,
+        traitees=traitees
+    )
+
+
+# ==========================================
+# 🆕 ROUTE ADMIN : APPROUVER UNE DEMANDE — DÉSACTIVE LE COMPTE
+# ==========================================
+@app.route("/admin/suppressions-compte/<int:demande_id>/desactiver", methods=["POST"])
+@login_required
+@limiter.limit("60 per hour")
+def desactiver_compte_suite_demande(demande_id):
+    verifier_droits_admin("gerer_suppressions_compte")
+
+    demande = (
+        db.session.query(AccountDeletionRequest)
+        .filter_by(id=demande_id)
+        .with_for_update()
+        .first()
+    )
+    if not demande:
+        flash("Demande introuvable. ⚠️", "danger")
+        return redirect(url_for("admin_suppressions_compte"))
+
+    if demande.status != "pending":
+        flash("Cette demande a déjà été traitée. ⚠️", "warning")
+        return redirect(url_for("admin_suppressions_compte"))
+
+    utilisateur = db.session.get(User, demande.user_id)
+    if not utilisateur:
+        flash("Le compte associé à cette demande est introuvable. ⚠️", "danger")
+        return redirect(url_for("admin_suppressions_compte"))
+
+    # Jamais le super-admin ni un autre admin/sous-admin, même par accident
+    # (ex: URL forgée) — cette action ne concerne que les comptes annonceur/partageur.
+    if utilisateur.role not in ("annonceur", "partageur"):
+        flash("Impossible de désactiver un compte administrateur via cette voie. 🚫", "danger")
+        return redirect(url_for("admin_suppressions_compte"))
+
+    note = request.form.get("admin_note", "").strip()
+
+    utilisateur.is_disabled = True
+    utilisateur.disabled_at = datetime.utcnow()
+    utilisateur.disabled_by_admin_id = current_user.id
+
+    demande.status = "approved"
+    demande.admin_notes = bleach.clean(note) if note else "Compte désactivé suite à la demande de suppression."
+    demande.processed_by_admin_id = current_user.id
+    demande.processed_at = datetime.utcnow()
+
+    db.session.commit()
+
+    logger.warning(
+        "[ACTION ADMIN] Compte id=%d (%s) désactivé suite à la demande #%d par admin id=%d",
+        utilisateur.id, utilisateur.email, demande.id, current_user.id
+    )
+
+    flash(f"Le compte de {utilisateur.email} a été désactivé. ✅", "success")
+    return redirect(url_for("admin_suppressions_compte"))
+
+
+# ==========================================
+# 🆕 ROUTE ADMIN : REFUSER UNE DEMANDE DE SUPPRESSION — COMPTE INCHANGÉ
+# ==========================================
+@app.route("/admin/suppressions-compte/<int:demande_id>/refuser", methods=["POST"])
+@login_required
+@limiter.limit("60 per hour")
+def refuser_suppression_compte(demande_id):
+    verifier_droits_admin("gerer_suppressions_compte")
+
+    demande = (
+        db.session.query(AccountDeletionRequest)
+        .filter_by(id=demande_id)
+        .with_for_update()
+        .first()
+    )
+    if not demande:
+        flash("Demande introuvable. ⚠️", "danger")
+        return redirect(url_for("admin_suppressions_compte"))
+
+    if demande.status != "pending":
+        flash("Cette demande a déjà été traitée. ⚠️", "warning")
+        return redirect(url_for("admin_suppressions_compte"))
+
+    motif = request.form.get("admin_note", "").strip()
+    if not motif:
+        flash("Veuillez indiquer un motif de refus. ⚠️", "warning")
+        return redirect(url_for("admin_suppressions_compte"))
+
+    demande.status = "rejected"
+    demande.admin_notes = bleach.clean(motif)
+    demande.processed_by_admin_id = current_user.id
+    demande.processed_at = datetime.utcnow()
+
+    db.session.commit()
+
+    logger.info(
+        "[SUPPRESSION COMPTE] Demande #%d refusée par admin id=%d (motif: %s)",
+        demande.id, current_user.id, motif
+    )
+
+    flash("Demande refusée. Le compte reste actif. ✅", "success")
+    return redirect(url_for("admin_suppressions_compte"))
+
+
+
+
 def envoyer_push(user, title, message, link=None):
     """
     Envoie une notification push réelle à TOUS les abonnements actifs de

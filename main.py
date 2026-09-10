@@ -50,6 +50,7 @@ from forms import (
     numero_whatsapp_valide,
 )
 from models import (
+    AccountDeletionRequest,
     Campaign,
     CampaignClick,
     CampaignShare,

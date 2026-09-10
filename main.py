@@ -2481,7 +2481,28 @@ def paiement_callback():
         elif status_fedapay in ["canceled", "declined"]:
             appliquer_paiement_echoue(transaction, status_fedapay)
             db.session.commit()
-            flash("Le paiement a été annulé ou a échoué. Vous pouvez réessayer. ⚠️", "warning")
+
+            # 🆕 Message enrichi : lien direct vers la campagne concernée
+            # (section "Paiement en attente" de mes_campagnes.html, qui
+            # contient déjà le bouton "Finaliser le Paiement Maintenant")
+            # plutôt qu'un avertissement générique sans action concrète.
+            camp = db.session.get(Campaign, transaction.campaign_id) if transaction.campaign_id else None
+            if camp:
+                nom_campagne = camp.promotion_detail or camp.promotion_type or f"#{camp.id}"
+                motif = "refusé par votre opérateur ou votre banque" if status_fedapay == "declined" else "annulé"
+                flash(
+                    Markup(
+                        'Le paiement pour « {nom} » a été {motif}. ⚠️ Aucune somme n\'a été débitée. '
+                        '<a href="{link}" class="btn btn-sm btn-warning ms-2">Relancer le paiement</a>'
+                    ).format(
+                        nom=escape(nom_campagne),
+                        motif=motif,
+                        link=url_for("mes_campagnes", _anchor=f"campagne-{camp.id}"),
+                    ),
+                    "warning"
+                )
+            else:
+                flash("Le paiement a été annulé ou a échoué. Vous pouvez réessayer. ⚠️", "warning")
 
         else:  # Statut encore 'pending'
             flash("Le paiement est toujours en cours de traitement. Un moment svp... ⏳", "info")

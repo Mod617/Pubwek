@@ -449,6 +449,14 @@ def create_app():
 
         if user is None or empreinte != user.empreinte_session():
             return None
+
+        # 🆕 Un compte désactivé (suite à une demande de suppression approuvée)
+        # ne doit plus donner accès à l'application, même si une session était
+        # déjà ouverte au moment de la désactivation — vérifié à CHAQUE requête,
+        # donc coupe l'accès immédiatement, sans attendre l'expiration du cookie.
+        if user.is_disabled:
+            return None
+
         return user
 
     return app

@@ -528,9 +528,6 @@ PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://127.0.0.1:5000")
 with app.app_context():
     db.create_all()
 
-with app.app_context():
-    db.create_all()
-
 # 🆕 Migration légère : ajoute les colonnes manquantes sur une table déjà
 # existante. db.create_all() ne modifie jamais une table qui existe déjà,
 # il ne crée que les tables absentes — sans ce bloc, verified_at/raw_response
@@ -550,6 +547,29 @@ with app.app_context():
     except Exception as e:
         db.session.rollback()
         logger.error("Erreur migration colonnes transactions : %s", e)
+
+# 🆕 Migration légère : colonnes de désactivation de compte sur `users`.
+# account_deletion_requests, elle, est une TABLE entièrement nouvelle —
+# db.create_all() ci-dessus l'a déjà créée tout seul, aucune migration
+# n'est nécessaire pour elle. Seules les colonnes ajoutées à `users`
+# (table déjà existante) ont besoin de ce traitement manuel.
+with app.app_context():
+    from sqlalchemy import text
+    try:
+        db.session.execute(text(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_disabled BOOLEAN NOT NULL DEFAULT FALSE"
+        ))
+        db.session.execute(text(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS disabled_at TIMESTAMP"
+        ))
+        db.session.execute(text(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS disabled_by_admin_id INTEGER REFERENCES users(id)"
+        ))
+        db.session.commit()
+        logger.info("Migration users.is_disabled / disabled_at / disabled_by_admin_id vérifiée.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Erreur migration colonnes users (désactivation compte) : %s", e)
 
 with app.app_context():
     # FIX: Les deux variables sont obligatoires — aucune valeur par défaut codée en dur

@@ -6557,6 +6557,19 @@ def contact():
         db.session.add(contact_msg)
         db.session.commit()
 
+        # 🆕 Notification interne + push à tous les admins/sous-admins habilités,
+        # exactement comme pour les remboursements ou les retraits — sans ça,
+        # personne n'est alerté tant qu'il ne va pas cliquer manuellement sur
+        # /admin/contacts pour vérifier s'il y a du nouveau.
+        notifier_admins_avec_permission(
+            "gerer_contacts",
+            "Nouveau message de contact 📬",
+            f"{contact_msg.name} ({contact_msg.email}) a envoyé un message : « {contact_msg.subject or contact_msg.message[:60]} »",
+            category="info",
+            link=url_for("admin_contacts"),
+        )
+        db.session.commit()
+
         if current_app.config.get("RESEND_API_KEY"):
             thread = threading.Thread(
                 target=envoyer_email_contact_async,

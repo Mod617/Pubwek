@@ -29,6 +29,43 @@ class DeviceCluster(db.Model):
     devices = db.relationship("Device", backref="cluster", lazy=True)
 
 
+class AccountDeletionRequest(db.Model):
+    """
+    Demande de suppression de compte soumise par un annonceur ou un partageur.
+
+    Comme sur les grandes plateformes (TikTok, Facebook...), la suppression
+    n'est jamais immédiate : l'administration examine le motif et, si elle
+    l'approuve, DÉSACTIVE le compte (User.is_disabled=True) plutôt que de le
+    supprimer réellement — aucune donnée n'est perdue, et le compte reste
+    réactivable par un admin en cas d'erreur ou de changement d'avis.
+    """
+    __tablename__ = "account_deletion_requests"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+
+    reason = db.Column(db.Text, nullable=False)  # Motif fourni par l'utilisateur
+
+    # "pending" (en attente) | "approved" (compte désactivé) | "rejected" (refusée, compte inchangé)
+    status = db.Column(db.String(20), default="pending", nullable=False, index=True)
+
+    admin_notes = db.Column(db.Text, nullable=True)  # Motif de refus, ou note libre de l'admin
+    processed_by_admin_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    processed_at = db.Column(db.DateTime, nullable=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    user = db.relationship(
+        "User",
+        foreign_keys=[user_id],
+        backref=db.backref("deletion_requests", lazy=True, cascade="all, delete-orphan")
+    )
+    processed_by = db.relationship("User", foreign_keys=[processed_by_admin_id])
+
+    def __repr__(self):
+        return f"<AccountDeletionRequest user_id={self.user_id} status={self.status}>"
+
+
 class NetworkCluster(db.Model):
     """
     Regroupement d'adresses IP suspectées d'appartenir à la même entité d'attaque 

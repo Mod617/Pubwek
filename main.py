@@ -6574,6 +6574,64 @@ def contact():
     return render_template("contact.html")
 
 
+# ==========================================
+# 🆕 ROUTE ADMIN : LISTE DES MESSAGES DE CONTACT
+# ==========================================
+@app.route("/admin/contacts")
+@login_required
+def admin_contacts():
+    verifier_droits_admin("gerer_contacts")
+
+    messages = ContactMessage.query.order_by(ContactMessage.created_at.desc()).all()
+
+    for m in messages:
+        m.demandeur = db.session.get(User, m.user_id) if m.user_id else None
+
+    nouveaux = [m for m in messages if m.status == "nouveau"]
+    traites = [m for m in messages if m.status != "nouveau"]
+
+    return render_template(
+        "admin_contacts.html",
+        nouveaux=nouveaux,
+        traites=traites
+    )
+
+
+# ==========================================
+# 🆕 ROUTE ADMIN : MARQUER UN MESSAGE COMME TRAITÉ
+# ==========================================
+@app.route("/admin/contacts/<int:message_id>/traiter", methods=["POST"])
+@login_required
+@limiter.limit("60 per hour")
+def traiter_message_contact(message_id):
+    verifier_droits_admin("gerer_contacts")
+
+    msg = db.session.get(ContactMessage, message_id)
+    if not msg:
+        flash("Message introuvable. ⚠️", "danger")
+        return redirect(url_for("admin_contacts"))
+
+    if msg.status == "traite":
+        flash("Ce message est déjà marqué comme traité. ⚠️", "warning")
+        return redirect(url_for("admin_contacts"))
+
+    note = request.form.get("admin_note", "").strip()
+
+    msg.status = "traite"
+    msg.admin_notes = bleach.clean(note) if note else None
+    msg.processed_by_admin_id = current_user.id
+    msg.processed_at = datetime.utcnow()
+
+    db.session.commit()
+
+    logger.info(
+        "[CONTACT] Message #%d marqué traité par admin id=%d",
+        msg.id, current_user.id
+    )
+    flash(f"Message de {msg.email} marqué comme traité. ✅", "success")
+    return redirect(url_for("admin_contacts"))
+
+
 
 
 

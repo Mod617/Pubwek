@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5" style="max-width: 700px;">
+  <div class="card border-danger">
+    <div class="card-header bg-danger text-white">
+      <h4 class="mb-0"><i class="fa-solid fa-triangle-exclamation me-2"></i>Nettoyage avant production</h4>
+    </div>
+    <div class="card-body">
+      <p class="fw-bold text-danger">⚠️ Action irréversible.</p>
+      <p>Cette opération va :</p>
+      <ul>
+        <li>Supprimer <strong>tous les annonceurs et partageurs</strong> (les comptes admin/sous-admin sont conservés)</li>
+        <li>Vider <strong>toutes les campagnes</strong>, transactions, retraits, remboursements</li>
+        <li>Vider les messages de contact et notifications</li>
+        <li>Supprimer <strong>tous les fichiers uploadés</strong> (images, vidéos, preuves)</li>
+        <li>Conserver la configuration système (tarifs, commissions)</li>
+      </ul>
+      <p class="text-muted small">Assurez-vous d'avoir fait un backup de la base avant de continuer.</p>
+
+      <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="form-label fw-bold" for="confirmation">
+          Pour confirmer, tapez exactement : <code>SUPPRIMER TOUT</code>
+        </label>
+        <input type="text" class="form-control mb-3" id="confirmation" name="confirmation" required autocomplete="off">
+        <button type="submit" class="btn btn-danger">
+          <i class="fa-solid fa-trash me-1"></i>Confirmer le nettoyage définitif
+        </button>
+        <a href="{{ url_for('admin_validate') }}" class="btn btn-outline-secondary">Annuler</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

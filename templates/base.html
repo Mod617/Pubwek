@@ -305,6 +305,7 @@
             {% endif %}
 
             <!-- Accès Admin -->
+            
             {% if current_user.role == "admin" %}
               <li class="nav-item">
                 <a class="nav-link pw-admin-link fw-bold {{ 'pw-active' if request.endpoint == 'admin_validate' }}" href="{{ url_for('admin_validate') }}">
@@ -313,6 +314,17 @@
               </li>
             {% endif %}
 
+            <!-- 🆕 Lien Contacts : super-admin OU sous-admin avec la permission -->
+            {% if current_user.has_permission("gerer_contacts") %}
+              <li class="nav-item">
+                <a class="nav-link pw-admin-link {{ 'pw-active' if request.endpoint in ['admin_contacts', 'traiter_message_contact'] }}" href="{{ url_for('admin_contacts') }}">
+                  <i class="fa-solid fa-envelope-open-text me-1"></i>Contacts
+                </a>
+              </li>
+            {% endif %}           
+
+
+          
             <!-- Bouton déconnexion -->
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('logout') }}">

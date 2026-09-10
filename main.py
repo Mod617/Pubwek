@@ -1198,10 +1198,13 @@ def nouvelle_campagne():
 
         session.pop('preview_video_url', None)
 
-        flash(
-            f"Campagne enregistrée ! Coût : {total_cost:.0f} FCFA. Veuillez procéder au paiement pour finaliser l'envoi. 💳",
-            "info"
-        )
+        # 🆕 Pas de flash ici : le client est redirigé tout de suite vers
+        # FedaPay (site externe) sans qu'aucune page locale ne s'affiche
+        # entre-temps (sauf s'il a un solde portefeuille, auquel cas la page
+        # confirmer_paiement_wallet.html affiche déjà le coût). Le message
+        # restait donc "en attente" en session et ressurgissait mélangé avec
+        # celui du paiement une fois de retour sur mes_campagnes — deux
+        # messages contradictoires empilés d'un coup.
         return redirect(url_for("payer_campagne", campaign_id=new_campaign.id))
 
     return redirect(url_for("dashboard_annonceur"))

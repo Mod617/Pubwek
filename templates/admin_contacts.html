@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-4">
+  <h2 class="fw-bold mb-4"><i class="fa-solid fa-envelope-open-text me-2"></i>Messages de contact</h2>
+
+  <ul class="nav nav-tabs mb-4" id="contactTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="nouveaux-tab" data-bs-toggle="tab" data-bs-target="#nouveaux" type="button" role="tab">
+        🆕 Nouveaux <span class="badge bg-danger ms-1">{{ nouveaux|length }}</span>
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="traites-tab" data-bs-toggle="tab" data-bs-target="#traites" type="button" role="tab">
+        ✅ Traités <span class="badge bg-secondary ms-1">{{ traites|length }}</span>
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="contactTabsContent">
+
+    <!-- ============ ONGLET : NOUVEAUX ============ -->
+    <div class="tab-pane fade show active" id="nouveaux" role="tabpanel">
+      {% if not nouveaux %}
+        <p class="text-muted">Aucun nouveau message pour le moment.</p>
+      {% else %}
+        {% for m in nouveaux %}
+          <div class="card mb-3 border-danger-subtle shadow-sm">
+            <div class="card-body">
+              <div class="d-flex justify-content-between flex-wrap mb-2">
+                <div>
+                  <strong>{{ m.name }}</strong>
+                  {% if m.demandeur %}
+                    <span class="badge bg-info text-dark ms-1">Compte : {{ m.demandeur.role }}</span>
+                  {% endif %}
+                  <br>
+                  <a href="mailto:{{ m.email }}">{{ m.email }}</a>
+                </div>
+                <div class="text-muted small">{{ m.created_at | heure_locale }}</div>
+              </div>
+
+              {% if m.subject %}
+                <p class="mb-1"><strong>Objet :</strong> {{ m.subject }}</p>
+              {% endif %}
+              <p class="mb-3" style="white-space: pre-wrap;">{{ m.message }}</p>
+
+              <form method="POST" action="{{ url_for('traiter_message_contact', message_id=m.id) }}" class="d-flex gap-2 flex-wrap align-items-start">
+                <input type="text" name="admin_note" class="form-control form-control-sm" style="max-width: 320px;" placeholder="Note interne (optionnelle)">
+                <button type="submit" class="btn btn-sm btn-success">
+                  <i class="fa-solid fa-check me-1"></i>Marquer comme traité
+                </button>
+                <a href="mailto:{{ m.email }}?subject=Re: {{ m.subject or 'Votre message' }}" class="btn btn-sm btn-outline-primary">
+                  <i class="fa-solid fa-reply me-1"></i>Répondre par email
+                </a>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+
+    <!-- ============ ONGLET : TRAITÉS ============ -->
+    <div class="tab-pane fade" id="traites" role="tabpanel">
+      {% if not traites %}
+        <p class="text-muted">Aucun message traité pour le moment.</p>
+      {% else %}
+        {% for m in traites %}
+          <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+              <div class="d-flex justify-content-between flex-wrap mb-2">
+                <div>
+                  <strong>{{ m.name }}</strong> — <a href="mailto:{{ m.email }}">{{ m.email }}</a>
+                </div>
+                <div class="text-muted small">Reçu le {{ m.created_at | heure_locale }}</div>
+              </div>
+              {% if m.subject %}<p class="mb-1"><strong>Objet :</strong> {{ m.subject }}</p>{% endif %}
+              <p class="mb-2" style="white-space: pre-wrap;">{{ m.message }}</p>
+              <div class="small text-success">
+                <i class="fa-solid fa-circle-check me-1"></i>
+                Traité le {{ m.processed_at | heure_locale }}
+                {% if m.processed_by %} par {{ m.processed_by.pseudo or m.processed_by.email }}{% endif %}
+              </div>
+              {% if m.admin_notes %}
+                <div class="small text-muted mt-1"><strong>Note :</strong> {{ m.admin_notes }}</div>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

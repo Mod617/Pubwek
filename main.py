@@ -6597,10 +6597,13 @@ def admin_contacts():
 # ==========================================
 # 🆕 ROUTE ADMIN : MARQUER UN MESSAGE COMME TRAITÉ
 # ==========================================
-@app.route("/admin/contacts/<int:message_id>/traiter", methods=["POST"])
+# ==========================================
+# 🆕 ROUTE ADMIN : RÉPONDRE À UN MESSAGE DE CONTACT
+# ==========================================
+@app.route("/admin/contacts/<int:message_id>/repondre", methods=["POST"])
 @login_required
-@limiter.limit("60 per hour")
-def traiter_message_contact(message_id):
+@limiter.limit("30 per hour")
+def repondre_message_contact(message_id):
     verifier_droits_admin("gerer_contacts")
 
     msg = db.session.get(ContactMessage, message_id)
@@ -6609,23 +6612,43 @@ def traiter_message_contact(message_id):
         return redirect(url_for("admin_contacts"))
 
     if msg.status == "traite":
-        flash("Ce message est déjà marqué comme traité. ⚠️", "warning")
+        flash("Une réponse a déjà été envoyée pour ce message. ⚠️", "warning")
         return redirect(url_for("admin_contacts"))
 
-    note = request.form.get("admin_note", "").strip()
+    reply_text = request.form.get("reply_message", "").strip()
+    if not reply_text:
+        flash("Veuillez rédiger une réponse avant de l'envoyer. ⚠️", "warning")
+        return redirect(url_for("admin_contacts"))
 
+    if len(reply_text) > 5000:
+        flash("La réponse est trop longue (5000 caractères maximum). ⚠️", "warning")
+        return redirect(url_for("admin_contacts"))
+
+    msg.admin_reply = bleach.clean(reply_text)
+    msg.replied_at = datetime.utcnow()
+    msg.replied_by_admin_id = current_user.id
     msg.status = "traite"
-    msg.admin_notes = bleach.clean(note) if note else None
-    msg.processed_by_admin_id = current_user.id
-    msg.processed_at = datetime.utcnow()
-
     db.session.commit()
 
+    if current_app.config.get("RESEND_API_KEY"):
+        thread = threading.Thread(
+            target=envoyer_email_reponse_contact_async,
+            args=(current_app._get_current_object(), msg.id)
+        )
+        thread.daemon = True
+        thread.start()
+        flash(f"Réponse envoyée à {msg.email}. ✅", "success")
+    else:
+        flash(
+            "Réponse enregistrée, mais l'envoi automatique d'email est indisponible "
+            "pour le moment (RESEND_API_KEY manquante). ⚠️",
+            "warning"
+        )
+
     logger.info(
-        "[CONTACT] Message #%d marqué traité par admin id=%d",
+        "[CONTACT] Réponse envoyée au message #%d par admin id=%d",
         msg.id, current_user.id
     )
-    flash(f"Message de {msg.email} marqué comme traité. ✅", "success")
     return redirect(url_for("admin_contacts"))
 
 

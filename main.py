@@ -5700,6 +5700,123 @@ def confirmer_retrait_manuel(withdrawal_id):
 
     return redirect(url_for("admin_retraits"))
 
+# ==========================================
+# 🧹 ROUTE TEMPORAIRE DE NETTOYAGE AVANT PRODUCTION
+# ⚠️ À SUPPRIMER DU CODE UNE FOIS UTILISÉE — voir note en bas de fonction.
+# ==========================================
+@app.route("/admin/nettoyage-production", methods=["GET", "POST"])
+@login_required
+@limiter.limit("5 per hour")
+def nettoyage_production():
+    """
+    Vide toutes les données de test avant le vrai lancement : campagnes,
+    transactions, utilisateurs annonceurs/partageurs, messages de contact,
+    notifications, et les tables de détection de fraude jamais utilisées par
+    l'application. Conserve : comptes admin/sous-admin, system_config,
+    video_generation_config.
+
+    Réservée au VRAI super-admin (jamais un sous-admin), protégée par une
+    phrase de confirmation tapée manuellement pour éviter tout clic accidentel.
+    """
+    verifier_super_admin_strict()
+
+    if request.method == "POST":
+        confirmation = request.form.get("confirmation", "").strip()
+        if confirmation != "SUPPRIMER TOUT":
+            flash("Phrase de confirmation incorrecte. Rien n'a été supprimé. ⚠️", "danger")
+            return redirect(url_for("nettoyage_production"))
+
+        from sqlalchemy import text
+
+        tables_a_vider = [
+            "campaign_clicks",
+            "campaign_share_proofs",
+            "campaign_shares",
+            "campaigns",
+            "wallet_transactions",
+            "withdrawal_requests",
+            "refund_requests",
+            "transactions",
+            "document_certifications",
+            "contact_messages",
+            "notifications",
+            "push_subscriptions",
+            "uploaded_files",
+            "account_deletion_requests",
+            "user_subscriptions",
+            "clicks",
+            "shares",
+            "products",
+            "views",
+            "fraud_logs",
+            "device_history",
+            "device_risk_history",
+            "device_sessions",
+            "devices",
+            "device_clusters",
+            "network_clusters",
+            "ip_addresses",
+            "user_sessions",
+        ]
+
+        try:
+            # 1️⃣ Vidage des tables de données (métier + tables de fraude jamais utilisées)
+            db.session.execute(text(
+                "TRUNCATE TABLE " + ", ".join(tables_a_vider) + " RESTART IDENTITY CASCADE"
+            ))
+
+            # 2️⃣ On retire les auto-références sur users AVANT de supprimer les
+            # comptes de test, pour ne jamais bloquer sur une contrainte de clé
+            # étrangère (referrer_id, created_by_admin_id, contacted_by_id,
+            # disabled_by_admin_id pointent tous vers users.id).
+            db.session.execute(text(
+                "UPDATE users SET referrer_id = NULL, created_by_admin_id = NULL, "
+                "contacted_by_id = NULL, disabled_by_admin_id = NULL"
+            ))
+
+            # 3️⃣ On garde uniquement les comptes admin et sous_admin
+            resultat = db.session.execute(text(
+                "DELETE FROM users WHERE role NOT IN ('admin', 'sous_admin')"
+            ))
+            nb_utilisateurs_supprimes = resultat.rowcount
+
+            db.session.commit()
+
+        except Exception as e:
+            db.session.rollback()
+            logger.error("[NETTOYAGE PRODUCTION] Échec du nettoyage base de données : %s", e)
+            flash(f"Erreur lors du nettoyage de la base : {e} ⚠️", "danger")
+            return redirect(url_for("nettoyage_production"))
+
+        # 4️⃣ Suppression physique des fichiers uploadés
+        nb_fichiers_supprimes = 0
+        upload_folder = current_app.config["UPLOAD_FOLDER"]
+        try:
+            for nom in os.listdir(upload_folder):
+                chemin = os.path.join(upload_folder, nom)
+                if os.path.isfile(chemin):
+                    os.remove(chemin)
+                    nb_fichiers_supprimes += 1
+        except Exception as e:
+            logger.error("[NETTOYAGE PRODUCTION] Échec suppression fichiers uploads : %s", e)
+            flash(f"Base nettoyée, mais erreur lors de la suppression des fichiers : {e} ⚠️", "warning")
+            return redirect(url_for("admin_validate"))
+
+        logger.warning(
+            "[NETTOYAGE PRODUCTION] Effectué par admin id=%d — %d utilisateur(s) supprimé(s), "
+            "%d fichier(s) supprimé(s).",
+            current_user.id, nb_utilisateurs_supprimes, nb_fichiers_supprimes
+        )
+        flash(
+            f"✅ Nettoyage terminé : {nb_utilisateurs_supprimes} utilisateur(s) de test supprimé(s), "
+            f"{nb_fichiers_supprimes} fichier(s) supprimé(s). Pensez à retirer cette route du code "
+            f"maintenant qu'elle a été utilisée. 🧹",
+            "success"
+        )
+        return redirect(url_for("admin_validate"))
+
+    return render_template("nettoyage_production.html")
+
 
 # ==========================================
 # 🆕 ROUTE ADMIN : REFUSER UNE DEMANDE DE RETRAIT

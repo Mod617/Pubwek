@@ -2658,6 +2658,19 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user and bcrypt.check_password_hash(user.password_hash, form.password.data):
+            # 🆕 Compte désactivé suite à une demande de suppression approuvée
+            # par l'admin : bloqué explicitement, avec un message qui explique
+            # la situation plutôt qu'un refus générique qui laisserait croire
+            # à un mot de passe erroné.
+            if user.is_disabled:
+                flash(
+                    "Ce compte a été désactivé suite à une demande de suppression. "
+                    "Si vous pensez qu'il s'agit d'une erreur, contactez l'administration. 🚫",
+                    "danger"
+                )
+                logger.warning("Tentative de connexion sur compte désactivé : %s", form.email.data)
+                return redirect(url_for("login"))
+
             if not user.is_confirmed and user.role not in ("admin", "sous_admin"):
                 flash("Votre compte doit être confirmé avant connexion 🚫", "danger")
                 logger.warning("Tentative de connexion sur compte non confirmé : %s", form.email.data)

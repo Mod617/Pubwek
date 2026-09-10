@@ -6629,6 +6629,45 @@ def traiter_message_contact(message_id):
     return redirect(url_for("admin_contacts"))
 
 
+def envoyer_email_reponse_contact_async(app, contact_msg_id):
+    """Envoie la réponse de l'admin au visiteur, via l'API Resend.
+    Best-effort : la réponse reste de toute façon enregistrée en base
+    même si l'envoi échoue (l'admin peut alors relancer manuellement).
+    """
+    with app.app_context():
+        contact_msg = db.session.get(ContactMessage, contact_msg_id)
+        if not contact_msg or not contact_msg.admin_reply:
+            return
+        try:
+            response = requests.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {current_app.config['RESEND_API_KEY']}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "from": "Pubwek <noreply@pubwek.com>",
+                    "to": [contact_msg.email],
+                    "reply_to": "pubwek1@gmail.com",
+                    "subject": f"Re: {contact_msg.subject or 'Votre message à Pubwek'}",
+                    "text": (
+                        f"Bonjour {contact_msg.name},\n\n"
+                        f"{contact_msg.admin_reply}\n\n"
+                        f"— L'équipe Pubwek\n\n"
+                        f"---\n"
+                        f"Votre message initial :\n{contact_msg.message}"
+                    ),
+                },
+                timeout=10,
+            )
+            if response.status_code >= 400:
+                logger.error("Échec envoi réponse contact #%d (Resend %s) : %s", contact_msg.id, response.status_code, response.text)
+            else:
+                logger.info("Réponse envoyée au message de contact #%d", contact_msg.id)
+        except Exception as e:
+            logger.error("Échec envoi réponse contact #%d : %s", contact_msg.id, e)
+
+
 
 
 

@@ -44,15 +44,24 @@
               {% endif %}
               <p class="mb-3" style="white-space: pre-wrap;">{{ m.message }}</p>
 
-              <form method="POST" action="{{ url_for('traiter_message_contact', message_id=m.id) }}" class="d-flex gap-2 flex-wrap align-items-start">
+              <hr>
+
+              <form method="POST" action="{{ url_for('repondre_message_contact', message_id=m.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="text" name="admin_note" class="form-control form-control-sm" style="max-width: 320px;" placeholder="Note interne (optionnelle)">
+                <label class="form-label fw-bold small" for="reply-{{ m.id }}">
+                  <i class="fa-solid fa-reply me-1"></i>Répondre à {{ m.name }}
+                </label>
+                <textarea
+                  class="form-control mb-2"
+                  id="reply-{{ m.id }}"
+                  name="reply_message"
+                  rows="4"
+                  maxlength="5000"
+                  placeholder="Rédigez votre réponse ici — elle sera envoyée par email à {{ m.email }}"
+                  required></textarea>
                 <button type="submit" class="btn btn-sm btn-success">
-                  <i class="fa-solid fa-check me-1"></i>Marquer comme traité
+                  <i class="fa-solid fa-paper-plane me-1"></i>Envoyer la réponse
                 </button>
-                <a href="mailto:{{ m.email }}?subject=Re: {{ m.subject or 'Votre message' }}" class="btn btn-sm btn-outline-primary">
-                  <i class="fa-solid fa-reply me-1"></i>Répondre par email
-                </a>
               </form>
             </div>
           </div>
@@ -74,15 +83,19 @@
                 </div>
                 <div class="text-muted small">Reçu le {{ m.created_at | heure_locale }}</div>
               </div>
+
               {% if m.subject %}<p class="mb-1"><strong>Objet :</strong> {{ m.subject }}</p>{% endif %}
               <p class="mb-2" style="white-space: pre-wrap;">{{ m.message }}</p>
-              <div class="small text-success">
-                <i class="fa-solid fa-circle-check me-1"></i>
-                Traité le {{ m.processed_at | heure_locale }}
-                {% if m.processed_by %} par {{ m.processed_by.pseudo or m.processed_by.email }}{% endif %}
-              </div>
-              {% if m.admin_notes %}
-                <div class="small text-muted mt-1"><strong>Note :</strong> {{ m.admin_notes }}</div>
+
+              {% if m.admin_reply %}
+                <div class="bg-light border rounded p-3 mt-2">
+                  <div class="small text-success mb-1">
+                    <i class="fa-solid fa-reply me-1"></i>
+                    Réponse envoyée le {{ m.replied_at | heure_locale }}
+                    {% if m.replied_by %} par {{ m.replied_by.pseudo or m.replied_by.email }}{% endif %}
+                  </div>
+                  <p class="mb-0" style="white-space: pre-wrap;">{{ m.admin_reply }}</p>
+                </div>
               {% endif %}
             </div>
           </div>

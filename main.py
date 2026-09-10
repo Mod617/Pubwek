@@ -5820,6 +5820,70 @@ def admin_gestion_sous_admins():
         permissions_disponibles=PERMISSIONS_DISPONIBLES
     )
 
+# ==========================================
+# 🆕 ROUTE : DEMANDE DE SUPPRESSION DE COMPTE (ANNONCEUR / PARTAGEUR)
+# ==========================================
+@app.route("/compte/demander-suppression", methods=["POST"])
+@login_required
+@limiter.limit("5 per hour")
+def demander_suppression_compte():
+    if current_user.role not in ("annonceur", "partageur"):
+        flash("Accès refusé 🚫", "danger")
+        return redirect(url_for("index"))
+
+    dashboard_retour = "dashboard_annonceur" if current_user.role == "annonceur" else "dashboard_partageur"
+
+    # Une seule demande en attente à la fois — évite le spam de demandes
+    # identiques pendant qu'une première est encore en cours de traitement.
+    demande_existante = AccountDeletionRequest.query.filter_by(
+        user_id=current_user.id, status="pending"
+    ).first()
+    if demande_existante:
+        flash("Vous avez déjà une demande de suppression en attente de traitement par l'administration. ⏳", "warning")
+        return redirect(url_for(dashboard_retour))
+
+    motif = request.form.get("reason", "").strip()
+    if not motif:
+        flash("Veuillez indiquer le motif de votre demande de suppression. ⚠️", "warning")
+        return redirect(url_for(dashboard_retour))
+
+    if len(motif) > 1000:
+        flash("Le motif ne peut pas dépasser 1000 caractères. ⚠️", "warning")
+        return redirect(url_for(dashboard_retour))
+
+    motif_propre = bleach.clean(motif)
+
+    demande = AccountDeletionRequest(
+        user_id=current_user.id,
+        reason=motif_propre,
+        status="pending",
+    )
+    db.session.add(demande)
+    db.session.commit()
+
+    # Notification aux admins habilités — sans elle, personne n'est prévenu
+    # qu'une demande attend d'être examinée.
+    notifier_admins_avec_permission(
+        "gerer_suppressions_compte",
+        "Demande de suppression de compte 🗑️",
+        f"{current_user.pseudo or current_user.email} ({current_user.role}) a demandé la suppression de son compte.",
+        category="warning",
+        link=url_for("admin_suppressions_compte"),
+    )
+    db.session.commit()
+
+    logger.info(
+        "[SUPPRESSION COMPTE] Demande créée par user_id=%d (role=%s), motif : %s",
+        current_user.id, current_user.role, motif_propre[:100]
+    )
+
+    flash(
+        "Votre demande de suppression a bien été transmise à l'administration. "
+        "Elle sera examinée sous peu ; votre compte reste actif jusqu'à traitement de la demande. ⏳",
+        "info"
+    )
+    return redirect(url_for(dashboard_retour))
+
 
 @app.route("/admin/sous-admins/creer", methods=["POST"])
 @login_required

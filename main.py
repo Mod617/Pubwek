@@ -54,6 +54,7 @@ from models import (
     Campaign,
     CampaignClick,
     CampaignShare,
+    ContactMessage,          # 🆕
     Notification,
     RefundRequest,
     SystemConfig,
@@ -6485,6 +6486,91 @@ def notifier_admins_avec_permission(permission, title, message, category="info",
     for u in destinataires:
         if u.has_permission(permission):
             envoyer_notification(u, title, message, category=category, link=link)
+
+
+def envoyer_email_contact_async(app, contact_msg_id):
+    """Notifie l'équipe Pubwek par email (API Resend) qu'un nouveau message
+    de contact vient d'arriver. Best-effort : si Resend échoue, le message
+    reste de toute façon en base, consultable depuis /admin/contacts.
+    """
+    with app.app_context():
+        contact_msg = db.session.get(ContactMessage, contact_msg_id)
+        if not contact_msg:
+            return
+        try:
+            response = requests.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {current_app.config['RESEND_API_KEY']}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "from": "Pubwek <noreply@pubwek.com>",
+                    "to": ["pubwek1@gmail.com"],
+                    "reply_to": contact_msg.email,
+                    "subject": f"📬 Nouveau message de contact : {contact_msg.subject or 'Sans objet'}",
+                    "text": (
+                        f"Nom : {contact_msg.name}\n"
+                        f"Email : {contact_msg.email}\n"
+                        f"Objet : {contact_msg.subject or '(non précisé)'}\n\n"
+                        f"Message :\n{contact_msg.message}\n\n"
+                        f"— Voir dans l'admin : /admin/contacts"
+                    ),
+                },
+                timeout=10,
+            )
+            if response.status_code >= 400:
+                logger.error("Échec notification contact (Resend %s) : %s", response.status_code, response.text)
+        except Exception as e:
+            logger.error("Échec envoi notification contact : %s", e)
+
+
+
+@app.route("/contact", methods=["GET", "POST"])
+@limiter.limit("5 per hour")
+def contact():
+    if request.method == "POST":
+        name = bleach.clean(request.form.get("name", "").strip())
+        email = request.form.get("email", "").strip()
+        subject = bleach.clean(request.form.get("subject", "").strip())
+        message = bleach.clean(request.form.get("message", "").strip())
+
+        if not name or not email or not message:
+            flash("Veuillez remplir tous les champs obligatoires. ⚠️", "danger")
+            return render_template("contact.html", name=name, email=email, subject=subject, message=message)
+
+        if len(message) > 3000:
+            flash("Votre message est trop long (3000 caractères maximum). ⚠️", "warning")
+            return render_template("contact.html", name=name, email=email, subject=subject, message=message)
+
+        # Validation basique de l'email
+        if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+            flash("Veuillez saisir une adresse email valide. ⚠️", "danger")
+            return render_template("contact.html", name=name, email=email, subject=subject, message=message)
+
+        contact_msg = ContactMessage(
+            name=name[:150],
+            email=email[:120],
+            subject=subject[:200] if subject else None,
+            message=message,
+            user_id=current_user.id if current_user.is_authenticated else None,
+            ip=ip_client(),
+        )
+        db.session.add(contact_msg)
+        db.session.commit()
+
+        if current_app.config.get("RESEND_API_KEY"):
+            thread = threading.Thread(
+                target=envoyer_email_contact_async,
+                args=(current_app._get_current_object(), contact_msg.id)
+            )
+            thread.daemon = True
+            thread.start()
+
+        flash("Votre message a bien été envoyé ! Nous vous répondrons dans les plus brefs délais. ✅", "success")
+        return redirect(url_for("contact"))
+
+    return render_template("contact.html")
 
 
 

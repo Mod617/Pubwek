@@ -117,6 +117,7 @@
   <div class="pw-contact-grid">
     <div class="pw-contact-card">
       <form method="POST" action="{{ url_for('contact') }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3">
           <label for="name">Nom complet <span class="text-danger">*</span></label>
           <input type="text" class="form-control" id="name" name="name" maxlength="150"

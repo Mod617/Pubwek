@@ -234,6 +234,18 @@ class User(UserMixin, db.Model):
     contacted_by_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
     contacted_at = db.Column(db.DateTime, nullable=True)
 
+    # =========================================================================
+    # 🆕 DÉSACTIVATION DE COMPTE (suite à une demande de suppression traitée)
+    #
+    # Un compte désactivé (annonceur ou partageur) ne peut plus se connecter
+    # (voir load_user / login), mais ses données restent intactes en base
+    # (campagnes, historique, portefeuille) — rien n'est supprimé. Réactivable
+    # uniquement par un admin, jamais automatiquement.
+    # =========================================================================
+    is_disabled = db.Column(db.Boolean, default=False, nullable=False, index=True)
+    disabled_at = db.Column(db.DateTime, nullable=True)
+    disabled_by_admin_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+
     # Relations Existantes
     products = db.relationship("Product", backref="owner", lazy=True, cascade="all, delete-orphan")
     shares = db.relationship("Share", backref="sharer", lazy=True, cascade="all, delete-orphan")
@@ -244,7 +256,8 @@ class User(UserMixin, db.Model):
 
     # 🆕 Relation de parrainage (auto-référencement) — foreign_keys précisé car il existe
     # maintenant PLUSIEURS colonnes users.id -> users.id (referrer_id, created_by_admin_id,
-    # contacted_by_id), donc SQLAlchemy ne peut plus deviner seul laquelle utiliser pour cette relation.
+    # contacted_by_id, disabled_by_admin_id), donc SQLAlchemy ne peut plus deviner seul
+    # laquelle utiliser pour cette relation.
     referrals = db.relationship(
         "User",
         backref=db.backref("referrer", remote_side=[id]),
@@ -259,6 +272,51 @@ class User(UserMixin, db.Model):
         foreign_keys=[contacted_by_id],
         lazy=True
     )
+
+    # 🆕 Relation vers l'admin qui a désactivé ce compte (audit)
+    disabled_par = db.relationship(
+        "User",
+        remote_side=[id],
+        foreign_keys=[disabled_by_admin_id],
+        lazy=True
+    )
+
+    def empreinte_session(self):
+        """Empreinte courte du mot de passe actuel.
+
+        Intégrée à l'identifiant de session et aux jetons de réinitialisation :
+        elle change dès que le mot de passe change, ce qui invalide d'un coup
+        les sessions ouvertes et les liens de réinitialisation en circulation.
+        """
+        return hashlib.sha256((self.password_hash or "").encode("utf-8")).hexdigest()[:16]
+
+    def get_id(self):
+        """Identifiant stocké dans le cookie de session (Flask-Login)."""
+        return f"{self.id}|{self.empreinte_session()}"
+
+    def __repr__(self):
+        return f"<User {self.email} ({self.role})>"
+
+    # =========================================================================
+    # 🆕 MÉTHODES DE GESTION DES PERMISSIONS SOUS-ADMIN
+    # =========================================================================
+    def get_permissions_list(self):
+        """Retourne la liste des permissions de ce sous-admin sous forme de liste Python."""
+        if not self.admin_permissions:
+            return []
+        return [p.strip() for p in self.admin_permissions.split(",") if p.strip()]
+
+    def has_permission(self, permission_key):
+        """
+        Vérifie si l'utilisateur a le droit d'accéder à une section admin donnée.
+        Le super-admin (role == "admin") a TOUJOURS accès à tout, sans restriction.
+        Un sous-admin doit avoir explicitement la permission ET être actif.
+        """
+        if self.role == "admin":
+            return True
+        if self.role == "sous_admin" and self.is_active_admin:
+            return permission_key in self.get_permissions_list()
+        return False
 
     def empreinte_session(self):
         """Empreinte courte du mot de passe actuel.

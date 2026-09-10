@@ -320,8 +320,14 @@
               </a>
             </li>
 
+
           {% else %}
             <!-- Liens publics -->
+            <li class="nav-item">
+              <a class="nav-link {{ 'pw-active' if request.endpoint == 'contact' }}" href="{{ url_for('contact') }}">
+                <i class="fa-solid fa-envelope me-1"></i>Contact
+              </a>
+            </li>
             <li class="nav-item">
               <a class="nav-link {{ 'pw-active' if request.endpoint == 'login' }}" href="{{ url_for('login') }}">Connexion</a>
             </li>
@@ -332,6 +338,7 @@
               <a class="nav-link {{ 'pw-active' if request.endpoint == 'register' and request.view_args.get('role') == 'partageur' }}" href="{{ url_for('register', role='partageur') }}">Inscription Partageur</a>
             </li>
           {% endif %}
+          
         </ul>
       </div>
     </div>

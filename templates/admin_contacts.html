@@ -45,6 +45,7 @@
               <p class="mb-3" style="white-space: pre-wrap;">{{ m.message }}</p>
 
               <form method="POST" action="{{ url_for('traiter_message_contact', message_id=m.id) }}" class="d-flex gap-2 flex-wrap align-items-start">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="text" name="admin_note" class="form-control form-control-sm" style="max-width: 320px;" placeholder="Note interne (optionnelle)">
                 <button type="submit" class="btn btn-sm btn-success">
                   <i class="fa-solid fa-check me-1"></i>Marquer comme traité

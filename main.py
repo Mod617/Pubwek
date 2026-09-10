@@ -578,6 +578,30 @@ with app.app_context():
         db.session.rollback()
         logger.error("Erreur migration colonnes users (désactivation compte) : %s", e)
 
+# 🆕 Migration légère : colonnes de réponse admin sur `contact_messages`.
+# La table existait déjà (créée par une version antérieure du modèle
+# ContactMessage) avant l'ajout de admin_reply/replied_at/replied_by_admin_id :
+# db.create_all() ne modifie jamais une table déjà existante, il ne crée que
+# les tables absentes — d'où le besoin de cette migration manuelle, comme
+# pour transactions et users ci-dessus.
+with app.app_context():
+    from sqlalchemy import text
+    try:
+        db.session.execute(text(
+            "ALTER TABLE contact_messages ADD COLUMN IF NOT EXISTS admin_reply TEXT"
+        ))
+        db.session.execute(text(
+            "ALTER TABLE contact_messages ADD COLUMN IF NOT EXISTS replied_at TIMESTAMP"
+        ))
+        db.session.execute(text(
+            "ALTER TABLE contact_messages ADD COLUMN IF NOT EXISTS replied_by_admin_id INTEGER REFERENCES users(id)"
+        ))
+        db.session.commit()
+        logger.info("Migration contact_messages.admin_reply / replied_at / replied_by_admin_id vérifiée.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Erreur migration colonnes contact_messages : %s", e)
+
 with app.app_context():
     # FIX: Les deux variables sont obligatoires — aucune valeur par défaut codée en dur
     admin_email = os.environ.get("ADMIN_EMAIL")

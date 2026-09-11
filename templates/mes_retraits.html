@@ -175,6 +175,7 @@
   .pf-badge-referral{ background:#F1EBFB; color:#6B3FCB; border-color:#DDCCF6;}
   .pf-badge-withdrawal{ background:#EFEEEA; color:#5A5A52; border-color:#DFDCD1;}
   .pf-badge-refund{ background:#FDF3E2; color:#8A5A0C; border-color:#F5DFB2;}
+  .pf-badge-campaign{ background:#E9F0FE; color:#2255C7; border-color:#CFDEFB;}
 
   .pf-empty{ text-align:center; padding:3rem 1.5rem; color:var(--pf-muted); font-size:.92rem; }
   .pf-scroll{ max-height: 420px; overflow-y:auto; }
@@ -190,11 +191,12 @@
 
   <div class="pf-header">
     <div>
-      <div class="pf-eyebrow">Espace partageur</div>
+      <!-- 🆕 Libellé et lien retour adaptés au rôle réel de l'utilisateur -->
+      <div class="pf-eyebrow">{{ "Espace partageur" if current_user.role == "partageur" else "Espace annonceur" }}</div>
       <h2>Mon portefeuille &amp; retraits</h2>
       <p>Suivez votre solde, demandez un retrait et consultez votre historique.</p>
     </div>
-    <a href="{{ url_for('dashboard_partageur') }}" class="pf-btn-back">
+    <a href="{{ url_for('dashboard_partageur' if current_user.role == 'partageur' else 'dashboard_annonceur') }}" class="pf-btn-back">
       <i class="bi bi-arrow-left me-1"></i>Retour au tableau de bord
     </a>
   </div>
@@ -237,7 +239,14 @@
       {% elif solde_actuel < minimum_retrait %}
         <div class="pf-alert pf-alert-warning">
           <i class="bi bi-exclamation-triangle"></i>
-          <div>Votre solde ({{ "{:,.0f}".format(solde_actuel) }} FCFA) est inférieur au minimum de retrait requis ({{ "{:,.0f}".format(minimum_retrait) }} FCFA). Continuez à partager des campagnes pour augmenter votre solde !</div>
+          <div>
+            Votre solde ({{ "{:,.0f}".format(solde_actuel) }} FCFA) est inférieur au minimum de retrait requis ({{ "{:,.0f}".format(minimum_retrait) }} FCFA).
+            {% if current_user.role == "partageur" %}
+              Continuez à partager des campagnes pour augmenter votre solde !
+            {% else %}
+              Ce solde augmente lorsqu'un remboursement de campagne vous est crédité.
+            {% endif %}
+          </div>
         </div>
       {% else %}
         <form action="{{ url_for('demander_retrait') }}" method="POST" class="pf-form">
@@ -324,7 +333,8 @@
   </div>
 
   <!-- Historique des mouvements du portefeuille -->
-  <div class="pf-section-title"><i class="bi bi-journal-text"></i>Détail de mes gains (clics &amp; parrainage)</div>
+  <!-- 🆕 Titre générique : "clics & parrainage" ne concernait que les partageurs -->
+  <div class="pf-section-title"><i class="bi bi-journal-text"></i>Détail des mouvements de mon portefeuille</div>
   <div class="pf-card mb-0">
     <div class="pf-card-body p-0">
       {% if mouvements %}
@@ -350,7 +360,13 @@
                 {% elif m.transaction_type == "withdrawal" %}
                   <span class="pf-badge pf-badge-withdrawal"><i class="bi bi-cash-coin"></i> Retrait</span>
                 {% elif m.transaction_type == "withdrawal_refund" %}
-                  <span class="pf-badge pf-badge-refund"><i class="bi bi-arrow-counterclockwise"></i> Remboursement</span>
+                  <span class="pf-badge pf-badge-refund"><i class="bi bi-arrow-counterclockwise"></i> Retrait recrédité</span>
+                {% elif m.transaction_type == "refund_credit" %}
+                  <!-- 🆕 Crédit de remboursement d'une campagne annonceur (voir traiter_remboursement) -->
+                  <span class="pf-badge pf-badge-refund"><i class="bi bi-piggy-bank"></i> Remboursement campagne</span>
+                {% elif m.transaction_type == "campaign_payment" %}
+                  <!-- 🆕 Débit du portefeuille pour payer une campagne (voir confirmer_paiement_wallet) -->
+                  <span class="pf-badge pf-badge-campaign"><i class="bi bi-megaphone"></i> Paiement campagne</span>
                 {% else %}
                   <span class="pf-badge pf-badge-withdrawal">{{ m.transaction_type }}</span>
                 {% endif %}

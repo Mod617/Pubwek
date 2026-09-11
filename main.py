@@ -5893,11 +5893,19 @@ def refuser_retrait(withdrawal_id):
 # ==========================================
 # 🆕 ROUTE : MES RETRAITS (ESPACE PARTAGEUR)
 # ==========================================
+# ==========================================
+# 🆕 ROUTE : MES RETRAITS (PARTAGEUR OU ANNONCEUR)
+# ==========================================
 @app.route("/partageur/mes-retraits")
 @login_required
 def mes_retraits():
-    if current_user.role != "partageur":
-        flash("Accès réservé aux partageurs. 🚫", "danger")
+    # 🆕 Ouvert aux partageurs (gains de clics/parrainage) ET aux annonceurs
+    # (crédits de remboursement) : les deux partagent le même portefeuille
+    # (User.wallet_balance) et le même circuit de retrait — voir demander_retrait().
+    # Avant ce correctif, un annonceur cliquant sur la notification "Retrait
+    # effectué" (qui pointe vers cette route) se heurtait à un refus d'accès.
+    if current_user.role not in ("partageur", "annonceur"):
+        flash("Accès réservé aux partageurs et annonceurs. 🚫", "danger")
         return redirect(url_for("index"))
 
     from models import WithdrawalRequest, WalletTransaction, SystemConfig
@@ -5929,7 +5937,7 @@ def mes_retraits():
         total_retire=total_retire,
         solde_actuel=current_user.wallet_balance or 0.0,
         minimum_retrait=config.minimum_withdrawal_amount
-    )  
+    ) 
 
 
 # ==========================================

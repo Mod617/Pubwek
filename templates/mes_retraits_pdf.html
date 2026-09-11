@@ -200,7 +200,8 @@
 
     <div class="header">
         <div class="brand">
-            <div class="eyebrow">Espace partageur</div>
+            <!-- 🆕 Libellé adapté au rôle réel de l'utilisateur -->
+            <div class="eyebrow">{{ "Espace partageur" if user.role == "partageur" else "Espace annonceur" }}</div>
             <h1>Pubwek</h1>
             <div class="tagline">Fiche de retraits &amp; mouvements de portefeuille</div>
         </div>
@@ -213,8 +214,9 @@
     <div class="info-block">
         <table>
             <tr>
-                <td class="label">Partageur :</td>
-                <td class="value">{{ user.pseudo or "Sans pseudo" }}</td>
+                <!-- 🆕 Libellé adapté au rôle réel de l'utilisateur -->
+                <td class="label">{{ "Partageur :" if user.role == "partageur" else "Annonceur :" }}</td>
+                <td class="value">{{ user.pseudo or user.company_name or "Sans pseudo" }}</td>
             </tr>
             <tr>
                 <td class="label">Email :</td>
@@ -289,7 +291,9 @@
                     {% if m.transaction_type == "click_reward" %}Clic
                     {% elif m.transaction_type == "referral_reward" %}Parrainage
                     {% elif m.transaction_type == "withdrawal" %}Retrait
-                    {% elif m.transaction_type == "withdrawal_refund" %}Remboursement
+                    {% elif m.transaction_type == "withdrawal_refund" %}Retrait recrédité
+                    {% elif m.transaction_type == "refund_credit" %}Remboursement campagne
+                    {% elif m.transaction_type == "campaign_payment" %}Paiement campagne
                     {% else %}{{ m.transaction_type }}{% endif %}
                 </td>
                 <td class="amount-cell {{ 'amount-pos' if m.amount > 0 else 'amount-neg' }}">{{ "+" if m.amount > 0 else "" }}{{ "{:,.0f}".format(m.amount) }} FCFA</td>

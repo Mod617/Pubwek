@@ -2249,14 +2249,14 @@ def creer_certification(doc_type, user, montant_reference, nb_lignes):
 # ==========================================
 # 🆕 ROUTE : EXPORT PDF — MES RETRAITS (PARTAGEUR)
 # ==========================================
-# ==========================================
-# 🆕 ROUTE : EXPORT PDF — MES RETRAITS (PARTAGEUR)
-# ==========================================
 @app.route("/partageur/mes-retraits/pdf")
 @login_required
 def mes_retraits_pdf():
-    if current_user.role != "partageur":
-        flash("Accès réservé aux partageurs. 🚫", "danger")
+    # 🆕 Ouvert aux partageurs ET aux annonceurs, même raison que mes_retraits() :
+    # les deux partagent le même portefeuille (wallet_balance) et le même
+    # circuit de retrait (WithdrawalRequest / WalletTransaction).
+    if current_user.role not in ("partageur", "annonceur"):
+        flash("Accès réservé aux partageurs et annonceurs. 🚫", "danger")
         return redirect(url_for("index"))
 
     from models import WithdrawalRequest, WalletTransaction
@@ -2297,9 +2297,7 @@ def mes_retraits_pdf():
         return redirect(url_for("mes_retraits"))
 
 
-# ==========================================
-# 🆕 ROUTE : EXPORT PDF — MES TRANSACTIONS (ANNONCEUR)
-# ==========================================
+
 # ==========================================
 # 🆕 ROUTE : EXPORT PDF — MES TRANSACTIONS (ANNONCEUR)
 # ==========================================

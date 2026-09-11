@@ -264,6 +264,34 @@
     background: var(--ink) !important;
     color: #fff !important;
   }
+
+  /* ---------- 🆕 Zone de danger (suppression de compte) ---------- */
+  .partageur-wrap .danger-zone-card {
+    border: 1px solid var(--clay-tint) !important;
+    border-top: 3px solid var(--clay) !important;
+    border-radius: 16px !important;
+    background: var(--paper-raised);
+  }
+  .partageur-wrap .danger-zone-card h5 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    color: var(--clay);
+  }
+  .partageur-wrap .danger-zone-card p.text-muted {
+    color: var(--ink-soft) !important;
+    font-size: 0.9rem;
+  }
+  .partageur-wrap .btn-danger-zone {
+    border-radius: 999px !important;
+    background: var(--clay-tint) !important;
+    color: var(--clay) !important;
+    border: 1px solid #eac6bf !important;
+    font-weight: 700;
+  }
+  .partageur-wrap .btn-danger-zone:hover {
+    background: var(--clay) !important;
+    color: #fff !important;
+  }
 </style>
 
 <div class="partageur-wrap">
@@ -502,6 +530,52 @@
                         <i class="bi bi-wallet2 me-2"></i>Consulter mon portefeuille
                     </a>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 🆕 ZONE DE DANGER — DEMANDE DE SUPPRESSION DE COMPTE -->
+    <!-- ========================================== -->
+    <div class="card p-4 shadow-sm mt-4 danger-zone-card">
+        <h5 class="mb-2"><i class="bi bi-exclamation-triangle me-2"></i>Zone de danger</h5>
+        <p class="text-muted mb-3">
+            Vous pouvez demander la suppression de votre compte Pubwek. Votre demande sera examinée par
+            l'administration ; votre compte restera actif jusqu'à ce qu'elle soit traitée. Aucune donnée
+            n'est perdue dans l'immédiat.
+        </p>
+        <button type="button" class="btn btn-danger-zone" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+            🗑️ Demander la suppression de mon compte
+        </button>
+    </div>
+
+    <!-- MODAL : Demande de suppression de compte -->
+    <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form action="{{ url_for('demander_suppression_compte') }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title fw-bold">🗑️ Demander la suppression de mon compte</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="small text-muted mb-3">
+                            Merci de nous indiquer pourquoi vous souhaitez quitter Pubwek. Votre demande sera
+                            examinée par l'administration, qui désactivera votre compte si elle l'approuve.
+                            Vous serez notifié(e) de sa décision.
+                        </p>
+                        <div class="mb-2">
+                            <label class="form-label fw-bold small">Motif de votre demande <span class="text-danger">*</span></label>
+                            <textarea name="reason" class="form-control" rows="4" maxlength="1000" required
+                                      placeholder="Ex: Je n'utilise plus la plateforme, je n'ai plus le temps..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-danger fw-bold">Envoyer ma demande</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

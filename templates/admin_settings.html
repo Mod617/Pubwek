@@ -159,6 +159,22 @@
     color: #fff;
   }
 
+  /* 🆕 Note explicative "montant de base" pour l'option B */
+  .base-rate-note {
+    display: inline-block;
+    background: #eef7f0;
+    color: #1e7a3f;
+    border: 1px solid #cfe9d6;
+    border-radius: 6px;
+    padding: 2px 7px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
   @media (max-width: 768px) {
     .page-header {
       padding: 1.5rem;
@@ -206,7 +222,7 @@
             <div class="card stat-card">
                 <div class="card-body p-3">
                     <small class="fw-semibold d-block text-truncate">Image (Opt. B)</small>
-                    <h4 class="fw-bold text-dark mt-1 mb-0">{{ config.cost_per_click_photo }} <span class="fs-6 text-secondary">FCFA / clic</span></h4>
+                    <h4 class="fw-bold text-dark mt-1 mb-0">{{ config.cost_per_click_photo }} <span class="fs-6 text-secondary">FCFA / clic / photo</span></h4>
                 </div>
             </div>
         </div>
@@ -271,13 +287,20 @@
 
                         <!-- OPTION B : IMAGE -->
                         <div class="mb-3">
-                            <label for="cost_per_click_photo" class="form-label">Option B : Uploader des Images (FCFA)</label>
+                            <label for="cost_per_click_photo" class="form-label">
+                                Option B : Uploader des Images (FCFA)
+                                <span class="base-rate-note">Montant par photo</span>
+                            </label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-image"></i></span>
                                 <input type="number" step="0.01" min="0" class="form-control" id="cost_per_click_photo" name="cost_per_click_photo" value="{{ config.cost_per_click_photo }}" required>
-                                <span class="input-group-text">FCFA / clic</span>
+                                <span class="input-group-text">FCFA / clic / photo</span>
                             </div>
-                            <div class="form-text small">Tarif facturé pour la diffusion d'affiches ou d'images fournies par l'annonceur.</div>
+                            <div class="form-text small">
+                                Tarif de BASE, facturé par photo. Une campagne à 5 photos coûte donc
+                                5 × ce montant par clic — l'annonceur doit publier autant de statuts
+                                séparés qu'il a de photos, d'où ce calcul automatique.
+                            </div>
                         </div>
 
                         <!-- OPTION C : TEXTE SIMPLE -->
@@ -307,13 +330,21 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="reward_per_click_photo" class="form-label">Option B : Image (FCFA)</label>
+                            <label for="reward_per_click_photo" class="form-label">
+                                Option B : Image (FCFA)
+                                <span class="base-rate-note">Montant par photo</span>
+                            </label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-image"></i></span>
                                 <input type="number" step="0.01" min="0" class="form-control" id="reward_per_click_photo" name="reward_per_click_photo" value="{{ config.reward_per_click_photo }}" required>
-                                <span class="input-group-text">FCFA / clic</span>
+                                <span class="input-group-text">FCFA / clic / photo</span>
                             </div>
-                            <div class="form-text small">Montant crédité sur le portefeuille du partageur pour chaque clic généré sur une campagne image.</div>
+                            <div class="form-text small">
+                                Tarif de BASE, versé par photo — même logique que le tarif facturé à
+                                l'annonceur ci-contre. Un partageur qui diffuse une campagne à 5 photos
+                                (donc 5 statuts à publier) touche automatiquement 5 × ce montant par
+                                clic, jamais un montant fixe indépendant du nombre de statuts.
+                            </div>
                         </div>
 
                         <div class="mb-3">

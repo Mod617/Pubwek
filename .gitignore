@@ -11,3 +11,6 @@ __pycache__/
 # mais recreee des qu'on lance l'application ou les tests en local.
 instance/
 *.db
+
+# Environnement virtuel de test local (Python 3.14)
+.venv-test/

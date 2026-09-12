@@ -156,7 +156,9 @@ def test_numeros_whatsapp():
     """F-07 : les numéros béninois actuels doivent être acceptés."""
     print("\n[F-07] Numéros WhatsApp")
     verifier("format actuel à 10 chiffres accepté", numero_whatsapp_valide("+2290197000000"))
-    verifier("ancien format à 8 chiffres accepté", numero_whatsapp_valide("+22997000000"))
+    # Depuis le passage du Bénin à la numérotation à 10 chiffres, un numéro
+    # sans le préfixe 01 (ancien format à 8 chiffres) n'est plus valide.
+    verifier("ancien format sans préfixe 01 refusé", not numero_whatsapp_valide("+22997000000"))
     verifier("numéro étranger refusé", not numero_whatsapp_valide("+33612345678"))
     verifier("valeur vide refusée", not numero_whatsapp_valide(""))
     verifier("texte arbitraire refusé", not numero_whatsapp_valide("+229abcdefgh"))
@@ -352,19 +354,32 @@ def test_antifraude_clics():
         db.session.commit()
 
         # --- Quota journalier atteint ---
-        camp.views_today = camp.views_per_day
+        # Le quota effectif du jour est calculé dynamiquement :
+        # objectif restant ÷ jours de diffusion restants (voir
+        # Campaign.quota_effectif_du_jour). On configure la campagne pour que
+        # ce quota vaille 2, puis on porte views_today à cette valeur.
+        camp.duration_days = 1
+        camp.target_whatsapp_views = 2
+        camp.whatsapp_views = 0
+        camp.views_today = camp.quota_effectif_du_jour()
         db.session.commit()
         ok, motif = evaluer("41.85.10.50")
         verifier("quota du jour atteint : aucun clic payé",
                  not ok and motif == main.MOTIF_QUOTA_JOUR, f"({motif})")
         camp.views_today = 0
+        camp.target_whatsapp_views = 1000
         db.session.commit()
 
-        # --- Le portefeuille est bien crédité, et une seule fois ---
+        # --- Versement DIFFÉRÉ jusqu'à validation de la preuve du jour ---
+        # Quand exiger_preuve_partage est actif (défaut), un clic valide est
+        # marqué payable (is_paid=True) mais le portefeuille n'est crédité
+        # qu'après validation, par un admin, de la preuve de fin de journée —
+        # c'est crediter_clics_du_jour() qui verse alors la récompense.
         CampaignClick.query.filter_by(campaign_share_id=share.id).delete()
         partageur.wallet_balance = 0.0
         partageur.last_seen_ip = "10.0.0.99"
         camp.whatsapp_views = 0
+        config.exiger_preuve_partage = True
         db.session.commit()
 
         with app.test_request_context(
@@ -373,22 +388,47 @@ def test_antifraude_clics():
         ):
             main.enregistrer_clic(share, camp, "whatsapp")
         db.session.refresh(partageur)
-        solde_apres_un_clic = partageur.wallet_balance
-        verifier("un clic valide crédite le portefeuille",
-                 solde_apres_un_clic == config.reward_per_click_photo,
-                 f"(solde={solde_apres_un_clic})")
+        verifier("preuve requise : un clic valide ne crédite pas tout de suite",
+                 partageur.wallet_balance == 0.0,
+                 f"(solde={partageur.wallet_balance})")
 
+        jour = camp.jour_diffusion_campagne()
+        en_attente = CampaignClick.query.filter_by(
+            campaign_share_id=share.id, is_paid=True, rewarded_at=None
+        ).count()
+        verifier("le clic valide est enregistré comme payable en attente",
+                 en_attente == 1, f"(payables={en_attente})")
+
+        # Second clic, même IP, même jour : dédupliqué, donc pas de payable en plus.
         with app.test_request_context(
             "/", environ_base={"REMOTE_ADDR": "41.85.55.1",
                                "HTTP_USER_AGENT": NAVIGATEUR}
         ):
             main.enregistrer_clic(share, camp, "whatsapp")
-        db.session.refresh(partageur)
-        verifier("un second clic de la même IP ne crédite rien",
-                 partageur.wallet_balance == solde_apres_un_clic,
-                 f"(solde={partageur.wallet_balance})")
+        payables = CampaignClick.query.filter_by(
+            campaign_share_id=share.id, is_paid=True
+        ).count()
+        verifier("un second clic de la même IP n'ajoute pas de payable",
+                 payables == 1, f"(payables={payables})")
 
-        # Les deux clics sont tracés, un seul est marqué payé
+        # Validation de la preuve du jour → le portefeuille est crédité, une fois.
+        attendu = main.recompense_pour(camp, config)
+        nb, montant = main.crediter_clics_du_jour(share, jour)
+        db.session.commit()
+        db.session.refresh(partageur)
+        verifier("preuve validée : le portefeuille est crédité une fois",
+                 nb == 1 and partageur.wallet_balance == attendu,
+                 f"(nb={nb}, solde={partageur.wallet_balance}, attendu={attendu})")
+
+        # Rappeler la fonction ne reverse pas un clic déjà rémunéré.
+        nb2, _ = main.crediter_clics_du_jour(share, jour)
+        db.session.commit()
+        db.session.refresh(partageur)
+        verifier("un clic déjà crédité n'est pas repayé",
+                 nb2 == 0 and partageur.wallet_balance == attendu,
+                 f"(nb2={nb2}, solde={partageur.wallet_balance})")
+
+        # Les deux clics sont tracés, un seul est marqué payé.
         total = CampaignClick.query.filter_by(campaign_share_id=share.id).count()
         payes = CampaignClick.query.filter_by(
             campaign_share_id=share.id, is_paid=True

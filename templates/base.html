@@ -306,7 +306,7 @@
 
             <!-- Accès Admin -->
             
-            {% if current_user.role == "admin" %}
+            {% if current_user.role in ("admin", "sous_admin") %}
               <li class="nav-item">
                 <a class="nav-link pw-admin-link fw-bold {{ 'pw-active' if request.endpoint == 'admin_validate' }}" href="{{ url_for('admin_validate') }}">
                   <i class="fa-solid fa-gear me-1"></i>Panneau Admin

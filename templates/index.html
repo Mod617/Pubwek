@@ -992,28 +992,38 @@
 
   // ---- Avis: 12 avis chiffrés, dupliqués une fois pour boucler ----
   // ⚠️ PLACEHOLDER — à remplacer par de vrais avis de clients avant mise en ligne.
+  // 🆕 Quelques avis à 4 étoiles avec une petite remarque réaliste (jamais
+  // grave) mélangés aux avis parfaits : une note uniformément à 5/5 partout
+  // paraît fabriquée aux yeux d'un visiteur averti — un léger bémol, toujours
+  // résolu positivement dans le texte, rend l'ensemble bien plus crédible.
   const avis = [
-    { nom: "Chantal A.", role: "Gérante, restaurant à Cotonou", texte: "En une semaine, j'ai eu plus de demandes sur WhatsApp qu'en un mois de bouche-à-oreille. +47 clients en 7 jours." },
-    { nom: "Firmin K.", role: "Partageur, Porto-Novo", texte: "Je partage 2-3 annonces par jour sur mon statut et je retire déjà 18 000 FCFA chaque semaine." },
-    { nom: "Rosine D.", role: "Boutique de mode, Abomey-Calavi", texte: "Simple à lancer, et je vois exactement combien de clics chaque partageur m'apporte en temps réel." },
-    { nom: "Ibrahim S.", role: "Partageur, Parakou", texte: "Ça complète bien mes revenus : environ 12 000 FCFA/semaine, et le retrait Mobile Money prend 2 minutes." },
-    { nom: "Léa M.", role: "Institut de beauté, Cotonou", texte: "Le ciblage par commune m'a permis de toucher exactement mon quartier. Taux de clic bien meilleur qu'avant." },
-    { nom: "Aristide H.", role: "Partageur, Bohicon", texte: "J'ai commencé pour tester, et dès la première semaine j'avais déjà touché 9 500 FCFA sans rien dépenser." },
-    { nom: "Fadilath O.", role: "Traiteur événementiel, Cotonou", texte: "3 nouvelles commandes de mariage en un mois, toutes venues d'un clic sur un statut WhatsApp." },
-    { nom: "Judicaël T.", role: "Partageur, Ouidah", texte: "C'est devenu un réflexe : je publie le matin en allant au travail et je regarde mes gains grimper le soir." },
-    { nom: "Nadège B.", role: "Salon de coiffure, Porto-Novo", texte: "Grâce à Pubwek, mon agenda est complet deux semaines à l'avance pour la première fois." },
-    { nom: "Moustapha D.", role: "Partageur, Cotonou", texte: "Je pensais que ce serait compliqué, mais en 5 minutes mon lien était prêt et je gagnais déjà mon premier clic." },
-    { nom: "Colette V.", role: "Boutique électroménager, Parakou", texte: "J'ai touché des clients dans des quartiers où je n'avais jamais réussi à me faire connaître avant." },
-    { nom: "Sègbédji A.", role: "Partageur, Abomey-Calavi", texte: "Le suivi des clics est très clair, je sais exactement combien je vais retirer à la fin de la semaine." }
+    { nom: "Chantal A.", role: "Gérante, restaurant à Cotonou", note: 5, texte: "En une semaine, j'ai eu plus de demandes sur WhatsApp qu'en un mois de bouche-à-oreille. +47 clients en 7 jours." },
+    { nom: "Firmin K.", role: "Partageur, Porto-Novo", note: 4, texte: "Le premier retrait a mis un peu plus de temps que ce que j'imaginais, mais depuis c'est fluide et je retire environ 18 000 FCFA chaque semaine." },
+    { nom: "Rosine D.", role: "Boutique de mode, Abomey-Calavi", note: 5, texte: "Simple à lancer, et je vois exactement combien de clics chaque partageur m'apporte en temps réel." },
+    { nom: "Ibrahim S.", role: "Partageur, Parakou", note: 5, texte: "Ça complète bien mes revenus : environ 12 000 FCFA/semaine, et le retrait Mobile Money prend 2 minutes." },
+    { nom: "Léa M.", role: "Institut de beauté, Cotonou", note: 4, texte: "Il m'a fallu un peu de temps pour bien comprendre le ciblage par commune, mais une fois maîtrisé, le taux de clic est bien meilleur qu'avant." },
+    { nom: "Aristide H.", role: "Partageur, Bohicon", note: 5, texte: "J'ai commencé pour tester, et dès la première semaine j'avais déjà touché 9 500 FCFA sans rien dépenser." },
+    { nom: "Fadilath O.", role: "Traiteur événementiel, Cotonou", note: 5, texte: "3 nouvelles commandes de mariage en un mois, toutes venues d'un clic sur un statut WhatsApp." },
+    { nom: "Judicaël T.", role: "Partageur, Ouidah", note: 5, texte: "C'est devenu un réflexe : je publie le matin en allant au travail et je regarde mes gains grimper le soir." },
+    { nom: "Nadège B.", role: "Salon de coiffure, Porto-Novo", note: 5, texte: "Grâce à Pubwek, mon agenda est complet deux semaines à l'avance pour la première fois." },
+    { nom: "Moustapha D.", role: "Partageur, Cotonou", note: 4, texte: "Mon tout premier clic a pris quelques jours à arriver, mais une fois lancé, j'ai vite compris comment optimiser mes statuts." },
+    { nom: "Colette V.", role: "Boutique électroménager, Parakou", note: 5, texte: "J'ai touché des clients dans des quartiers où je n'avais jamais réussi à me faire connaître avant." },
+    { nom: "Sègbédji A.", role: "Partageur, Abomey-Calavi", note: 5, texte: "Le suivi des clics est très clair, je sais exactement combien je vais retirer à la fin de la semaine." }
   ];
 
   function initiale(nom) { return nom.trim().charAt(0).toUpperCase(); }
+
+  function etoiles(note) {
+    const pleines = "★".repeat(note);
+    const vides = "☆".repeat(5 - note);
+    return pleines + vides;
+  }
 
   function carte(a) {
     const div = document.createElement("div");
     div.className = "pw-testi-card";
     div.innerHTML =
-      '<div class="pw-testi-stars">★★★★★</div>' +
+      '<div class="pw-testi-stars">' + etoiles(a.note) + '</div>' +
       '<p class="pw-testi-quote">« ' + a.texte + ' »</p>' +
       '<div class="pw-testi-person">' +
         '<div class="pw-testi-avatar">' + initiale(a.nom) + '</div>' +

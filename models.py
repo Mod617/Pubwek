@@ -1308,6 +1308,51 @@ class SystemConfig(db.Model):
     # bascule dans app.py.
     # =========================================================================
     exiger_preuve_partage = db.Column(db.Boolean, default=True, nullable=False)
+        exiger_preuve_partage = db.Column(db.Boolean, default=True, nullable=False)
+
+    # =========================================================================
+    # 🆕 EXIGENCE DE VALIDATION ADMIN À L'INSCRIPTION (partageurs)
+    #
+    # True (défaut) : chaque partageur reste en attente (is_confirmed=False)
+    # après son inscription, jusqu'à validation manuelle par un admin — c'est
+    # le comportement actuel, inchangé.
+    #
+    # False : le compte partageur est confirmé et connecté automatiquement à
+    # l'inscription, sans passer par la file d'attente admin. Ne s'applique
+    # qu'AUX NOUVELLES inscriptions à partir du basculement — les comptes déjà
+    # en attente à ce moment-là restent en attente, à traiter manuellement.
+    # Réservé au VRAI super-admin uniquement (jamais un sous-admin) — voir la
+    # route de bascule dans app.py.
+    # =========================================================================
+    exiger_validation_partageur = db.Column(db.Boolean, default=True, nullable=False)
+
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    @classmethod
+    def get_config(cls):
+        """Récupère la configuration actuelle ou en crée une par défaut si vide."""
+        config = cls.query.first()
+        if not config:
+            config = cls(
+                cost_per_click_video=3.0,
+                cost_per_click_photo=1.0,
+                cost_per_click_text=1.0,
+                reward_per_click_video=1.0,
+                reward_per_click_photo=0.4,
+                reward_per_click_text=0.3,
+                commission_rate=10.0,
+                referral_reward_rate=3.0,
+                minimum_withdrawal_amount=500.0,
+                click_dedup_hours=24,
+                max_paid_clicks_per_share_per_day=50,
+                max_paid_clicks_per_ip_per_day=20,
+                min_seconds_between_paid_clicks=20,
+                exiger_preuve_partage=True,
+                exiger_validation_partageur=True,
+            )
+            db.session.add(config)
+            db.session.commit()
+        return config
 
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

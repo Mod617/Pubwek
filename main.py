@@ -2907,13 +2907,80 @@ def register(role):
             session.pop("referrer_id", None)
 
             logger.info("Nouvel utilisateur inscrit (role: %s, parrainé_par: %s).", role, referrer_id_to_save)
-            
+
+            # =================================================================
+            # 🆕 Tarifs lus depuis SystemConfig au moment de l'inscription,
+            # jamais codés en dur : si l'admin change les tarifs plus tard
+            # dans /admin/settings, les prochaines notifications de bienvenue
+            # refléteront automatiquement les nouveaux montants.
+            # =================================================================
+            config = SystemConfig.get_config()
+
             if role == "partageur":
+                # =============================================================
+                # 🆕 Notification de bienvenue explicative — répond à l'avance
+                # aux questions les plus fréquentes des partageurs (rémunération,
+                # audience, paiement), pour réduire les allers-retours manuels
+                # avec l'administration une fois le compte confirmé.
+                # =============================================================
+                envoyer_notification(
+                    new_user,
+                    "Bienvenue sur Pubwek 👋",
+                    (
+                        "Votre inscription est enregistrée et en attente de validation par l'administration. "
+                        "Une fois votre compte confirmé, voici comment ça marche :\n\n"
+                        "• Vous n'avez jamais rien à payer. C'est l'annonceur qui paie sa campagne.\n"
+                        "• Vous publiez le statut WhatsApp fourni par Pubwek sur votre propre compte : "
+                        "ce sont vos contacts qui le voient et cliquent, vous n'avez pas besoin d'audience particulière.\n"
+                        f"• Chaque clic vous rapporte de l'argent : {config.reward_per_click_video:.0f} FCFA par clic pour une vidéo, "
+                        f"{config.reward_per_click_photo:.0f} FCFA par photo chargée par l'annonceur (donc {config.reward_per_click_photo * 25:.0f} FCFA "
+                        f"par clic si l'annonceur a mis 25 photos, par exemple), "
+                        f"et {config.reward_per_click_text:.0f} FCFA par clic pour un texte seul.\n"
+                        f"• Vos gains s'accumulent dans votre portefeuille Pubwek, retirable dès {config.minimum_withdrawal_amount:.0f} FCFA "
+                        "(Mobile Money, Moov Money, Celtiis Cash ou Wave)."
+                    ),
+                    category="info",
+                    link=url_for("login"),
+                )
+                db.session.commit()
+
                 flash(f"Merci {pseudo} 🙏 Votre demande est enregistrée et en attente de validation.", "info")
                 return redirect(url_for("index"))
             else:
-                flash("Compte annonceur créé avec succès 🎉", "success")
-                return redirect(url_for("login"))
+                # =============================================================
+                # 🆕 Connexion automatique de l'annonceur juste après son
+                # inscription : il n'a pas à ressaisir son email/mot de passe
+                # sur la page de connexion, il arrive directement sur son
+                # tableau de bord. Un compte annonceur est is_confirmed=True
+                # dès la création, donc rien ne bloque cet accès immédiat.
+                # =============================================================
+                login_user(new_user)
+
+                # 🆕 Notification de bienvenue explicative, même logique que
+                # pour le partageur — répond à l'avance aux questions
+                # fréquentes côté annonceur (coût, fonctionnement, ciblage).
+                envoyer_notification(
+                    new_user,
+                    "Bienvenue sur Pubwek 👋",
+                    (
+                        "Votre compte annonceur est créé et actif. Voici comment lancer votre première campagne :\n\n"
+                        "• Choisissez votre format : vidéo (30 secondes max), plusieurs photos, ou texte seul.\n"
+                        "• Définissez votre zone de diffusion (département ou commune précise) et votre objectif de clics.\n"
+                        f"• Le coût par clic dépend du format choisi : {config.cost_per_click_video:.0f} FCFA pour une vidéo, "
+                        f"{config.cost_per_click_photo:.0f} FCFA par photo chargée (multiplié par le nombre de photos), "
+                        f"et {config.cost_per_click_text:.0f} FCFA pour un texte seul — une commission de {config.commission_rate:.0f}% s'y ajoute.\n"
+                        "• Une fois votre campagne créée, procédez au paiement : elle sera ensuite transmise à "
+                        "l'administration pour validation avant d'être diffusée par nos partageurs.\n"
+                        "• Vous pouvez suivre vos statistiques de clics et de partageurs à tout moment depuis "
+                        "\"Mes campagnes\"."
+                    ),
+                    category="info",
+                    link=url_for("dashboard_annonceur"),
+                )
+                db.session.commit()
+
+                flash(f"Bienvenue {pseudo} ! Votre compte annonceur a été créé avec succès 🎉", "success")
+                return redirect(url_for("dashboard_annonceur"))
         except Exception as e:
             db.session.rollback()
             flash("Une erreur est survenue lors de l'enregistrement. ⚠️", "danger")

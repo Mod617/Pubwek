@@ -9,7 +9,7 @@
 # Railway, il est installé via nixpacks.toml (voir ce fichier à la racine).
 # =============================================================================
 # --- Cœur Flask --------------------------------------------------------------
-Flask==2.3.3
+Flask==3.1.3
 Flask-SQLAlchemy==3.1.1
 Flask-Login==0.6.3
 Flask-WTF==1.2.1
@@ -18,12 +18,12 @@ Flask-Limiter==3.5.0
 Flask-Talisman==1.1.0
 email-validator==2.1.0.post1
 # --- Configuration -----------------------------------------------------------
-python-dotenv==1.0.1
+python-dotenv==1.2.2
 # --- Serveur et base de données de production --------------------------------
-gunicorn==21.2.0
+gunicorn==23.0.0
 psycopg2-binary==2.9.12
 # --- Appels HTTP (FedaPay) ---------------------------------------------------
-requests==2.31.0
+requests==2.33.1
 # --- Sécurité : nettoyage des saisies utilisateur ---------------------------
 bleach==6.4.0
 # --- Stockage des compteurs de limitation de débit ---------------------------
@@ -32,6 +32,10 @@ bleach==6.4.0
 # plusieurs workers gunicorn.
 redis==5.0.8
 # --- Export PDF (relevés de transactions et de retraits) --------------------
+# Alerte Dependabot GHSA-jj5c-hhrg-vv5h (DoS via chaîne forgée) : AUCUN
+# correctif publié en amont à ce jour. Le risque est limité — le HTML rendu en
+# PDF provient de nos propres gabarits (relevés), pas d'une saisie arbitraire
+# de l'utilisateur. À surveiller et remonter dès qu'une version corrigée sort.
 xhtml2pdf==0.2.16
 # --- Cachet électronique : génération des QR codes de vérification ----------
 # Utilisé par generer_qr_code_base64() pour produire le QR imprimé sur chaque
@@ -45,7 +49,7 @@ pywebpush==2.0.0
 # --- Traitement des images ---------------------------------------------------
 # Sert à valider réellement le contenu des images téléversées (PIL.Image.open),
 # pas seulement leur extension.
-Pillow==11.1.0
+Pillow==12.3.0
 # Retirés avec la génération vidéo (Creatomate / diaporama) :
 #   moviepy, numpy  — montage du diaporama
 #   celery          — file d'attente du rendu

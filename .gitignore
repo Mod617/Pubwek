@@ -14,3 +14,4 @@ instance/
 
 # Environnement virtuel de test local (Python 3.14)
 .venv-test/
+.venv-verify/

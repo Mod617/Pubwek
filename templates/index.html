@@ -286,7 +286,9 @@
     position: relative;
     display: flex;
     align-items: flex-end;
-    transition: background .4s ease;
+    background-size: cover;
+    background-position: center;
+    transition: background-image .4s ease;
     overflow: hidden;
   }
   .pw-status-visual::before {
@@ -705,7 +707,7 @@
         </div>
 
         <div class="pw-status-visual" id="pwStatusVisual">
-          <div class="pw-status-emoji" id="pwStatusEmoji">🍲</div>
+          <div class="pw-status-emoji" id="pwStatusEmoji"></div>
           <div class="pw-status-body">
             <div class="pw-status-text" id="pwStatusText">
               Nouveau menu disponible dès aujourd'hui, livraison rapide sur tout Cotonou !
@@ -889,38 +891,38 @@
   // ---- Phone hero : 6 exemples avec des accroches pensées pour retenir l'attention ----
   const exemples = [
     {
-      nom: "Le Bon Goût — Cotonou", avatar: "🍲", emoji: "🍲",
-      gradient: "linear-gradient(160deg, #7a3b23 0%, #b8642f 55%, #d98c3f 100%)",
+      nom: "Wheke Food — Cotonou", avatar: "🍗",
+      image: "{{ url_for('static', filename='images/wheke-food.jpg') }}",
       vues: "1 284", clics: "+32",
       texte: "🔥 Aujourd'hui seulement : nouveau menu + livraison offerte dès 5 000 FCFA !"
     },
     {
-      nom: "Adjara Mode — Porto-Novo", avatar: "👗", emoji: "👗",
-      gradient: "linear-gradient(160deg, #5a2340 0%, #93315c 55%, #c14f7c 100%)",
+      nom: "Adjara Mode — Porto-Novo", avatar: "👗",
+      image: "{{ url_for('static', filename='images/adjara-mode.jpg') }}",
       vues: "2 037", clics: "+58",
       texte: "✨ La collection dont tout le monde parle est enfin là. Elle part vite."
     },
     {
-      nom: "Plomberie Express — Parakou", avatar: "🔧", emoji: "🔧",
-      gradient: "linear-gradient(160deg, #1c3d52 0%, #2a5f7a 55%, #3f88a8 100%)",
+      nom: "Plomberie Express — Parakou", avatar: "🔧",
+      image: "{{ url_for('static', filename='images/plomberie-express.jpg') }}",
       vues: "864", clics: "+21",
       texte: "🚰 Fuite d'eau ? On est chez vous en moins de 30 min, 7j/7."
     },
     {
-      nom: "Éclat Beauté — Abomey-Calavi", avatar: "💅", emoji: "💅",
-      gradient: "linear-gradient(160deg, #4a1f4a 0%, #7d3470 55%, #a8508f 100%)",
+      nom: "Éclat Beauté — Abomey-Calavi", avatar: "💅",
+      image: "{{ url_for('static', filename='images/eclat-beaute.jpg') }}",
       vues: "1 590", clics: "+44",
       texte: "💅 Derniers jours : -20% sur toutes les prestations avant la fin du mois."
     },
     {
-      nom: "TechZone — Bohicon", avatar: "📱", emoji: "📱",
-      gradient: "linear-gradient(160deg, #1f2937 0%, #374151 55%, #4b5563 100%)",
+      nom: "TechZone — Bohicon", avatar: "📱",
+      image: "{{ url_for('static', filename='images/techzone.jpg') }}",
       vues: "3 102", clics: "+76",
       texte: "📱 Smartphones reconditionnés garantis 6 mois, à partir de 45 000 FCFA."
     },
     {
-      nom: "Chez Léa Traiteur — Ouidah", avatar: "🎉", emoji: "🎉",
-      gradient: "linear-gradient(160deg, #6b2b2b 0%, #a34a3a 55%, #c96a4d 100%)",
+      nom: "Chez Léa Traiteur — Ouidah", avatar: "🎉",
+      image: "{{ url_for('static', filename='images/chez-lea-traiteur.jpg') }}",
       vues: "1 748", clics: "+39",
       texte: "🎉 Votre événement mérite un traiteur qui ne déçoit jamais. Devis gratuit en 5 min."
     }
@@ -960,8 +962,8 @@
       nameEl.textContent = ex.nom;
       timeEl.textContent = "à l'instant";
       avatarEl.textContent = ex.avatar;
-      emojiEl.textContent = ex.emoji;
-      visualEl.style.background = ex.gradient;
+      emojiEl.textContent = "";
+      visualEl.style.backgroundImage = "url('" + ex.image + "')";
       viewsEl.textContent = ex.vues;
       clicksEl.textContent = ex.clics;
       textEl.textContent = ex.texte;
@@ -970,7 +972,7 @@
         el.style.transition = "opacity .35s ease";
         el.style.opacity = 1;
       });
-      visualEl.style.transition = "opacity .35s ease, background .4s ease";
+      visualEl.style.transition = "opacity .35s ease, background-image .4s ease";
       visualEl.style.opacity = 1;
     }, 220);
 

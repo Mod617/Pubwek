@@ -1308,7 +1308,7 @@ class SystemConfig(db.Model):
     # bascule dans app.py.
     # =========================================================================
     exiger_preuve_partage = db.Column(db.Boolean, default=True, nullable=False)
-        exiger_preuve_partage = db.Column(db.Boolean, default=True, nullable=False)
+    
 
     # =========================================================================
     # 🆕 EXIGENCE DE VALIDATION ADMIN À L'INSCRIPTION (partageurs)

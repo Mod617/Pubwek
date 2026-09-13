@@ -602,6 +602,27 @@ with app.app_context():
         db.session.rollback()
         logger.error("Erreur migration colonnes contact_messages : %s", e)
 
+# 🆕 Migration légère : colonnes de configuration ajoutées sur `system_config`
+# après la création initiale de la table (exiger_preuve_partage,
+# exiger_validation_partageur) — même raison que pour transactions/users/
+# contact_messages ci-dessus : db.create_all() ne modifie jamais une table
+# déjà existante.
+with app.app_context():
+    from sqlalchemy import text
+    try:
+        db.session.execute(text(
+            "ALTER TABLE system_config ADD COLUMN IF NOT EXISTS exiger_preuve_partage BOOLEAN NOT NULL DEFAULT TRUE"
+        ))
+        db.session.execute(text(
+            "ALTER TABLE system_config ADD COLUMN IF NOT EXISTS exiger_validation_partageur BOOLEAN NOT NULL DEFAULT TRUE"
+        ))
+        db.session.commit()
+        logger.info("Migration system_config.exiger_preuve_partage / exiger_validation_partageur vérifiée.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Erreur migration colonnes system_config : %s", e)
+
+
 with app.app_context():
     # FIX: Les deux variables sont obligatoires — aucune valeur par défaut codée en dur
     admin_email = os.environ.get("ADMIN_EMAIL")

@@ -292,17 +292,19 @@
             </a>
             {% endif %}
 
+           
+
             {% if current_user.role == "admin" %}
-            <form action="{{ url_for('toggle_preuve_partage') }}" method="POST" class="d-inline"
-                  onsubmit="return confirm('{{ 'Désactiver' if config_systeme.exiger_preuve_partage else 'Réactiver' }} l\'exigence de preuve de partage ? {{ 'Tous les clics en attente seront crédités immédiatement.' if config_systeme.exiger_preuve_partage else '' }}');">
+            <form action="{{ url_for('toggle_validation_partageur') }}" method="POST" class="d-inline"
+                  onsubmit="return confirm('{{ 'Désactiver' if config_systeme.exiger_validation_partageur else 'Réactiver' }} la validation admin pour les nouvelles inscriptions partageur ? {{ 'Les nouveaux partageurs seront confirmés et connectés automatiquement, sans passer par vous. Les demandes déjà en attente ne sont pas concernées.' if config_systeme.exiger_validation_partageur else '' }}');">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                {% if config_systeme.exiger_preuve_partage %}
+                {% if config_systeme.exiger_validation_partageur %}
                     <button type="submit" class="btn action-btn action-btn-success">
-                        <i class="bi bi-shield-check me-1"></i> 🛡️ Preuve exigée (cliquer pour désactiver)
+                        <i class="bi bi-person-check me-1"></i> 🛡️ Validation partageur exigée (cliquer pour désactiver)
                     </button>
                 {% else %}
                     <button type="submit" class="btn action-btn action-btn-danger">
-                        <i class="bi bi-shield-x me-1"></i> ⚠️ Preuve désactivée (cliquer pour réactiver)
+                        <i class="bi bi-person-x me-1"></i> ⚠️ Validation partageur désactivée (cliquer pour réactiver)
                     </button>
                 {% endif %}
             </form>
@@ -313,6 +315,7 @@
                 <i class="bi bi-people-fill me-1"></i> 🔑 Gérer les sous-admins
             </a>
             {% endif %}
+            
         </div>
     </div>
 

@@ -2828,9 +2828,6 @@ def register(role):
     # =========================================================================
     ref_param = request.args.get("ref")
     if ref_param:
-        # On cherche si le parrain existe (soit par son Pseudo, soit par son ID)
-        # ⚠️ User.id est un entier : on ne le compare que si ref_param est numérique,
-        # sinon PostgreSQL lève une erreur de conversion et casse toute la requête.
         if ref_param.isdigit():
             referrer = User.query.filter(
                 (User.pseudo == ref_param) | (User.id == int(ref_param))
@@ -2847,24 +2844,16 @@ def register(role):
     if form.validate_on_submit():
         existing_user = User.query.filter_by(email=form.email.data).first()
 
-        # =========================================================================
-        # 📞 === RECONSTRUCTION DU NUMÉRO WHATSAPP COMPLET ===
-        # form.whatsapp_number.data ne contient que les 8 chiffres saisis par
-        # l'utilisateur (le champ n'accepte plus le préfixe). On reconstruit ici
-        # le numéro complet au format béninois avant toute validation/sauvegarde.
-        # =========================================================================
         whatsapp_number = form.whatsapp_number.data
         if whatsapp_number:
             whatsapp_number = "+22901" + whatsapp_number.strip()
 
-        # FIX: Anti-énumération — même message que l'email soit pris ou non
         email_ou_whatsapp_pris = False
 
         if existing_user:
             email_ou_whatsapp_pris = True
 
         if whatsapp_number and not email_ou_whatsapp_pris:
-            # Même règle que le formulaire (forms.NUMERO_WHATSAPP_REGEX)
             if not numero_whatsapp_valide(whatsapp_number):
                 flash(MESSAGE_NUMERO_INVALIDE, "danger")
                 return render_template("register.html", form=form, role=role, departements_communes=DEPARTEMENTS_COMMUNES)
@@ -2872,12 +2861,19 @@ def register(role):
                 email_ou_whatsapp_pris = True
 
         if email_ou_whatsapp_pris:
-            # Message générique : ne révèle pas si c'est l'email ou le WhatsApp qui est pris
             flash("Un compte avec ces informations existe déjà. Vérifiez vos données ou connectez-vous.", "danger")
             return render_template("register.html", form=form, role=role, departements_communes=DEPARTEMENTS_COMMUNES)
 
         hashed_pw = bcrypt.generate_password_hash(form.password.data).decode("utf-8")
-        is_confirmed = (role == "annonceur")
+
+        # =====================================================================
+        # 🆕 Un annonceur est toujours confirmé d'office. Un partageur est
+        # confirmé d'office UNIQUEMENT si l'exigence de validation admin a été
+        # désactivée par le super-admin (SystemConfig.exiger_validation_partageur).
+        # =====================================================================
+        config = SystemConfig.get_config()
+        validation_partageur_desactivee = role == "partageur" and not config.exiger_validation_partageur
+        is_confirmed = (role == "annonceur") or validation_partageur_desactivee
 
         pseudo_base = form.email.data.split("@")[0]
         pseudo = f"{pseudo_base}{random.randint(100, 999)}"
@@ -2893,9 +2889,6 @@ def register(role):
                 logo_filename = generer_nom_unique(logo_file.filename)
                 logo_file.save(os.path.join(current_app.config["UPLOAD_FOLDER"], logo_filename))
 
-        # =========================================================================
-        # 🔗 === PARRAINAGE : RÉCUPÉRATION DU PARRAIN DEPUIS LA SESSION ===
-        # =========================================================================
         referrer_id_to_save = session.get("referrer_id")
 
         new_user = User(
@@ -2904,12 +2897,11 @@ def register(role):
             role=role,
             company_name=form.company_name.data if role == "annonceur" else None,
             province=form.province.data or "Non spécifiée",
-            commune=form.commune.data if role == "partageur" else None,  # 🆕
+            commune=form.commune.data if role == "partageur" else None,
             whatsapp_number=whatsapp_number,
             pseudo=pseudo,
             is_confirmed=is_confirmed,
             logo=logo_filename,
-            # Association du parrain
             referrer_id=referrer_id_to_save,
             has_launched_first_campaign=False
         )
@@ -2918,68 +2910,79 @@ def register(role):
             db.session.add(new_user)
             db.session.commit()
 
-            # Le logo a été écrit sur disque avant que l'utilisateur n'existe :
-            # on ne peut lui attribuer un propriétaire qu'une fois l'id connu.
             if logo_filename:
                 enregistrer_upload(logo_filename, new_user.id, kind="logo")
                 db.session.commit()
 
-            # Une fois inscrit, on nettoie la session pour éviter les effets de bord
             session.pop("referrer_id", None)
 
             logger.info("Nouvel utilisateur inscrit (role: %s, parrainé_par: %s).", role, referrer_id_to_save)
 
-            # =================================================================
-            # 🆕 Tarifs lus depuis SystemConfig au moment de l'inscription,
-            # jamais codés en dur : si l'admin change les tarifs plus tard
-            # dans /admin/settings, les prochaines notifications de bienvenue
-            # refléteront automatiquement les nouveaux montants.
-            # =================================================================
-            config = SystemConfig.get_config()
-
             if role == "partageur":
-                # =============================================================
-                # 🆕 Notification de bienvenue explicative — répond à l'avance
-                # aux questions les plus fréquentes des partageurs (rémunération,
-                # audience, paiement), pour réduire les allers-retours manuels
-                # avec l'administration une fois le compte confirmé.
-                # =============================================================
-                envoyer_notification(
-                    new_user,
-                    "Bienvenue sur Pubwek 👋",
-                    (
-                        "Votre inscription est enregistrée et en attente de validation par l'administration. "
-                        "Une fois votre compte confirmé, voici comment ça marche :\n\n"
-                        "• Vous n'avez jamais rien à payer. C'est l'annonceur qui paie sa campagne.\n"
-                        "• Vous publiez le statut WhatsApp fourni par Pubwek sur votre propre compte : "
-                        "ce sont vos contacts qui le voient et cliquent, vous n'avez pas besoin d'audience particulière.\n"
-                        f"• Chaque clic vous rapporte de l'argent : {config.reward_per_click_video:.0f} FCFA par clic pour une vidéo, "
-                        f"{config.reward_per_click_photo:.0f} FCFA par photo chargée par l'annonceur (donc {config.reward_per_click_photo * 25:.0f} FCFA "
-                        f"par clic si l'annonceur a mis 25 photos, par exemple), "
-                        f"et {config.reward_per_click_text:.0f} FCFA par clic pour un texte seul.\n"
-                        f"• Vos gains s'accumulent dans votre portefeuille Pubwek, retirable dès {config.minimum_withdrawal_amount:.0f} FCFA "
-                        "(Mobile Money, Moov Money, Celtiis Cash ou Wave)."
-                    ),
-                    category="info",
-                    link=url_for("login"),
-                )
-                db.session.commit()
+                if validation_partageur_desactivee:
+                    # =============================================================
+                    # 🆕 Validation admin désactivée : connexion automatique,
+                    # même traitement que l'annonceur ci-dessous.
+                    # =============================================================
+                    login_user(new_user)
+                    envoyer_notification(
+                        new_user,
+                        "Bienvenue sur Pubwek 👋",
+                        (
+                            "Votre compte partageur est actif. Voici comment ça marche :\n\n"
+                            "• Vous n'avez jamais rien à payer. C'est l'annonceur qui paie sa campagne.\n"
+                            "• Vous publiez le statut WhatsApp fourni par Pubwek sur votre propre compte : "
+                            "ce sont vos contacts qui le voient et cliquent, vous n'avez pas besoin d'audience particulière.\n"
+                            f"• Chaque clic vous rapporte de l'argent : {config.reward_per_click_video:.0f} FCFA par clic pour une vidéo, "
+                            f"{config.reward_per_click_photo:.0f} FCFA par photo chargée par l'annonceur (donc {config.reward_per_click_photo * 25:.0f} FCFA "
+                            f"par clic si l'annonceur a mis 25 photos, par exemple), "
+                            f"et {config.reward_per_click_text:.0f} FCFA par clic pour un texte seul.\n"
+                            f"• Vos gains s'accumulent dans votre portefeuille Pubwek, retirable dès {config.minimum_withdrawal_amount:.0f} FCFA "
+                            "(Mobile Money, Moov Money, Celtiis Cash ou Wave)."
+                        ),
+                        category="info",
+                        link=url_for("dashboard_partageur"),
+                    )
+                    db.session.commit()
 
-                flash(f"Merci {pseudo} 🙏 Votre demande est enregistrée et en attente de validation.", "info")
-                return redirect(url_for("index"))
+                    flash(f"Bienvenue {pseudo} ! Votre compte partageur est actif 🎉", "success")
+                    return redirect(url_for("dashboard_partageur"))
+                else:
+                    # =============================================================
+                    # 🆕 Notification de bienvenue explicative — répond à l'avance
+                    # aux questions les plus fréquentes des partageurs, pour réduire
+                    # les allers-retours manuels une fois le compte confirmé.
+                    # =============================================================
+                    envoyer_notification(
+                        new_user,
+                        "Bienvenue sur Pubwek 👋",
+                        (
+                            "Votre inscription est enregistrée et en attente de validation par l'administration. "
+                            "Une fois votre compte confirmé, voici comment ça marche :\n\n"
+                            "• Vous n'avez jamais rien à payer. C'est l'annonceur qui paie sa campagne.\n"
+                            "• Vous publiez le statut WhatsApp fourni par Pubwek sur votre propre compte : "
+                            "ce sont vos contacts qui le voient et cliquent, vous n'avez pas besoin d'audience particulière.\n"
+                            f"• Chaque clic vous rapporte de l'argent : {config.reward_per_click_video:.0f} FCFA par clic pour une vidéo, "
+                            f"{config.reward_per_click_photo:.0f} FCFA par photo chargée par l'annonceur (donc {config.reward_per_click_photo * 25:.0f} FCFA "
+                            f"par clic si l'annonceur a mis 25 photos, par exemple), "
+                            f"et {config.reward_per_click_text:.0f} FCFA par clic pour un texte seul.\n"
+                            f"• Vos gains s'accumulent dans votre portefeuille Pubwek, retirable dès {config.minimum_withdrawal_amount:.0f} FCFA "
+                            "(Mobile Money, Moov Money, Celtiis Cash ou Wave)."
+                        ),
+                        category="info",
+                        link=url_for("login"),
+                    )
+                    db.session.commit()
+
+                    flash(f"Merci {pseudo} 🙏 Votre demande est enregistrée et en attente de validation.", "info")
+                    return redirect(url_for("index"))
             else:
                 # =============================================================
                 # 🆕 Connexion automatique de l'annonceur juste après son
-                # inscription : il n'a pas à ressaisir son email/mot de passe
-                # sur la page de connexion, il arrive directement sur son
-                # tableau de bord. Un compte annonceur est is_confirmed=True
-                # dès la création, donc rien ne bloque cet accès immédiat.
+                # inscription.
                 # =============================================================
                 login_user(new_user)
 
-                # 🆕 Notification de bienvenue explicative, même logique que
-                # pour le partageur — répond à l'avance aux questions
-                # fréquentes côté annonceur (coût, fonctionnement, ciblage).
                 envoyer_notification(
                     new_user,
                     "Bienvenue sur Pubwek 👋",

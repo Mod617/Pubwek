@@ -3475,6 +3475,41 @@ def toggle_preuve_partage():
 
     return redirect(url_for("admin_validate"))
 
+# ==========================================
+# 🆕 ROUTE : BASCULE DE L'EXIGENCE DE VALIDATION ADMIN (INSCRIPTION PARTAGEUR)
+# Réservée au VRAI super-admin uniquement — voir verifier_super_admin_strict().
+# Ne s'applique qu'aux NOUVELLES inscriptions à partir du basculement : les
+# partageurs déjà en attente restent en attente, aucun rattrapage rétroactif.
+# ==========================================
+@app.route("/admin/toggle-validation-partageur", methods=["POST"])
+@login_required
+def toggle_validation_partageur():
+    verifier_super_admin_strict()
+
+    config = SystemConfig.get_config()
+    config.exiger_validation_partageur = not config.exiger_validation_partageur
+    db.session.commit()
+
+    if config.exiger_validation_partageur:
+        logger.warning(
+            "[ACTION SUPER-ADMIN] Validation admin à l'inscription partageur RÉACTIVÉE par admin id=%d.",
+            current_user.id
+        )
+        flash("Validation admin réactivée. Les nouvelles inscriptions partageur repassent en file d'attente. ✅", "success")
+    else:
+        logger.warning(
+            "[ACTION SUPER-ADMIN] Validation admin à l'inscription partageur DÉSACTIVÉE par admin id=%d.",
+            current_user.id
+        )
+        flash(
+            "Validation admin désactivée. Les nouveaux partageurs seront désormais confirmés et connectés "
+            "automatiquement à l'inscription. Les demandes déjà en attente restent inchangées. ✅",
+            "success"
+        )
+
+    return redirect(url_for("admin_validate"))
+
+
 
 @app.route("/admin/validate")
 @login_required

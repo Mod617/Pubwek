@@ -1104,6 +1104,18 @@ def nouvelle_campagne():
             flash(MESSAGE_NUMERO_INVALIDE, "danger")
             return redirect(url_for("dashboard_annonceur"))
 
+        # 🆕 Format wa.me confirmé par l'annonceur via le test à deux boutons
+        # (voir dashboard_annonceur.html). Défense en profondeur : même si le
+        # JS est contourné, on refuse la campagne sans confirmation explicite.
+        whatsapp_garder_01_raw = request.form.get("whatsapp_garder_01", "").strip()
+        if whatsapp_number and whatsapp_garder_01_raw not in ("0", "1"):
+            flash(
+                "Merci de tester les deux liens WhatsApp et de confirmer le bon format avant de valider votre campagne. ⚠️",
+                "danger"
+            )
+            return redirect(url_for("dashboard_annonceur"))
+        whatsapp_garder_01 = whatsapp_garder_01_raw == "1"
+
         # --- Champ optionnel : site web / application web de la structure ---
         website_url = request.form.get("website_url", "").strip()
         if website_url:
@@ -1254,6 +1266,7 @@ def nouvelle_campagne():
             views_per_day=views_per_day,
             total_cost=total_cost,
             whatsapp_number=whatsapp_number or "",
+            whatsapp_garder_01=whatsapp_garder_01,
 
             # --- MISES À JOUR DU WORKFLOW ET DES STATUTS ---
             status="non_payee",

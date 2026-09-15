@@ -5447,13 +5447,17 @@ def admin_preuves_partage():
 # nouveau format officiel, seul valide pour les SMS/appels réseau) — elle ne
 # sert qu'à construire le numéro tel que wa.me doit le recevoir.
 # =========================================================================
-def numero_pour_wa_me(numero):
+def numero_pour_wa_me(numero, garder_01=False):
     """Retire le "01" du numéro stocké (+22901XXXXXXXX -> 229XXXXXXXX),
     pour contourner le décalage entre la réforme de numérotation béninoise
     et l'indexation interne des comptes WhatsApp créés avant celle-ci.
+
+    garder_01=True : ne retire rien, pour les comptes dont WhatsApp a
+    indexé le numéro AVEC le "01" (nouveau format) — voir
+    Campaign.whatsapp_garder_01.
     """
     chiffres = re.sub(r"[^0-9]", "", numero or "")
-    if chiffres.startswith("22901"):
+    if not garder_01 and chiffres.startswith("22901"):
         chiffres = "229" + chiffres[5:]
     return chiffres
 

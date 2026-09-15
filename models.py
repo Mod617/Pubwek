@@ -634,6 +634,17 @@ class Campaign(db.Model):
 
     total_cost = db.Column(db.Float, nullable=False)
     whatsapp_number = db.Column(db.String(20), nullable=True)
+
+    # =========================================================================
+    # 🆕 FORMAT wa.me CONFIRMÉ POUR CE NUMÉRO (nouveau vs ancien numérotage Bénin)
+    #
+    # Certains comptes WhatsApp (créés/réindexés après la réforme du
+    # 30/11/2024) sont indexés AVEC le "01" du numéro stocké — pour eux,
+    # numero_pour_wa_me() ne doit pas le retirer. False par défaut = reproduit
+    # exactement l'ancien comportement pour toutes les campagnes existantes ;
+    # confirmé au cas par cas via le test à deux boutons côté formulaire.
+    # =========================================================================
+    whatsapp_garder_01 = db.Column(db.Boolean, nullable=False, default=False)
     
     # =========================================================================
     # 🎯 STATUTS ET WORKFLOW DE VALIDATION / PAIEMENT / REMBOURSEMENT

@@ -5472,7 +5472,7 @@ def tracking_redirect_whatsapp(token):
     if not camp or not camp.whatsapp_number:
         abort(404)
     # La destination est calculée d'abord : le visiteur ne doit jamais attendre
-    numero = numero_pour_wa_me(camp.whatsapp_number)
+    numero = numero_pour_wa_me(camp.whatsapp_number, garder_01=camp.whatsapp_garder_01)
     message = urllib.parse.quote(
         f"Bonjour, je suis intéressé(e) par : {camp.promotion_detail or camp.promotion_type}"
     )

@@ -205,6 +205,15 @@
     font-weight: 600 !important;
   }
 
+  /* 🆕 Badge du gain par clic */
+  .partageur-wrap #produitsDisponibles .badge.badge-gain {
+    background: var(--emerald-tint) !important;
+    color: var(--emerald-dark) !important;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    border: 1px solid #cfe4da;
+  }
+
   .partageur-wrap .quota-track {
     width: 100%;
     height: 6px;
@@ -457,6 +466,14 @@
                                         </span>
                                         <span class="badge bg-dark">{{ camp.target_whatsapp_views }} clics visés</span>
                                     </div>
+
+                                    <!-- 🆕 Gain par clic, mis en avant pour que le partageur sache exactement ce qu'il gagne sur CETTE campagne -->
+                                    <div class="mb-2">
+                                        <span class="badge badge-gain px-2 py-1">
+                                            <i class="bi bi-coin me-1"></i>{{ "{:,.0f}".format(item.recompense_par_clic) }} FCFA / clic
+                                        </span>
+                                    </div>
+
                                     <h6 class="fw-bold">{{ camp.promotion_detail or "Campagne #" ~ camp.id }}</h6>
                                     <p class="text-muted small mb-3" style="white-space: pre-line;">{{ camp.description or "" }}</p>
 

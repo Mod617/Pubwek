@@ -5590,16 +5590,22 @@ def lancer_rappels_preuves_periodique(application, intervalle_secondes=3600):
 def _notifier_partageurs_quota_atteint(camp):
     """
     Notifie tous les partageurs actifs d'une campagne que le quota de clics du jour
-    est atteint, afin qu'ils puissent retirer leur statut WhatsApp s'ils le souhaitent,
-    et leur rappelle d'envoyer leur preuve de fin de journée pour faire créditer
-    leurs clics. Ils ne sont jamais rémunérés pour les clics au-delà du quota,
-    donc aucune obligation de retirer le statut.
+    est atteint, afin qu'ils puissent retirer leur statut WhatsApp s'ils le souhaitent.
+    Le rappel d'envoi de la preuve de fin de journée n'est ajouté que si l'exigence
+    de preuve est actuellement activée (SystemConfig.exiger_preuve_partage) — sinon
+    il n'y a rien à rappeler. Ils ne sont jamais rémunérés pour les clics au-delà
+    du quota, donc aucune obligation de retirer le statut.
     """
     try:
+        config = SystemConfig.get_config()
         shares = CampaignShare.query.filter_by(campaign_id=camp.id).all()
         for s in shares:
             partageur = db.session.get(User, s.sharer_id)
             if partageur:
+                rappel_preuve = (
+                    "N'oubliez surtout pas d'envoyer votre capture de fin de journée : "
+                    "c'est elle qui permet de faire valider et créditer vos clics du jour. "
+                ) if config.exiger_preuve_partage else ""
                 envoyer_notification(
                     partageur,
                     "Quota du jour atteint 🎯",
@@ -5608,8 +5614,7 @@ def _notifier_partageurs_quota_atteint(camp):
                         f"« {camp.promotion_detail or camp.promotion_type} » sont atteints. "
                         f"Vous pouvez retirer votre statut WhatsApp si vous le souhaitez — "
                         f"vous ne serez pas rémunéré(e) au-delà de ce quota. "
-                        f"N'oubliez surtout pas d'envoyer votre capture de fin de journée : "
-                        f"c'est elle qui permet de faire valider et créditer vos clics du jour. "
+                        f"{rappel_preuve}"
                         f"La diffusion reprendra demain."
                     ),
                     category="warning",
@@ -5619,7 +5624,6 @@ def _notifier_partageurs_quota_atteint(camp):
         logger.info("[QUOTA] Alerte quota envoyée à %d partageur(s) pour campagne #%d", len(shares), camp.id)
     except Exception as e:
         logger.error("Erreur notification quota atteint (campagne %d) : %s", camp.id, e)
-
 
 @app.route("/t/<token>/site")
 def tracking_redirect_site(token):

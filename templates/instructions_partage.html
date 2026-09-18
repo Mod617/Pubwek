@@ -329,6 +329,7 @@
             </div>
 
             <!-- ÉTAPE FINALE : ENVOI DES PREUVES -->
+            {% if exiger_preuve_partage %}
             <div class="mb-4 mt-4 pt-3 border-top step-block">
                 <h5 class="fw-bold">
                     <span class="badge bg-primary rounded-circle me-2">{{ "4" if media_urls else "3" }}</span>
@@ -400,6 +401,7 @@
                     {% endfor %}
                 {% endif %}
             </div>
+            {% endif %}
 
             <div class="text-center mt-4">
                 <a href="{{ url_for('dashboard_partageur') }}" class="btn btn-link">⬅ Retour au tableau de bord</a>

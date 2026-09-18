@@ -3162,6 +3162,7 @@ def dashboard_partageur():
             "duree_totale": camp.duration_days,
             "vues_aujourdhui": camp.views_today or 0,
             "quota_du_jour": camp.views_per_day or 0,
+            "recompense_par_clic": recompense_pour(camp, config),  # 🆕 gain affiché au partageur
         })
 
     return render_template(

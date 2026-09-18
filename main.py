@@ -3826,8 +3826,8 @@ def instructions_partage(campaign_id):
         jour_actuel=jour_actuel,
         jours_preuves=jours_preuves,
         exiger_preuve_partage=config.exiger_preuve_partage,  # 🆕
+        recompense_par_clic=recompense_pour(camp, config),  # 🆕 gain rappelé au partageur
     )
-
 
 # ==========================================
 # ROUTE : REFUS D'UNE CAMPAGNE (ADMIN)

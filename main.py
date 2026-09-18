@@ -5519,6 +5519,10 @@ def relancer_rappels_preuves():
     relatif codé en dur plutôt que url_for() : cette fonction tourne hors
     contexte de requête HTTP (tâche de fond), où url_for() n'est pas fiable.
     """
+    config = SystemConfig.get_config()
+    if not config.exiger_preuve_partage:
+        return  # 🆕 La preuve n'est plus exigée : rien à rappeler
+
     campagnes_actives = Campaign.query.filter_by(is_active=True, paid=True, validated=True).all()
     total_alertes = 0
 

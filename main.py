@@ -3808,10 +3808,12 @@ def instructions_partage(campaign_id):
     lien_whatsapp_tracking = url_for("tracking_redirect_whatsapp", token=share.tracking_token, _external=True) if camp.whatsapp_number else None
     lien_site_tracking = url_for("tracking_redirect_site", token=share.tracking_token, _external=True) if camp.website_url else None
 
-    # 🆕 État des preuves de fin de journée, pour chaque jour déjà entamé,
-    # avec gestion de la fenêtre de rattrapage de 48h.
+    # 🆕 Si l'exigence de preuve est désactivée globalement, on ne calcule
+    # même pas les états de preuve : la section ne doit plus apparaître.
+    config = SystemConfig.get_config()
+
     jour_actuel = camp.jour_diffusion_campagne()
-    jours_preuves = etats_preuves_partage(share, camp)
+    jours_preuves = etats_preuves_partage(share, camp) if config.exiger_preuve_partage else []
 
     return render_template(
         "instructions_partage.html",
@@ -3822,6 +3824,7 @@ def instructions_partage(campaign_id):
         lien_site_tracking=lien_site_tracking,
         jour_actuel=jour_actuel,
         jours_preuves=jours_preuves,
+        exiger_preuve_partage=config.exiger_preuve_partage,  # 🆕
     )
 
 

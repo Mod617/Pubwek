@@ -48,6 +48,32 @@
     font-size: 0.94rem;
   }
 
+  /* 🆕 Badge du gain par clic, mis en avant sous le titre */
+  .instructions-wrap .gain-clic-box {
+    background: var(--emerald-tint);
+    border: 1px solid #cfe4da;
+    border-radius: 12px;
+    padding: 0.85rem 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 1.5rem;
+  }
+  .instructions-wrap .gain-clic-box i {
+    color: var(--emerald-dark);
+    font-size: 1.4rem;
+  }
+  .instructions-wrap .gain-clic-box .gain-clic-montant {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--emerald-dark);
+  }
+  .instructions-wrap .gain-clic-box .gain-clic-label {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+  }
+
   /* ---------- Step blocks ---------- */
   .instructions-wrap .step-block {
     padding: 1.1rem 0 1.1rem 0;
@@ -235,7 +261,18 @@
     <div class="card shadow-sm border-0">
         <div class="card-body p-4">
             <h3 class="fw-bold text-success mb-1">✅ Partage enregistré !</h3>
-            <p class="text-muted mb-4">Suivez les étapes ci-dessous pour publier cette campagne sur votre statut WhatsApp et commencer à générer des clics.</p>
+            <p class="text-muted mb-3">Suivez les étapes ci-dessous pour publier cette campagne sur votre statut WhatsApp et commencer à générer des clics.</p>
+
+            <!-- 🆕 RAPPEL DU GAIN PAR CLIC SUR CETTE CAMPAGNE -->
+            {% if recompense_par_clic %}
+            <div class="gain-clic-box">
+                <i class="bi bi-coin"></i>
+                <div>
+                    <div class="gain-clic-montant">{{ "{:,.0f}".format(recompense_par_clic) }} FCFA par clic valide</div>
+                    <div class="gain-clic-label">C'est ce que vous gagnez pour chaque clic validé sur cette campagne.</div>
+                </div>
+            </div>
+            {% endif %}
 
             <!-- ÉTAPE 1 : COPIER LE TEXTE (avec les liens de tracking inclus) -->
             <div class="mb-4 step-block">

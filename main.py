@@ -2931,6 +2931,17 @@ def register(role):
                 enregistrer_upload(logo_filename, new_user.id, kind="logo")
                 db.session.commit()
 
+            # 🆕 Parrainage partageur → partageur : crédit fixe immédiat du
+            # parrain, uniquement si le PARRAIN est lui aussi un partageur
+            # (le parrainage annonceur, en %, reste géré ailleurs par
+            # validate_campaign()). S'applique que le filleul soit
+            # auto-confirmé ou en attente de validation admin.
+            if role == "partageur" and referrer_id_to_save:
+                parrain = db.session.get(User, referrer_id_to_save)
+                if parrain and parrain.role == "partageur":
+                    crediter_parrainage_partageur(parrain, new_user, ip_client())
+                    db.session.commit()
+
             session.pop("referrer_id", None)
 
             logger.info("Nouvel utilisateur inscrit (role: %s, parrainé_par: %s).", role, referrer_id_to_save)

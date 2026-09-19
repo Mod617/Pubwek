@@ -3416,10 +3416,11 @@ def admin_settings():
 
             comm_rate = float(request.form.get("commission_rate", 10.0))
             ref_rate = float(request.form.get("referral_reward_rate", 3.0))
+            ref_partageur_fixe = float(request.form.get("referral_reward_partageur_fixe", 200.0))  # 🆕
             min_withdrawal = float(request.form.get("minimum_withdrawal_amount", 500.0))
 
             # Validations de sécurité de base
-            valeurs_a_verifier = [cost_video, cost_photo, cost_text, reward_video, reward_photo, reward_text, comm_rate, ref_rate, min_withdrawal]
+            valeurs_a_verifier = [cost_video, cost_photo, cost_text, reward_video, reward_photo, reward_text, comm_rate, ref_rate, ref_partageur_fixe, min_withdrawal]
             if any(v < 0 for v in valeurs_a_verifier):
                 flash("Les valeurs ne peuvent pas être négatives ⚠️", "danger")
                 return redirect(url_for("admin_settings"))
@@ -3443,6 +3444,7 @@ def admin_settings():
             config.reward_per_click_text = reward_text
             config.commission_rate = comm_rate
             config.referral_reward_rate = ref_rate
+            config.referral_reward_partageur_fixe = ref_partageur_fixe  # 🆕
             config.minimum_withdrawal_amount = min_withdrawal
 
             db.session.commit()

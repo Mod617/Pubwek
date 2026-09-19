@@ -3030,6 +3030,60 @@ def register(role):
     return render_template("register.html", form=form, role=role, departements_communes=DEPARTEMENTS_COMMUNES)
 
 
+def crediter_parrainage_partageur(parrain, filleul, ip_filleul):
+    """Crédite le parrain d'un montant FIXE (SystemConfig.referral_reward_partageur_fixe)
+    quand son filleul, lui aussi partageur, vient de s'inscrire.
+
+    Anti-abus : si l'IP du filleul correspond à la dernière IP connue du
+    parrain (même appareil/réseau), on soupçonne un auto-parrainage via un
+    second compte — le lien de parrainage reste enregistré (referrer_id),
+    mais AUCUN crédit n'est versé, et l'incident est journalisé pour audit.
+
+    ⚠️ Pas encore appelée nulle part dans le code (étape 3/5 du déploiement
+    du parrainage partageur→partageur) — voir register() pour le branchement.
+    """
+    if parrain.last_seen_ip and ip_filleul and parrain.last_seen_ip == ip_filleul:
+        logger.warning(
+            "[ANTI-FRAUDE] Parrainage partageur suspect : filleul id=%d et parrain id=%d "
+            "partagent la même IP (%s). Crédit bloqué.",
+            filleul.id, parrain.id, ip_filleul
+        )
+        return False
+
+    config = SystemConfig.get_config()
+    montant = config.referral_reward_partageur_fixe or 0.0
+    if montant <= 0:
+        return False
+
+    parrain.wallet_balance = (parrain.wallet_balance or 0.0) + montant
+    db.session.add(WalletTransaction(
+        user_id=parrain.id,
+        amount=montant,
+        balance_after=parrain.wallet_balance,
+        transaction_type="referral_reward",
+        description=(
+            f"Parrainage partageur : inscription de {filleul.pseudo or filleul.email}"
+        )
+    ))
+    envoyer_notification(
+        parrain,
+        "Gain de parrainage crédité 🎁",
+        (
+            f"Vous avez gagné {montant:.0f} FCFA suite à l'inscription de votre filleul "
+            f"{filleul.pseudo or filleul.email} sur Pubwek ! Ce montant a été ajouté à "
+            f"votre portefeuille."
+        ),
+        category="success",
+        link=url_for("mes_retraits"),
+    )
+    logger.info(
+        "[PARRAINAGE PARTAGEUR] %s gagne %.2f FCFA grâce à l'inscription de %s.",
+        parrain.pseudo or parrain.email, montant, filleul.pseudo or filleul.email
+    )
+    return True
+
+
+
 @app.route("/dashboard/annonceur")
 @login_required
 def dashboard_annonceur():

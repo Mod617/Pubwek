@@ -146,6 +146,44 @@
   .partageur-wrap .input-group .btn-success:hover { background: var(--emerald-dark) !important; }
   .partageur-wrap #copyFeedback { color: var(--emerald-dark) !important; }
 
+  /* ---------- 🆕 Deux gains de parrainage, côte à côte ---------- */
+  .partageur-wrap .referral-gains-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+  }
+  .partageur-wrap .referral-gain-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--slate-tint);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 0.55rem 0.9rem;
+    flex: 1 1 220px;
+  }
+  .partageur-wrap .referral-gain-pill i {
+    font-size: 1.15rem;
+    color: var(--emerald-dark);
+  }
+  .partageur-wrap .referral-gain-pill .referral-gain-amount {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    color: var(--ink);
+    display: block;
+    line-height: 1.15;
+  }
+  .partageur-wrap .referral-gain-pill .referral-gain-label {
+    font-size: 0.74rem;
+    color: var(--ink-soft);
+  }
+  .partageur-wrap .referral-gain-pill.pill-partageur {
+    background: var(--emerald-tint);
+    border-color: #cfe4da;
+  }
+  .partageur-wrap .referral-gain-pill.pill-partageur i { color: var(--emerald-dark); }
+
   /* ---------- Stat cards ---------- */
   .partageur-wrap .row.g-4.mb-4 > .col-md-4 .card {
     border-left: none !important;
@@ -373,21 +411,41 @@
         </div>
     </div>
 
+    <!-- 🆕 CARTE PARRAINAGE — met désormais en avant les DEUX gains possibles -->
     <div class="card border-0 shadow-sm mb-4 bg-light">
         <div class="card-body p-4">
             <div class="row align-items-center">
                 <div class="col-md-8">
                     <h5 class="fw-bold text-dark mb-2">📢 Boostez vos gains avec le Parrainage !</h5>
                     <p class="text-muted mb-3 mb-md-0">
-                        Partagez votre lien unique ci-dessous. Vous toucherez une commission de <strong>3%</strong> sur le coût de la toute première campagne lancée par chacun de vos filleuls annonceurs.
+                        Partagez votre lien unique ci-dessous — il fonctionne pour parrainer
+                        <strong>un annonceur</strong> comme <strong>un autre partageur</strong>.
                     </p>
                 </div>
                 <div class="col-md-4 text-md-end">
-                    <span class="badge bg-warning text-dark px-3 py-2 fw-semibold">Gagnez 3% par filleul</span>
+                    <span class="badge bg-warning text-dark px-3 py-2 fw-semibold">Double récompense 🎁</span>
                 </div>
             </div>
-            
-            <div class="mt-3">
+
+            <!-- 🆕 Les deux gains, côte à côte, pour que ce soit immédiatement visible -->
+            <div class="referral-gains-row mt-3">
+                <div class="referral-gain-pill">
+                    <i class="bi bi-megaphone-fill"></i>
+                    <div>
+                        <span class="referral-gain-amount">{{ config.referral_reward_rate if config is defined else "3" }}%</span>
+                        <span class="referral-gain-label">sur la 1ère campagne d'un filleul <strong>annonceur</strong></span>
+                    </div>
+                </div>
+                <div class="referral-gain-pill pill-partageur">
+                    <i class="bi bi-people-fill"></i>
+                    <div>
+                        <span class="referral-gain-amount">{{ "{:,.0f}".format(recompense_parrainage_partageur) }} FCFA</span>
+                        <span class="referral-gain-label">immédiatement, dès l'inscription d'un filleul <strong>partageur</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-2">
                 <label for="referralLink" class="form-label fw-semibold text-secondary">Votre lien d'affiliation unique :</label>
                 <div class="input-group mb-2">
                     <input type="text" class="form-control bg-white" id="referralLink" value="{{ affiliate_link }}" readonly>
@@ -411,7 +469,7 @@
                         <h6 class="text-muted mb-0 fw-semibold">Filleuls inscrits</h6>
                     </div>
                     <h3 class="fw-bold text-dark mb-1">{{ total_filleuls }}</h3>
-                    <p class="text-muted small mb-0">Annonceurs inscrits via votre lien</p>
+                    <p class="text-muted small mb-0">Annonceurs ou partageurs inscrits via votre lien</p>
                 </div>
             </div>
         </div>
@@ -441,7 +499,7 @@
                         <h6 class="text-muted mb-0 fw-semibold">Gains en Attente</h6>
                     </div>
                     <h3 class="fw-bold text-warning mb-1">{{ gains_en_attente | round(0) }} FCFA</h3>
-                    <p class="text-muted small mb-0">En attente de paiement de leur campagne</p>
+                    <p class="text-muted small mb-0">En attente de paiement de leur campagne (filleuls annonceurs)</p>
                 </div>
             </div>
         </div>

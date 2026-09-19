@@ -142,7 +142,7 @@
     @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full
            font-caption text-caption font-bold whitespace-nowrap;
   }
-  .pw-chip-success { @apply bg-brand-light text-brand-deep; }
+  .pw-chip-success { @apply bg-success-light text-success-deep; }
   .pw-chip-warning { @apply bg-amber-soft text-secondary; }
   .pw-chip-danger  { @apply bg-error-container text-on-error-container; }
   .pw-chip-neutral { @apply bg-surface-container text-on-surface-variant; }

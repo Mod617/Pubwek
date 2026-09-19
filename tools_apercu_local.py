@@ -37,7 +37,9 @@ os.makedirs(APERCU_WORKDIR, exist_ok=True)
 os.chdir(APERCU_WORKDIR)   # -> UPLOAD_FOLDER = <temp>/uploads_secure
 
 os.environ.update({
-    "ENV": "development", "SECRET_KEY": "x"*20,
+    # Cle >= 32 caracteres : en dessous, config.py en tire une au hasard a
+    # chaque demarrage, ce qui invalide sessions et liens de reinitialisation.
+    "ENV": "development", "SECRET_KEY": "apercu_local_pubwek_cle_de_developpement",
     "DATABASE_URL": "sqlite:///" + db.replace("\\", "/"),
     "ADMIN_EMAIL": "admin@x.com", "ADMIN_PASSWORD": "AdminX123!",
 })

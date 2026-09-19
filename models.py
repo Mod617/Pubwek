@@ -1280,6 +1280,15 @@ class SystemConfig(db.Model):
     commission_rate = db.Column(db.Float, default=10.0)     # Par défaut 10%
     referral_reward_rate = db.Column(db.Float, default=3.0) # Par défaut 3% du montant total de la commission
 
+    # =========================================================================
+    # 🆕 PARRAINAGE PARTAGEUR → PARTAGEUR : montant FIXE (distinct du % ci-dessus,
+    # qui ne s'applique qu'au parrainage d'un annonceur). Crédité immédiatement
+    # à l'inscription du filleul partageur — voir crediter_parrainage_partageur()
+    # dans app.py. Colonne ajoutée le 19/09/2026, pas encore utilisée par le code
+    # tant que les étapes suivantes ne sont pas déployées.
+    # =========================================================================
+    referral_reward_partageur_fixe = db.Column(db.Float, default=200.0, nullable=False)
+
     # 🆕 Seuil minimum de retrait pour les partageurs (portefeuille)
     minimum_withdrawal_amount = db.Column(db.Float, default=500.0)
 
@@ -1319,7 +1328,6 @@ class SystemConfig(db.Model):
     # bascule dans app.py.
     # =========================================================================
     exiger_preuve_partage = db.Column(db.Boolean, default=True, nullable=False)
-    
 
     # =========================================================================
     # 🆕 EXIGENCE DE VALIDATION ADMIN À L'INSCRIPTION (partageurs)
@@ -1353,6 +1361,7 @@ class SystemConfig(db.Model):
                 reward_per_click_text=0.3,
                 commission_rate=10.0,
                 referral_reward_rate=3.0,
+                referral_reward_partageur_fixe=200.0,
                 minimum_withdrawal_amount=500.0,
                 click_dedup_hours=24,
                 max_paid_clicks_per_share_per_day=50,
@@ -1360,33 +1369,6 @@ class SystemConfig(db.Model):
                 min_seconds_between_paid_clicks=20,
                 exiger_preuve_partage=True,
                 exiger_validation_partageur=True,
-            )
-            db.session.add(config)
-            db.session.commit()
-        return config
-
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    @classmethod
-    def get_config(cls):
-        """Récupère la configuration actuelle ou en crée une par défaut si vide."""
-        config = cls.query.first()
-        if not config:
-            config = cls(
-                cost_per_click_video=3.0,
-                cost_per_click_photo=1.0,
-                cost_per_click_text=1.0,
-                reward_per_click_video=1.0,
-                reward_per_click_photo=0.4,
-                reward_per_click_text=0.3,
-                commission_rate=10.0,
-                referral_reward_rate=3.0,
-                minimum_withdrawal_amount=500.0,
-                click_dedup_hours=24,
-                max_paid_clicks_per_share_per_day=50,
-                max_paid_clicks_per_ip_per_day=20,
-                min_seconds_between_paid_clicks=20,
-                exiger_preuve_partage=True,
             )
             db.session.add(config)
             db.session.commit()

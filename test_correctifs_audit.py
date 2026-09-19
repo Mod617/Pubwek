@@ -241,6 +241,33 @@ def test_antifraude_clics():
         partageur.last_seen_ip = "10.0.0.99"
         db.session.commit()
 
+        def moment_du_jour(minutes_avant):
+            """Horodatage recule de `minutes_avant`, sans sortir de la journee UTC.
+
+            Les plafonds quotidiens ne comptent que les clics posterieurs a
+            minuit UTC (voir `debut_journee` dans evaluer_clic). Reculer
+            betement de 10 minutes place les clics la veille quand la suite
+            tourne juste apres minuit : les plafonds ne se declenchent alors
+            jamais et les verifications echouent sans qu'il y ait de
+            regression. On borne donc le recul au debut de la journee.
+            """
+            maintenant = datetime.utcnow()
+            debut_journee = maintenant.replace(hour=0, minute=0, second=0, microsecond=0)
+            return max(maintenant - timedelta(minutes=minutes_avant), debut_journee)
+
+        def neutraliser_anti_rafale_si_necessaire(horodatage):
+            """Desactive le delai anti-rafale s'il ne peut pas etre depasse.
+
+            Juste apres minuit UTC, aucun horodatage de la journee en cours
+            n'est assez ancien pour sortir de la fenetre anti-rafale. Le cas
+            nominal est deja verifie plus haut ; ici on veut seulement
+            pouvoir tester les plafonds.
+            """
+            age = (datetime.utcnow() - horodatage).total_seconds()
+            if age <= (config.min_seconds_between_paid_clicks or 0):
+                config.min_seconds_between_paid_clicks = 0
+                db.session.commit()
+
         def evaluer(ip, ua=NAVIGATEUR):
             return main.evaluer_clic(share, camp, ip, ua, config)
 
@@ -294,9 +321,11 @@ def test_antifraude_clics():
                  not ok and motif == main.MOTIF_RAFALE, f"({motif})")
 
         # --- Hors de la fenêtre anti-rafale, une autre IP passe ---
+        horodatage_ancien = moment_du_jour(10)
         for c in CampaignClick.query.filter_by(campaign_share_id=share.id).all():
-            c.clicked_at = datetime.utcnow() - timedelta(minutes=10)
+            c.clicked_at = horodatage_ancien
         db.session.commit()
+        neutraliser_anti_rafale_si_necessaire(horodatage_ancien)
         ok, motif = evaluer("41.85.10.21")
         verifier("une autre IP est payée une fois la rafale passée", ok, f"({motif})")
 
@@ -328,7 +357,7 @@ def test_antifraude_clics():
         db.session.add(CampaignClick(
             campaign_share_id=autre_share.id, link_type="whatsapp",
             ip="41.85.99.99", user_agent=NAVIGATEUR, is_paid=True,
-            clicked_at=datetime.utcnow() - timedelta(minutes=5),
+            clicked_at=moment_du_jour(5),
         ))
         ancien_ip = config.max_paid_clicks_per_ip_per_day
         config.max_paid_clicks_per_ip_per_day = 1

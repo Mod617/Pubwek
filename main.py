@@ -604,9 +604,9 @@ with app.app_context():
 
 # 🆕 Migration légère : colonnes de configuration ajoutées sur `system_config`
 # après la création initiale de la table (exiger_preuve_partage,
-# exiger_validation_partageur) — même raison que pour transactions/users/
-# contact_messages ci-dessus : db.create_all() ne modifie jamais une table
-# déjà existante.
+# exiger_validation_partageur, referral_reward_partageur_fixe) — même raison
+# que pour transactions/users/contact_messages ci-dessus : db.create_all() ne
+# modifie jamais une table déjà existante.
 with app.app_context():
     from sqlalchemy import text
     try:
@@ -616,8 +616,12 @@ with app.app_context():
         db.session.execute(text(
             "ALTER TABLE system_config ADD COLUMN IF NOT EXISTS exiger_validation_partageur BOOLEAN NOT NULL DEFAULT TRUE"
         ))
+        # 🆕 Montant fixe du parrainage partageur → partageur (voir models.py)
+        db.session.execute(text(
+            "ALTER TABLE system_config ADD COLUMN IF NOT EXISTS referral_reward_partageur_fixe FLOAT NOT NULL DEFAULT 200"
+        ))
         db.session.commit()
-        logger.info("Migration system_config.exiger_preuve_partage / exiger_validation_partageur vérifiée.")
+        logger.info("Migration system_config.exiger_preuve_partage / exiger_validation_partageur / referral_reward_partageur_fixe vérifiée.")
     except Exception as e:
         db.session.rollback()
         logger.error("Erreur migration colonnes system_config : %s", e)

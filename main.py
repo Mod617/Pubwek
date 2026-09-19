@@ -2706,6 +2706,24 @@ def webhook_fedapay():
 
 @app.route("/")
 def index():
+    # 🆕 Capture du parrain dès l'accueil, pour que le même lien de parrainage
+    # fonctionne peu importe le rôle choisi ensuite (annonceur ou partageur).
+    # register() capture aussi le ref directement de son côté : les anciens
+    # liens déjà partagés (vers /register/annonceur?ref=...) continuent donc
+    # de fonctionner sans rien changer.
+    ref_param = request.args.get("ref")
+    if ref_param:
+        if ref_param.isdigit():
+            referrer = User.query.filter(
+                (User.pseudo == ref_param) | (User.id == int(ref_param))
+            ).first()
+        else:
+            referrer = User.query.filter(User.pseudo == ref_param).first()
+
+        if referrer:
+            session["referrer_id"] = referrer.id
+            logger.info("Parrain détecté et stocké en session (accueil) : %s (ID: %s)", referrer.pseudo, referrer.id)
+
     return render_template("index.html")
 
 

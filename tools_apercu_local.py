@@ -42,6 +42,9 @@ os.environ.update({
     "ENV": "development", "SECRET_KEY": "apercu_local_pubwek_cle_de_developpement",
     "DATABASE_URL": "sqlite:///" + db.replace("\\", "/"),
     "ADMIN_EMAIL": "admin@x.com", "ADMIN_PASSWORD": "AdminX123!",
+    # Sans ce secret, les routes PDF (recus de retraits et de transactions)
+    # repondent 500 : elles signent une certification avant le rendu.
+    "DOCUMENT_SIGNING_SECRET": "apercu_local_signature_de_documents",
 })
 import main
 from models import db as _db, User, Campaign

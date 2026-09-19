@@ -3169,11 +3169,13 @@ def dashboard_partageur():
     from models import SystemConfig, User, Campaign, Notification, WalletTransaction
     config = SystemConfig.get_config()
     
-    # Récupération des filleuls (les annonceurs parrainés par ce partageur)
+    # Récupération des filleuls (les annonceurs ET partageurs parrainés par ce partageur)
     filleuls = User.query.filter_by(referrer_id=current_user.id).all()
     total_filleuls = len(filleuls)
 
     # 🆕 Gains de parrainage déjà crédités (vraie donnée du portefeuille, plus de calcul dupliqué)
+    # Couvre à la fois le parrainage annonceur (%) et le parrainage partageur (montant fixe),
+    # puisque les deux utilisent le même transaction_type="referral_reward".
     gains_valides = (
         db.session.query(func.coalesce(func.sum(WalletTransaction.amount), 0.0))
         .filter(
@@ -3183,9 +3185,13 @@ def dashboard_partageur():
         .scalar()
     )
 
-    # Gains encore EN ATTENTE : filleuls dont la première campagne n'est pas encore payée+validée
+    # Gains encore EN ATTENTE : filleuls ANNONCEURS dont la première campagne
+    # n'est pas encore payée+validée. Ne concerne pas les filleuls partageurs :
+    # leur crédit (montant fixe) est immédiat à l'inscription, jamais "en attente".
     gains_en_attente = 0.0
     for filleul in filleuls:
+        if filleul.role != "annonceur":
+            continue  # 🆕 Le parrainage partageur est crédité immédiatement, rien à calculer ici
         if filleul.has_launched_first_campaign:
             continue  # Déjà validée (et donc déjà créditée ci-dessus) — on ne recompte pas
 
@@ -3204,8 +3210,13 @@ def dashboard_partageur():
     # =========================================================================
     clics_en_attente_validation = montant_en_attente_validation(current_user)
 
-    # Lien d'affiliation unique du partageur (redirige vers l'inscription d'un annonceur avec sa réf)
-    affiliate_link = url_for("register", role="annonceur", ref=current_user.pseudo or current_user.id, _external=True)
+    # 🆕 Lien d'affiliation unique du partageur : pointe désormais vers
+    # l'accueil (et non plus directement /register/annonceur), capté dès
+    # l'arrivée sur le site — fonctionne donc pour parrainer indifféremment
+    # un annonceur OU un partageur. Les anciens liens déjà partagés
+    # (vers /register/annonceur?ref=...) continuent de fonctionner
+    # normalement, register() captant aussi le ref de son côté.
+    affiliate_link = url_for("index", ref=current_user.pseudo or current_user.id, _external=True)
 
     # =========================================================================
     # 🆕 NOTIFICATIONS DU PARTAGEUR
@@ -3260,6 +3271,7 @@ def dashboard_partageur():
         clics_en_attente_validation=round(clics_en_attente_validation, 2),
         solde_portefeuille=current_user.wallet_balance or 0.0,
         affiliate_link=affiliate_link,
+        recompense_parrainage_partageur=config.referral_reward_partageur_fixe,  # 🆕
         notifications=notifications,
         notifications_non_lues=notifications_non_lues,
         campagnes_disponibles=campagnes_disponibles

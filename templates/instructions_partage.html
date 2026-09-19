@@ -1,423 +1,220 @@
-{% extends "base.html" %}
+{% extends "base_v2.html" %}
+
+{% macro etape(numero, titre) %}
+  <h2 class="flex items-center gap-space-xs font-headline-md text-body-md font-bold text-slate-midnight">
+    <span class="w-6 h-6 shrink-0 rounded-full bg-emerald-primary text-white font-label-numeric-md text-[13px] font-bold flex items-center justify-center">{{ numero }}</span>
+    {{ titre }}
+  </h2>
+{% endmacro %}
 
 {% block content %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<section class="py-space-lg bg-background">
+<div class="max-w-2xl mx-auto px-margin">
 
-<style>
-  .instructions-wrap {
-    --paper:        #F5F3ED;
-    --paper-raised: #FFFFFF;
-    --ink:          #1B2A2E;
-    --ink-soft:     #5B6B6C;
-    --line:         #E3DFD3;
-    --emerald:      #2F6F5E;
-    --emerald-dark: #1F4F42;
-    --emerald-tint: #E7F0EC;
-    --amber:        #B8842E;
-    --amber-tint:   #F8EEDD;
-    --clay:         #B0483C;
-    --clay-tint:    #F6E7E3;
-    --slate-tint:   #EFEDE4;
+  <div class="pw-card !p-space-md space-y-space-md">
 
-    background: var(--paper);
-    padding: 2.5rem 1.25rem 4rem;
-    margin: -1.5rem calc(50% - 50vw) 0;
-    padding-left: calc(1.25rem + (50vw - 50%));
-    padding-right: calc(1.25rem + (50vw - 50%));
-    font-family: 'Inter', sans-serif;
-    color: var(--ink);
-    min-height: 100vh;
-  }
-
-  .instructions-wrap .card {
-    border-radius: 18px !important;
-    border: 1px solid var(--line) !important;
-    box-shadow: 0 1px 2px rgba(27,42,46,0.05) !important;
-  }
-
-  .instructions-wrap h3.text-success {
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-    color: var(--emerald-dark) !important;
-  }
-  .instructions-wrap .card-body > p.text-muted {
-    color: var(--ink-soft) !important;
-    font-size: 0.94rem;
-  }
-
-  /* ---------- Step blocks ---------- */
-  .instructions-wrap .step-block {
-    padding: 1.1rem 0 1.1rem 0;
-    border-top: 1px solid var(--line);
-  }
-  .instructions-wrap .step-block:first-of-type { border-top: none; padding-top: 0; }
-
-  .instructions-wrap h5.fw-bold {
-    display: flex;
-    align-items: center;
-    gap: 0.7rem;
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-    font-size: 1.08rem;
-    color: var(--ink);
-  }
-  .instructions-wrap h6.fw-bold.text-muted {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.72rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--ink-soft) !important;
-  }
-
-  .instructions-wrap .badge.bg-primary.rounded-circle {
-    background: var(--emerald) !important;
-    width: 28px; height: 28px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'IBM Plex Mono', monospace;
-    font-weight: 500;
-    font-size: 0.85rem;
-    flex-shrink: 0;
-    margin-right: 0 !important;
-  }
-
-  /* ---------- Text block ---------- */
-  .instructions-wrap .bg-light.border.rounded {
-    background: var(--slate-tint) !important;
-    border: 1px solid var(--line) !important;
-    border-radius: 12px !important;
-    font-size: 0.92rem;
-    line-height: 1.6;
-  }
-  .instructions-wrap .btn-outline-primary {
-    color: var(--emerald-dark) !important;
-    border-color: var(--emerald) !important;
-    border-radius: 999px !important;
-  }
-  .instructions-wrap .btn-outline-primary:hover {
-    background: var(--emerald) !important;
-    color: #fff !important;
-  }
-  .instructions-wrap #copieFeedback,
-  .instructions-wrap .text-success.fw-semibold { color: var(--emerald-dark) !important; }
-
-  /* ---------- Tracking links ---------- */
-  .instructions-wrap .input-group-text {
-    background: var(--paper-raised) !important;
-    border: 1px solid var(--line) !important;
-  }
-  .instructions-wrap .form-control {
-    border: 1px solid var(--line);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.82rem;
-  }
-  .instructions-wrap .btn-outline-success {
-    color: var(--emerald-dark) !important;
-    border-color: var(--emerald) !important;
-    border-radius: 0 9px 9px 0 !important;
-  }
-  .instructions-wrap .btn-outline-success:hover { background: var(--emerald) !important; color: #fff !important; }
-  .instructions-wrap .btn-outline-secondary {
-    border-color: var(--line) !important;
-    color: var(--ink-soft) !important;
-    border-radius: 999px !important;
-  }
-  .instructions-wrap .btn-outline-secondary:hover {
-    background: var(--ink) !important;
-    color: #fff !important;
-    border-color: var(--ink) !important;
-  }
-
-  /* ---------- WhatsApp CTA ---------- */
-  .instructions-wrap .btn-success.btn-lg {
-    background: var(--emerald) !important;
-    border: none !important;
-    border-radius: 12px !important;
-    font-weight: 700;
-    transition: background .15s ease, transform .15s ease;
-  }
-  .instructions-wrap .btn-success.btn-lg:hover {
-    background: var(--emerald-dark) !important;
-    transform: translateY(-1px);
-  }
-
-  /* ---------- Anti-fraude info box ---------- */
-  .instructions-wrap .antifraude-note {
-    background: var(--slate-tint);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 0.85rem 1rem;
-    font-size: 0.85rem;
-    color: var(--ink-soft);
-    display: flex;
-    gap: 0.6rem;
-    align-items: flex-start;
-  }
-  .instructions-wrap .antifraude-note i { color: var(--emerald); margin-top: 0.15rem; }
-
-  /* ---------- Proof section ---------- */
-  .instructions-wrap .border-top { border-color: var(--line) !important; }
-
-  .instructions-wrap .proof-day-card {
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 0.9rem 1rem;
-    margin-bottom: 0.75rem;
-    background: var(--paper-raised);
-  }
-  .instructions-wrap .proof-day-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
-  .instructions-wrap .proof-day-title {
-    font-weight: 700;
-    font-size: 0.92rem;
-  }
-
-  .badge-statut {
-    border-radius: 999px;
-    font-size: 0.74rem;
-    font-weight: 600;
-    padding: 0.3rem 0.7rem;
-  }
-  .badge-statut.validee { background: var(--emerald-tint); color: var(--emerald-dark); }
-  .badge-statut.en_attente { background: var(--amber-tint); color: var(--amber); }
-  .badge-statut.rejetee { background: var(--clay-tint); color: var(--clay); }
-  .badge-statut.perdue { background: var(--slate-tint); color: var(--ink-soft); }
-  .badge-statut.a_envoyer { background: var(--slate-tint); color: var(--ink); }
-
-  .instructions-wrap .proof-deadline {
-    font-size: 0.78rem;
-    color: var(--clay);
-    font-weight: 600;
-  }
-  .instructions-wrap .proof-deadline.calme { color: var(--ink-soft); font-weight: 500; }
-
-  .instructions-wrap .alert-danger {
-    background: var(--clay-tint) !important;
-    border: 1px solid #ecd2cc !important;
-    color: var(--clay) !important;
-    border-radius: 10px !important;
-  }
-  .instructions-wrap .alert-success-soft {
-    background: var(--emerald-tint);
-    border: 1px solid #cfe4da;
-    color: var(--emerald-dark);
-    border-radius: 10px;
-    padding: 0.6rem 0.9rem;
-    font-size: 0.85rem;
-  }
-  .instructions-wrap .btn-primary.btn-sm {
-    background: var(--emerald) !important;
-    border: none !important;
-    border-radius: 8px !important;
-  }
-  .instructions-wrap .btn-primary.btn-sm:hover { background: var(--emerald-dark) !important; }
-
-  .instructions-wrap .btn-link {
-    color: var(--ink-soft);
-    font-weight: 600;
-    text-decoration: none;
-  }
-  .instructions-wrap .btn-link:hover { color: var(--emerald-dark); }
-</style>
-
-<div class="instructions-wrap">
-<div class="container mt-5" style="max-width: 700px;">
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-4">
-            <h3 class="fw-bold text-success mb-1">✅ Partage enregistré !</h3>
-            <p class="text-muted mb-4">Suivez les étapes ci-dessous pour publier cette campagne sur votre statut WhatsApp et commencer à générer des clics.</p>
-
-            <!-- ÉTAPE 1 : COPIER LE TEXTE (avec les liens de tracking inclus) -->
-            <div class="mb-4 step-block">
-                <h5 class="fw-bold">
-                    <span class="badge bg-primary rounded-circle me-2">1</span>
-                    Copiez le texte de l'annonce
-                </h5>
-                <div class="bg-light border rounded p-3 mt-2 position-relative">
-                    <p id="texteAnnonce" class="mb-0" style="white-space: pre-line;">{{ camp.description or camp.promotion_detail or "" }}{% if lien_whatsapp_tracking %}
-
-📲 Commander sur WhatsApp : {{ lien_whatsapp_tracking }}{% endif %}{% if lien_site_tracking %}
-
-🌐 Voir le site : {{ lien_site_tracking }}{% endif %}</p>
-                </div>
-                <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="copierTexte()">
-                    <i class="bi bi-clipboard"></i> Copier le texte complet
-                </button>
-                <small id="copieFeedback" class="text-success fw-semibold d-none ms-2">Copié ! ✅</small>
-            </div>
-
-            <!-- ÉTAPE 1bis : LIENS DE TRACKING INDIVIDUELS (au cas où le partageur préfère les insérer séparément) -->
-            {% if lien_whatsapp_tracking or lien_site_tracking %}
-            <div class="mb-4 step-block">
-                <h6 class="fw-bold text-muted mb-2">🔗 Vos liens personnels de suivi</h6>
-                <p class="small text-muted mb-2">
-                    Ces liens sont propres à votre partage : chaque clic dessus sera comptabilisé à votre nom pour cette campagne.
-                </p>
-
-                {% if lien_whatsapp_tracking %}
-                <div class="input-group mb-2">
-                    <span class="input-group-text bg-white"><i class="bi bi-whatsapp text-success"></i></span>
-                    <input type="text" class="form-control form-control-sm" id="lienWhatsappTracking" value="{{ lien_whatsapp_tracking }}" readonly>
-                    <button type="button" class="btn btn-outline-success btn-sm" onclick="copierLien('lienWhatsappTracking', 'feedbackWhatsapp')">Copier</button>
-                </div>
-                <small id="feedbackWhatsapp" class="text-success fw-semibold d-none">Lien WhatsApp copié ! ✅</small>
-                {% endif %}
-
-                {% if lien_site_tracking %}
-                <div class="input-group mt-2">
-                    <span class="input-group-text bg-white"><i class="bi bi-globe text-primary"></i></span>
-                    <input type="text" class="form-control form-control-sm" id="lienSiteTracking" value="{{ lien_site_tracking }}" readonly>
-                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="copierLien('lienSiteTracking', 'feedbackSite')">Copier</button>
-                </div>
-                <small id="feedbackSite" class="text-primary fw-semibold d-none">Lien du site copié ! ✅</small>
-                {% endif %}
-            </div>
-            {% endif %}
-
-            <!-- ÉTAPE 2 : MÉDIAS (si Option A ou B) -->
-            {% if media_urls %}
-            <div class="mb-4 step-block">
-                <h5 class="fw-bold">
-                    <span class="badge bg-primary rounded-circle me-2">2</span>
-                    Téléchargez {{ "la vidéo" if camp.display_option == "A" else "les photos" }}
-                </h5>
-                <div class="d-flex flex-wrap gap-2 mt-2">
-                    {% for url in media_urls %}
-                        {% if camp.display_option == "A" %}
-                            <video src="{{ url }}" controls class="rounded shadow-sm" style="max-width: 220px; max-height: 200px;"></video>
-                        {% else %}
-                            <img src="{{ url }}" class="rounded shadow-sm" style="max-width: 120px; max-height: 120px; object-fit: cover;">
-                        {% endif %}
-                    {% endfor %}
-                </div>
-                <div class="d-flex flex-wrap gap-2 mt-2">
-                    {% for url in media_urls %}
-                        <a href="{{ url }}" download class="btn btn-outline-secondary btn-sm">
-                            <i class="bi bi-download"></i> Télécharger {{ loop.index }}
-                        </a>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- ÉTAPE : OUVRIR WHATSAPP -->
-            <div class="mb-2 step-block">
-                <h5 class="fw-bold">
-                    <span class="badge bg-primary rounded-circle me-2">{{ "3" if media_urls else "2" }}</span>
-                    Ouvrez WhatsApp et publiez votre statut
-                </h5>
-                <p class="text-muted small mb-2">
-                    Dans WhatsApp, allez dans l'onglet <strong>Statuts</strong> → <strong>Ajouter un statut</strong>,
-                    {% if media_urls %}ajoutez {{ "la vidéo" if camp.display_option == "A" else "les photos" }} téléchargée(s){% else %}collez le texte copié{% endif %}, puis publiez.
-                </p>
-                <a href="whatsapp://" class="btn btn-success btn-lg w-100 fw-semibold">
-                    <i class="bi bi-whatsapp me-2"></i> Ouvrir WhatsApp
-                </a>
-                <small class="text-muted d-block mt-2 text-center">
-                    Sur ordinateur, WhatsApp doit être installé pour que ce lien fonctionne. Sinon, ouvrez WhatsApp directement sur votre téléphone.
-                </small>
-            </div>
-
-            <!-- ÉTAPE FINALE : ENVOI DES PREUVES -->
-            <div class="mb-4 mt-4 pt-3 border-top step-block">
-                <h5 class="fw-bold">
-                    <span class="badge bg-primary rounded-circle me-2">{{ "4" if media_urls else "3" }}</span>
-                    Envoyez la preuve de fin de journée
-                </h5>
-
-                <div class="antifraude-note mb-3">
-                    <i class="bi bi-shield-check"></i>
-                    <div>
-                        Seuls les clics réels comptent : notre système écarte automatiquement les clics
-                        suspects (robots, doublons, votre propre lien...), qui sont définitivement perdus,
-                        sans recours possible. Envoyez votre capture de fin de journée pour faire valider
-                        et créditer vos clics valides du jour — vous avez <strong>{{ camp.FENETRE_RATTRAPAGE_HEURES }} heures</strong>
-                        après la fin de chaque jour pour le faire, sans quoi les clics de ce jour-là seront perdus.
-                    </div>
-                </div>
-
-                {% if jours_preuves %}
-                    {% for item in jours_preuves %}
-                    <div class="proof-day-card">
-                        <div class="proof-day-top">
-                            <span class="proof-day-title">📅 Jour {{ item.jour }} / {{ camp.duration_days }}</span>
-                            <span class="badge-statut {{ item.statut }}">
-                                {% if item.statut == "validee" %}✅ Validée
-                                {% elif item.statut == "en_attente" %}⏳ En attente de validation
-                                {% elif item.statut == "rejetee" %}❌ Rejetée
-                                {% elif item.statut == "perdue" %}🚫 Clics perdus
-                                {% else %}📸 Preuve à envoyer{% endif %}
-                            </span>
-                        </div>
-
-                        {% if item.statut == "validee" %}
-                            <div class="alert-success-soft">
-                                <i class="bi bi-check-circle-fill me-1"></i>
-                                Vos clics du jour {{ item.jour }} ont été validés et ajoutés à votre portefeuille disponible.
-                            </div>
-
-                        {% elif item.statut == "en_attente" %}
-                            <p class="small text-muted mb-0">Votre capture est en cours de vérification par un administrateur.</p>
-
-                        {% elif item.statut == "perdue" %}
-                            <p class="small text-muted mb-0">Le délai de {{ camp.FENETRE_RATTRAPAGE_HEURES }}h est dépassé pour ce jour. Les clics de cette journée ne peuvent plus être crédités.</p>
-
-                        {% else %}
-                            {% if item.statut == "rejetee" %}
-                                <div class="alert alert-danger py-2 px-3 small mb-2">
-                                    ❌ Rejetée : {{ item.preuve.rejection_reason }}. Veuillez renvoyer une capture.
-                                </div>
-                            {% endif %}
-
-                            {% if item.reclamable %}
-                                <p class="proof-deadline {{ 'calme' if item.heures_restantes > 6 else '' }} mb-2">
-                                    <i class="bi bi-alarm me-1"></i>
-                                    {% if item.heures_restantes > 0 %}
-                                        Il vous reste environ {{ item.heures_restantes }}h pour envoyer cette preuve.
-                                    {% else %}
-                                        Dernières minutes pour envoyer cette preuve !
-                                    {% endif %}
-                                </p>
-                            {% endif %}
-
-                            <form method="POST" action="{{ url_for('envoyer_preuve_partage', share_id=share.id, day_number=item.jour) }}" enctype="multipart/form-data" class="d-flex gap-2">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <input type="file" name="preuve" accept="image/*" required class="form-control form-control-sm">
-                                <button type="submit" class="btn btn-primary btn-sm text-nowrap">Envoyer</button>
-                            </form>
-                        {% endif %}
-                    </div>
-                    {% endfor %}
-                {% endif %}
-            </div>
-
-            <div class="text-center mt-4">
-                <a href="{{ url_for('dashboard_partageur') }}" class="btn btn-link">⬅ Retour au tableau de bord</a>
-            </div>
-        </div>
+    <!-- En-tete -->
+    <div>
+      <h1 class="flex items-center gap-1.5 font-headline-md text-headline-md text-emerald-deep">
+        <span class="material-symbols-outlined text-[24px]">check_circle</span>
+        Partage enregistré
+      </h1>
+      <p class="mt-0.5 font-body-sm text-body-sm text-on-surface-variant">
+        Suivez les étapes ci-dessous pour publier cette campagne sur votre statut WhatsApp
+        et commencer à générer des clics.
+      </p>
     </div>
+
+    <!-- ETAPE 1 : copier le texte -->
+    <div class="space-y-space-xs">
+      {{ etape(1, "Copiez le texte de l'annonce") }}
+      <div class="pw-card-flat">
+        <p id="texteAnnonce" class="font-body-sm text-body-sm text-on-surface" style="white-space: pre-line;">{{ camp.description or camp.promotion_detail or "" }}{% if lien_whatsapp_tracking %}
+📲 Commander sur WhatsApp : {{ lien_whatsapp_tracking }}{% endif %}{% if lien_site_tracking %}
+🌐 Voir le site : {{ lien_site_tracking }}{% endif %}</p>
+      </div>
+      <div class="flex items-center gap-space-xs">
+        <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral" onclick="copierTexte()">
+          <span class="material-symbols-outlined text-[18px]">content_copy</span> Copier le texte complet
+        </button>
+        <span id="copieFeedback" class="hidden font-caption text-caption font-semibold text-emerald-primary">Copié</span>
+      </div>
+    </div>
+
+    <!-- Liens de suivi personnels -->
+    {% if lien_whatsapp_tracking or lien_site_tracking %}
+    <div class="space-y-space-xs">
+      <h2 class="flex items-center gap-1.5 font-headline-md text-[14px] font-semibold text-on-surface-variant">
+        <span class="material-symbols-outlined text-[18px]">link</span> Vos liens personnels de suivi
+      </h2>
+      <p class="font-caption text-caption text-on-surface-variant">
+        Ces liens sont propres à votre partage : chaque clic dessus sera comptabilisé à votre nom
+        pour cette campagne.
+      </p>
+
+      {% if lien_whatsapp_tracking %}
+      <div>
+        <div class="flex">
+          <span class="inline-flex items-center rounded-l-xl border border-r-0 border-outline-variant/50 bg-surface-container px-space-sm">
+            <span class="material-symbols-outlined text-[18px] text-emerald-primary">chat</span>
+          </span>
+          <input type="text" class="pw-input rounded-none font-label-numeric-md text-label-numeric-md" id="lienWhatsappTracking" value="{{ lien_whatsapp_tracking }}" readonly>
+          <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral rounded-l-none shrink-0" onclick="copierLien('lienWhatsappTracking', 'feedbackWhatsapp')">Copier</button>
+        </div>
+        <span id="feedbackWhatsapp" class="hidden font-caption text-caption font-semibold text-emerald-primary">Lien WhatsApp copié</span>
+      </div>
+      {% endif %}
+
+      {% if lien_site_tracking %}
+      <div>
+        <div class="flex">
+          <span class="inline-flex items-center rounded-l-xl border border-r-0 border-outline-variant/50 bg-surface-container px-space-sm">
+            <span class="material-symbols-outlined text-[18px] text-emerald-primary">public</span>
+          </span>
+          <input type="text" class="pw-input rounded-none font-label-numeric-md text-label-numeric-md" id="lienSiteTracking" value="{{ lien_site_tracking }}" readonly>
+          <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral rounded-l-none shrink-0" onclick="copierLien('lienSiteTracking', 'feedbackSite')">Copier</button>
+        </div>
+        <span id="feedbackSite" class="hidden font-caption text-caption font-semibold text-emerald-primary">Lien du site copié</span>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- ETAPE 2 : medias -->
+    {% if media_urls %}
+    <div class="space-y-space-xs">
+      {{ etape(2, "Téléchargez " ~ ("la vidéo" if camp.display_option == "A" else "les photos")) }}
+      <div class="flex flex-wrap gap-space-xs">
+        {% for url in media_urls %}
+          {% if camp.display_option == "A" %}
+            <video src="{{ url }}" controls class="rounded-xl shadow-sm max-w-[220px] max-h-[200px]"></video>
+          {% else %}
+            <img src="{{ url }}" alt="" class="w-28 h-28 rounded-xl object-cover shadow-sm">
+          {% endif %}
+        {% endfor %}
+      </div>
+      <div class="flex flex-wrap gap-space-2xs">
+        {% for url in media_urls %}
+          <a href="{{ url }}" download class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5">
+            <span class="material-symbols-outlined text-[16px]">download</span> Télécharger {{ loop.index }}
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ETAPE : publier -->
+    <div class="space-y-space-xs">
+      {{ etape("3" if media_urls else "2", "Ouvrez WhatsApp et publiez votre statut") }}
+      <p class="font-caption text-caption text-on-surface-variant">
+        Dans WhatsApp, allez dans l'onglet <strong class="text-slate-midnight">Statuts</strong> →
+        <strong class="text-slate-midnight">Ajouter un statut</strong>,
+        {% if media_urls %}ajoutez {{ "la vidéo" if camp.display_option == "A" else "les photos" }} téléchargée(s){% else %}collez le texte copié{% endif %}, puis publiez.
+      </p>
+      <a href="whatsapp://" class="pw-btn pw-btn-md pw-btn-primary w-full">
+        <span class="material-symbols-outlined text-[20px]">chat</span> Ouvrir WhatsApp
+      </a>
+      <p class="pw-help text-center">
+        Sur ordinateur, WhatsApp doit être installé pour que ce lien fonctionne.
+        Sinon, ouvrez WhatsApp directement sur votre téléphone.
+      </p>
+    </div>
+
+    <!-- ETAPE FINALE : preuves -->
+    <div class="pt-space-sm border-t border-outline-variant/30 space-y-space-xs">
+      {{ etape("4" if media_urls else "3", "Envoyez la preuve de fin de journée") }}
+
+      <div class="flex items-start gap-space-xs rounded-xl border border-amber-rich/30 bg-amber-soft px-space-sm py-space-xs">
+        <span class="material-symbols-outlined text-[18px] text-amber-rich shrink-0">shield</span>
+        <p class="font-caption text-caption text-secondary">
+          Seuls les clics réels comptent : notre système écarte automatiquement les clics suspects
+          (robots, doublons, votre propre lien…), qui sont définitivement perdus. Envoyez votre capture
+          de fin de journée pour faire valider et créditer vos clics valides du jour — vous avez
+          <strong>{{ camp.FENETRE_RATTRAPAGE_HEURES }} heures</strong> après la fin de chaque jour,
+          sans quoi les clics de ce jour-là seront perdus.
+        </p>
+      </div>
+
+      {% if jours_preuves %}
+        <div class="space-y-space-xs">
+        {% for item in jours_preuves %}
+          <div class="rounded-xl border border-outline-variant/30 p-space-sm">
+            <div class="flex items-center justify-between gap-space-xs">
+              <span class="font-headline-md text-[14px] font-semibold text-slate-midnight">
+                Jour {{ item.jour }} / {{ camp.duration_days }}
+              </span>
+              {% if item.statut == "validee" %}
+                <span class="pw-chip pw-chip-success"><span class="material-symbols-outlined text-[14px]">check_circle</span> Validée</span>
+              {% elif item.statut == "en_attente" %}
+                <span class="pw-chip pw-chip-warning"><span class="material-symbols-outlined text-[14px]">hourglass_top</span> En attente</span>
+              {% elif item.statut == "rejetee" %}
+                <span class="pw-chip pw-chip-danger"><span class="material-symbols-outlined text-[14px]">cancel</span> Rejetée</span>
+              {% elif item.statut == "perdue" %}
+                <span class="pw-chip pw-chip-neutral"><span class="material-symbols-outlined text-[14px]">block</span> Clics perdus</span>
+              {% else %}
+                <span class="pw-chip pw-chip-neutral"><span class="material-symbols-outlined text-[14px]">photo_camera</span> Preuve à envoyer</span>
+              {% endif %}
+            </div>
+
+            {% if item.statut == "validee" %}
+              <p class="mt-1 font-caption text-caption text-emerald-deep">
+                Vos clics du jour {{ item.jour }} ont été validés et ajoutés à votre portefeuille disponible.
+              </p>
+            {% elif item.statut == "en_attente" %}
+              <p class="mt-1 font-caption text-caption text-on-surface-variant">
+                Votre capture est en cours de vérification par un administrateur.
+              </p>
+            {% elif item.statut == "perdue" %}
+              <p class="mt-1 font-caption text-caption text-on-surface-variant">
+                Le délai de {{ camp.FENETRE_RATTRAPAGE_HEURES }}h est dépassé pour ce jour.
+                Les clics de cette journée ne peuvent plus être crédités.
+              </p>
+            {% else %}
+              {% if item.statut == "rejetee" %}
+                <p class="mt-1 rounded-lg bg-error-container px-space-sm py-1 font-caption text-caption text-on-error-container">
+                  Rejetée : {{ item.preuve.rejection_reason }}. Veuillez renvoyer une capture.
+                </p>
+              {% endif %}
+              {% if item.reclamable %}
+                <p class="mt-1 flex items-center gap-1 font-caption text-caption font-semibold {{ 'text-on-surface-variant' if item.heures_restantes > 6 else 'text-error' }}">
+                  <span class="material-symbols-outlined text-[14px]">schedule</span>
+                  {% if item.heures_restantes > 0 %}
+                    Il vous reste environ {{ item.heures_restantes }}h pour envoyer cette preuve.
+                  {% else %}
+                    Dernières minutes pour envoyer cette preuve.
+                  {% endif %}
+                </p>
+              {% endif %}
+              <form method="POST" action="{{ url_for('envoyer_preuve_partage', share_id=share.id, day_number=item.jour) }}"
+                    enctype="multipart/form-data" class="mt-1.5 flex gap-space-2xs">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="file" name="preuve" accept="image/*" required class="pw-file">
+                <button type="submit" class="pw-btn pw-btn-sm pw-btn-primary shrink-0">Envoyer</button>
+              </form>
+            {% endif %}
+          </div>
+        {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <p class="text-center">
+      <a href="{{ url_for('dashboard_partageur') }}" class="font-body-sm text-body-sm font-semibold text-emerald-primary hover:text-emerald-deep hover:underline">
+        Retour au tableau de bord
+      </a>
+    </p>
+
+  </div>
 </div>
-</div>
+</section>
 
 <script>
 function copierTexte() {
     const texte = document.getElementById("texteAnnonce").innerText;
     navigator.clipboard.writeText(texte).then(function() {
         const feedback = document.getElementById("copieFeedback");
-        feedback.classList.remove("d-none");
-        setTimeout(function() {
-            feedback.classList.add("d-none");
-        }, 3000);
+        feedback.classList.remove("hidden");
+        setTimeout(function() { feedback.classList.add("hidden"); }, 3000);
     }).catch(function(err) {
         console.error("Erreur lors de la copie :", err);
     });
@@ -427,10 +224,8 @@ function copierLien(inputId, feedbackId) {
     const input = document.getElementById(inputId);
     navigator.clipboard.writeText(input.value).then(function() {
         const feedback = document.getElementById(feedbackId);
-        feedback.classList.remove("d-none");
-        setTimeout(function() {
-            feedback.classList.add("d-none");
-        }, 3000);
+        feedback.classList.remove("hidden");
+        setTimeout(function() { feedback.classList.add("hidden"); }, 3000);
     }).catch(function(err) {
         console.error("Erreur lors de la copie :", err);
     });

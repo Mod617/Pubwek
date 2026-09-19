@@ -142,7 +142,7 @@
         let newY = Math.min(100, Math.max(0, startPercentY - moveFactorY));
 
         currentTarget.img.style.objectPosition = `${newX}% ${newY}%`;
-        currentTarget.saveBtn.classList.remove('d-none');
+        currentTarget.saveBtn.classList.remove('hidden');
 
         if (currentTarget.type === 'cover') {
             coverPos = { x: newX, y: newY };
@@ -177,7 +177,7 @@
         .then(data => {
             if (data.success) {
                 const btn = document.getElementById('btnSaveCoverPosition');
-                if (btn) btn.classList.add('d-none');
+                if (btn) btn.classList.add('hidden');
                 alert("Position de la couverture enregistrée !");
             } else {
                 alert("Erreur position : " + data.error);
@@ -200,7 +200,7 @@
         .then(data => {
             if (data.success) {
                 const btn = document.getElementById('btnSaveLogoPosition');
-                if (btn) btn.classList.add('d-none');
+                if (btn) btn.classList.add('hidden');
                 alert("Position du profil enregistrée !");
             } else {
                 alert("Erreur position : " + data.error);
@@ -360,8 +360,9 @@
                 // textContent, pas innerHTML : la bio est une saisie utilisateur.
                 text.textContent = "";
                 if (data.bio) {
-                    const icone = document.createElement('i');
-                    icone.className = "fas fa-quote-left me-1 opacity-50";
+                    const icone = document.createElement('span');
+                    icone.className = "material-symbols-outlined text-[14px] opacity-60 mr-1";
+                    icone.textContent = "description";
                     text.appendChild(icone);
                     text.appendChild(document.createTextNode(" " + data.bio));
                 } else {
@@ -453,7 +454,7 @@
         if (!container && mediaInput && mediaInput.parentNode) {
             container = document.createElement('div');
             container.id = 'imagePreviewsContainer';
-            container.className = 'd-flex flex-wrap gap-2 mt-2';
+            container.className = 'flex flex-wrap gap-2 mt-2';
             mediaInput.parentNode.appendChild(container);
         }
         if (!container) return;
@@ -464,33 +465,22 @@
             const fileUrl = getBlobUrl(file);
 
             const wrapper = document.createElement('div');
-            wrapper.className = 'position-relative d-inline-block';
+            wrapper.className = 'relative inline-block';
             wrapper.style.width = '75px';
             wrapper.style.height = '75px';
 
             const img = document.createElement('img');
             img.src = fileUrl;
-            img.className = 'img-thumbnail w-100 h-100';
+            img.className = 'w-full h-full rounded-lg border border-outline-variant/40 bg-white object-cover';
             img.style.objectFit = 'cover';
             img.style.borderRadius = '8px';
             img.style.cursor = 'pointer';
             img.title = 'Cliquer pour agrandir';
 
-            img.addEventListener('click', () => {
-                const modalImg = document.getElementById('previewModalImage');
-                const modalElement = document.getElementById('imagePreviewModal');
-                if (modalImg && modalElement) {
-                    modalImg.src = fileUrl;
-                    if (typeof bootstrap !== 'undefined') {
-                        new bootstrap.Modal(modalElement).show();
-                    }
-                }
-            });
-
             const removeBtn = document.createElement('button');
             removeBtn.type = 'button';
             removeBtn.innerHTML = '&times;';
-            removeBtn.className = 'btn btn-danger btn-sm position-absolute p-0 d-flex align-items-center justify-content-center';
+            removeBtn.className = 'absolute flex items-center justify-center p-0 bg-error text-white font-bold cursor-pointer';
             removeBtn.style.cssText = 'top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%; font-size: 14px; line-height: 1; border: 2px solid white; z-index: 2;';
 
             removeBtn.addEventListener('click', (e) => {

@@ -1,586 +1,273 @@
-{% extends "base.html" %} 
+{% extends "base_v2.html" %}
+
 {% block content %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<section class="py-space-lg bg-background">
+<div class="max-w-6xl mx-auto px-margin space-y-space-md">
 
-<style>
-  .partageur-wrap {
-    --paper:        #F5F3ED;
-    --paper-raised: #FFFFFF;
-    --ink:          #1B2A2E;
-    --ink-soft:     #5B6B6C;
-    --line:         #E3DFD3;
-    --emerald:      #2F6F5E;
-    --emerald-dark: #1F4F42;
-    --emerald-tint: #E7F0EC;
-    --amber:        #B8842E;
-    --amber-tint:   #F8EEDD;
-    --clay:         #B0483C;
-    --clay-tint:    #F6E7E3;
-    --slate-tint:   #EFEDE4;
-
-    background: var(--paper);
-    padding: 2.5rem 1.25rem 4rem;
-    margin: -1.5rem calc(50% - 50vw) 0;
-    padding-left: calc(1.25rem + (50vw - 50%));
-    padding-right: calc(1.25rem + (50vw - 50%));
-    font-family: 'Inter', sans-serif;
-    color: var(--ink);
-    min-height: 100vh;
-  }
-
-  .partageur-wrap .container { max-width: 1180px; }
-
-  /* ---------- Header ---------- */
-  .partageur-wrap h2.fw-bold.text-dark {
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-    color: var(--ink) !important;
-    margin-bottom: 0.2rem;
-  }
-  .partageur-wrap h2.fw-bold.text-dark .text-success { color: var(--emerald) !important; }
-  .partageur-wrap p.text-muted { color: var(--ink-soft) !important; }
-
-  .partageur-wrap .badge.bg-success.px-3 {
-    background: var(--emerald) !important;
-    border-radius: 999px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-weight: 500;
-    font-size: 0.72rem;
-    letter-spacing: 0.04em;
-  }
-
-  .partageur-wrap .btn-light.position-relative {
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    background: var(--paper-raised);
-  }
-
-  /* ---------- Cards, generic ---------- */
-  .partageur-wrap .card {
-    border-radius: 16px !important;
-    border: 1px solid var(--line) !important;
-  }
-
-  /* ---------- Wallet balance (signature hero) ---------- */
-  .partageur-wrap .card.bg-success.bg-opacity-10 {
-    background: linear-gradient(135deg, var(--emerald) 0%, var(--emerald-dark) 100%) !important;
-    border: none !important;
-    border-left: none !important;
-    box-shadow: 0 4px 18px rgba(31,79,66,0.18);
-  }
-  .partageur-wrap .card.bg-success.bg-opacity-10 h6 { color: rgba(255,255,255,0.75) !important; }
-  .partageur-wrap .card.bg-success.bg-opacity-10 h6 i { color: rgba(255,255,255,0.75) !important; }
-  .partageur-wrap .card.bg-success.bg-opacity-10 h2 {
-    color: var(--amber) !important;
-    font-family: 'Fraunces', serif;
-    font-weight: 700;
-  }
-  .partageur-wrap .card.bg-success.bg-opacity-10 p.text-muted { color: rgba(255,255,255,0.65) !important; }
-  .partageur-wrap .card.bg-success.bg-opacity-10 .btn-success {
-    background: var(--amber) !important;
-    border: none !important;
-    color: var(--ink) !important;
-    border-radius: 999px !important;
-  }
-  .partageur-wrap .card.bg-success.bg-opacity-10 .btn-success:hover { filter: brightness(0.94); }
-
-  /* ---------- 🆕 Ligne "en attente de validation" dans la carte portefeuille ---------- */
-  .partageur-wrap .wallet-pending-row {
-    border-top: 1px solid rgba(255,255,255,0.18);
-    margin-top: 1.1rem;
-    padding-top: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  .partageur-wrap .wallet-pending-label {
-    color: rgba(255,255,255,0.8) !important;
-    font-size: 0.85rem;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-  .partageur-wrap .wallet-pending-value {
-    font-family: 'Fraunces', serif;
-    font-weight: 700;
-    font-size: 1.15rem;
-    color: #fff !important;
-  }
-  .partageur-wrap .wallet-pending-note {
-    color: rgba(255,255,255,0.6) !important;
-    font-size: 0.78rem;
-    margin-top: 0.15rem;
-  }
-
-  /* ---------- Parrainage card ---------- */
-  .partageur-wrap .card.bg-light {
-    background: var(--paper-raised) !important;
-  }
-  .partageur-wrap .card.bg-light h5 {
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-    color: var(--ink) !important;
-  }
-  .partageur-wrap .badge.bg-warning.text-dark {
-    background: var(--amber-tint) !important;
-    color: var(--amber) !important;
-    border-radius: 999px;
-    font-weight: 600;
-  }
-  .partageur-wrap #referralLink {
-    border: 1px solid var(--line);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.86rem;
-    background: var(--slate-tint) !important;
-  }
-  .partageur-wrap .input-group .btn-success {
-    background: var(--emerald) !important;
-    border: none !important;
-    border-radius: 0 9px 9px 0 !important;
-  }
-  .partageur-wrap .input-group .btn-success:hover { background: var(--emerald-dark) !important; }
-  .partageur-wrap #copyFeedback { color: var(--emerald-dark) !important; }
-
-  /* ---------- Stat cards ---------- */
-  .partageur-wrap .row.g-4.mb-4 > .col-md-4 .card {
-    border-left: none !important;
-  }
-  .partageur-wrap .row.g-4.mb-4 > .col-md-4:nth-child(2) .card,
-  .partageur-wrap .row.g-4.mb-4 > .col-md-4:nth-child(3) .card {
-    border-left: none !important;
-  }
-  .partageur-wrap .rounded-circle.p-3 {
-    border-radius: 50% !important;
-  }
-  .partageur-wrap .bg-primary.bg-opacity-10 { background: var(--slate-tint) !important; color: var(--ink) !important; }
-  .partageur-wrap .bg-success.bg-opacity-10.text-success { background: var(--emerald-tint) !important; color: var(--emerald-dark) !important; }
-  .partageur-wrap .bg-warning.bg-opacity-10.text-warning { background: var(--amber-tint) !important; color: var(--amber) !important; }
-  .partageur-wrap .row.g-4.mb-4 h6.text-muted {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.72rem;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    color: var(--ink-soft) !important;
-  }
-  .partageur-wrap .row.g-4.mb-4 h3 {
-    font-family: 'Fraunces', serif;
-    font-weight: 700;
-  }
-  .partageur-wrap .row.g-4.mb-4 h3.text-success { color: var(--emerald-dark) !important; }
-  .partageur-wrap .row.g-4.mb-4 h3.text-warning { color: var(--amber) !important; }
-
-  /* ---------- Campagnes disponibles ---------- */
-  .partageur-wrap #produitsDisponibles h4 {
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-  }
-  .partageur-wrap #produitsDisponibles .card.border {
-    border: 1px solid var(--line) !important;
-    transition: transform .12s ease, box-shadow .12s ease;
-  }
-  .partageur-wrap #produitsDisponibles .card.border:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 18px rgba(27,42,46,0.08) !important;
-  }
-  .partageur-wrap #produitsDisponibles .card.border-warning {
-    border: 1px solid var(--amber) !important;
-  }
-  .partageur-wrap #produitsDisponibles .badge.bg-secondary {
-    background: var(--slate-tint) !important;
-    color: var(--ink) !important;
-    font-weight: 600;
-  }
-  .partageur-wrap #produitsDisponibles .badge.bg-dark {
-    background: var(--ink) !important;
-    font-family: 'IBM Plex Mono', monospace;
-    font-weight: 500;
-  }
-  .partageur-wrap #produitsDisponibles h6.fw-bold {
-    font-family: 'Fraunces', serif;
-    font-weight: 600 !important;
-  }
-
-  .partageur-wrap .quota-track {
-    width: 100%;
-    height: 6px;
-    border-radius: 999px;
-    background: var(--slate-tint);
-    overflow: hidden;
-    margin: 0.5rem 0 0.7rem;
-  }
-  .partageur-wrap .quota-fill { height: 100%; background: var(--emerald); border-radius: 999px; }
-  .partageur-wrap .quota-fill.quota-full { background: var(--amber); }
-
-  .partageur-wrap .alert.alert-warning {
-    background: var(--amber-tint) !important;
-    border: 1px solid #ecd7ae !important;
-    color: #8a6420 !important;
-  }
-  .partageur-wrap .alert.alert-light.border {
-    background: var(--slate-tint) !important;
-    border-color: var(--line) !important;
-    color: var(--ink-soft) !important;
-  }
-
-  .partageur-wrap .btn-outline-success {
-    color: var(--emerald-dark) !important;
-    border-color: var(--emerald) !important;
-    border-radius: 9px !important;
-  }
-  .partageur-wrap .btn-outline-success:hover {
-    background: var(--emerald) !important;
-    color: #fff !important;
-  }
-  .partageur-wrap #produitsDisponibles .btn-success {
-    background: var(--emerald) !important;
-    border: none !important;
-    border-radius: 9px !important;
-  }
-  .partageur-wrap #produitsDisponibles .btn-success:hover { background: var(--emerald-dark) !important; }
-
-  /* ---------- Empty state ---------- */
-  .partageur-wrap #produitsDisponibles .text-center.py-5 i.text-warning { color: var(--amber) !important; }
-  .partageur-wrap #produitsDisponibles .text-center.py-5 h5 {
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-  }
-
-  /* ---------- Bottom two cards ---------- */
-  .partageur-wrap .row.g-4:last-child h4 {
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-  }
-  .partageur-wrap .row.g-4:last-child .btn-outline-dark {
-    border-color: var(--line) !important;
-    color: var(--ink) !important;
-    border-radius: 9px !important;
-  }
-  .partageur-wrap .row.g-4:last-child .btn-outline-dark:hover {
-    background: var(--ink) !important;
-    color: #fff !important;
-  }
-
-  /* ---------- 🆕 Zone de danger (suppression de compte) ---------- */
-  .partageur-wrap .danger-zone-card {
-    border: 1px solid var(--clay-tint) !important;
-    border-top: 3px solid var(--clay) !important;
-    border-radius: 16px !important;
-    background: var(--paper-raised);
-  }
-  .partageur-wrap .danger-zone-card h5 {
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-    color: var(--clay);
-  }
-  .partageur-wrap .danger-zone-card p.text-muted {
-    color: var(--ink-soft) !important;
-    font-size: 0.9rem;
-  }
-  .partageur-wrap .btn-danger-zone {
-    border-radius: 999px !important;
-    background: var(--clay-tint) !important;
-    color: var(--clay) !important;
-    border: 1px solid #eac6bf !important;
-    font-weight: 700;
-  }
-  .partageur-wrap .btn-danger-zone:hover {
-    background: var(--clay) !important;
-    color: #fff !important;
-  }
-</style>
-
-<div class="partageur-wrap">
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold text-dark">Tableau de bord - <span class="text-success">Partageur</span></h2>
-            <p class="text-muted mb-0">Bienvenue, {{ current_user.pseudo or current_user.email }} ! 👋</p>
-        </div>
-        <div class="d-flex align-items-center gap-3">
-            <!-- 🆕 Cloche de notifications -->
-            <div class="dropdown" id="notifDropdownWrapper">
-                <button class="btn btn-light position-relative shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-bell-fill fs-5"></i>
-                    {% if notifications_non_lues > 0 %}
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            {{ notifications_non_lues }}
-                        </span>
-                    {% endif %}
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow-lg p-2" style="width: 340px; max-height: 400px; overflow-y: auto;">
-                    <li><h6 class="dropdown-header">Notifications</h6></li>
-                    {% for notif in notifications %}
-                        <li>
-                            <a class="dropdown-item small py-2 {{ 'fw-bold' if not notif.is_read else 'text-muted' }}" href="{{ notif.link or '#' }}">
-                                <div class="d-flex align-items-start gap-2">
-                                    <span class="badge bg-{{ notif.category }} mt-1">&nbsp;</span>
-                                    <div>
-                                        <div>{{ notif.title }}</div>
-                                        <div class="text-muted" style="font-size: 0.75rem;">{{ notif.message }}</div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                    {% else %}
-                        <li><span class="dropdown-item-text text-muted small">Aucune notification pour le moment.</span></li>
-                    {% endfor %}
-                </ul>
-            </div>
-            <span class="badge bg-success px-3 py-2 fs-6">Statut : Actif</span>
-        </div>
+  <!-- ================= EN-TETE ================= -->
+  <div class="flex flex-wrap items-center justify-between gap-space-sm">
+    <div>
+      <h1 class="font-headline-md text-headline-md text-slate-night">
+        Tableau de bord <span class="text-emerald-primary">Partageur</span>
+      </h1>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">
+        Bienvenue, {{ current_user.pseudo or current_user.email }}
+      </p>
     </div>
 
-    <!-- 🆕 SOLDE DU PORTEFEUILLE — mis en avant en premier -->
-    <div class="card border-0 shadow-sm mb-4 bg-success bg-opacity-10 border-start border-success border-4">
-        <div class="card-body p-4">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h6 class="text-muted mb-1 fw-semibold"><i class="bi bi-wallet2 me-2"></i>Solde disponible de votre portefeuille</h6>
-                    <h2 class="fw-bold text-success mb-0">{{ "{:,.0f}".format(solde_portefeuille) }} FCFA</h2>
-                    <p class="text-muted small mb-0 mt-1">Alimenté par vos clics générés et vos gains de parrainage.</p>
-                </div>
-                <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                    <a href="{{ url_for('mes_retraits') }}" class="btn btn-success fw-bold px-4 py-2 shadow-sm">
-                        <i class="bi bi-cash-coin me-2"></i>Demander un retrait
-                    </a>
-                </div>
-            </div>
-
-            <!-- 🆕 Ligne : clics valides en attente de validation admin -->
-            {% if clics_en_attente_validation and clics_en_attente_validation > 0 %}
-            <div class="wallet-pending-row">
-                <div>
-                    <div class="wallet-pending-label"><i class="bi bi-hourglass-split"></i> En attente de validation</div>
-                    <div class="wallet-pending-note">Clics déjà obtenus, crédités dès qu'un admin valide votre capture du jour.</div>
-                </div>
-                <div class="wallet-pending-value">{{ "{:,.0f}".format(clics_en_attente_validation) }} FCFA</div>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <div class="card border-0 shadow-sm mb-4 bg-light">
-        <div class="card-body p-4">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h5 class="fw-bold text-dark mb-2">📢 Boostez vos gains avec le Parrainage !</h5>
-                    <p class="text-muted mb-3 mb-md-0">
-                        Partagez votre lien unique ci-dessous. Vous toucherez une commission de <strong>3%</strong> sur le coût de la toute première campagne lancée par chacun de vos filleuls annonceurs.
-                    </p>
-                </div>
-                <div class="col-md-4 text-md-end">
-                    <span class="badge bg-warning text-dark px-3 py-2 fw-semibold">Gagnez 3% par filleul</span>
-                </div>
-            </div>
-            
-            <div class="mt-3">
-                <label for="referralLink" class="form-label fw-semibold text-secondary">Votre lien d'affiliation unique :</label>
-                <div class="input-group mb-2">
-                    <input type="text" class="form-control bg-white" id="referralLink" value="{{ affiliate_link }}" readonly>
-                    <button class="btn btn-success" type="button" onclick="copyReferralLink()">
-                        <i class="bi bi-clipboard-check"></i> Copier le lien
-                    </button>
-                </div>
-                <small id="copyFeedback" class="text-success fw-semibold d-none">Lien copié avec succès ! 🎉</small>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-4 mb-4">
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-3 me-3">
-                            <i class="bi bi-people-fill fs-4"></i>
-                        </div>
-                        <h6 class="text-muted mb-0 fw-semibold">Filleuls inscrits</h6>
-                    </div>
-                    <h3 class="fw-bold text-dark mb-1">{{ total_filleuls }}</h3>
-                    <p class="text-muted small mb-0">Annonceurs inscrits via votre lien</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100 border-start border-success border-4">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="bg-success bg-opacity-10 text-success rounded-circle p-3 me-3">
-                            <i class="bi bi-cash-coin fs-4"></i>
-                        </div>
-                        <h6 class="text-muted mb-0 fw-semibold">Gains de Parrainage (déjà crédités)</h6>
-                    </div>
-                    <h3 class="fw-bold text-success mb-1">{{ gains_valides | round(0) }} FCFA</h3>
-                    <p class="text-muted small mb-0">Déjà ajoutés à votre portefeuille</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100 border-start border-warning border-4">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="bg-warning bg-opacity-10 text-warning rounded-circle p-3 me-3">
-                            <i class="bi bi-hourglass-split fs-4"></i>
-                        </div>
-                        <h6 class="text-muted mb-0 fw-semibold">Gains en Attente</h6>
-                    </div>
-                    <h3 class="fw-bold text-warning mb-1">{{ gains_en_attente | round(0) }} FCFA</h3>
-                    <p class="text-muted small mb-0">En attente de paiement de leur campagne</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 🆕 CAMPAGNES DISPONIBLES DANS LA ZONE DU PARTAGEUR -->
-    <div class="card border-0 shadow-sm mb-4" id="produitsDisponibles">
-        <div class="card-body p-4">
-            <h4 class="fw-bold text-dark mb-3">🔥 Campagnes disponibles dans votre zone</h4>
-            {% if campagnes_disponibles %}
-                <div class="row g-3">
-                    {% for item in campagnes_disponibles %}
-                        {% set camp = item.campaign %}
-                        <div class="col-md-6 col-lg-4">
-                            <div class="card h-100 border shadow-sm {{ 'border-warning' if item.quota_atteint_aujourdhui else '' }}">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <span class="badge bg-secondary">
-                                            {% if camp.display_option == "A" %}🎬 Vidéo
-                                            {% elif camp.display_option == "B" %}📸 Multi-Statuts
-                                            {% else %}📝 Texte seul{% endif %}
-                                        </span>
-                                        <span class="badge bg-dark">{{ camp.target_whatsapp_views }} clics visés</span>
-                                    </div>
-                                    <h6 class="fw-bold">{{ camp.promotion_detail or "Campagne #" ~ camp.id }}</h6>
-                                    <p class="text-muted small mb-3" style="white-space: pre-line;">{{ camp.description or "" }}</p>
-
-                                    <!-- 🆕 Statut du quota journalier, affiché uniquement si déjà partagée -->
-                                    {% if item.deja_partagee %}
-                                        {% if item.quota_atteint_aujourdhui %}
-                                            <div class="quota-track"><div class="quota-fill quota-full" style="width: 100%;"></div></div>
-                                            <div class="alert alert-warning py-2 px-3 small mb-2">
-                                                <i class="bi bi-exclamation-triangle-fill me-1"></i>
-                                                <strong>Quota du jour atteint !</strong> Vous pouvez retirer votre statut si vous le souhaitez — vous ne serez pas facturé au-delà. La diffusion reprend demain.
-                                            </div>
-                                        {% elif item.jour_actuel > 0 %}
-                                            {% set quota_pct = (item.vues_aujourdhui / item.quota_du_jour * 100) if item.quota_du_jour else 0 %}
-                                            <div class="quota-track"><div class="quota-fill" style="width: {{ [quota_pct, 100] | min }}%;"></div></div>
-                                            <div class="alert alert-light border py-2 px-3 small mb-2 text-muted">
-                                                <i class="bi bi-calendar-check me-1"></i>
-                                                Jour {{ item.jour_actuel }} / {{ item.duree_totale }} — {{ item.vues_aujourdhui }} / {{ item.quota_du_jour }} clics aujourd'hui
-                                            </div>
-                                        {% endif %}
-
-                                        <a href="{{ url_for('instructions_partage', campaign_id=camp.id) }}" class="btn btn-outline-success w-100 btn-sm fw-semibold">
-                                            <i class="bi bi-check-circle-fill me-1"></i> Déjà partagée — Voir les instructions
-                                        </a>
-                                    {% else %}
-                                        <form action="{{ url_for('partager_campagne_partageur', campaign_id=camp.id) }}" method="POST">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <button type="submit" class="btn btn-success w-100 btn-sm fw-semibold">
-                                                <i class="bi bi-share-fill me-1"></i> Partager cette campagne
-                                            </button>
-                                        </form>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="text-center py-5">
-                    <i class="bi bi-hourglass-split text-warning" style="font-size: 2.5rem;"></i>
-                    <h5 class="fw-bold text-dark mt-3 mb-2">Aucune opportunité disponible pour le moment</h5>
-                    <p class="text-muted mb-0" style="max-width: 480px; margin: 0 auto;">
-                        Il n'y a pas encore de campagne active pour votre commune ou votre département.
-                        Pas d'inquiétude : de nouvelles campagnes sont ajoutées régulièrement. Dès qu'une
-                        campagne ciblera votre zone, elle apparaîtra automatiquement ici et vous pourrez
-                        la partager immédiatement pour commencer à gagner. Revenez faire un tour bientôt ! 👀
-                    </p>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <div class="row g-4">
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100 p-4">
-                <h4 class="fw-bold text-dark mb-3">📦 Produits à partager</h4>
-                <p class="text-muted">Explorez le catalogue de campagnes actives. Partagez les visuels sur vos réseaux sociaux (WhatsApp, TikTok, Facebook) et commencez à générer des clics pour être rémunéré.</p>
-                <div class="mt-auto pt-3">
-                    <a href="#produitsDisponibles" class="btn btn-success w-100 py-2 fw-semibold">
-                        <i class="bi bi-grid-fill me-2"></i>Voir les produits disponibles
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100 p-4">
-                <h4 class="fw-bold text-dark mb-3">💸 Mes gains & retraits</h4>
-                <p class="text-muted">Consultez le détail de vos gains (clics, parrainage), votre solde disponible et demandez vos retraits.</p>
-                <div class="mt-auto pt-3">
-                    <a href="{{ url_for('mes_retraits') }}" class="btn btn-outline-dark w-100 py-2 fw-semibold">
-                        <i class="bi bi-wallet2 me-2"></i>Consulter mon portefeuille
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- 🆕 ZONE DE DANGER — DEMANDE DE SUPPRESSION DE COMPTE -->
-    <!-- ========================================== -->
-    <div class="card p-4 shadow-sm mt-4 danger-zone-card">
-        <h5 class="mb-2"><i class="bi bi-exclamation-triangle me-2"></i>Zone de danger</h5>
-        <p class="text-muted mb-3">
-            Vous pouvez demander la suppression de votre compte Pubwek. Votre demande sera examinée par
-            l'administration ; votre compte restera actif jusqu'à ce qu'elle soit traitée. Aucune donnée
-            n'est perdue dans l'immédiat.
-        </p>
-        <button type="button" class="btn btn-danger-zone" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
-            🗑️ Demander la suppression de mon compte
+    <div class="flex items-center gap-space-xs">
+      <!-- Cloche de notifications -->
+      <div class="relative" id="notifDropdownWrapper">
+        <button type="button" id="notifToggle" aria-expanded="false"
+                class="relative w-10 h-10 rounded-full border border-outline-variant/40 bg-white shadow-sm flex items-center justify-center text-slate-midnight hover:bg-surface-container-low transition-colors">
+          <span class="material-symbols-outlined text-[20px]">notifications</span>
+          {% if notifications_non_lues > 0 %}
+            <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-white font-caption text-[11px] font-bold flex items-center justify-center" id="notifBadge">
+              {{ notifications_non_lues }}
+            </span>
+          {% endif %}
         </button>
+
+        <div id="notifPanel"
+             class="hidden absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl border border-outline-variant/30 bg-surface-container-lowest shadow-xl z-40 p-1.5">
+          <div class="px-space-sm py-1.5 font-label-caps text-label-caps uppercase tracking-wider text-on-surface-variant font-bold">Notifications</div>
+          {% for notif in notifications %}
+            <a class="notif-item flex items-start gap-space-xs rounded-xl px-space-sm py-2 hover:bg-surface-container-low transition-colors {{ 'font-semibold text-on-surface' if not notif.is_read else 'text-on-surface-variant' }}"
+               href="{{ notif.link or '#' }}">
+              <span class="mt-1.5 w-2 h-2 rounded-full shrink-0
+                {%- if notif.category == 'success' %} bg-emerald-primary
+                {%- elif notif.category == 'warning' %} bg-amber-rich
+                {%- elif notif.category == 'danger' %} bg-error
+                {%- else %} bg-outline-variant{% endif %}"></span>
+              <span class="min-w-0">
+                <span class="block font-body-sm text-body-sm truncate">{{ notif.title }}</span>
+                <span class="block font-caption text-caption text-on-surface-variant">{{ notif.message }}</span>
+              </span>
+            </a>
+          {% else %}
+            <p class="px-space-sm py-space-sm font-body-sm text-body-sm text-on-surface-variant">Aucune notification pour le moment.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <span class="pw-chip pw-chip-success">
+        <span class="material-symbols-outlined text-[14px]">check_circle</span> Actif
+      </span>
+    </div>
+  </div>
+
+  <!-- ================= PORTEFEUILLE + INDICATEURS ================= -->
+  <div class="grid grid-cols-1 lg:grid-cols-5 gap-space-sm">
+
+    <!-- Portefeuille -->
+    <div class="lg:col-span-2 rounded-2xl p-space-md bg-gradient-to-br from-emerald-deep to-slate-night text-white shadow-lg relative overflow-hidden">
+      <div class="absolute -right-8 -bottom-8 w-32 h-32 rounded-full bg-emerald-bright/20 blur-2xl"></div>
+      <div class="relative space-y-space-xs">
+        <div class="flex items-center gap-1.5 font-label-caps text-label-caps uppercase tracking-wider text-emerald-bright font-bold">
+          <span class="material-symbols-outlined text-[16px]">account_balance_wallet</span>
+          Solde disponible
+        </div>
+        <div class="font-label-numeric-lg text-3xl font-extrabold tracking-tight">{{ "{:,.0f}".format(solde_portefeuille) }} FCFA</div>
+        <p class="font-caption text-caption text-white/70">Alimenté par vos clics générés et vos gains de parrainage.</p>
+
+        {% if clics_en_attente_validation and clics_en_attente_validation > 0 %}
+        <div class="flex items-center justify-between gap-space-xs rounded-xl bg-white/10 px-space-sm py-1.5">
+          <span class="flex items-center gap-1 font-caption text-caption text-white/80">
+            <span class="material-symbols-outlined text-[14px]">hourglass_top</span>
+            En attente de validation
+          </span>
+          <span class="font-label-numeric-md text-label-numeric-md font-bold text-amber-vibrant">{{ "{:,.0f}".format(clics_en_attente_validation) }} FCFA</span>
+        </div>
+        {% endif %}
+
+        <a href="{{ url_for('mes_retraits') }}" class="pw-btn pw-btn-sm bg-white text-emerald-deep hover:bg-emerald-light w-full">
+          <span class="material-symbols-outlined text-[18px]">payments</span>
+          Demander un retrait
+        </a>
+      </div>
     </div>
 
-    <!-- MODAL : Demande de suppression de compte -->
-    <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <form action="{{ url_for('demander_suppression_compte') }}" method="POST">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <div class="modal-header bg-danger text-white">
-                        <h5 class="modal-title fw-bold">🗑️ Demander la suppression de mon compte</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p class="small text-muted mb-3">
-                            Merci de nous indiquer pourquoi vous souhaitez quitter Pubwek. Votre demande sera
-                            examinée par l'administration, qui désactivera votre compte si elle l'approuve.
-                            Vous serez notifié(e) de sa décision.
-                        </p>
-                        <div class="mb-2">
-                            <label class="form-label fw-bold small">Motif de votre demande <span class="text-danger">*</span></label>
-                            <textarea name="reason" class="form-control" rows="4" maxlength="1000" required
-                                      placeholder="Ex: Je n'utilise plus la plateforme, je n'ai plus le temps..."></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-danger fw-bold">Envoyer ma demande</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+    <!-- Filleuls -->
+    <div class="pw-tile">
+      <div class="flex items-center gap-1.5 mb-1">
+        <span class="material-symbols-outlined text-[18px] text-emerald-primary">group</span>
+        <span class="pw-tile-label">Filleuls</span>
+      </div>
+      <div class="pw-tile-value">{{ total_filleuls }}</div>
+      <p class="pw-tile-note">Annonceurs inscrits via votre lien</p>
     </div>
+
+    <!-- Gains credites -->
+    <div class="pw-tile border-l-4 border-l-emerald-primary">
+      <div class="flex items-center gap-1.5 mb-1">
+        <span class="material-symbols-outlined text-[18px] text-emerald-primary">paid</span>
+        <span class="pw-tile-label">Gains crédités</span>
+      </div>
+      <div class="pw-tile-value text-emerald-deep">{{ gains_valides | round(0) }} <span class="text-base">FCFA</span></div>
+      <p class="pw-tile-note">Déjà ajoutés à votre portefeuille</p>
+    </div>
+
+    <!-- Gains en attente -->
+    <div class="pw-tile border-l-4 border-l-amber-rich">
+      <div class="flex items-center gap-1.5 mb-1">
+        <span class="material-symbols-outlined text-[18px] text-amber-rich">hourglass_top</span>
+        <span class="pw-tile-label">En attente</span>
+      </div>
+      <div class="pw-tile-value text-amber-rich">{{ gains_en_attente | round(0) }} <span class="text-base">FCFA</span></div>
+      <p class="pw-tile-note">Campagne du filleul pas encore payée</p>
+    </div>
+  </div>
+
+  <!-- ================= PARRAINAGE ================= -->
+  <div class="pw-card !p-space-md">
+    <div class="flex flex-wrap items-start justify-between gap-space-xs mb-space-xs">
+      <div class="min-w-0">
+        <h2 class="font-headline-sm text-body-md font-bold text-slate-midnight flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[20px] text-amber-rich">campaign</span>
+          Boostez vos gains avec le parrainage
+        </h2>
+        <p class="font-caption text-caption text-on-surface-variant">
+          Commission de <strong class="text-slate-midnight">3%</strong> sur la première campagne de chaque filleul annonceur.
+        </p>
+      </div>
+      <span class="pw-chip pw-chip-warning">Gagnez 3% par filleul</span>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-space-2xs">
+      <input type="text" class="pw-input font-label-numeric-md text-label-numeric-md sm:rounded-r-none" id="referralLink" value="{{ affiliate_link }}" readonly>
+      <button class="pw-btn pw-btn-sm pw-btn-primary shrink-0 sm:rounded-l-none" type="button" onclick="copyReferralLink()">
+        <span class="material-symbols-outlined text-[18px]">content_copy</span>
+        Copier
+      </button>
+    </div>
+    <p id="copyFeedback" class="hidden mt-1 font-caption text-caption font-semibold text-emerald-primary">Lien copié avec succès</p>
+  </div>
+
+  <!-- ================= CAMPAGNES DISPONIBLES ================= -->
+  <div id="produitsDisponibles" class="space-y-space-xs">
+    <div class="flex items-center justify-between gap-space-sm">
+      <h2 class="font-headline-sm text-body-md font-bold text-slate-midnight flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-[20px] text-emerald-primary">storefront</span>
+        Campagnes disponibles dans votre zone
+      </h2>
+      {% if campagnes_disponibles %}
+        <span class="pw-chip pw-chip-neutral">{{ campagnes_disponibles | length }} disponible{{ 's' if campagnes_disponibles | length > 1 else '' }}</span>
+      {% endif %}
+    </div>
+
+    {% if campagnes_disponibles %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-space-sm">
+        {% for item in campagnes_disponibles %}
+          {% set camp = item.campaign %}
+          <div class="pw-tile flex flex-col {{ 'border-l-4 border-l-amber-rich' if item.quota_atteint_aujourdhui else '' }}">
+
+            <div class="flex items-center justify-between gap-space-2xs mb-1.5">
+              <span class="pw-chip pw-chip-neutral">
+                {% if camp.display_option == "A" %}<span class="material-symbols-outlined text-[14px]">smart_display</span> Vidéo
+                {% elif camp.display_option == "B" %}<span class="material-symbols-outlined text-[14px]">layers</span> Multi-Statuts
+                {% else %}<span class="material-symbols-outlined text-[14px]">description</span> Texte seul{% endif %}
+              </span>
+              <span class="pw-chip bg-slate-midnight text-white">{{ camp.target_whatsapp_views }} clics visés</span>
+            </div>
+
+            <h3 class="font-headline-md text-body-md font-bold text-slate-midnight leading-snug">{{ camp.promotion_detail or "Campagne #" ~ camp.id }}</h3>
+            {% if camp.description %}
+              <p class="mt-0.5 font-caption text-caption text-on-surface-variant line-clamp-3" style="white-space: pre-line;">{{ camp.description }}</p>
+            {% endif %}
+
+            <div class="mt-auto pt-space-xs space-y-1.5">
+              {% if item.deja_partagee %}
+                {% if item.quota_atteint_aujourdhui %}
+                  <div class="h-1.5 rounded-full bg-surface-container overflow-hidden">
+                    <div class="h-full rounded-full bg-amber-rich" style="width: 100%;"></div>
+                  </div>
+                  <p class="flex items-start gap-1 font-caption text-caption text-secondary">
+                    <span class="material-symbols-outlined text-[14px] shrink-0">warning</span>
+                    <span><strong>Quota du jour atteint.</strong> Vous pouvez retirer votre statut, aucune facturation au-delà. Reprise demain.</span>
+                  </p>
+                {% elif item.jour_actuel > 0 %}
+                  {% set quota_pct = (item.vues_aujourdhui / item.quota_du_jour * 100) if item.quota_du_jour else 0 %}
+                  <div class="h-1.5 rounded-full bg-surface-container overflow-hidden">
+                    <div class="h-full rounded-full bg-emerald-primary" style="width: {{ [quota_pct, 100] | min }}%;"></div>
+                  </div>
+                  <p class="font-caption text-caption text-on-surface-variant">
+                    Jour {{ item.jour_actuel }}/{{ item.duree_totale }} — {{ item.vues_aujourdhui }}/{{ item.quota_du_jour }} clics aujourd'hui
+                  </p>
+                {% endif %}
+
+                <a href="{{ url_for('instructions_partage', campaign_id=camp.id) }}"
+                   class="pw-btn pw-btn-sm pw-btn-neutral w-full !text-emerald-deep">
+                  <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                  Voir les instructions
+                </a>
+              {% else %}
+                <form action="{{ url_for('partager_campagne_partageur', campaign_id=camp.id) }}" method="POST">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="pw-btn pw-btn-sm pw-btn-primary w-full">
+                    <span class="material-symbols-outlined text-[18px]">share</span>
+                    Partager cette campagne
+                  </button>
+                </form>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="pw-card !p-space-lg text-center">
+        <span class="material-symbols-outlined text-[36px] text-amber-rich">hourglass_top</span>
+        <h3 class="mt-1 font-headline-md text-headline-md text-slate-midnight">Aucune opportunité pour le moment</h3>
+        <p class="mx-auto mt-1 max-w-lg font-body-sm text-body-sm text-on-surface-variant">
+          Il n'y a pas encore de campagne active pour votre commune ou votre département.
+          De nouvelles campagnes sont ajoutées régulièrement : dès qu'une campagne ciblera
+          votre zone, elle apparaîtra ici et vous pourrez la partager immédiatement.
+        </p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- ================= ACCES RAPIDES ================= -->
+  <div class="flex flex-col sm:flex-row gap-space-xs">
+    <a href="#produitsDisponibles" class="pw-btn pw-btn-sm pw-btn-neutral flex-1">
+      <span class="material-symbols-outlined text-[18px]">inventory_2</span>
+      Voir les produits à partager
+    </a>
+    <a href="{{ url_for('mes_retraits') }}" class="pw-btn pw-btn-sm pw-btn-neutral flex-1">
+      <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+      Mes gains &amp; retraits
+    </a>
+  </div>
+
+  <!-- ================= ZONE DE DANGER ================= -->
+  <details class="group rounded-2xl border border-error/30 bg-error-container/40">
+    <summary class="flex items-center gap-1.5 cursor-pointer select-none px-space-md py-space-sm font-headline-md text-[14px] font-semibold text-error list-none">
+      <span class="material-symbols-outlined text-[18px]">warning</span>
+      Zone de danger — supprimer mon compte
+      <span class="material-symbols-outlined text-[18px] ml-auto transition-transform group-open:rotate-180">expand_more</span>
+    </summary>
+
+    <div class="px-space-md pb-space-md">
+      <p class="font-caption text-caption text-on-surface-variant mb-space-xs">
+        Votre demande sera examinée par l'administration ; votre compte restera actif jusqu'à
+        ce qu'elle soit traitée. Aucune donnée n'est perdue dans l'immédiat.
+      </p>
+      <form action="{{ url_for('demander_suppression_compte') }}" method="POST" class="space-y-space-xs">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div>
+          <label class="pw-label" for="reason">Motif de votre demande <span class="text-error">*</span></label>
+          <textarea name="reason" id="reason" class="pw-input resize-y" rows="3" maxlength="1000" required
+                    placeholder="Ex: Je n'utilise plus la plateforme, je n'ai plus le temps..."></textarea>
+        </div>
+        <button type="submit" class="pw-btn pw-btn-sm bg-error text-white hover:opacity-90">
+          <span class="material-symbols-outlined text-[18px]">delete</span>
+          Envoyer ma demande
+        </button>
+      </form>
+    </div>
+  </details>
+
 </div>
-</div>
+</section>
 
 <script>
 function copyReferralLink() {
@@ -590,37 +277,65 @@ function copyReferralLink() {
 
     navigator.clipboard.writeText(copyText.value).then(function() {
         var feedback = document.getElementById("copyFeedback");
-        feedback.classList.remove("d-none");
+        feedback.classList.remove("hidden");
         setTimeout(function() {
-            feedback.classList.add("d-none");
+            feedback.classList.add("hidden");
         }, 3000);
     }).catch(function(err) {
         console.error('Erreur lors de la copie : ', err);
     });
 }
 
-// 🆕 Marque les notifications comme lues dès l'ouverture de la cloche
+// Cloche de notifications : ouverture/fermeture + marquage comme lues
 document.addEventListener('DOMContentLoaded', function () {
-    const notifWrapper = document.getElementById('notifDropdownWrapper');
-    if (notifWrapper) {
-        notifWrapper.addEventListener('shown.bs.dropdown', function () {
-            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-            const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
-            fetch('/notifications/marquer-lues', {
-                method: 'POST',
-                headers: { 'X-CSRFToken': csrfToken }
-            }).then(function () {
-                const badge = notifWrapper.querySelector('.badge.bg-danger');
-                if (badge) badge.remove();
-                notifWrapper.querySelectorAll('.dropdown-item.fw-bold').forEach(function (item) {
-                    item.classList.remove('fw-bold');
-                    item.classList.add('text-muted');
-                });
-            }).catch(function (err) {
-                console.error('Erreur lors du marquage des notifications :', err);
-            });
-        });
+  const wrapper = document.getElementById('notifDropdownWrapper');
+  if (!wrapper) return;
+
+  const toggle = document.getElementById('notifToggle');
+  const panel  = document.getElementById('notifPanel');
+  let dejaMarquees = false;
+
+  function marquerCommeLues() {
+    if (dejaMarquees) return;
+    dejaMarquees = true;
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+    fetch('/notifications/marquer-lues', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrfToken }
+    }).then(function () {
+      const badge = document.getElementById('notifBadge');
+      if (badge) badge.remove();
+      panel.querySelectorAll('.notif-item.font-semibold').forEach(function (item) {
+        item.classList.remove('font-semibold', 'text-on-surface');
+        item.classList.add('text-on-surface-variant');
+      });
+    }).catch(function (err) {
+      console.error('Erreur lors du marquage des notifications :', err);
+    });
+  }
+
+  toggle.addEventListener('click', function (e) {
+    e.stopPropagation();
+    const ouvert = !panel.classList.contains('hidden');
+    panel.classList.toggle('hidden', ouvert);
+    toggle.setAttribute('aria-expanded', String(!ouvert));
+    if (!ouvert) marquerCommeLues();
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!wrapper.contains(e.target)) {
+      panel.classList.add('hidden');
+      toggle.setAttribute('aria-expanded', 'false');
     }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      panel.classList.add('hidden');
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+  });
 });
 </script>
 {% endblock %}

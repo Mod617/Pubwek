@@ -1,108 +1,116 @@
-{% extends "base.html" %}
+{% extends "base_v2.html" %}
 
 {% block content %}
-<div class="container my-4">
-  <h2 class="fw-bold mb-4"><i class="fa-solid fa-envelope-open-text me-2"></i>Messages de contact</h2>
+<section class="py-space-lg bg-background">
+<div class="max-w-4xl mx-auto px-margin space-y-space-sm">
 
-  <ul class="nav nav-tabs mb-4" id="contactTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="nouveaux-tab" data-bs-toggle="tab" data-bs-target="#nouveaux" type="button" role="tab">
-        🆕 Nouveaux <span class="badge bg-danger ms-1">{{ nouveaux|length }}</span>
+  <div>
+    <span class="pw-badge bg-amber-soft text-amber-rich">Administration</span>
+    <h1 class="mt-1 font-headline-md text-headline-md text-slate-night">Messages de contact</h1>
+  </div>
+
+  <div data-pw-tabs>
+    <div class="pw-tabs" role="tablist">
+      <button type="button" class="pw-tab is-active" data-tab="nouveaux" role="tab" aria-selected="true">
+        <span class="material-symbols-outlined text-[18px]">mark_email_unread</span>
+        Nouveaux
+        <span class="pw-chip {{ 'pw-chip-danger' if nouveaux else 'pw-chip-neutral' }}">{{ nouveaux|length }}</span>
       </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="traites-tab" data-bs-toggle="tab" data-bs-target="#traites" type="button" role="tab">
-        ✅ Traités <span class="badge bg-secondary ms-1">{{ traites|length }}</span>
+      <button type="button" class="pw-tab" data-tab="traites" role="tab" aria-selected="false">
+        <span class="material-symbols-outlined text-[18px]">done_all</span>
+        Traités
+        <span class="pw-chip pw-chip-neutral">{{ traites|length }}</span>
       </button>
-    </li>
-  </ul>
+    </div>
 
-  <div class="tab-content" id="contactTabsContent">
-
-    <!-- ============ ONGLET : NOUVEAUX ============ -->
-    <div class="tab-pane fade show active" id="nouveaux" role="tabpanel">
+    <!-- ============ NOUVEAUX ============ -->
+    <div class="pw-tab-panel is-active space-y-space-xs" data-panel="nouveaux">
       {% if not nouveaux %}
-        <p class="text-muted">Aucun nouveau message pour le moment.</p>
+        <div class="pw-card !p-space-lg text-center">
+          <span class="material-symbols-outlined text-[36px] text-on-surface-variant">mail</span>
+          <p class="mt-1 font-body-sm text-body-sm text-on-surface-variant">Aucun nouveau message pour le moment.</p>
+        </div>
       {% else %}
         {% for m in nouveaux %}
-          <div class="card mb-3 border-danger-subtle shadow-sm">
-            <div class="card-body">
-              <div class="d-flex justify-content-between flex-wrap mb-2">
-                <div>
-                  <strong>{{ m.name }}</strong>
-                  {% if m.demandeur %}
-                    <span class="badge bg-info text-dark ms-1">Compte : {{ m.demandeur.role }}</span>
-                  {% endif %}
-                  <br>
-                  <a href="mailto:{{ m.email }}">{{ m.email }}</a>
-                </div>
-                <div class="text-muted small">{{ m.created_at | heure_locale }}</div>
+        <div class="pw-tile border-l-4 border-l-error">
+          <div class="flex flex-wrap items-start justify-between gap-space-xs">
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-space-2xs">
+                <strong class="font-headline-md text-body-md text-slate-midnight">{{ m.name }}</strong>
+                {% if m.demandeur %}
+                  <span class="pw-chip pw-chip-neutral">Compte : {{ m.demandeur.role }}</span>
+                {% endif %}
               </div>
-
-              {% if m.subject %}
-                <p class="mb-1"><strong>Objet :</strong> {{ m.subject }}</p>
-              {% endif %}
-              <p class="mb-3" style="white-space: pre-wrap;">{{ m.message }}</p>
-
-              <hr>
-
-              <form method="POST" action="{{ url_for('repondre_message_contact', message_id=m.id) }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <label class="form-label fw-bold small" for="reply-{{ m.id }}">
-                  <i class="fa-solid fa-reply me-1"></i>Répondre à {{ m.name }}
-                </label>
-                <textarea
-                  class="form-control mb-2"
-                  id="reply-{{ m.id }}"
-                  name="reply_message"
-                  rows="4"
-                  maxlength="5000"
-                  placeholder="Rédigez votre réponse ici — elle sera envoyée par email à {{ m.email }}"
-                  required></textarea>
-                <button type="submit" class="btn btn-sm btn-success">
-                  <i class="fa-solid fa-paper-plane me-1"></i>Envoyer la réponse
-                </button>
-              </form>
+              <a class="font-caption text-caption text-emerald-primary hover:underline" href="mailto:{{ m.email }}">{{ m.email }}</a>
             </div>
+            <span class="font-caption text-caption text-on-surface-variant whitespace-nowrap">{{ m.created_at | heure_locale }}</span>
           </div>
+
+          {% if m.subject %}
+            <p class="mt-1.5 font-body-sm text-body-sm">
+              <span class="font-semibold text-slate-midnight">Objet :</span> {{ m.subject }}
+            </p>
+          {% endif %}
+          <p class="mt-1 font-body-sm text-body-sm text-on-surface" style="white-space: pre-wrap;">{{ m.message }}</p>
+
+          <form method="POST" action="{{ url_for('repondre_message_contact', message_id=m.id) }}"
+                class="mt-space-sm pt-space-sm border-t border-outline-variant/30 space-y-space-xs">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div>
+              <label class="pw-label" for="reply-{{ m.id }}">Répondre à {{ m.name }}</label>
+              <textarea class="pw-input resize-y" id="reply-{{ m.id }}" name="reply_message" rows="3" maxlength="5000"
+                        placeholder="Votre réponse sera envoyée par email à {{ m.email }}" required></textarea>
+            </div>
+            <button type="submit" class="pw-btn pw-btn-sm pw-btn-primary">
+              <span class="material-symbols-outlined text-[18px]">send</span> Envoyer la réponse
+            </button>
+          </form>
+        </div>
         {% endfor %}
       {% endif %}
     </div>
 
-    <!-- ============ ONGLET : TRAITÉS ============ -->
-    <div class="tab-pane fade" id="traites" role="tabpanel">
+    <!-- ============ TRAITES ============ -->
+    <div class="pw-tab-panel space-y-space-xs" data-panel="traites">
       {% if not traites %}
-        <p class="text-muted">Aucun message traité pour le moment.</p>
+        <div class="pw-card !p-space-lg text-center">
+          <span class="material-symbols-outlined text-[36px] text-on-surface-variant">done_all</span>
+          <p class="mt-1 font-body-sm text-body-sm text-on-surface-variant">Aucun message traité pour le moment.</p>
+        </div>
       {% else %}
         {% for m in traites %}
-          <div class="card mb-3 shadow-sm">
-            <div class="card-body">
-              <div class="d-flex justify-content-between flex-wrap mb-2">
-                <div>
-                  <strong>{{ m.name }}</strong> — <a href="mailto:{{ m.email }}">{{ m.email }}</a>
-                </div>
-                <div class="text-muted small">Reçu le {{ m.created_at | heure_locale }}</div>
-              </div>
-
-              {% if m.subject %}<p class="mb-1"><strong>Objet :</strong> {{ m.subject }}</p>{% endif %}
-              <p class="mb-2" style="white-space: pre-wrap;">{{ m.message }}</p>
-
-              {% if m.admin_reply %}
-                <div class="bg-light border rounded p-3 mt-2">
-                  <div class="small text-success mb-1">
-                    <i class="fa-solid fa-reply me-1"></i>
-                    Réponse envoyée le {{ m.replied_at | heure_locale }}
-                    {% if m.replied_by %} par {{ m.replied_by.pseudo or m.replied_by.email }}{% endif %}
-                  </div>
-                  <p class="mb-0" style="white-space: pre-wrap;">{{ m.admin_reply }}</p>
-                </div>
-              {% endif %}
+        <div class="pw-tile">
+          <div class="flex flex-wrap items-start justify-between gap-space-xs">
+            <div class="min-w-0">
+              <strong class="font-headline-md text-body-md text-slate-midnight">{{ m.name }}</strong>
+              <a class="ml-1 font-caption text-caption text-emerald-primary hover:underline" href="mailto:{{ m.email }}">{{ m.email }}</a>
             </div>
+            <span class="font-caption text-caption text-on-surface-variant whitespace-nowrap">Reçu le {{ m.created_at | heure_locale }}</span>
           </div>
+
+          {% if m.subject %}
+            <p class="mt-1.5 font-body-sm text-body-sm">
+              <span class="font-semibold text-slate-midnight">Objet :</span> {{ m.subject }}
+            </p>
+          {% endif %}
+          <p class="mt-1 font-body-sm text-body-sm text-on-surface" style="white-space: pre-wrap;">{{ m.message }}</p>
+
+          {% if m.admin_reply %}
+          <div class="mt-space-xs pw-card-flat">
+            <p class="flex items-center gap-1 font-caption text-caption font-semibold text-emerald-deep">
+              <span class="material-symbols-outlined text-[14px]">send</span>
+              Réponse envoyée le {{ m.replied_at | heure_locale }}
+              {% if m.replied_by %} par {{ m.replied_by.pseudo or m.replied_by.email }}{% endif %}
+            </p>
+            <p class="mt-1 font-body-sm text-body-sm text-on-surface" style="white-space: pre-wrap;">{{ m.admin_reply }}</p>
+          </div>
+          {% endif %}
+        </div>
         {% endfor %}
       {% endif %}
     </div>
-
   </div>
+
 </div>
+</section>
 {% endblock %}

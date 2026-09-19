@@ -1,35 +1,67 @@
-{% extends "base.html" %}
+{% extends "base_v2.html" %}
 
 {% block content %}
-<div class="container my-5" style="max-width: 700px;">
-  <div class="card border-danger">
-    <div class="card-header bg-danger text-white">
-      <h4 class="mb-0"><i class="fa-solid fa-triangle-exclamation me-2"></i>Nettoyage avant production</h4>
-    </div>
-    <div class="card-body">
-      <p class="fw-bold text-danger">⚠️ Action irréversible.</p>
-      <p>Cette opération va :</p>
-      <ul>
-        <li>Supprimer <strong>tous les annonceurs et partageurs</strong> (les comptes admin/sous-admin sont conservés)</li>
-        <li>Vider <strong>toutes les campagnes</strong>, transactions, retraits, remboursements</li>
-        <li>Vider les messages de contact et notifications</li>
-        <li>Supprimer <strong>tous les fichiers uploadés</strong> (images, vidéos, preuves)</li>
-        <li>Conserver la configuration système (tarifs, commissions)</li>
-      </ul>
-      <p class="text-muted small">Assurez-vous d'avoir fait un backup de la base avant de continuer.</p>
+<section class="py-space-lg bg-background">
+<div class="max-w-xl mx-auto px-margin">
 
-      <form method="POST">
+  <div class="rounded-2xl border border-error/40 overflow-hidden shadow-md">
+    <div class="flex items-center gap-1.5 bg-error text-white px-space-md py-space-sm font-headline-md text-body-md font-bold">
+      <span class="material-symbols-outlined text-[20px]">warning</span>
+      Nettoyage avant production
+    </div>
+
+    <div class="bg-surface-container-lowest p-space-md space-y-space-sm">
+      <p class="font-body-sm text-body-sm font-bold text-error">Action irréversible.</p>
+
+      <div>
+        <p class="font-body-sm text-body-sm text-on-surface">Cette opération va :</p>
+        <ul class="mt-1 space-y-1 font-body-sm text-body-sm text-on-surface-variant">
+          <li class="flex items-start gap-1.5">
+            <span class="material-symbols-outlined text-[16px] text-error shrink-0 mt-0.5">delete_forever</span>
+            <span>Supprimer <strong class="text-slate-midnight">tous les annonceurs et partageurs</strong> (les comptes admin et sous-admin sont conservés)</span>
+          </li>
+          <li class="flex items-start gap-1.5">
+            <span class="material-symbols-outlined text-[16px] text-error shrink-0 mt-0.5">delete_forever</span>
+            <span>Vider <strong class="text-slate-midnight">toutes les campagnes</strong>, transactions, retraits et remboursements</span>
+          </li>
+          <li class="flex items-start gap-1.5">
+            <span class="material-symbols-outlined text-[16px] text-error shrink-0 mt-0.5">delete_forever</span>
+            <span>Vider les messages de contact et les notifications</span>
+          </li>
+          <li class="flex items-start gap-1.5">
+            <span class="material-symbols-outlined text-[16px] text-error shrink-0 mt-0.5">delete_forever</span>
+            <span>Supprimer <strong class="text-slate-midnight">tous les fichiers téléversés</strong> (images, vidéos, preuves)</span>
+          </li>
+          <li class="flex items-start gap-1.5">
+            <span class="material-symbols-outlined text-[16px] text-emerald-primary shrink-0 mt-0.5">check_circle</span>
+            <span>Conserver la configuration système (tarifs, commissions)</span>
+          </li>
+        </ul>
+      </div>
+
+      <p class="pw-help !mt-0">Assurez-vous d'avoir fait une sauvegarde de la base avant de continuer.</p>
+
+      <form method="POST" class="space-y-space-sm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <label class="form-label fw-bold" for="confirmation">
-          Pour confirmer, tapez exactement : <code>SUPPRIMER TOUT</code>
-        </label>
-        <input type="text" class="form-control mb-3" id="confirmation" name="confirmation" required autocomplete="off">
-        <button type="submit" class="btn btn-danger">
-          <i class="fa-solid fa-trash me-1"></i>Confirmer le nettoyage définitif
-        </button>
-        <a href="{{ url_for('admin_validate') }}" class="btn btn-outline-secondary">Annuler</a>
+        <div>
+          <label class="pw-label" for="confirmation">
+            Pour confirmer, tapez exactement :
+            <code class="font-label-numeric-md text-label-numeric-md font-bold text-error">SUPPRIMER TOUT</code>
+          </label>
+          <input type="text" class="pw-input" id="confirmation" name="confirmation" required autocomplete="off">
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-space-xs">
+          <button type="submit" class="pw-btn pw-btn-sm bg-error text-white hover:opacity-90 flex-1">
+            <span class="material-symbols-outlined text-[18px]">delete_forever</span>
+            Confirmer le nettoyage définitif
+          </button>
+          <a href="{{ url_for('admin_validate') }}" class="pw-btn pw-btn-sm pw-btn-neutral flex-1">Annuler</a>
+        </div>
       </form>
     </div>
   </div>
+
 </div>
+</section>
 {% endblock %}

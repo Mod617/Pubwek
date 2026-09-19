@@ -1,0 +1,12 @@
+{
+  "name": "pubwek-design",
+  "private": true,
+  "description": "Compilation du design system Pubwek (Tailwind) vers static/css/pubwek.css",
+  "scripts": {
+    "build:css": "tailwindcss -i ./static/css/tailwind-input.css -o ./static/css/pubwek.css --minify",
+    "watch:css": "tailwindcss -i ./static/css/tailwind-input.css -o ./static/css/pubwek.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}

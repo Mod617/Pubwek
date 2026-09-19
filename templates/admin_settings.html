@@ -1,415 +1,157 @@
-{% extends "base.html" %}
+{% extends "base_v2.html" %}
+
+{# Champ numerique avec icone a gauche et unite a droite #}
+{% macro champ(id, nom, libelle, valeur, icone, unite, aide, pas="0.01", maxi=None, note=None) %}
+  <div>
+    <label class="pw-label" for="{{ id }}">
+      {{ libelle }}
+      {% if note %}<span class="pw-chip pw-chip-neutral ml-1">{{ note }}</span>{% endif %}
+    </label>
+    <div class="flex">
+      <span class="inline-flex items-center rounded-l-xl border border-r-0 border-outline-variant/50 bg-surface-container px-space-sm">
+        <span class="material-symbols-outlined text-[18px] text-on-surface-variant">{{ icone }}</span>
+      </span>
+      <input type="number" step="{{ pas }}" min="0" {% if maxi %}max="{{ maxi }}"{% endif %}
+             class="pw-input rounded-none font-label-numeric-md text-label-numeric-md font-bold"
+             id="{{ id }}" name="{{ nom }}" value="{{ valeur }}" required>
+      <span class="inline-flex items-center whitespace-nowrap rounded-r-xl border border-l-0 border-outline-variant/50 bg-surface-container px-space-sm font-caption text-caption text-on-surface-variant">
+        {{ unite }}
+      </span>
+    </div>
+    {% if aide %}<p class="pw-help">{{ aide }}</p>{% endif %}
+  </div>
+{% endmacro %}
+
 {% block content %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<section class="py-space-lg bg-background">
+<div class="max-w-5xl mx-auto px-margin space-y-space-sm">
 
-<style>
-  .settings-page {
-    background: linear-gradient(135deg, #f0f9ff 0%, #e8f5e9 100%);
-    min-height: 100vh;
-    padding: 2.5rem 0 3rem;
-  }
+  <!-- En-tete -->
+  <div class="flex flex-wrap items-end justify-between gap-space-sm">
+    <div class="min-w-0">
+      <span class="pw-badge bg-amber-soft text-amber-rich">Administration</span>
+      <h1 class="mt-1 font-headline-md text-headline-md text-slate-night">Configuration du système</h1>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">
+        Tarifs de diffusion, commissions de la plateforme et taux de parrainage.
+      </p>
+    </div>
+    <span class="pw-chip pw-chip-warning">
+      <span class="material-symbols-outlined text-[14px]">admin_panel_settings</span> Administrateur
+    </span>
+  </div>
 
-  .page-header {
-    background: #fff;
-    border-radius: 16px;
-    padding: 1.75rem 2rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-    margin-bottom: 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
+  <!-- Recapitulatif -->
+  <div class="grid grid-cols-2 lg:grid-cols-6 gap-space-xs">
+    <div class="pw-tile !p-space-sm">
+      <span class="pw-tile-label">Vidéo (A)</span>
+      <span class="pw-tile-value !text-xl">{{ config.cost_per_click_video }}</span>
+      <span class="pw-tile-note">FCFA / clic</span>
+    </div>
+    <div class="pw-tile !p-space-sm">
+      <span class="pw-tile-label">Image (B)</span>
+      <span class="pw-tile-value !text-xl">{{ config.cost_per_click_photo }}</span>
+      <span class="pw-tile-note">FCFA / clic / photo</span>
+    </div>
+    <div class="pw-tile !p-space-sm">
+      <span class="pw-tile-label">Texte (C)</span>
+      <span class="pw-tile-value !text-xl">{{ config.cost_per_click_text }}</span>
+      <span class="pw-tile-note">FCFA / clic</span>
+    </div>
+    <div class="pw-tile !p-space-sm border-l-4 border-l-emerald-primary">
+      <span class="pw-tile-label">Commission</span>
+      <span class="pw-tile-value !text-xl text-emerald-deep">{{ config.commission_rate }} %</span>
+    </div>
+    <div class="pw-tile !p-space-sm border-l-4 border-l-emerald-primary">
+      <span class="pw-tile-label">Parrainage</span>
+      <span class="pw-tile-value !text-xl text-emerald-deep">{{ config.referral_reward_rate }} %</span>
+    </div>
+    <div class="pw-tile !p-space-sm border-l-4 border-l-amber-rich">
+      <span class="pw-tile-label">Retrait min.</span>
+      <span class="pw-tile-value !text-xl text-amber-rich">{{ config.minimum_withdrawal_amount | int }}</span>
+      <span class="pw-tile-note">FCFA</span>
+    </div>
+  </div>
 
-  .page-header h2 {
-    color: #1a1a2e;
-    font-weight: 700;
-    margin-bottom: 0.25rem;
-  }
+  <!-- Formulaire -->
+  <form action="{{ url_for('admin_settings') }}" method="POST" novalidate class="pw-card !p-space-md space-y-space-md">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-  .page-header .text-danger {
-    color: #e74c3c !important;
-  }
+    <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight">
+      <span class="material-symbols-outlined text-[20px] text-emerald-primary">settings</span>
+      Ajuster les paramètres financiers
+    </h2>
 
-  .page-header .text-muted {
-    font-size: 0.95rem;
-    margin-bottom: 0;
-  }
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
 
-  .role-badge {
-    background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
-    border-radius: 50px;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-  }
+      <!-- Facture a l'annonceur -->
+      <div class="space-y-space-sm">
+        <h3 class="pb-1 border-b border-outline-variant/40 font-label-caps text-label-caps uppercase tracking-wider text-on-surface-variant font-bold">
+          Tarification des clics (facturé à l'annonceur)
+        </h3>
+        {{ champ("cost_per_click_video", "cost_per_click_video", "Option A : vidéo",
+                 config.cost_per_click_video, "smart_display", "FCFA / clic",
+                 "Tarif appliqué lorsque l'annonceur téléverse directement sa propre vidéo.") }}
+        {{ champ("cost_per_click_photo", "cost_per_click_photo", "Option B : images",
+                 config.cost_per_click_photo, "image", "FCFA / clic / photo",
+                 "Tarif de base, facturé par photo. Une campagne à 5 photos coûte 5 × ce montant par clic — l'annonceur publie autant de statuts séparés qu'il a de photos.",
+                 note="Montant par photo") }}
+        {{ champ("cost_per_click_text", "cost_per_click_text", "Option C : texte simple",
+                 config.cost_per_click_text, "description", "FCFA / clic",
+                 "Tarif appliqué aux annonces en texte brut, sans média.") }}
+      </div>
 
-  /* Cartes récapitulatives */
-  .stat-card {
-    border: none;
-    border-radius: 14px;
-    background: #fff;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    height: 100%;
-  }
+      <!-- Reverse au partageur -->
+      <div class="space-y-space-sm">
+        <h3 class="pb-1 border-b border-outline-variant/40 font-label-caps text-label-caps uppercase tracking-wider text-on-surface-variant font-bold">
+          Récompense par clic (reversé au partageur)
+        </h3>
+        {{ champ("reward_per_click_video", "reward_per_click_video", "Option A : vidéo",
+                 config.reward_per_click_video, "smart_display", "FCFA / clic",
+                 "Montant crédité au partageur pour chaque clic généré sur une campagne vidéo.") }}
+        {{ champ("reward_per_click_photo", "reward_per_click_photo", "Option B : images",
+                 config.reward_per_click_photo, "image", "FCFA / clic / photo",
+                 "Tarif de base, versé par photo — même logique que le tarif facturé à l'annonceur. Un partageur qui diffuse une campagne à 5 photos touche 5 × ce montant par clic.",
+                 note="Montant par photo") }}
+        {{ champ("reward_per_click_text", "reward_per_click_text", "Option C : texte",
+                 config.reward_per_click_text, "description", "FCFA / clic",
+                 "Montant crédité au partageur pour chaque clic généré sur une campagne texte.") }}
+      </div>
 
-  .stat-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  }
+      <!-- Commissions -->
+      <div class="space-y-space-sm">
+        <h3 class="pb-1 border-b border-outline-variant/40 font-label-caps text-label-caps uppercase tracking-wider text-on-surface-variant font-bold">
+          Commissions et redistribution
+        </h3>
+        {{ champ("commission_rate", "commission_rate", "Commission de la plateforme",
+                 config.commission_rate, "trending_up", "%",
+                 "Frais de service appliqués sur le coût total de la campagne de l'annonceur.",
+                 pas="0.1", maxi=100) }}
+        {{ champ("referral_reward_rate", "referral_reward_rate", "Part reversée au parrain",
+                 config.referral_reward_rate, "group", "% d'affiliation",
+                 "Pourcentage reversé au parrain lors du premier achat de son filleul.",
+                 pas="0.1", maxi=100) }}
+      </div>
 
-  .stat-card .card-body {
-    padding: 1.1rem;
-  }
-
-  .stat-card small {
-    color: #999 !important;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-  }
-
-  .stat-card h4 {
-    font-size: 1.35rem;
-  }
-
-  /* Carte formulaire */
-  .settings-form-card {
-    border: none;
-    border-radius: 18px;
-    box-shadow: 0 6px 28px rgba(0, 0, 0, 0.07);
-    overflow: hidden;
-  }
-
-  .settings-form-card .card-header {
-    background: #fff !important;
-    border-bottom: 1px solid #f0f0f0 !important;
-  }
-
-  .settings-form-card .card-header h5 {
-    color: #1a1a2e;
-  }
-
-  .settings-form-card .card-body {
-    padding: 2rem !important;
-  }
-
-  .section-subtitle {
-    color: #444 !important;
-    font-weight: 700 !important;
-    border-bottom: 2px solid #f0f0f0 !important;
-  }
-
-  .form-label {
-    font-weight: 600;
-    color: #333;
-    font-size: 0.9rem;
-  }
-
-  .form-text.small {
-    color: #999;
-    font-size: 0.78rem;
-  }
-
-  .input-group-text {
-    background: #f8f9fa;
-    border-color: #e2e2e2;
-    color: #666;
-  }
-
-  .settings-form-card .form-control {
-    border-color: #e2e2e2;
-  }
-
-  .settings-form-card .form-control:focus {
-    border-color: #27ae60;
-    box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.15);
-  }
-
-  .settings-form-card .input-group:focus-within .input-group-text {
-    border-color: #27ae60;
-  }
-
-  .btn-cancel {
-    border-radius: 50px;
-    font-weight: 600;
-    border: 1.5px solid #ddd;
-    color: #555;
-    background: transparent;
-    transition: all 0.2s ease;
-  }
-
-  .btn-cancel:hover {
-    background: #f1f1f1;
-    color: #333;
-  }
-
-  .btn-save {
-    border-radius: 50px;
-    font-weight: 600;
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
-    border: none;
-    color: #fff;
-    transition: opacity 0.2s ease;
-  }
-
-  .btn-save:hover {
-    opacity: 0.9;
-    color: #fff;
-  }
-
-  /* 🆕 Note explicative "montant de base" pour l'option B */
-  .base-rate-note {
-    display: inline-block;
-    background: #eef7f0;
-    color: #1e7a3f;
-    border: 1px solid #cfe9d6;
-    border-radius: 6px;
-    padding: 2px 7px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    margin-left: 6px;
-    vertical-align: middle;
-  }
-
-  @media (max-width: 768px) {
-    .page-header {
-      padding: 1.5rem;
-    }
-    .settings-form-card .card-body {
-      padding: 1.5rem !important;
-    }
-    .page-header {
-      text-align: center;
-      justify-content: center;
-    }
-  }
-
-  @media (max-width: 576px) {
-    .d-flex.justify-content-end {
-      flex-direction: column;
-    }
-    .d-flex.justify-content-end .btn {
-      width: 100%;
-    }
-  }
-</style>
-
-<div class="settings-page">
-<div class="container">
-    <div class="page-header">
-        <div>
-            <h2>Configuration du <span class="text-danger">Système</span></h2>
-            <p class="text-muted">Modifiez les tarifs de diffusion, les commissions de la plateforme et les taux de parrainage.</p>
-        </div>
-        <span class="badge role-badge px-3 py-2 fs-6">Rôle : Administrateur</span>
+      <!-- Retraits -->
+      <div class="space-y-space-sm">
+        <h3 class="pb-1 border-b border-outline-variant/40 font-label-caps text-label-caps uppercase tracking-wider text-on-surface-variant font-bold">
+          Portefeuille et retraits
+        </h3>
+        {{ champ("minimum_withdrawal_amount", "minimum_withdrawal_amount", "Montant minimum de retrait",
+                 config.minimum_withdrawal_amount, "account_balance_wallet", "FCFA",
+                 "Solde minimum requis pour qu'un partageur puisse demander un retrait.",
+                 pas="1") }}
+      </div>
     </div>
 
-    <!-- CARTE RÉCAPITULATIVE -->
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-md">
-            <div class="card stat-card">
-                <div class="card-body p-3">
-                    <small class="fw-semibold d-block text-truncate">Vidéo (Opt. A)</small>
-                    <h4 class="fw-bold text-dark mt-1 mb-0">{{ config.cost_per_click_video }} <span class="fs-6 text-secondary">FCFA / clic</span></h4>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md">
-            <div class="card stat-card">
-                <div class="card-body p-3">
-                    <small class="fw-semibold d-block text-truncate">Image (Opt. B)</small>
-                    <h4 class="fw-bold text-dark mt-1 mb-0">{{ config.cost_per_click_photo }} <span class="fs-6 text-secondary">FCFA / clic / photo</span></h4>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md">
-            <div class="card stat-card">
-                <div class="card-body p-3">
-                    <small class="fw-semibold d-block text-truncate">Texte (Opt. C)</small>
-                    <h4 class="fw-bold text-dark mt-1 mb-0">{{ config.cost_per_click_text }} <span class="fs-6 text-secondary">FCFA / clic</span></h4>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md">
-            <div class="card stat-card">
-                <div class="card-body p-3">
-                    <small class="fw-semibold d-block text-truncate">Commission Site</small>
-                    <h4 class="fw-bold text-primary mt-1 mb-0">{{ config.commission_rate }} %</h4>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md">
-            <div class="card stat-card">
-                <div class="card-body p-3">
-                    <small class="fw-semibold d-block text-truncate">Parrainage</small>
-                    <h4 class="fw-bold text-success mt-1 mb-0">{{ config.referral_reward_rate }} %</h4>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-md">
-            <div class="card stat-card">
-                <div class="card-body p-3">
-                    <small class="fw-semibold d-block text-truncate">Retrait min.</small>
-                    <h4 class="fw-bold text-warning mt-1 mb-0">{{ config.minimum_withdrawal_amount | int }} FCFA</h4>
-                </div>
-            </div>
-        </div>
+    <div class="flex justify-end gap-space-xs pt-space-sm border-t border-outline-variant/30">
+      <a href="{{ url_for('index') }}" class="pw-btn pw-btn-sm pw-btn-neutral">Annuler</a>
+      <button type="submit" class="pw-btn pw-btn-sm pw-btn-primary">
+        <span class="material-symbols-outlined text-[18px]">save</span> Enregistrer les configurations
+      </button>
     </div>
+  </form>
 
-    <!-- FORMULAIRE DE CONFIGURATION -->
-    <div class="card settings-form-card">
-        <div class="card-header py-3">
-            <h5 class="fw-bold mb-0"><i class="bi bi-sliders me-2"></i> Ajuster les paramètres financiers</h5>
-        </div>
-        <div class="card-body">
-            <form action="{{ url_for('admin_settings') }}" method="POST" class="needs-validation" novalidate>
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                
-                <div class="row g-4">
-                    <!-- SECTION TARIFS FACTURÉS À L'ANNONCEUR -->
-                    <div class="col-md-6">
-                        <h6 class="section-subtitle mb-3 pb-2">📈 Tarification des clics (facturé à l'annonceur)</h6>
-                        
-                        <!-- OPTION A : VIDÉO -->
-                        <div class="mb-3">
-                            <label for="cost_per_click_video" class="form-label">Option A : Uploader des Vidéos (FCFA)</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-play-btn"></i></span>
-                                <input type="number" step="0.01" min="0" class="form-control" id="cost_per_click_video" name="cost_per_click_video" value="{{ config.cost_per_click_video }}" required>
-                                <span class="input-group-text">FCFA / clic</span>
-                            </div>
-                            <div class="form-text small">Tarif appliqué lorsque l'annonceur uploade directement ses propres vidéos.</div>
-                        </div>
-
-                        <!-- OPTION B : IMAGE -->
-                        <div class="mb-3">
-                            <label for="cost_per_click_photo" class="form-label">
-                                Option B : Uploader des Images (FCFA)
-                                <span class="base-rate-note">Montant par photo</span>
-                            </label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-image"></i></span>
-                                <input type="number" step="0.01" min="0" class="form-control" id="cost_per_click_photo" name="cost_per_click_photo" value="{{ config.cost_per_click_photo }}" required>
-                                <span class="input-group-text">FCFA / clic / photo</span>
-                            </div>
-                            <div class="form-text small">
-                                Tarif de BASE, facturé par photo. Une campagne à 5 photos coûte donc
-                                5 × ce montant par clic — l'annonceur doit publier autant de statuts
-                                séparés qu'il a de photos, d'où ce calcul automatique.
-                            </div>
-                        </div>
-
-                        <!-- OPTION C : TEXTE SIMPLE -->
-                        <div class="mb-3">
-                            <label for="cost_per_click_text" class="form-label">Option C : Texte simple (FCFA)</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-file-text"></i></span>
-                                <input type="number" step="0.01" min="0" class="form-control" id="cost_per_click_text" name="cost_per_click_text" value="{{ config.cost_per_click_text }}" required>
-                                <span class="input-group-text">FCFA / clic</span>
-                            </div>
-                            <div class="form-text small">Tarif appliqué aux annonces sous forme de texte brut sans média.</div>
-                        </div>
-                    </div>
-
-                    <!-- SECTION RÉCOMPENSE DU PARTAGEUR -->
-                    <div class="col-md-6">
-                        <h6 class="section-subtitle mb-3 pb-2">🎁 Récompense par clic (reversé au partageur)</h6>
-
-                        <div class="mb-3">
-                            <label for="reward_per_click_video" class="form-label">Option A : Vidéo (FCFA)</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-play-btn"></i></span>
-                                <input type="number" step="0.01" min="0" class="form-control" id="reward_per_click_video" name="reward_per_click_video" value="{{ config.reward_per_click_video }}" required>
-                                <span class="input-group-text">FCFA / clic</span>
-                            </div>
-                            <div class="form-text small">Montant crédité sur le portefeuille du partageur pour chaque clic généré sur une campagne vidéo.</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="reward_per_click_photo" class="form-label">
-                                Option B : Image (FCFA)
-                                <span class="base-rate-note">Montant par photo</span>
-                            </label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-image"></i></span>
-                                <input type="number" step="0.01" min="0" class="form-control" id="reward_per_click_photo" name="reward_per_click_photo" value="{{ config.reward_per_click_photo }}" required>
-                                <span class="input-group-text">FCFA / clic / photo</span>
-                            </div>
-                            <div class="form-text small">
-                                Tarif de BASE, versé par photo — même logique que le tarif facturé à
-                                l'annonceur ci-contre. Un partageur qui diffuse une campagne à 5 photos
-                                (donc 5 statuts à publier) touche automatiquement 5 × ce montant par
-                                clic, jamais un montant fixe indépendant du nombre de statuts.
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="reward_per_click_text" class="form-label">Option C : Texte (FCFA)</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-file-text"></i></span>
-                                <input type="number" step="0.01" min="0" class="form-control" id="reward_per_click_text" name="reward_per_click_text" value="{{ config.reward_per_click_text }}" required>
-                                <span class="input-group-text">FCFA / clic</span>
-                            </div>
-                            <div class="form-text small">Montant crédité sur le portefeuille du partageur pour chaque clic généré sur une campagne texte.</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row g-4 mt-1">
-                    <!-- SECTION COMMISSIONS & REDISTRIBUTION -->
-                    <div class="col-md-6">
-                        <h6 class="section-subtitle mb-3 pb-2">💸 Commissions et Redistribution</h6>
-
-                        <div class="mb-3">
-                            <label for="commission_rate" class="form-label">Taux de commission de la plateforme (%)</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-percent"></i></span>
-                                <input type="number" step="0.1" min="0" max="100" class="form-control" id="commission_rate" name="commission_rate" value="{{ config.commission_rate }}" required>
-                                <span class="input-group-text">%</span>
-                            </div>
-                            <div class="form-text small">Frais de service appliqués sur le coût total de la campagne de l'annonceur.</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="referral_reward_rate" class="form-label">Part reversée au Parrain (%)</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-gift"></i></span>
-                                <input type="number" step="0.1" min="0" max="100" class="form-control" id="referral_reward_rate" name="referral_reward_rate" value="{{ config.referral_reward_rate }}" required>
-                                <span class="input-group-text">% d'affiliation</span>
-                            </div>
-                            <div class="form-text small">Pourcentage de commission reversé au parrain lors du premier achat de son filleul.</div>
-                        </div>
-                    </div>
-
-                    <!-- SECTION RETRAITS -->
-                    <div class="col-md-6">
-                        <h6 class="section-subtitle mb-3 pb-2">🏦 Portefeuille & Retraits</h6>
-
-                        <div class="mb-3">
-                            <label for="minimum_withdrawal_amount" class="form-label">Montant minimum de retrait (FCFA)</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-wallet2"></i></span>
-                                <input type="number" step="1" min="0" class="form-control" id="minimum_withdrawal_amount" name="minimum_withdrawal_amount" value="{{ config.minimum_withdrawal_amount }}" required>
-                                <span class="input-group-text">FCFA</span>
-                            </div>
-                            <div class="form-text small">Solde minimum requis dans le portefeuille pour qu'un partageur puisse demander un retrait.</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                    <a href="{{ url_for('index') }}" class="btn btn-cancel px-4 py-2">Annuler</a>
-                    <button type="submit" class="btn btn-save px-4 py-2">
-                        <i class="bi bi-save me-2"></i> Enregistrer les configurations
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
 </div>
-</div>
+</section>
 {% endblock %}

@@ -15,3 +15,8 @@ instance/
 # Environnement virtuel de test local (Python 3.14)
 .venv-test/
 .venv-verify/
+
+# Outillage Tailwind : seul static/css/pubwek.css (le CSS compile) est versionne,
+# pour que Railway n'ait aucune etape de build Node a executer.
+node_modules/
+package-lock.json

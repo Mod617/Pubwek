@@ -1,219 +1,112 @@
-{% extends "base.html" %}
+{% extends "base_v2.html" %}
 
 {% block content %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<section class="py-space-lg md:py-space-xl bg-gradient-to-b from-canvas-cream via-surface-container-low to-background">
+<div class="w-full max-w-xl mx-auto px-margin">
 
-<style>
-  .register-wrapper {
-    min-height: 80vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem 1rem;
-    background: linear-gradient(135deg, #f0f9ff 0%, #e8f5e9 100%);
-  }
+  <div class="pw-card">
 
-  .register-card {
-    width: 100%;
-    max-width: 560px;
-    background: #fff;
-    border-radius: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-    padding: 2.5rem 2.25rem;
-  }
-
-  .register-card h2 {
-    font-weight: 700;
-    color: #1a1a2e;
-    margin-bottom: 0.25rem;
-  }
-
-  .register-subtitle {
-    text-align: center;
-    color: #777;
-    margin-bottom: 2rem;
-    font-size: 0.95rem;
-  }
-
-  .register-card .form-label {
-    font-weight: 600;
-    color: #333;
-    font-size: 0.9rem;
-  }
-
-  .register-card .form-control,
-  .register-card .form-select {
-    border-radius: 10px;
-    border: 1px solid #ddd;
-    padding: 0.65rem 0.9rem;
-  }
-
-  .register-card .form-control:focus,
-  .register-card .form-select:focus {
-    border-color: #27ae60;
-    box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.15);
-  }
-
-  .register-card .input-group-text {
-    border-radius: 10px 0 0 10px;
-    background: #f5f5f5;
-    font-weight: 600;
-    color: #444;
-  }
-
-  .register-card .input-group .form-control {
-    border-radius: 0 10px 10px 0;
-  }
-
-  .register-card .input-group .btn-outline-secondary {
-    border-radius: 0 10px 10px 0;
-    border: 1px solid #ddd;
-    border-left: none;
-  }
-
-  #submitBtn {
-    background: linear-gradient(135deg, #2ecc71, #27ae60);
-    border: none;
-    border-radius: 50px;
-    padding: 0.75rem;
-    font-weight: 600;
-    transition: opacity 0.2s ease;
-  }
-
-  #submitBtn:hover {
-    opacity: 0.9;
-  }
-
-  #submitBtn:disabled {
-    opacity: 0.7;
-  }
-
-  .btn-back {
-    border-radius: 50px;
-    padding: 0.75rem;
-    font-weight: 600;
-    background: #f1f1f1;
-    color: #333;
-    border: none;
-    transition: background 0.2s ease;
-  }
-
-  .btn-back:hover {
-    background: #e4e4e4;
-    color: #111;
-  }
-
-  .form-text {
-    font-size: 0.8rem;
-  }
-
-  #confirmationMessage {
-    border-radius: 12px;
-  }
-
-  .login-link {
-    text-align: center;
-    margin-top: 1.25rem;
-    font-size: 0.9rem;
-    color: #555;
-  }
-
-  .login-link a {
-    color: #27ae60;
-    font-weight: 600;
-    text-decoration: none;
-  }
-
-  .login-link a:hover {
-    text-decoration: underline;
-  }
-
-  @media (max-width: 576px) {
-    .register-card {
-      padding: 2rem 1.5rem;
-      border-radius: 16px;
-    }
-  }
-</style>
-
-<div class="register-wrapper">
-  <div class="register-card">
-    <h2 class="text-center">
-      Inscription {{ "Partageur" if role == "partageur" else "Annonceur" }}
-    </h2>
-    <p class="register-subtitle">
+    <!-- En-tete -->
+    <div class="text-center space-y-1 mb-space-md">
       {% if role == "partageur" %}
-        Rejoignez Pubwek et commencez à gagner de l'argent en partageant des produits.
+        <span class="pw-badge bg-amber-soft text-amber-rich">
+          <span class="material-symbols-outlined text-[16px]">monetization_on</span>
+          Compte Partageur
+        </span>
       {% else %}
-        Rejoignez Pubwek et faites connaître vos produits à plus de clients.
+        <span class="pw-badge bg-emerald-light text-emerald-deep">
+          <span class="material-symbols-outlined text-[16px]">storefront</span>
+          Compte Annonceur
+        </span>
       {% endif %}
-    </p>
+
+      <h1 class="font-headline-md text-headline-md md:text-headline-lg text-slate-night">
+        Créer votre compte
+      </h1>
+      <p class="font-body-md text-body-md text-on-surface-variant">
+        {% if role == "partageur" %}
+          Rejoignez Pubwek et commencez à gagner de l'argent en partageant des produits.
+        {% else %}
+          Rejoignez Pubwek et faites connaître vos produits à plus de clients.
+        {% endif %}
+      </p>
+    </div>
 
     <form id="registerForm" method="POST" action="" enctype="multipart/form-data"
+          class="space-y-space-sm"
           data-communes="{{ departements_communes | tojson | forceescape }}"
           data-commune-initiale="{{ form.commune.data or '' }}">
       {{ form.hidden_tag() }}
-
       <input type="hidden" name="role" value="{{ role }}">
 
-      <div class="mb-3">
-        {{ form.email.label(class="form-label") }}
-        {{ form.email(class="form-control", id="email", placeholder="ex: utilisateur@gmail.com") }}
+      <!-- Email -->
+      <div>
+        {{ form.email.label(class="pw-label") }}
+        {{ form.email(class="pw-input", id="email", placeholder="ex: utilisateur@gmail.com") }}
         {% for error in form.email.errors %}
-          <div class="text-danger small">{{ error }}</div>
+          <p class="pw-error">{{ error }}</p>
         {% endfor %}
       </div>
 
-      <div class="mb-3">
-        {{ form.password.label(class="form-label") }}
-        <div class="input-group">
-          {{ form.password(class="form-control", id="password", placeholder="••••••") }}
-          <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('password', this)" tabindex="-1">
-            <i class="bi bi-eye"></i>
+      <!-- Mot de passe -->
+      <div>
+        {{ form.password.label(class="pw-label") }}
+        <div class="relative">
+          {{ form.password(class="pw-input pr-12", id="password", placeholder="••••••") }}
+          <button type="button" tabindex="-1"
+                  class="absolute inset-y-0 right-0 flex items-center px-space-md text-on-surface-variant hover:text-slate-midnight transition-colors"
+                  onclick="togglePasswordVisibility('password', this)" aria-label="Afficher le mot de passe">
+            <span class="material-symbols-outlined text-[20px]">visibility</span>
           </button>
         </div>
         {% for error in form.password.errors %}
-          <div class="text-danger small">{{ error }}</div>
+          <p class="pw-error">{{ error }}</p>
         {% endfor %}
       </div>
 
-      <div class="mb-3">
-        {{ form.confirm_password.label(class="form-label") }}
-        <div class="input-group">
-          {{ form.confirm_password(class="form-control", id="confirm_password", placeholder="••••••") }}
-          <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('confirm_password', this)" tabindex="-1">
-            <i class="bi bi-eye"></i>
+      <!-- Confirmation -->
+      <div>
+        {{ form.confirm_password.label(class="pw-label") }}
+        <div class="relative">
+          {{ form.confirm_password(class="pw-input pr-12", id="confirm_password", placeholder="••••••") }}
+          <button type="button" tabindex="-1"
+                  class="absolute inset-y-0 right-0 flex items-center px-space-md text-on-surface-variant hover:text-slate-midnight transition-colors"
+                  onclick="togglePasswordVisibility('confirm_password', this)" aria-label="Afficher le mot de passe">
+            <span class="material-symbols-outlined text-[20px]">visibility</span>
           </button>
         </div>
         {% for error in form.confirm_password.errors %}
-          <div class="text-danger small">{{ error }}</div>
+          <p class="pw-error">{{ error }}</p>
         {% endfor %}
       </div>
 
       {% if role == "partageur" %}
-      <div class="mb-3">
-        {{ form.province.label(class="form-label") }}
-        {{ form.province(class="form-select", id="province") }}
+      <!-- Province -->
+      <div>
+        {{ form.province.label(class="pw-label") }}
+        {{ form.province(class="pw-select", id="province") }}
         {% for error in form.province.errors %}
-          <div class="text-danger small">{{ error }}</div>
+          <p class="pw-error">{{ error }}</p>
         {% endfor %}
       </div>
 
-      <div class="mb-3">
-        {{ form.commune.label(class="form-label") }}
-        {{ form.commune(class="form-select", id="commune") }}
+      <!-- Commune -->
+      <div>
+        {{ form.commune.label(class="pw-label") }}
+        {{ form.commune(class="pw-select", id="commune") }}
         {% for error in form.commune.errors %}
-          <div class="text-danger small">{{ error }}</div>
+          <p class="pw-error">{{ error }}</p>
         {% endfor %}
-        <small class="form-text text-muted">Sélectionnez d'abord votre province ci-dessus.</small>
+        <p class="pw-help">Sélectionnez d'abord votre province ci-dessus.</p>
       </div>
 
-      <div class="mb-3">
-        {{ form.whatsapp_number.label(class="form-label") }}
-        <div class="input-group">
-          <span class="input-group-text">+22901</span>
+      <!-- WhatsApp -->
+      <div>
+        {{ form.whatsapp_number.label(class="pw-label") }}
+        <div class="flex">
+          <span class="inline-flex items-center rounded-l-xl border border-r-0 border-outline-variant/50 bg-surface-container px-space-md font-label-numeric-md text-label-numeric-md font-bold text-slate-midnight">+22901</span>
           {{ form.whatsapp_number(
-                class="form-control",
+                class="pw-input rounded-l-none",
                 id="whatsapp_number",
                 placeholder="57290905",
                 value=(form.whatsapp_number.data or ""),
@@ -222,67 +115,74 @@
           ) }}
         </div>
         {% for error in form.whatsapp_number.errors %}
-          <div class="text-danger small">{{ error }}</div>
+          <p class="pw-error">{{ error }}</p>
         {% endfor %}
-        <small class="form-text text-muted">Saisissez seulement les 8 chiffres après le 01 (ex : 57290905). Le préfixe +22901 est ajouté automatiquement.</small>
+        <p class="pw-help">Saisissez seulement les 8 chiffres après le 01 (ex : 57290905). Le préfixe +22901 est ajouté automatiquement.</p>
       </div>
       {% endif %}
 
       {% if role == "annonceur" %}
-      <div class="mb-3">
-        {{ form.company_name.label(class="form-label") }}
-        {{ form.company_name(class="form-control", id="company_name", placeholder="Nom de votre entreprise") }}
+      <!-- Entreprise -->
+      <div>
+        {{ form.company_name.label(class="pw-label") }}
+        {{ form.company_name(class="pw-input", id="company_name", placeholder="Nom de votre entreprise") }}
         {% for error in form.company_name.errors %}
-          <div class="text-danger small">{{ error }}</div>
+          <p class="pw-error">{{ error }}</p>
         {% endfor %}
       </div>
 
-      <div class="mb-3">
-        {{ form.logo_file.label(class="form-label") }}
-        {{ form.logo_file(class="form-control", id="logo_file", accept="image/*") }}
+      <!-- Logo -->
+      <div>
+        {{ form.logo_file.label(class="pw-label") }}
+        {{ form.logo_file(class="pw-file", id="logo_file", accept="image/*") }}
         {% for error in form.logo_file.errors %}
-          <div class="text-danger small">{{ error }}</div>
+          <p class="pw-error">{{ error }}</p>
         {% endfor %}
-        <small class="form-text text-muted">Optionnel. Permet d'incruster votre logo de marque sur vos vidéos.</small>
+        <p class="pw-help">Optionnel. Permet d'incruster votre logo de marque sur vos vidéos.</p>
       </div>
       {% endif %}
 
-      <div class="d-grid gap-2 mt-4">
-        <button type="submit" class="btn btn-success btn-lg" id="submitBtn">
+      <!-- Actions -->
+      <div class="pt-space-xs">
+        <button type="submit" class="pw-btn pw-btn-md pw-btn-primary w-full" id="submitBtn">
           <span id="btnText">Créer mon compte</span>
-          <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+          <span id="btnSpinner" class="hidden w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" role="status"></span>
         </button>
-        <a href="{{ url_for('index') }}" class="btn btn-back btn-lg">⬅ Retour à l'accueil</a>
       </div>
     </form>
 
-    <div id="confirmationMessage" class="alert alert-info mt-4 text-center d-none"></div>
+    <div id="confirmationMessage"
+         class="hidden mt-space-md rounded-2xl border border-outline-variant/40 bg-surface-container px-space-md py-space-sm text-center font-body-sm text-body-sm text-on-surface"></div>
 
-    <div class="login-link">
-      <p>Déjà inscrit ? <a href="{{ url_for('login') }}">Se connecter</a></p>
+    <div class="mt-space-sm pt-space-sm border-t border-outline-variant/30 flex flex-wrap items-center justify-center gap-x-space-sm gap-y-1 font-body-sm text-body-sm text-on-surface-variant">
+      <span>Déjà inscrit ?</span>
+      <a class="font-semibold text-emerald-primary hover:text-emerald-deep hover:underline" href="{{ url_for('login') }}">Se connecter</a>
+      <span class="text-outline-variant">·</span>
+      <a class="font-semibold text-on-surface-variant hover:text-slate-midnight hover:underline" href="{{ url_for('index') }}">Accueil</a>
     </div>
+
   </div>
 </div>
+</section>
 
 <script>
-// 🆕 Bascule afficher/masquer un champ mot de passe (utilisé sur password et confirm_password)
+// Bascule afficher/masquer un champ mot de passe (utilise sur password et confirm_password)
 function togglePasswordVisibility(fieldId, btn) {
   const field = document.getElementById(fieldId);
-  const icon = btn.querySelector("i");
+  const icon = btn.querySelector(".material-symbols-outlined");
 
   if (field.type === "password") {
     field.type = "text";
-    icon.classList.remove("bi-eye");
-    icon.classList.add("bi-eye-slash");
+    icon.textContent = "visibility_off";
+    btn.setAttribute("aria-label", "Masquer le mot de passe");
   } else {
     field.type = "password";
-    icon.classList.remove("bi-eye-slash");
-    icon.classList.add("bi-eye");
+    icon.textContent = "visibility";
+    btn.setAttribute("aria-label", "Afficher le mot de passe");
   }
 }
 
-// 🆕 Données département → communes, lues depuis les attributs data-* du formulaire
-// (évite tout mélange Jinja/JS dans le script, ce qui perturbait l'analyseur de l'éditeur)
+// Donnees departement → communes, lues depuis les attributs data-* du formulaire
 document.addEventListener("DOMContentLoaded", function() {
   const registerForm = document.getElementById("registerForm");
   const DEPARTEMENTS_COMMUNES = JSON.parse(registerForm.dataset.communes);
@@ -322,7 +222,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   const provinceSelect = document.getElementById("province");
   if (provinceSelect) {
-    // Initialisation au chargement (utile si l'utilisateur revient après une erreur de formulaire)
+    // Initialisation au chargement (utile si l'utilisateur revient apres une erreur de formulaire)
     remplirCommunes(provinceSelect.value, COMMUNE_INITIALE);
 
     provinceSelect.addEventListener("change", function() {
@@ -330,8 +230,8 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // 🆕 Numéro WhatsApp : n'autorise que la saisie de chiffres dans le champ,
-  // limité aux 8 chiffres après le préfixe fixe +22901 affiché à côté.
+  // Numero WhatsApp : n'autorise que la saisie de chiffres dans le champ,
+  // limite aux 8 chiffres apres le prefixe fixe +22901 affiche a cote.
   const whatsappInput = document.getElementById("whatsapp_number");
   if (whatsappInput) {
     whatsappInput.addEventListener("input", function() {
@@ -346,18 +246,15 @@ document.getElementById("registerForm").addEventListener("submit", function(even
     const submitBtn = document.getElementById("submitBtn");
     const confirmationDiv = document.getElementById("confirmationMessage");
 
-    // ℹ️ Le champ whatsapp_number ne contient plus que les 8 chiffres saisis :
-    // le préfixe +22901 est désormais reconstruit côté serveur (main.py) avant
-    // sauvegarde en base, donc on n'ajoute plus rien ici avant l'envoi.
+    // Le champ whatsapp_number ne contient plus que les 8 chiffres saisis :
+    // le prefixe +22901 est reconstruit cote serveur (main.py) avant sauvegarde.
 
-    // On change l'apparence du bouton pour montrer que ça travaille
     btnText.innerText = "Envoi en cours...";
-    btnSpinner.classList.remove("d-none");
+    btnSpinner.classList.remove("hidden");
     submitBtn.disabled = true;
 
-    // On affiche le message de patience
     confirmationDiv.innerHTML = "Traitement de votre inscription... Veuillez patienter ⏳";
-    confirmationDiv.classList.remove("d-none");
+    confirmationDiv.classList.remove("hidden");
 });
 </script>
 {% endblock %}

@@ -1,480 +1,238 @@
-{% extends "base.html" %}
+{% extends "base_v2.html" %}
 
 {% block content %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<section class="py-space-lg bg-background">
+<div class="max-w-6xl mx-auto px-margin space-y-space-sm">
 
-<style>
-  .withdraw-page {
-    background: linear-gradient(135deg, #f0f9ff 0%, #e8f5e9 100%);
-    min-height: 100vh;
-    padding: 2.5rem 0 3rem;
-  }
+  <!-- En-tete -->
+  <div class="flex flex-wrap items-end justify-between gap-space-sm">
+    <div class="min-w-0">
+      <span class="pw-badge bg-amber-soft text-amber-rich">Administration</span>
+      <h1 class="mt-1 font-headline-md text-headline-md text-slate-night">Demandes de retrait</h1>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">
+        Traitez les demandes de retrait des partageurs.
+      </p>
+    </div>
+    <a href="{{ url_for('admin_validate') }}" class="pw-btn pw-btn-sm pw-btn-neutral">
+      <span class="material-symbols-outlined text-[18px]">arrow_back</span> Panneau d'administration
+    </a>
+  </div>
 
-  .page-header {
-    background: #fff;
-    border-radius: 16px;
-    padding: 1.75rem 2rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-    margin-bottom: 2.5rem;
-  }
+  <!-- ================= EN ATTENTE ================= -->
+  <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
+    <span class="material-symbols-outlined text-[20px] text-amber-rich">hourglass_top</span>
+    En attente de traitement
+    {% if en_attente %}<span class="pw-chip pw-chip-warning">{{ en_attente | length }}</span>{% endif %}
+  </h2>
 
-  .page-header h2 {
-    color: #1a1a2e;
-    font-weight: 700;
-  }
+  {% if en_attente %}
+  <div class="pw-table-wrap">
+    <table class="pw-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Partageur</th>
+          <th class="text-right">Montant</th>
+          <th>Moyen de réception</th>
+          <th>Numéro</th>
+          <th>Demandée le</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in en_attente %}
+        <tr>
+          <td class="font-label-numeric-md text-label-numeric-md font-bold text-on-surface-variant">#{{ d.id }}</td>
+          <td>
+            {% if d.demandeur %}
+              <div class="font-semibold text-slate-midnight">{{ d.demandeur.pseudo or "Sans pseudo" }}</div>
+              <div class="font-caption text-caption text-on-surface-variant">{{ d.demandeur.email }}</div>
+            {% else %}
+              <span class="text-on-surface-variant">Utilisateur supprimé</span>
+            {% endif %}
+          </td>
+          <td class="text-right font-label-numeric-md text-label-numeric-md font-bold text-slate-midnight whitespace-nowrap">
+            {{ "{:,.0f}".format(d.amount) }} FCFA
+          </td>
+          <td>{{ d.payout_channel }}</td>
+          <td>
+            <a href="https://wa.me/{{ d.payout_phone | replace(' ', '') }}" target="_blank" rel="noopener"
+               class="inline-flex items-center gap-1 font-label-numeric-md text-label-numeric-md text-emerald-deep hover:underline">
+              {{ d.payout_phone }} <span class="material-symbols-outlined text-[14px]">chat</span>
+            </a>
+          </td>
+          <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">
+            {{ d.requested_at | heure_locale if d.requested_at else "—" }}
+          </td>
+          <td>
+            <div class="flex flex-col gap-1">
+              <button type="button" class="pw-btn pw-btn-sm pw-btn-primary !py-1.5 !text-[12px]" data-pw-modal="payerModal{{ d.id }}">
+                <span class="material-symbols-outlined text-[16px]">payments</span> Marquer payé
+              </button>
+              <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px] !text-error" data-pw-modal="refuserModal{{ d.id }}">
+                <span class="material-symbols-outlined text-[16px]">cancel</span> Refuser
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
-  .page-header .text-muted {
-    font-size: 0.95rem;
-  }
+  <!-- Fenetres par demande -->
+  {% for d in en_attente %}
+  <div class="pw-modal fixed inset-0 z-[90] hidden items-center justify-center p-space-md bg-slate-night/80 overflow-y-auto"
+       id="payerModal{{ d.id }}" aria-modal="true" role="dialog">
+    <div class="pw-modal-panel w-full max-w-lg my-auto rounded-2xl bg-surface-container-lowest shadow-2xl overflow-hidden">
+      <form action="{{ url_for('confirmer_retrait_manuel', withdrawal_id=d.id) }}" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-  .btn-back-admin {
-    border-radius: 50px;
-    padding: 0.6rem 1.4rem;
-    font-weight: 600;
-    background: #f1f1f1;
-    color: #333;
-    border: none;
-    transition: background 0.2s ease;
-  }
-
-  .btn-back-admin:hover {
-    background: #e4e4e4;
-    color: #111;
-  }
-
-  .section-title {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    font-weight: 700;
-    margin-bottom: 1.25rem;
-  }
-
-  .section-title.pending {
-    color: #e67e22;
-  }
-
-  .section-title.history {
-    color: #555;
-  }
-
-  .table-card {
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-    padding: 0.5rem;
-    margin-bottom: 3rem;
-    overflow: hidden;
-  }
-
-  .table-card table {
-    margin-bottom: 0;
-  }
-
-  .table-card thead tr {
-    background: #1a1a2e !important;
-  }
-
-  .table-card thead th {
-    border: none;
-    font-weight: 600;
-    font-size: 0.85rem;
-    letter-spacing: 0.3px;
-    padding: 1rem 0.75rem;
-  }
-
-  .table-card tbody td {
-    padding: 0.9rem 0.75rem;
-    vertical-align: middle;
-    border-color: #f0f0f0;
-  }
-
-  .table-card tbody tr:hover {
-    background-color: #f8fbf9;
-  }
-
-  .amount-cell {
-    color: #27ae60;
-    font-weight: 700;
-  }
-
-  .whatsapp-link {
-    color: #333;
-    font-weight: 500;
-  }
-
-  .whatsapp-link:hover {
-    color: #27ae60;
-  }
-
-  .btn-pay {
-    background: linear-gradient(135deg, #2ecc71, #27ae60);
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    color: #fff;
-    transition: opacity 0.2s ease;
-  }
-
-  .btn-pay:hover {
-    opacity: 0.9;
-    color: #fff;
-  }
-
-  .btn-reject {
-    border-radius: 8px;
-    font-weight: 600;
-    border: 1.5px solid #e74c3c;
-    color: #e74c3c;
-    background: transparent;
-    transition: all 0.2s ease;
-  }
-
-  .btn-reject:hover {
-    background: #e74c3c;
-    color: #fff;
-  }
-
-  .status-badge {
-    border-radius: 50px;
-    padding: 0.4rem 0.8rem;
-    font-weight: 600;
-    font-size: 0.78rem;
-  }
-
-  .empty-state {
-    background: #fff;
-    border-radius: 16px;
-    padding: 2rem;
-    text-align: center;
-    color: #888;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    margin-bottom: 3rem;
-  }
-
-  /* Modals */
-  .modal-content {
-    border-radius: 16px;
-    border: none;
-    overflow: hidden;
-  }
-
-  .modal-header {
-    border: none;
-    padding: 1.25rem 1.5rem;
-  }
-
-  .modal-header.bg-success {
-    background: linear-gradient(135deg, #2ecc71, #27ae60) !important;
-  }
-
-  .modal-header.bg-danger {
-    background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
-  }
-
-  .modal-body {
-    padding: 1.5rem;
-  }
-
-  .modal-footer {
-    border: none;
-    padding: 1rem 1.5rem 1.5rem;
-  }
-
-  .modal .form-control {
-    border-radius: 10px;
-    border: 1px solid #ddd;
-  }
-
-  .modal .form-control:focus {
-    border-color: #27ae60;
-    box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.15);
-  }
-
-  @media (max-width: 768px) {
-    .page-header {
-      padding: 1.5rem;
-    }
-    .table-card {
-      border-radius: 12px;
-    }
-  }
-
-  /* ========================================== */
-  /* 📱 TRANSFORMATION TABLEAU → CARTES SUR MOBILE */
-  /* ========================================== */
-  @media (max-width: 767.98px) {
-    .responsive-table thead {
-      display: none; /* on masque l'en-tête classique */
-    }
-
-    .responsive-table, 
-    .responsive-table tbody, 
-    .responsive-table tr, 
-    .responsive-table td {
-      display: block;
-      width: 100%;
-    }
-
-    .responsive-table tr {
-      background: #fff;
-      border: 1px solid #eee;
-      border-radius: 14px;
-      margin-bottom: 1rem;
-      padding: 0.75rem 1rem;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
-    }
-
-    .responsive-table tr:hover {
-      background-color: #fff; /* on désactive le hover striped en carte */
-    }
-
-    .responsive-table td {
-      text-align: right !important;
-      padding: 0.6rem 0 !important;
-      border: none !important;
-      border-bottom: 1px solid #f2f2f2 !important;
-      position: relative;
-      padding-left: 45% !important;
-      min-height: 1.5rem;
-    }
-
-    .responsive-table td:last-child {
-      border-bottom: none !important;
-    }
-
-    /* Le petit libellé à gauche, généré depuis data-label */
-    .responsive-table td::before {
-      content: attr(data-label);
-      position: absolute;
-      left: 0;
-      top: 0.6rem;
-      width: 40%;
-      font-weight: 600;
-      font-size: 0.78rem;
-      color: #888;
-      text-align: left;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-
-    /* La cellule Actions n'a pas besoin d'être alignée à droite ni d'avoir de bordure */
-    .responsive-table td.actions-cell {
-      text-align: center !important;
-      padding-left: 0 !important;
-    }
-
-    .responsive-table td.actions-cell::before {
-      display: none;
-    }
-
-    .responsive-table td.actions-cell .d-flex {
-      align-items: stretch;
-    }
-
-    /* Le nom du partageur reste aligné à gauche + libellé au-dessus */
-    .responsive-table td[data-label="Partageur"] {
-      text-align: left !important;
-    }
-  }
-</style>
-
-<div class="withdraw-page">
-<div class="container">
-    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <div>
-            <h2 class="mb-1">💰 Demandes de retrait</h2>
-            <p class="text-muted mb-0">Traitez les demandes de retrait des partageurs.</p>
+        <div class="pw-modal-head bg-emerald-primary text-white">
+          <span>Confirmer le paiement manuel #{{ d.id }}</span>
+          <button type="button" class="pw-modal-close opacity-70 hover:opacity-100" aria-label="Fermer">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
         </div>
-        <a href="{{ url_for('admin_validate') }}" class="btn btn-back-admin">
-            ⬅️ Retour au panneau d'administration
-        </a>
+
+        <div class="pw-modal-body">
+          <p class="font-body-sm text-body-sm text-on-surface">
+            Envoyez d'abord <strong class="text-slate-midnight">{{ "{:,.0f}".format(d.amount) }} FCFA</strong> à
+            <strong class="text-slate-midnight">{{ d.demandeur.pseudo if d.demandeur else "ce partageur" }}</strong>
+            via <strong class="text-slate-midnight">{{ d.payout_channel }}</strong> au
+            <strong class="text-slate-midnight">{{ d.payout_phone }}</strong>, puis téléversez la capture
+            de confirmation du virement.
+          </p>
+          <div>
+            <label class="pw-label">Preuve de paiement (capture d'écran) <span class="text-error">*</span></label>
+            <input type="file" name="proof_file" class="pw-file" accept="image/*" required>
+            <p class="pw-help">Cette preuve sera conservée et consultable en cas de litige.</p>
+          </div>
+        </div>
+
+        <div class="pw-modal-foot">
+          <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral pw-modal-close">Annuler</button>
+          <button type="submit" class="pw-btn pw-btn-sm pw-btn-primary">
+            <span class="material-symbols-outlined text-[18px]">check_circle</span> Confirmer le paiement
+          </button>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <!-- ========================================== -->
-    <!-- ⏳ DEMANDES EN ATTENTE -->
-    <!-- ========================================== -->
-    <h4 class="section-title pending"><i class="bi bi-hourglass-split"></i>En attente de traitement</h4>
+  <div class="pw-modal fixed inset-0 z-[90] hidden items-center justify-center p-space-md bg-slate-night/80 overflow-y-auto"
+       id="refuserModal{{ d.id }}" aria-modal="true" role="dialog">
+    <div class="pw-modal-panel w-full max-w-lg my-auto rounded-2xl bg-surface-container-lowest shadow-2xl overflow-hidden">
+      <form action="{{ url_for('refuser_retrait', withdrawal_id=d.id) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-    {% if en_attente %}
-    <div class="table-card">
-    <div class="table-responsive">
-        <table class="table table-striped align-middle mb-0 responsive-table">
-            <thead class="text-white text-center">
-                <tr>
-                    <th>ID</th>
-                    <th>Partageur</th>
-                    <th>Montant</th>
-                    <th>Moyen de réception</th>
-                    <th>Numéro</th>
-                    <th>Demandée le</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for d in en_attente %}
-                <tr>
-                    <td class="text-center fw-bold" data-label="ID">#{{ d.id }}</td>
-                    <td data-label="Partageur">
-                        {% if d.demandeur %}
-                            <div class="fw-bold">{{ d.demandeur.pseudo or "Sans pseudo" }}</div>
-                            <div class="text-muted small">{{ d.demandeur.email }}</div>
-                        {% else %}
-                            <span class="text-muted">Utilisateur supprimé</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-center amount-cell" data-label="Montant">{{ "{:,.0f}".format(d.amount) }} FCFA</td>
-                    <td class="text-center" data-label="Moyen">{{ d.payout_channel }}</td>
-                    <td class="text-center" data-label="Numéro">
-                        <a href="https://wa.me/{{ d.payout_phone | replace(' ', '') }}" target="_blank" class="text-decoration-none whatsapp-link">
-                            {{ d.payout_phone }} <i class="bi bi-whatsapp text-success"></i>
-                        </a>
-                    </td>
-                    <td class="text-center small text-muted" data-label="Demandée le">{{ d.requested_at | heure_locale if d.requested_at else "-" }}</td>
-                    <td class="text-center actions-cell" data-label="Actions" style="min-width: 220px;">
-                        <div class="d-flex flex-column gap-2">
-                            <!-- Paiement manuel avec preuve -->
-                            <button type="button" class="btn btn-sm btn-pay" data-bs-toggle="modal" data-bs-target="#payerModal{{ d.id }}">
-                                💵 Marquer payé (manuel)
-                            </button>
-                            <!-- Refuser -->
-                            <button type="button" class="btn btn-sm btn-reject" data-bs-toggle="modal" data-bs-target="#refuserModal{{ d.id }}">
-                                ❌ Refuser
-                            </button>
-                        </div>
-                    </td>
-                </tr>
+        <div class="pw-modal-head bg-error text-white">
+          <span>Refuser la demande #{{ d.id }}</span>
+          <button type="button" class="pw-modal-close opacity-70 hover:opacity-100" aria-label="Fermer">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
 
-                <!-- MODAL : Confirmer paiement manuel avec preuve -->
-                <div class="modal fade" id="payerModal{{ d.id }}" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <form action="{{ url_for('confirmer_retrait_manuel', withdrawal_id=d.id) }}" method="POST" enctype="multipart/form-data">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <div class="modal-header bg-success text-white">
-                                    <h5 class="modal-title fw-bold">💵 Confirmer le paiement manuel #{{ d.id }}</h5>
-                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <p class="mb-3">
-                                        Envoyez d'abord <strong>{{ "{:,.0f}".format(d.amount) }} FCFA</strong> à
-                                        <strong>{{ d.demandeur.pseudo if d.demandeur else "ce partageur" }}</strong>
-                                        via <strong>{{ d.payout_channel }}</strong> au <strong>{{ d.payout_phone }}</strong>,
-                                        puis téléversez la capture d'écran de la confirmation du virement.
-                                    </p>
-                                    <label class="form-label fw-bold">Preuve de paiement (capture d'écran) <span class="text-danger">*</span></label>
-                                    <input type="file" name="proof_file" class="form-control" accept="image/*" required>
-                                    <div class="form-text text-muted">Cette preuve sera conservée et consultable en cas de litige.</div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                                    <button type="submit" class="btn btn-pay fw-bold">✅ Confirmer le paiement</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+        <div class="pw-modal-body">
+          <div>
+            <label class="pw-label">Motif du refus <span class="text-error">*</span></label>
+            <textarea name="admin_note" class="pw-input resize-y" rows="3" required
+                      placeholder="Ex : numéro invalide, veuillez le corriger et refaire une demande."></textarea>
+            <p class="pw-help">Le montant sera automatiquement recrédité sur le portefeuille du partageur.</p>
+          </div>
+        </div>
 
-                <!-- MODAL : Refuser la demande -->
-                <div class="modal fade" id="refuserModal{{ d.id }}" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content">
-                            <form action="{{ url_for('refuser_retrait', withdrawal_id=d.id) }}" method="POST">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <div class="modal-header bg-danger text-white">
-                                    <h5 class="modal-title fw-bold">❌ Refuser la demande #{{ d.id }}</h5>
-                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <label class="form-label fw-bold">Motif du refus <span class="text-danger">*</span></label>
-                                    <textarea name="admin_note" class="form-control" rows="3" required placeholder="Ex : numéro invalide, veuillez le corriger et refaire une demande."></textarea>
-                                    <div class="form-text text-muted">Le montant sera automatiquement recrédité sur le portefeuille du partageur.</div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                                    <button type="submit" class="btn btn-danger fw-bold">Confirmer le refus</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="pw-modal-foot">
+          <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral pw-modal-close">Annuler</button>
+          <button type="submit" class="pw-btn pw-btn-sm bg-error text-white hover:opacity-90">Confirmer le refus</button>
+        </div>
+      </form>
     </div>
-    </div>
-    {% else %}
-    <div class="empty-state mb-5">Aucune demande de retrait en attente.</div>
-    {% endif %}
+  </div>
+  {% endfor %}
 
-    <!-- ========================================== -->
-    <!-- ✅ DEMANDES TRAITÉES -->
-    <!-- ========================================== -->
-    <h4 class="section-title history"><i class="bi bi-archive"></i>Historique des demandes traitées</h4>
+  {% else %}
+  <div class="pw-card !p-space-lg text-center">
+    <span class="material-symbols-outlined text-[36px] text-on-surface-variant">payments</span>
+    <p class="mt-1 font-body-sm text-body-sm text-on-surface-variant">Aucune demande de retrait en attente.</p>
+  </div>
+  {% endif %}
 
-    {% if traitees %}
-    <div class="table-card">
-    <div class="table-responsive">
-        <table class="table table-striped align-middle mb-0 responsive-table">
-            <thead class="text-white text-center">
-                <tr>
-                    <th>ID</th>
-                    <th>Partageur</th>
-                    <th>Montant</th>
-                    <th>Moyen</th>
-                    <th>Statut</th>
-                    <th>Méthode</th>
-                    <th>Preuve</th>
-                    <th>Traitée le</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for d in traitees %}
-                <tr>
-                    <td class="text-center fw-bold" data-label="ID">#{{ d.id }}</td>
-                    <td data-label="Partageur">
-                        {% if d.demandeur %}
-                            <div class="fw-bold">{{ d.demandeur.pseudo or "Sans pseudo" }}</div>
-                            <div class="text-muted small">{{ d.demandeur.email }}</div>
-                        {% else %}
-                            <span class="text-muted">Utilisateur supprimé</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-center fw-bold" data-label="Montant">{{ "{:,.0f}".format(d.amount) }} FCFA</td>
-                    <td class="text-center" data-label="Moyen">{{ d.payout_channel }}</td>
-                    <td class="text-center" data-label="Statut">
-                        {% if d.status == "paid" %}
-                            <span class="status-badge bg-success text-white">✅ Payé</span>
-                        {% elif d.status == "rejected" %}
-                            <span class="status-badge bg-danger text-white">❌ Refusé</span>
-                        {% else %}
-                            <span class="status-badge bg-secondary text-white">{{ d.status }}</span>
-                        {% endif %}
-                        {% if d.status == "rejected" and d.admin_note %}
-                            <div class="text-muted small mt-1">{{ d.admin_note }}</div>
-                        {% endif %}
-                    </td>
-                    <td class="text-center text-capitalize" data-label="Méthode">{{ d.payment_method or "-" }}</td>
-                    <td class="text-center" data-label="Preuve">
-                        {% if d.proof_file %}
-                            <a href="{{ url_for('serve_upload', filename=d.proof_file) }}" target="_blank" class="btn btn-xs btn-outline-primary" style="font-size: 0.75rem;">
-                                🖼️ Voir la preuve
-                            </a>
-                        {% else %}
-                            <span class="text-muted small">—</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-center small text-muted" data-label="Traitée le">{{ d.processed_at | heure_locale if d.processed_at else "-" }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    </div>
-    {% else %}
-    <div class="empty-state">Aucune demande traitée pour le moment.</div>
-    {% endif %}
+  <!-- ================= HISTORIQUE ================= -->
+  <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
+    <span class="material-symbols-outlined text-[20px] text-emerald-primary">history</span>
+    Historique des demandes traitées
+  </h2>
+
+  {% if traitees %}
+  <div class="pw-table-wrap">
+    <table class="pw-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Partageur</th>
+          <th class="text-right">Montant</th>
+          <th>Moyen</th>
+          <th>Statut</th>
+          <th>Méthode</th>
+          <th>Preuve</th>
+          <th>Traitée le</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in traitees %}
+        <tr>
+          <td class="font-label-numeric-md text-label-numeric-md font-bold text-on-surface-variant">#{{ d.id }}</td>
+          <td>
+            {% if d.demandeur %}
+              <div class="font-semibold text-slate-midnight">{{ d.demandeur.pseudo or "Sans pseudo" }}</div>
+              <div class="font-caption text-caption text-on-surface-variant">{{ d.demandeur.email }}</div>
+            {% else %}
+              <span class="text-on-surface-variant">Utilisateur supprimé</span>
+            {% endif %}
+          </td>
+          <td class="text-right font-label-numeric-md text-label-numeric-md font-bold text-slate-midnight whitespace-nowrap">
+            {{ "{:,.0f}".format(d.amount) }} FCFA
+          </td>
+          <td>{{ d.payout_channel }}</td>
+          <td>
+            {% if d.status == "paid" %}
+              <span class="pw-chip pw-chip-success"><span class="material-symbols-outlined text-[14px]">check_circle</span> Payé</span>
+            {% elif d.status == "rejected" %}
+              <span class="pw-chip pw-chip-danger"><span class="material-symbols-outlined text-[14px]">cancel</span> Refusé</span>
+            {% else %}
+              <span class="pw-chip pw-chip-neutral">{{ d.status }}</span>
+            {% endif %}
+            {% if d.status == "rejected" and d.admin_note %}
+              <div class="mt-0.5 font-caption text-caption text-on-surface-variant">{{ d.admin_note }}</div>
+            {% endif %}
+          </td>
+          <td class="capitalize">{{ d.payment_method or "—" }}</td>
+          <td>
+            {% if d.proof_file %}
+              <a href="{{ url_for('serve_upload', filename=d.proof_file) }}" target="_blank" rel="noopener"
+                 class="pw-btn pw-btn-sm pw-btn-neutral !py-1 !text-[12px]">
+                <span class="material-symbols-outlined text-[16px]">image</span> Voir
+              </a>
+            {% else %}
+              <span class="text-on-surface-variant">—</span>
+            {% endif %}
+          </td>
+          <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">
+            {{ d.processed_at | heure_locale if d.processed_at else "—" }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="pw-card !p-space-lg text-center">
+    <span class="material-symbols-outlined text-[36px] text-on-surface-variant">history</span>
+    <p class="mt-1 font-body-sm text-body-sm text-on-surface-variant">Aucune demande traitée pour le moment.</p>
+  </div>
+  {% endif %}
 
 </div>
-</div>
+</section>
 {% endblock %}

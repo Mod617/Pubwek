@@ -1,831 +1,622 @@
-{% extends "base.html" %}
+{% extends "base_v2.html" %}
+
+{# ============ Ligne de tableau : un utilisateur en attente ============ #}
+{% macro user_row(user) %}
+<tr>
+  <td class="font-semibold text-slate-midnight">{{ user.email }}</td>
+  <td><span class="pw-chip pw-chip-neutral capitalize">{{ user.role }}</span></td>
+  <td>{{ user.province or user.department or "Non spécifié" }}</td>
+  <td>{{ user.company_name or "—" }}</td>
+  <td>
+    {% if user.whatsapp_number %}
+      <a href="https://wa.me/{{ user.whatsapp_number | replace(' ', '') }}" target="_blank" rel="noopener"
+         class="pw-btn pw-btn-sm pw-btn-neutral !py-1 !text-[12px] !text-emerald-deep">
+        <span class="material-symbols-outlined text-[16px]">chat</span> Contacter
+      </a>
+    {% else %}
+      <span class="text-on-surface-variant">Aucun numéro</span>
+    {% endif %}
+  </td>
+  <td>
+    {% if user.is_confirmed %}
+      <span class="pw-chip pw-chip-success"><span class="material-symbols-outlined text-[14px]">check_circle</span> Confirmé</span>
+    {% else %}
+      <span class="pw-chip pw-chip-warning"><span class="material-symbols-outlined text-[14px]">hourglass_top</span> En attente</span>
+      <div class="mt-0.5">
+        {% if not user.contacted_by_id %}
+          <span class="pw-chip pw-chip-neutral">Libre</span>
+        {% elif user.contacted_by_id == current_user.id %}
+          <span class="pw-chip pw-chip-success">Pris en charge par vous</span>
+        {% else %}
+          {% if current_user.role == "admin" %}
+            <span class="pw-chip pw-chip-neutral" title="Nom visible uniquement par l'administrateur principal">
+              <span class="material-symbols-outlined text-[14px]">lock</span>
+              Pris en charge par {{ user.contacted_by.pseudo or user.contacted_by.email if user.contacted_by else "un autre admin" }}
+            </span>
+          {% else %}
+            <span class="pw-chip pw-chip-neutral"><span class="material-symbols-outlined text-[14px]">lock</span> Dossier déjà pris en charge</span>
+          {% endif %}
+        {% endif %}
+      </div>
+    {% endif %}
+  </td>
+  <td>
+    {% if user.is_confirmed %}
+      <button class="pw-btn pw-btn-sm pw-btn-neutral !py-1 !text-[12px]" disabled>Déjà validé</button>
+    {% elif user.contacted_by_id and user.contacted_by_id != current_user.id and current_user.role != "admin" %}
+      <button class="pw-btn pw-btn-sm pw-btn-neutral !py-1 !text-[12px]" disabled>
+        <span class="material-symbols-outlined text-[16px]">lock</span> Verrouillé
+      </button>
+    {% else %}
+      {% if not user.contacted_by_id %}
+        <form action="{{ url_for('contacter_partageur_verification', user_id=user.id) }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="pw-btn pw-btn-sm pw-btn-primary !py-1.5 !text-[12px]">
+            <span class="material-symbols-outlined text-[16px]">send</span> Message de vérification
+          </button>
+        </form>
+      {% else %}
+        <div class="flex gap-space-2xs">
+          <form action="{{ url_for('confirm_user', user_id=user.id) }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="pw-btn pw-btn-sm pw-btn-primary !py-1.5 !text-[12px]">Confirmer</button>
+          </form>
+          <form action="{{ url_for('refuse_user', user_id=user.id) }}" method="POST"
+                onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px] !text-error">Refuser</button>
+          </form>
+        </div>
+      {% endif %}
+    {% endif %}
+  </td>
+</tr>
+{% endmacro %}
+
+{% macro user_table(liste, vide) %}
+<div class="pw-table-wrap">
+  <table class="pw-table">
+    <thead>
+      <tr>
+        <th>Email</th><th>Rôle</th><th>Département / zone</th><th>Entreprise</th>
+        <th>WhatsApp</th><th>Statut</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in liste %}
+        {{ user_row(user) }}
+      {% else %}
+        <tr><td colspan="7" class="text-center text-on-surface-variant py-space-md">{{ vide }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endmacro %}
 
 {% block content %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<section class="py-space-lg bg-background">
+<div class="max-w-6xl mx-auto px-margin space-y-space-sm">
 
-<style>
-  .admin-page {
-    background: linear-gradient(135deg, #f0f9ff 0%, #e8f5e9 100%);
-    min-height: 100vh;
-    padding: 2.5rem 0 3rem;
-  }
-
-  .page-header {
-    background: #fff;
-    border-radius: 16px;
-    padding: 1.75rem 2rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-    margin-bottom: 2.5rem;
-    border-bottom: none !important;
-  }
-
-  .page-header h2 {
-    color: #1a1a2e;
-  }
-
-  .action-btn {
-    border-radius: 50px;
-    font-weight: 600;
-    padding: 0.6rem 1.2rem;
-    border: none;
-    box-shadow: none !important;
-    transition: opacity 0.2s ease, transform 0.15s ease;
-  }
-
-  .action-btn:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-  }
-
-  .action-btn-success {
-    background: linear-gradient(135deg, #2ecc71, #27ae60);
-    color: #fff;
-  }
-
-  .action-btn-outline-dark {
-    background: #f1f1f1;
-    color: #333;
-  }
-
-  .action-btn-danger {
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
-    color: #fff;
-  }
-
-  .action-btn-dark {
-    background: linear-gradient(135deg, #1a1a2e, #33334d);
-    color: #fff;
-  }
-
-  .section-title {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    font-weight: 700;
-    color: #2980b9;
-    margin: 2rem 0 1.25rem;
-  }
-
-  .table-card {
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-    padding: 0.5rem;
-    margin-bottom: 1.5rem;
-    overflow: hidden;
-  }
-
-  .table-card table {
-    margin-bottom: 0;
-  }
-
-  .table-card thead tr {
-    background: #1a1a2e !important;
-  }
-
-  .table-card thead th {
-    border: none;
-    font-weight: 600;
-    font-size: 0.82rem;
-    letter-spacing: 0.3px;
-    padding: 1rem 0.75rem;
-  }
-
-  .table-card tbody td {
-    padding: 0.85rem 0.75rem;
-    vertical-align: middle;
-    border-color: #f0f0f0;
-    font-size: 0.88rem;
-  }
-
-  .table-card tbody tr:hover {
-    background-color: #f8fbf9;
-  }
-
-  .btn-back-home {
-    border-radius: 50px;
-    padding: 0.7rem 2rem;
-    font-weight: 600;
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    border: none;
-  }
-
-  .btn-back-home:hover {
-    opacity: 0.9;
-  }
-
-  /* Modals */
-  .modal-content {
-    border-radius: 16px;
-    border: none;
-    overflow: hidden;
-  }
-
-  .modal-header {
-    border: none;
-  }
-
-  .modal-header.bg-danger {
-    background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
-  }
-
-  .modal-header.bg-primary {
-    background: linear-gradient(135deg, #3498db, #2980b9) !important;
-  }
-
-  .modal-footer {
-    border: none;
-  }
-
-  @media (max-width: 768px) {
-    .page-header {
-      padding: 1.5rem;
-    }
-  }
-
-  /* ========================================== */
-  /* 📱 TRANSFORMATION TABLEAU → CARTES SUR MOBILE */
-  /* ========================================== */
-  @media (max-width: 767.98px) {
-    .responsive-table thead {
-      display: none;
-    }
-
-    .responsive-table,
-    .responsive-table tbody,
-    .responsive-table tr,
-    .responsive-table td {
-      display: block;
-      width: 100%;
-    }
-
-    .responsive-table tr {
-      background: #fff;
-      border: 1px solid #eee;
-      border-radius: 14px;
-      margin-bottom: 1rem;
-      padding: 0.75rem 1rem;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
-    }
-
-    .responsive-table tr:hover {
-      background-color: #fff;
-    }
-
-    .responsive-table td {
-      text-align: right !important;
-      padding: 0.6rem 0 !important;
-      border: none !important;
-      border-bottom: 1px solid #f2f2f2 !important;
-      position: relative;
-      padding-left: 45% !important;
-      min-height: 1.5rem;
-    }
-
-    .responsive-table td:last-child {
-      border-bottom: none !important;
-    }
-
-    .responsive-table td::before {
-      content: attr(data-label);
-      position: absolute;
-      left: 0;
-      top: 0.6rem;
-      width: 40%;
-      font-weight: 600;
-      font-size: 0.75rem;
-      color: #888;
-      text-align: left;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-
-    .responsive-table td.left-align,
-    .responsive-table td[data-label="Email"],
-    .responsive-table td[data-label="Annonceur"],
-    .responsive-table td[data-label="Détail & Texte"] {
-      text-align: left !important;
-    }
-
-    .responsive-table td.empty-row {
-      text-align: center !important;
-      padding-left: 0 !important;
-    }
-
-    .responsive-table td.empty-row::before {
-      display: none;
-    }
-  }
-</style>
-
-<div class="admin-page">
-<div class="container">
-    <div class="page-header d-flex flex-column flex-md-row justify-content-between align-items-center">
-        <h2 class="mb-0 fw-bold">👨‍💻 Panneau d'administration</h2>
-        <div class="mt-3 mt-md-0 d-flex gap-2 flex-wrap justify-content-center align-items-center">
-            <!-- 🆕 Cloche de notifications -->
-            <div class="dropdown" id="notifDropdownWrapper">
-                <button class="btn btn-light position-relative shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-bell-fill fs-5"></i>
-                    {% if notifications_non_lues > 0 %}
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            {{ notifications_non_lues }}
-                        </span>
-                    {% endif %}
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow-lg p-2" style="width: 340px; max-height: 400px; overflow-y: auto;">
-                    <li><h6 class="dropdown-header">Notifications</h6></li>
-                    {% for notif in notifications %}
-                        <li>
-                            <a class="dropdown-item small py-2 {{ 'fw-bold' if not notif.is_read else 'text-muted' }}" href="{{ notif.link or '#' }}">
-                                <div class="d-flex align-items-start gap-2">
-                                    <span class="badge bg-{{ notif.category }} mt-1">&nbsp;</span>
-                                    <div>
-                                        <div>{{ notif.title }}</div>
-                                        <div class="text-muted" style="font-size: 0.75rem;">{{ notif.message }}</div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                    {% else %}
-                        <li><span class="dropdown-item-text text-muted small">Aucune notification pour le moment.</span></li>
-                    {% endfor %}
-                </ul>
-            </div>
-
-            {% if current_user.role == "admin" or current_user.has_permission("configurer_video") %}
-            {% endif %}
-
-            {% if current_user.role == "admin" or current_user.has_permission("gerer_retraits") %}
-            <a href="{{ url_for('admin_retraits') }}" class="btn action-btn action-btn-success">
-                <i class="bi bi-cash-stack me-1"></i> 💰 Demandes de retrait
-            </a>
-            {% endif %}
-
-            {% if current_user.role == "admin" or current_user.has_permission("valider_campagnes") %}
-            <a href="{{ url_for('admin_remboursements') }}" class="btn action-btn action-btn-success">
-                <i class="bi bi-cash-coin me-1"></i> 💸 Demandes de remboursement
-            </a>
-            {% endif %}
-
-            {% if current_user.role == "admin" or current_user.has_permission("gerer_suppressions_compte") %}
-            <a href="{{ url_for('admin_suppressions_compte') }}" class="btn action-btn action-btn-danger">
-                <i class="bi bi-person-x me-1"></i> 🗑️ Suppressions de compte
-            </a>
-            {% endif %}           
-
-            {% if current_user.role == "admin" or current_user.has_permission("voir_transactions") %}
-            <a href="{{ url_for('admin_transactions_globales') }}" class="btn action-btn action-btn-outline-dark">
-                <i class="bi bi-journal-text me-1"></i> 🧾 Registre des transactions
-            </a>
-            {% endif %}
-
-            {% if current_user.role == "admin" or current_user.has_permission("configurer_tarifs") %}
-            <a href="{{ url_for('admin_settings') }}" class="btn action-btn action-btn-danger">
-                <i class="bi bi-sliders me-1"></i> ⚙️ Configurer les Tarifs
-            </a>
-            {% endif %}
-
-            {% if current_user.role == "admin" or current_user.has_permission("valider_utilisateurs") %}
-            <a href="{{ url_for('admin_utilisateurs') }}" class="btn action-btn action-btn-outline-dark">
-                <i class="bi bi-people me-1"></i> 👥 Utilisateurs validés
-            </a>
-            {% endif %}
-
-            {% if current_user.role == "admin" %}
-            <form action="{{ url_for('toggle_preuve_partage') }}" method="POST" class="d-inline"
-                  onsubmit="return confirm('{{ 'Désactiver' if config_systeme.exiger_preuve_partage else 'Réactiver' }} l\'exigence de preuve de partage ? {{ 'Tous les clics en attente seront crédités immédiatement.' if config_systeme.exiger_preuve_partage else '' }}');">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                {% if config_systeme.exiger_preuve_partage %}
-                    <button type="submit" class="btn action-btn action-btn-success">
-                        <i class="bi bi-shield-check me-1"></i> 🛡️ Preuve exigée (cliquer pour désactiver)
-                    </button>
-                {% else %}
-                    <button type="submit" class="btn action-btn action-btn-danger">
-                        <i class="bi bi-shield-x me-1"></i> ⚠️ Preuve désactivée (cliquer pour réactiver)
-                    </button>
-                {% endif %}
-            </form>
-            {% endif %}
-
-            {% if current_user.role == "admin" %}
-            <a href="{{ url_for('admin_gestion_sous_admins') }}" class="btn action-btn action-btn-dark">
-                <i class="bi bi-people-fill me-1"></i> 🔑 Gérer les sous-admins
-            </a>
-            {% endif %}
-        </div>
+  <!-- ================= EN-TETE ================= -->
+  <div class="flex flex-wrap items-start justify-between gap-space-sm">
+    <div class="min-w-0">
+      <span class="pw-badge bg-amber-soft text-amber-rich">Administration</span>
+      <h1 class="mt-1 font-headline-md text-headline-md text-slate-night">Panneau d'administration</h1>
     </div>
 
-    <!-- 🆕 MACRO PARTAGÉE : une ligne de tableau pour un utilisateur (annonceur, partageur ou admin) -->
-    {% macro user_row(user) %}
-        <tr>
-            <td class="left-align" data-label="Email">{{ user.email }}</td>
-            <td class="text-capitalize text-center" data-label="Rôle">{{ user.role }}</td>
-            <td class="text-center" data-label="Département / Zone">{{ user.province or user.department or "Non spécifié" }}</td>
-            <td class="text-center" data-label="Entreprise">{{ user.company_name or "-" }}</td>
-            <td class="text-center" data-label="Numéro WhatsApp">
-                {% if user.whatsapp_number %}
-                    <a href="https://wa.me/{{ user.whatsapp_number | replace(' ', '') }}"
-                       target="_blank" class="btn btn-sm btn-outline-success">
-                        💬 Contacter
-                    </a>
-                {% else %}
-                    <span class="text-muted">Aucun numéro</span>
-                {% endif %}
-            </td>
-            <td class="text-center" data-label="Statut">
-                {% if user.is_confirmed %}
-                    <span class="badge bg-success">✅ Confirmé</span>
-                {% else %}
-                    <span class="badge bg-warning text-dark d-block mb-1">⏳ En attente</span>
-                    {% if not user.contacted_by_id %}
-                        <span class="badge bg-light text-dark border">🟢 Libre</span>
-                    {% elif user.contacted_by_id == current_user.id %}
-                        <span class="badge bg-info text-dark">🟡 Pris en charge par vous</span>
-                    {% else %}
-                        {% if current_user.role == "admin" %}
-                            <span class="badge bg-secondary" title="Nom visible uniquement par l'administrateur principal">
-                                🔒 Pris en charge par {{ user.contacted_by.pseudo or user.contacted_by.email if user.contacted_by else "un autre admin" }}
-                            </span>
-                        {% else %}
-                            <span class="badge bg-secondary">🔒 Dossier déjà pris en charge</span>
-                        {% endif %}
-                    {% endif %}
-                {% endif %}
-            </td>
-            <td class="text-center" data-label="Actions">
-                {% if user.is_confirmed %}
-                    <button class="btn btn-sm btn-secondary" disabled>Déjà validé</button>
-                {% elif user.contacted_by_id and user.contacted_by_id != current_user.id and current_user.role != "admin" %}
-                    <button class="btn btn-sm btn-secondary" disabled>🚫 Verrouillé</button>
-                {% else %}
-                    <div class="d-flex flex-column gap-1 align-items-center">
-                        {% if not user.contacted_by_id %}
-                            <form action="{{ url_for('contacter_partageur_verification', user_id=user.id) }}" method="POST" class="d-inline">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-sm btn-primary">📩 Envoyer message de vérification</button>
-                            </form>
-                        {% else %}
-                            <div class="d-flex gap-1 justify-content-center">
-                                <form action="{{ url_for('confirm_user', user_id=user.id) }}" method="POST" class="d-inline">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn btn-sm btn-success">Confirmer ✅</button>
-                                </form>
-                                <form action="{{ url_for('refuse_user', user_id=user.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?');">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn btn-sm btn-danger">Refuser ❌</button>
-                                </form>
-                            </div>
-                        {% endif %}
-                    </div>
-                {% endif %}
-            </td>
-        </tr>
-    {% endmacro %}
+    <div class="flex flex-wrap items-center gap-space-2xs">
+      <!-- Cloche de notifications -->
+      <div class="relative" id="notifDropdownWrapper">
+        <button type="button" id="notifToggle" aria-expanded="false"
+                class="relative w-9 h-9 rounded-full border border-outline-variant/40 bg-white shadow-sm flex items-center justify-center text-slate-midnight hover:bg-surface-container-low transition-colors">
+          <span class="material-symbols-outlined text-[18px]">notifications</span>
+          {% if notifications_non_lues > 0 %}
+            <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-white font-caption text-[11px] font-bold flex items-center justify-center" id="notifBadge">{{ notifications_non_lues }}</span>
+          {% endif %}
+        </button>
+        <div id="notifPanel" class="hidden absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl border border-outline-variant/30 bg-surface-container-lowest shadow-xl z-40 p-1.5">
+          <div class="px-space-sm py-1.5 font-label-caps text-label-caps uppercase tracking-wider text-on-surface-variant font-bold">Notifications</div>
+          {% for notif in notifications %}
+            <a class="notif-item flex items-start gap-space-xs rounded-xl px-space-sm py-2 hover:bg-surface-container-low transition-colors {{ 'font-semibold text-on-surface' if not notif.is_read else 'text-on-surface-variant' }}" href="{{ notif.link or '#' }}">
+              <span class="mt-1.5 w-2 h-2 rounded-full shrink-0
+                {%- if notif.category == 'success' %} bg-emerald-primary
+                {%- elif notif.category == 'warning' %} bg-amber-rich
+                {%- elif notif.category == 'danger' %} bg-error
+                {%- else %} bg-outline-variant{% endif %}"></span>
+              <span class="min-w-0">
+                <span class="block font-body-sm text-body-sm truncate">{{ notif.title }}</span>
+                <span class="block font-caption text-caption text-on-surface-variant">{{ notif.message }}</span>
+              </span>
+            </a>
+          {% else %}
+            <p class="px-space-sm py-space-sm font-body-sm text-body-sm text-on-surface-variant">Aucune notification pour le moment.</p>
+          {% endfor %}
+        </div>
+      </div>
 
-    {% if peut_voir_utilisateurs %}
-        {% set annonceurs = users | selectattr("role", "equalto", "annonceur") | list %}
-        {% set partageurs = users | selectattr("role", "equalto", "partageur") | list %}
-        {% set admins = users | rejectattr("role", "equalto", "annonceur") | rejectattr("role", "equalto", "partageur") | list %}
+      {% if current_user.role == "admin" or current_user.has_permission("gerer_retraits") %}
+      <a href="{{ url_for('admin_retraits') }}" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px]">
+        <span class="material-symbols-outlined text-[16px]">payments</span> Retraits
+      </a>
+      {% endif %}
+      {% if current_user.role == "admin" or current_user.has_permission("valider_campagnes") %}
+      <a href="{{ url_for('admin_remboursements') }}" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px]">
+        <span class="material-symbols-outlined text-[16px]">savings</span> Remboursements
+      </a>
+      {% endif %}
+      {% if current_user.role == "admin" or current_user.has_permission("gerer_suppressions_compte") %}
+      <a href="{{ url_for('admin_suppressions_compte') }}" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px] !text-error">
+        <span class="material-symbols-outlined text-[16px]">person</span> Suppressions
+      </a>
+      {% endif %}
+      {% if current_user.role == "admin" or current_user.has_permission("voir_transactions") %}
+      <a href="{{ url_for('admin_transactions_globales') }}" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px]">
+        <span class="material-symbols-outlined text-[16px]">receipt_long</span> Transactions
+      </a>
+      {% endif %}
+      {% if current_user.role == "admin" or current_user.has_permission("configurer_tarifs") %}
+      <a href="{{ url_for('admin_settings') }}" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px]">
+        <span class="material-symbols-outlined text-[16px]">settings</span> Tarifs
+      </a>
+      {% endif %}
+      {% if current_user.role == "admin" or current_user.has_permission("valider_utilisateurs") %}
+      <a href="{{ url_for('admin_utilisateurs') }}" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px]">
+        <span class="material-symbols-outlined text-[16px]">group</span> Utilisateurs
+      </a>
+      {% endif %}
+      {% if current_user.role == "admin" %}
+      <form action="{{ url_for('toggle_preuve_partage') }}" method="POST" class="inline"
+            onsubmit="return confirm('{{ 'Désactiver' if config_systeme.exiger_preuve_partage else 'Réactiver' }} l\'exigence de preuve de partage ? {{ 'Tous les clics en attente seront crédités immédiatement.' if config_systeme.exiger_preuve_partage else '' }}');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if config_systeme.exiger_preuve_partage %}
+          <button type="submit" class="pw-btn pw-btn-sm pw-btn-primary !py-1.5 !text-[12px]">
+            <span class="material-symbols-outlined text-[16px]">shield</span> Preuve exigée
+          </button>
+        {% else %}
+          <button type="submit" class="pw-btn pw-btn-sm bg-error text-white hover:opacity-90 !py-1.5 !text-[12px]">
+            <span class="material-symbols-outlined text-[16px]">warning</span> Preuve désactivée
+          </button>
+        {% endif %}
+      </form>
+      <a href="{{ url_for('admin_gestion_sous_admins') }}" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px]">
+        <span class="material-symbols-outlined text-[16px]">admin_panel_settings</span> Sous-admins
+      </a>
+      {% endif %}
+    </div>
+  </div>
 
-        <h4 class="section-title">📢 Annonceurs en attente de validation</h4>
-        <div class="table-card">
-        <div class="table-responsive">
-            <table class="table table-striped align-middle mb-0 responsive-table">
-                <thead class="text-white text-center">
-                    <tr>
-                        <th>Email</th>
-                        <th>Rôle</th>
-                        <th>Département / Zone</th>
-                        <th>Entreprise</th>
-                        <th>Numéro WhatsApp</th>
-                        <th>Statut</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {% for user in annonceurs %}
-                    {{ user_row(user) }}
-                {% else %}
-                    <tr>
-                        <td colspan="7" class="empty-row text-center text-muted py-3">
-                            Aucun annonceur en attente de validation.
-                        </td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        </div>
+  <!-- ================= UTILISATEURS EN ATTENTE ================= -->
+  {% if peut_voir_utilisateurs %}
+    {% set annonceurs = users | selectattr("role", "equalto", "annonceur") | list %}
+    {% set partageurs = users | selectattr("role", "equalto", "partageur") | list %}
+    {% set admins = users | rejectattr("role", "equalto", "annonceur") | rejectattr("role", "equalto", "partageur") | list %}
 
-        <h4 class="section-title">🤝 Partageurs en attente de validation</h4>
-        <div class="table-card">
-        <div class="table-responsive">
-            <table class="table table-striped align-middle mb-0 responsive-table">
-                <thead class="text-white text-center">
-                    <tr>
-                        <th>Email</th>
-                        <th>Rôle</th>
-                        <th>Département / Zone</th>
-                        <th>Entreprise</th>
-                        <th>Numéro WhatsApp</th>
-                        <th>Statut</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {% for user in partageurs %}
-                    {{ user_row(user) }}
-                {% else %}
-                    <tr>
-                        <td colspan="7" class="empty-row text-center text-muted py-3">
-                            Aucun partageur en attente de validation.
-                        </td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        </div>
+    <div data-pw-tabs>
+      <div class="pw-tabs" role="tablist">
+        <button type="button" class="pw-tab is-active" data-tab="u-annonceurs" role="tab" aria-selected="true">
+          <span class="material-symbols-outlined text-[18px]">storefront</span> Annonceurs
+          <span class="pw-chip {{ 'pw-chip-warning' if annonceurs else 'pw-chip-neutral' }}">{{ annonceurs|length }}</span>
+        </button>
+        <button type="button" class="pw-tab" data-tab="u-partageurs" role="tab" aria-selected="false">
+          <span class="material-symbols-outlined text-[18px]">group</span> Partageurs
+          <span class="pw-chip {{ 'pw-chip-warning' if partageurs else 'pw-chip-neutral' }}">{{ partageurs|length }}</span>
+        </button>
+        <button type="button" class="pw-tab" data-tab="u-admins" role="tab" aria-selected="false">
+          <span class="material-symbols-outlined text-[18px]">admin_panel_settings</span> Administrateurs
+          <span class="pw-chip {{ 'pw-chip-warning' if admins else 'pw-chip-neutral' }}">{{ admins|length }}</span>
+        </button>
+      </div>
 
-        <h4 class="section-title">🔑 Administrateurs en attente de validation</h4>
-        <div class="table-card">
-        <div class="table-responsive">
-            <table class="table table-striped align-middle mb-0 responsive-table">
-                <thead class="text-white text-center">
-                    <tr>
-                        <th>Email</th>
-                        <th>Rôle</th>
-                        <th>Département / Zone</th>
-                        <th>Entreprise</th>
-                        <th>Numéro WhatsApp</th>
-                        <th>Statut</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {% for user in admins %}
-                    {{ user_row(user) }}
-                {% else %}
-                    <tr>
-                        <td colspan="7" class="empty-row text-center text-muted py-3">
-                            Aucun administrateur en attente de validation.
-                        </td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        </div>
+      <div class="pw-tab-panel is-active" data-panel="u-annonceurs">
+        {{ user_table(annonceurs, "Aucun annonceur en attente de validation.") }}
+      </div>
+      <div class="pw-tab-panel" data-panel="u-partageurs">
+        {{ user_table(partageurs, "Aucun partageur en attente de validation.") }}
+      </div>
+      <div class="pw-tab-panel" data-panel="u-admins">
+        {{ user_table(admins, "Aucun administrateur en attente de validation.") }}
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- ================= CAMPAGNES ================= -->
+  {% if peut_voir_campagnes %}
+
+  <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
+    <span class="material-symbols-outlined text-[20px] text-emerald-primary">campaign</span>
+    Campagnes publicitaires
+  </h2>
+
+  <!-- Onglets (navigation serveur) -->
+  <div class="pw-tabs">
+    {% for nom, info in onglets_campagnes.items() %}
+    <a class="pw-tab {{ 'is-active' if nom == onglet_actif }}"
+       href="{{ url_for('admin_validate', tab=nom, q=recherche) }}">
+      {{ info.label }}
+      <span class="pw-chip pw-chip-neutral">{{ compteurs.get(nom, 0) }}</span>
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Recherche -->
+  <form method="GET" class="flex gap-space-2xs max-w-md">
+    <input type="hidden" name="tab" value="{{ onglet_actif }}">
+    <input type="text" name="q" value="{{ recherche }}" class="pw-input"
+           placeholder="ID de campagne ou email de l'annonceur">
+    <button class="pw-btn pw-btn-sm pw-btn-neutral shrink-0" type="submit" aria-label="Rechercher">
+      <span class="material-symbols-outlined text-[18px]">search</span>
+    </button>
+    {% if recherche %}
+      <a href="{{ url_for('admin_validate', tab=onglet_actif) }}"
+         class="pw-btn pw-btn-sm pw-btn-neutral shrink-0" aria-label="Effacer la recherche">
+        <span class="material-symbols-outlined text-[18px]">close</span>
+      </a>
     {% endif %}
+  </form>
 
-    <!-- ========================================== -->
-    <!-- 🆕 GESTION DES CAMPAGNES — ONGLETS + PAGINATION -->
-    <!-- ========================================== -->
-    {% if peut_voir_campagnes %}
+  <!-- Tableau des campagnes -->
+  <div class="pw-table-wrap">
+    <table class="pw-table">
+      <thead>
+        <tr>
+          <th>ID</th><th>Annonceur</th><th>Type</th><th>Détail &amp; texte</th>
+          <th>Zones</th><th>Médias</th><th>Objectif</th><th>Durée / progression</th>
+          <th class="text-right">Coût</th><th>Statut</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for camp in campaigns_page.items %}
+        <tr>
+          <td class="font-label-numeric-md text-label-numeric-md font-bold text-on-surface-variant">#{{ camp.id }}</td>
 
-    {% macro campaign_row(camp) %}
-    <tr>
-        <td class="text-center fw-bold" data-label="ID">#{{ camp.id }}</td>
-        <td data-label="Annonceur">
+          <!-- Annonceur -->
+          <td>
             {% if camp.annonceur %}
-                <div>{{ camp.annonceur.email }}</div>
-                <button type="button" class="btn btn-xs btn-outline-info mt-1 btn-voir-profil" style="font-size: 0.75rem;"
-                        data-company="{{ camp.annonceur.company_name or 'Non spécifié' }}"
-                        data-whatsapp="{{ camp.whatsapp_number or camp.annonceur.whatsapp_number or 'Aucun' }}"
-                        data-slogan="{{ camp.annonceur.profile_slogan or '' }}"
-                        data-bio="{{ camp.annonceur.bio or '' }}"
-                        data-profile="{{ url_for('serve_upload', filename=camp.annonceur.logo if camp.annonceur.logo else camp.annonceur.profile_picture) if (camp.annonceur.logo or camp.annonceur.profile_picture) else '' }}"
-                        data-cover="{{ url_for('serve_upload', filename=camp.annonceur.cover_photo) if camp.annonceur.cover_photo else '' }}">
-                    🔍 Voir Profil
-                </button>
-                {% if camp.website_url %}
-                    <a href="{{ camp.website_url }}" target="_blank" rel="noopener noreferrer"
-                       class="btn btn-xs btn-outline-primary mt-1 d-block" style="font-size: 0.75rem;">
-                        🌐 Voir le site
-                    </a>
-                {% endif %}
+              <div class="font-semibold text-slate-midnight">{{ camp.annonceur.email }}</div>
+              <button type="button" class="btn-voir-profil pw-btn pw-btn-sm pw-btn-neutral !py-1 !text-[11px] mt-1"
+                      data-company="{{ camp.annonceur.company_name or 'Non spécifié' }}"
+                      data-whatsapp="{{ camp.whatsapp_number or camp.annonceur.whatsapp_number or 'Aucun' }}"
+                      data-slogan="{{ camp.annonceur.profile_slogan or '' }}"
+                      data-bio="{{ camp.annonceur.bio or '' }}"
+                      data-profile="{{ url_for('serve_upload', filename=camp.annonceur.logo if camp.annonceur.logo else camp.annonceur.profile_picture) if (camp.annonceur.logo or camp.annonceur.profile_picture) else '' }}"
+                      data-cover="{{ url_for('serve_upload', filename=camp.annonceur.cover_photo) if camp.annonceur.cover_photo else '' }}">
+                <span class="material-symbols-outlined text-[14px]">person</span> Voir le profil
+              </button>
+              {% if camp.website_url %}
+                <a href="{{ camp.website_url }}" target="_blank" rel="noopener noreferrer"
+                   class="pw-btn pw-btn-sm pw-btn-neutral !py-1 !text-[11px] mt-1 w-full">
+                  <span class="material-symbols-outlined text-[14px]">public</span> Voir le site
+                </a>
+              {% endif %}
             {% else %}
-                <span class="text-muted">Utilisateur supprimé</span>
+              <span class="text-on-surface-variant">Utilisateur supprimé</span>
             {% endif %}
-        </td>
-        <td class="text-center" data-label="Type">
-            <span class="text-capitalize d-block">{{ camp.promotion_type }}</span>
+          </td>
+
+          <!-- Type -->
+          <td>
+            <span class="capitalize block">{{ camp.promotion_type }}</span>
             {% if camp.display_option == "A" %}
-                <span class="badge bg-success mt-1">🎬 Vidéo</span>
+              <span class="pw-chip pw-chip-neutral mt-0.5"><span class="material-symbols-outlined text-[14px]">smart_display</span> Vidéo</span>
             {% elif camp.display_option == "B" %}
-                <span class="badge bg-primary mt-1">📸 Multi-Statuts</span>
+              <span class="pw-chip pw-chip-neutral mt-0.5"><span class="material-symbols-outlined text-[14px]">layers</span> Multi-statuts</span>
             {% elif camp.display_option == "C" %}
-                <span class="badge bg-secondary mt-1">📝 Texte seul</span>
+              <span class="pw-chip pw-chip-neutral mt-0.5"><span class="material-symbols-outlined text-[14px]">description</span> Texte seul</span>
             {% endif %}
-        </td>
-        <td data-label="Détail & Texte">
-            <strong>Détail :</strong> {{ camp.promotion_detail or "-" }}<br>
-            <small class="text-muted"><strong>Statut WhatsApp :</strong> {{ camp.description or "-" }}</small>
+          </td>
+
+          <!-- Detail -->
+          <td class="max-w-[16rem]">
+            <div class="font-semibold text-slate-midnight">{{ camp.promotion_detail or "—" }}</div>
+            <div class="font-caption text-caption text-on-surface-variant">{{ camp.description or "—" }}</div>
             {% if camp.is_resubmission %}
-                <br><span class="badge bg-warning text-dark mt-1" title="Resoumise le {{ camp.resubmitted_at | heure_locale if camp.resubmitted_at }}">🔄 Resoumise</span>
+              <span class="pw-chip pw-chip-warning mt-0.5"
+                    title="Resoumise le {{ camp.resubmitted_at | heure_locale if camp.resubmitted_at }}">
+                <span class="material-symbols-outlined text-[14px]">restore</span> Resoumise
+              </span>
             {% endif %}
-        </td>
-        <td class="text-center" data-label="Zones / Communes">
-            <div>{{ camp.provinces or camp.departments or "Toutes zones" }}</div>
+          </td>
+
+          <!-- Zones -->
+          <td class="max-w-[12rem]">
+            <div class="font-caption text-caption">{{ camp.provinces or camp.departments or "Toutes zones" }}</div>
             {% if camp.communes %}
-                <small class="text-muted d-block mt-1">
-                    <strong>Communes :</strong> {{ camp.communes }}
-                </small>
+              <div class="font-caption text-caption text-on-surface-variant">
+                <span class="font-semibold">Communes :</span> {{ camp.communes }}
+              </div>
             {% endif %}
-        </td>
-        <td class="text-center" data-label="Médias">
+          </td>
+
+          <!-- Medias -->
+          <td>
             {% if camp.display_option == "C" %}
-                <span class="text-muted small">📝 Aucun média — annonce textuelle uniquement</span>
+              <span class="font-caption text-caption text-on-surface-variant">Aucun média — annonce textuelle</span>
             {% elif camp.media_files %}
+              <div class="flex flex-wrap gap-1">
                 {% for file in camp.media_files.split(',') %}
-                    {% set file_url = url_for('serve_upload', filename=file) %}
-                    <div class="mb-2">
-                        {% if file.lower().endswith(('.mp4', '.mov', '.avi', '.webm')) %}
-                            <div class="position-relative d-inline-block bg-dark rounded overflow-hidden shadow-sm" style="width: 120px; height: 80px; cursor: pointer;" onclick="showMedia('{{ file_url }}', true)">
-                                <div class="position-absolute top-50 start-50 translate-middle text-white z-3">
-                                    <i class="bi bi-play-circle-fill fs-2 opacity-75"></i>
-                                </div>
-                                <video src="{{ file_url }}" class="w-100 h-100 object-fit-cover opacity-50"></video>
-                            </div>
-                        {% else %}
-                            <img src="{{ file_url }}" width="100" class="rounded shadow-sm object-fit-cover"
-                                 onclick="showMedia('{{ file_url }}', false)" style="cursor:pointer; max-height: 100px;">
-                        {% endif %}
-                        <br>
-                        <a href="{{ file_url }}" download class="btn btn-xs btn-outline-primary mt-1" style="font-size: 0.7rem;">⬇ Télécharger</a>
-                    </div>
+                  {% set file_url = url_for('serve_upload', filename=file) %}
+                  <div class="text-center">
+                    {% if file.lower().endswith(('.mp4', '.mov', '.avi', '.webm')) %}
+                      <button type="button" class="relative block w-24 h-16 overflow-hidden rounded-lg bg-slate-night shadow-sm"
+                              onclick="showMedia('{{ file_url }}', true)">
+                        <video src="{{ file_url }}" class="w-full h-full object-cover opacity-60"></video>
+                        <span class="absolute inset-0 flex items-center justify-center text-white">
+                          <span class="material-symbols-outlined text-[24px]">play_circle</span>
+                        </span>
+                      </button>
+                    {% else %}
+                      <button type="button" class="block w-24 h-16 overflow-hidden rounded-lg shadow-sm"
+                              onclick="showMedia('{{ file_url }}', false)">
+                        <img src="{{ file_url }}" alt="" class="w-full h-full object-cover">
+                      </button>
+                    {% endif %}
+                    <a href="{{ file_url }}" download class="mt-0.5 inline-flex items-center gap-0.5 font-caption text-[11px] text-emerald-primary hover:underline">
+                      <span class="material-symbols-outlined text-[12px]">download</span> Télécharger
+                    </a>
+                  </div>
                 {% endfor %}
+              </div>
             {% else %}
-                <span class="text-muted">Aucun média</span>
+              <span class="text-on-surface-variant">Aucun média</span>
             {% endif %}
-        </td>
-        <td class="text-center" data-label="Objectif Clics">
-            <span class="badge bg-info text-dark">
-                {{ camp.target_whatsapp_views if camp.target_whatsapp_views else camp.whatsapp_views }} clics
+          </td>
+
+          <!-- Objectif -->
+          <td>
+            <span class="pw-chip pw-chip-neutral">
+              {{ camp.target_whatsapp_views if camp.target_whatsapp_views else camp.whatsapp_views }} clics
             </span>
-        </td>
-        <td class="text-center" data-label="Durée / Progression" style="min-width: 150px;">
-            <div class="fw-bold text-dark">
-                <i class="bi bi-calendar3 me-1"></i>{{ camp.duration_days }} jour{{ 's' if camp.duration_days > 1 else '' }}
+          </td>
+
+          <!-- Duree / progression -->
+          <td class="min-w-[9rem]">
+            <div class="flex items-center gap-1 font-semibold text-slate-midnight">
+              <span class="material-symbols-outlined text-[16px]">calendar_month</span>
+              {{ camp.duration_days }} jour{{ 's' if camp.duration_days > 1 else '' }}
             </div>
-            <div class="text-muted small">
-                ≈ {{ camp.views_per_day }} clics / jour
-            </div>
+            <div class="font-caption text-caption text-on-surface-variant">≈ {{ camp.views_per_day }} clics / jour</div>
+
             {% if camp.validated and camp.is_active and camp.current_day_number %}
-                <hr class="my-1">
-                <div class="small">
-                    <span class="badge bg-primary">Jour {{ camp.current_day_number }} / {{ camp.duration_days }}</span>
-                </div>
-                <div class="small text-muted mt-1">
-                    {{ camp.views_today or 0 }} / {{ camp.views_per_day }} clics aujourd'hui
+              <div class="mt-1 pt-1 border-t border-outline-variant/30">
+                <span class="pw-chip pw-chip-success">Jour {{ camp.current_day_number }} / {{ camp.duration_days }}</span>
+                <div class="mt-0.5 font-caption text-caption text-on-surface-variant">
+                  {{ camp.views_today or 0 }} / {{ camp.views_per_day }} clics aujourd'hui
                 </div>
                 {% if camp.daily_quota_paused %}
-                    <span class="badge bg-warning text-dark mt-1">⏸️ Quota du jour atteint</span>
+                  <span class="pw-chip pw-chip-warning mt-0.5">Quota du jour atteint</span>
                 {% endif %}
+              </div>
             {% elif camp.validated and not camp.is_active and camp.status == "terminee" %}
-                <span class="badge bg-success mt-1">✅ Diffusion terminée</span>
+              <span class="pw-chip pw-chip-success mt-0.5">
+                <span class="material-symbols-outlined text-[14px]">task_alt</span> Diffusion terminée
+              </span>
             {% endif %}
-        </td>
-        <td class="text-center fw-bold text-success" data-label="Coût total">{{ "{:,.0f}".format(camp.total_cost) }} XOF</td>
-        <td class="text-center" data-label="Statut">
+          </td>
+
+          <!-- Cout -->
+          <td class="text-right font-label-numeric-md text-label-numeric-md font-bold text-emerald-deep whitespace-nowrap">
+            {{ "{:,.0f}".format(camp.total_cost) }} XOF
+          </td>
+
+          <!-- Statut -->
+          <td>
             {% if camp.validated or camp.admin_status == "approved" %}
-                <span class="badge bg-success">✅ Validée</span>
+              <span class="pw-chip pw-chip-success"><span class="material-symbols-outlined text-[14px]">check_circle</span> Validée</span>
             {% elif camp.admin_status == "rejected" or camp.status == "rejete" %}
-                <span class="badge bg-danger">❌ Rejetée</span>
+              <span class="pw-chip pw-chip-danger"><span class="material-symbols-outlined text-[14px]">cancel</span> Rejetée</span>
             {% else %}
-                <span class="badge bg-warning text-dark d-block mb-1">⏳ En attente</span>
+              <span class="pw-chip pw-chip-warning"><span class="material-symbols-outlined text-[14px]">hourglass_top</span> En attente</span>
+              <div class="mt-0.5">
                 {% if camp.paid %}
-                    <span class="badge bg-success">💰 Déjà payée</span>
+                  <span class="pw-chip pw-chip-success">Déjà payée</span>
                 {% else %}
-                    <span class="badge bg-danger">⚠️ Non payée</span>
+                  <span class="pw-chip pw-chip-danger">Non payée</span>
                 {% endif %}
+              </div>
             {% endif %}
-        </td>
-        <td class="text-center" data-label="Actions">
-            {% if not camp.validated and camp.admin_status != "rejected" and camp.status != "rejete" %}
-                <div class="d-flex flex-column gap-1 align-items-center">
-                    <form action="{{ url_for('validate_campaign', campaign_id=camp.id) }}" method="POST" class="d-inline">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-sm btn-success">Valider ✅</button>
-                    </form>
-                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ camp.id }}">
-                        Refuser ❌
-                    </button>
-                </div>
+          </td>
 
-                <div class="modal fade" id="rejectModal{{ camp.id }}" tabindex="-1" aria-hidden="true">
-                  <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                      <form action="{{ url_for('refuse_campaign', campaign_id=camp.id) }}" method="POST">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <div class="modal-header bg-danger text-white">
-                          <h5 class="modal-title">Refuser la campagne #{{ camp.id }}</h5>
-                          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body text-start">
-                          <label for="rejection_reason{{ camp.id }}" class="form-label fw-bold">
-                            Motif du refus <span class="text-danger">*</span>
-                          </label>
-                          <textarea name="rejection_reason" id="rejection_reason{{ camp.id }}" class="form-control" rows="4"
-                                    placeholder="Ex : la vidéo dépasse 30 secondes, veuillez la raccourcir avant de relancer." required></textarea>
-                          <small class="text-muted d-block mt-1">Ce motif sera envoyé à l'annonceur pour qu'il puisse corriger et relancer sa campagne.</small>
-                        </div>
-                        <div class="modal-footer">
-                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                          <button type="submit" class="btn btn-danger fw-bold">Confirmer le refus ❌</button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
+          <!-- Actions -->
+          <td class="min-w-[11rem]">
+            {% if not camp.validated and camp.admin_status != "rejected" and camp.status != "rejete" %}
+              <div class="flex flex-col gap-1">
+                <form action="{{ url_for('validate_campaign', campaign_id=camp.id) }}" method="POST">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="pw-btn pw-btn-sm pw-btn-primary w-full !py-1.5 !text-[12px]">
+                    <span class="material-symbols-outlined text-[16px]">check_circle</span> Valider
+                  </button>
+                </form>
+                <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral !text-error w-full !py-1.5 !text-[12px]"
+                        data-pw-modal="rejectModal{{ camp.id }}">
+                  <span class="material-symbols-outlined text-[16px]">cancel</span> Refuser
+                </button>
+              </div>
 
             {% elif camp.admin_status == "rejected" or camp.status == "rejete" %}
-                {% if camp.refund_status == "processed" %}
-                    <span class="badge bg-success d-block mb-1">✅ Remboursement traité</span>
-                    <small class="text-muted d-block">Virement effectué manuellement.</small>
-                {% elif camp.refund_status == "requested" %}
-                    <span class="badge bg-secondary d-block mb-1">⏳ Demande de remboursement reçue</span>
-                    <small class="text-muted d-block">Coordonnées transmises par l'annonceur — à traiter sous 48h.</small>
-                    <a href="{{ url_for('admin_remboursements') }}" class="btn btn-sm btn-outline-dark fw-bold mt-1">
-                        Traiter la demande
-                    </a>
-                {% elif camp.refund_status == "rejected" %}
-                    <span class="badge bg-warning text-dark d-block mb-1">🔁 Demande refusée</span>
-                    <small class="text-muted d-block">En attente d'une nouvelle demande corrigée de l'annonceur (pas besoin de réautoriser).</small>
-                {% elif camp.refund_status == "available" %}
-                    <span class="badge bg-info text-dark">💰 Remboursement débloqué</span>
-                    <small class="text-muted d-block mt-1">En attente que l'annonceur soumette ses coordonnées.</small>
-                {% elif camp.paid %}
-                    <form action="{{ url_for('autoriser_remboursement_admin', campaign_id=camp.id) }}" method="POST" class="d-inline">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold">
-                            💰 Autoriser Remboursement
-                        </button>
-                    </form>
-                {% else %}
-                    <span class="badge bg-secondary d-block mb-1">⚠️ Non payée</span>
-                    <small class="text-muted d-block">Aucun remboursement possible : cette campagne n'a jamais été réglée.</small>
-                {% endif %}
-            {% elif camp.validated and not camp.shared_to_partageurs %}
-                <form action="{{ url_for('partager_campagne_admin', campaign_id=camp.id) }}" method="POST" class="d-inline">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-sm btn-primary fw-bold">
-                        📤 Partager aux partageurs
-                    </button>
+              {% if camp.refund_status == "processed" %}
+                <span class="pw-chip pw-chip-success">Remboursement traité</span>
+                <p class="mt-0.5 font-caption text-caption text-on-surface-variant">Virement effectué manuellement.</p>
+              {% elif camp.refund_status == "requested" %}
+                <span class="pw-chip pw-chip-neutral">Demande reçue</span>
+                <p class="mt-0.5 font-caption text-caption text-on-surface-variant">Coordonnées transmises — à traiter sous 48h.</p>
+                <a href="{{ url_for('admin_remboursements') }}" class="pw-btn pw-btn-sm pw-btn-neutral w-full mt-1 !py-1.5 !text-[12px]">
+                  Traiter la demande
+                </a>
+              {% elif camp.refund_status == "rejected" %}
+                <span class="pw-chip pw-chip-warning">Demande refusée</span>
+                <p class="mt-0.5 font-caption text-caption text-on-surface-variant">
+                  En attente d'une nouvelle demande corrigée de l'annonceur.
+                </p>
+              {% elif camp.refund_status == "available" %}
+                <span class="pw-chip pw-chip-warning">Remboursement débloqué</span>
+                <p class="mt-0.5 font-caption text-caption text-on-surface-variant">
+                  En attente que l'annonceur soumette ses coordonnées.
+                </p>
+              {% elif camp.paid %}
+                <form action="{{ url_for('autoriser_remboursement_admin', campaign_id=camp.id) }}" method="POST">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="pw-btn pw-btn-sm pw-btn-secondary w-full !py-1.5 !text-[12px]">
+                    <span class="material-symbols-outlined text-[16px]">savings</span> Autoriser le remboursement
+                  </button>
                 </form>
+              {% else %}
+                <span class="pw-chip pw-chip-neutral">Non payée</span>
+                <p class="mt-0.5 font-caption text-caption text-on-surface-variant">
+                  Aucun remboursement possible : campagne jamais réglée.
+                </p>
+              {% endif %}
+
+            {% elif camp.validated and not camp.shared_to_partageurs %}
+              <form action="{{ url_for('partager_campagne_admin', campaign_id=camp.id) }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="pw-btn pw-btn-sm pw-btn-primary w-full !py-1.5 !text-[12px]">
+                  <span class="material-symbols-outlined text-[16px]">share</span> Partager aux partageurs
+                </button>
+              </form>
             {% elif camp.shared_to_partageurs %}
-                <span class="badge bg-success d-block mb-1">✅ Partagée aux partageurs</span>
+              <span class="pw-chip pw-chip-success">Partagée aux partageurs</span>
             {% else %}
-                <button class="btn btn-sm btn-secondary" disabled>En cours / Active</button>
+              <button class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px]" disabled>En cours / active</button>
             {% endif %}
 
             {% if camp.validated %}
-                <a href="{{ url_for('admin_suivi_campagne', campaign_id=camp.id) }}" class="btn btn-sm btn-outline-dark fw-bold d-block mt-1">
-                    📊 Suivre cette campagne
-                </a>
+              <a href="{{ url_for('admin_suivi_campagne', campaign_id=camp.id) }}"
+                 class="pw-btn pw-btn-sm pw-btn-neutral w-full mt-1 !py-1.5 !text-[12px]">
+                <span class="material-symbols-outlined text-[16px]">analytics</span> Suivre
+              </a>
             {% endif %}
-        </td>
-    </tr>
-    {% endmacro %}
-
-    <h4 class="section-title">Campagnes publicitaires (WhatsApp)</h4>
-
-    <ul class="nav nav-tabs mb-3 flex-wrap">
-      {% for nom, info in onglets_campagnes.items() %}
-      <li class="nav-item">
-        <a class="nav-link {{ 'active' if nom == onglet_actif }}"
-           href="{{ url_for('admin_validate', tab=nom, q=recherche) }}">
-          {{ info.label }} <span class="badge bg-secondary ms-1">{{ compteurs.get(nom, 0) }}</span>
-        </a>
-      </li>
+          </td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="11" class="text-center text-on-surface-variant py-space-md">
+            Aucune campagne dans cet onglet{{ " pour cette recherche" if recherche }}.
+          </td>
+        </tr>
       {% endfor %}
-    </ul>
+      </tbody>
+    </table>
+  </div>
 
-    <form method="GET" class="d-flex gap-2 mb-3" style="max-width: 420px;">
-      <input type="hidden" name="tab" value="{{ onglet_actif }}">
-      <input type="text" name="q" value="{{ recherche }}" class="form-control"
-             placeholder="ID de campagne ou email de l'annonceur">
-      <button class="btn btn-outline-dark" type="submit">🔍</button>
-      {% if recherche %}
-        <a href="{{ url_for('admin_validate', tab=onglet_actif) }}" class="btn btn-outline-secondary">✕</a>
-      {% endif %}
-    </form>
+  <!-- Fenetres de refus, hors du tableau -->
+  {% for camp in campaigns_page.items %}
+    {% if not camp.validated and camp.admin_status != "rejected" and camp.status != "rejete" %}
+    <div class="pw-modal fixed inset-0 z-[90] hidden items-center justify-center p-space-md bg-slate-night/80 overflow-y-auto"
+         id="rejectModal{{ camp.id }}" aria-modal="true" role="dialog">
+      <div class="pw-modal-panel w-full max-w-lg my-auto rounded-2xl bg-surface-container-lowest shadow-2xl overflow-hidden">
+        <form action="{{ url_for('refuse_campaign', campaign_id=camp.id) }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-    <div class="table-card">
-    <div class="table-responsive">
-        <table class="table table-striped align-middle mb-0 responsive-table">
-            <thead class="text-white text-center">
-                <tr>
-                    <th>ID</th>
-                    <th>Annonceur</th>
-                    <th>Type</th>
-                    <th>Détail & Texte</th>
-                    <th>Zones / Communes</th>
-                    <th>Médias</th>
-                    <th>Objectif Clics</th>
-                    <th>Durée / Progression</th>
-                    <th>Coût total</th>
-                    <th>Statut</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for camp in campaigns_page.items %}
-                {{ campaign_row(camp) }}
-            {% else %}
-                <tr>
-                    <td colspan="11" class="empty-row text-center text-muted py-3">
-                        Aucune campagne dans cet onglet{{ " pour cette recherche" if recherche }}.
-                    </td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    </div>
+          <div class="pw-modal-head bg-error text-white">
+            <span>Refuser la campagne #{{ camp.id }}</span>
+            <button type="button" class="pw-modal-close opacity-70 hover:opacity-100" aria-label="Fermer">
+              <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          </div>
 
-    {% if campaigns_page.pages and campaigns_page.pages > 1 %}
-    <nav class="d-flex justify-content-center flex-wrap gap-2 mb-4">
-      {% if campaigns_page.has_prev %}
-        <a class="btn btn-sm btn-outline-dark" href="{{ url_for('admin_validate', tab=onglet_actif, page=campaigns_page.prev_num, q=recherche) }}">‹ Précédent</a>
-      {% endif %}
-      {% for p in range(1, campaigns_page.pages + 1) %}
-        <a class="btn btn-sm {{ 'btn-dark' if p == campaigns_page.page else 'btn-outline-dark' }}"
-           href="{{ url_for('admin_validate', tab=onglet_actif, page=p, q=recherche) }}">{{ p }}</a>
-      {% endfor %}
-      {% if campaigns_page.has_next %}
-        <a class="btn btn-sm btn-outline-dark" href="{{ url_for('admin_validate', tab=onglet_actif, page=campaigns_page.next_num, q=recherche) }}">Suivant ›</a>
-      {% endif %}
-    </nav>
-    {% endif %}
+          <div class="pw-modal-body">
+            <div>
+              <label class="pw-label" for="rejection_reason{{ camp.id }}">Motif du refus <span class="text-error">*</span></label>
+              <textarea name="rejection_reason" id="rejection_reason{{ camp.id }}" class="pw-input resize-y" rows="4" required
+                        placeholder="Ex : la vidéo dépasse 30 secondes, veuillez la raccourcir avant de relancer."></textarea>
+              <p class="pw-help">Ce motif sera envoyé à l'annonceur pour qu'il puisse corriger et relancer sa campagne.</p>
+            </div>
+          </div>
 
-    {% endif %}
-
-    <div class="text-center mt-4">
-        <a href="{{ url_for('index') }}" class="btn btn-back-home text-white">⬅ Retour à l'accueil</a>
-    </div>
-</div>
-</div>
-
-<!-- MODAL : VISUALISATION MÉDIA -->
-<div class="modal fade" id="mediaModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-xl">
-    <div class="modal-content bg-dark text-center border-0 rounded-3 overflow-hidden shadow-lg">
-      <div class="modal-body p-0 position-relative">
-        <button type="button" class="btn-close btn-close-white position-absolute top-3 end-3 shadow-sm" style="z-index: 50;" data-bs-dismiss="modal" aria-label="Close"></button>
-        <img id="modalImage" src="" alt="" class="img-fluid d-none mx-auto">
-        <video id="modalVideo" controls class="w-100 d-none" style="max-height: 80vh;"></video>
-      </div>
-      <div class="modal-footer bg-dark border-0 justify-content-center pb-3">
-        <button type="button" class="btn btn-sm btn-light px-4 fw-bold" data-bs-dismiss="modal">Fermer</button>
+          <div class="pw-modal-foot">
+            <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral pw-modal-close">Annuler</button>
+            <button type="submit" class="pw-btn pw-btn-sm bg-error text-white hover:opacity-90">Confirmer le refus</button>
+          </div>
+        </form>
       </div>
     </div>
+    {% endif %}
+  {% endfor %}
+
+  <!-- Pagination -->
+  {% if campaigns_page.pages and campaigns_page.pages > 1 %}
+  <nav class="flex flex-wrap items-center justify-center gap-space-2xs">
+    {% if campaigns_page.has_prev %}
+      <a class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5"
+         href="{{ url_for('admin_validate', tab=onglet_actif, page=campaigns_page.prev_num, q=recherche) }}">
+        <span class="material-symbols-outlined text-[16px]">arrow_back</span> Précédent
+      </a>
+    {% endif %}
+    {% for p in range(1, campaigns_page.pages + 1) %}
+      <a class="pw-btn pw-btn-sm !py-1.5 !px-3 {{ 'pw-btn-primary' if p == campaigns_page.page else 'pw-btn-neutral' }}"
+         href="{{ url_for('admin_validate', tab=onglet_actif, page=p, q=recherche) }}">{{ p }}</a>
+    {% endfor %}
+    {% if campaigns_page.has_next %}
+      <a class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5"
+         href="{{ url_for('admin_validate', tab=onglet_actif, page=campaigns_page.next_num, q=recherche) }}">
+        Suivant <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+      </a>
+    {% endif %}
+  </nav>
+  {% endif %}
+  {% endif %}
+
+</div>
+</section>
+
+<!-- ================= FENETRE : VISUALISATION MEDIA ================= -->
+<div class="pw-modal fixed inset-0 z-[90] hidden items-center justify-center p-space-md bg-slate-night/90 overflow-y-auto"
+     id="mediaModal" aria-modal="true" role="dialog">
+  <div class="pw-modal-panel w-full max-w-4xl my-auto rounded-2xl bg-slate-night shadow-2xl overflow-hidden relative">
+    <button type="button" class="pw-modal-close absolute top-2 right-2 z-10 w-9 h-9 rounded-full bg-white/15 text-white flex items-center justify-center hover:bg-white/25 transition-colors" aria-label="Fermer">
+      <span class="material-symbols-outlined text-[20px]">close</span>
+    </button>
+    <img id="modalImage" src="" alt="" class="hidden w-full max-h-[80vh] object-contain">
+    <video id="modalVideo" controls class="hidden w-full max-h-[80vh]"></video>
   </div>
 </div>
 
-<!-- MODAL : PROFIL COMPLET DE L'ANNONCEUR -->
-<div class="modal fade" id="annonceurModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content border-0 shadow-lg rounded-3">
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title fw-bold"><i class="bi bi-building me-2"></i>Profil de l'Annonceur</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body p-0">
-        <div class="position-relative bg-light text-center" style="height: 140px; overflow: hidden;">
-            <img id="annCover" src="" alt="Couverture" class="w-100 h-100 object-fit-cover d-none">
-            <div id="annCoverPlaceholder" class="w-100 h-100 d-flex align-items-center justify-content-center text-muted bg-secondary bg-opacity-25">
-                <span><i class="bi bi-image me-1"></i> Aucune photo de couverture</span>
-            </div>
-            <div class="position-absolute start-3" style="bottom: -35px; z-index: 5;">
-                <img id="annProfile" src="" alt="Profil" class="rounded-circle border border-3 border-white shadow-sm d-none" style="width: 80px; height: 80px; object-fit: cover; background-color: #fff;">
-                <div id="annProfilePlaceholder" class="rounded-circle border border-3 border-white shadow-sm bg-primary text-white d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; font-size: 2rem;">
-                    🏢
-                </div>
-            </div>
+<!-- ================= FENETRE : PROFIL DE L'ANNONCEUR ================= -->
+<div class="pw-modal fixed inset-0 z-[90] hidden items-center justify-center p-space-md bg-slate-night/80 overflow-y-auto"
+     id="annonceurModal" aria-modal="true" role="dialog">
+  <div class="pw-modal-panel w-full max-w-lg my-auto rounded-2xl bg-surface-container-lowest shadow-2xl overflow-hidden">
+    <div class="pw-modal-head bg-emerald-primary text-white">
+      <span>Profil de l'annonceur</span>
+      <button type="button" class="pw-modal-close opacity-70 hover:opacity-100" aria-label="Fermer">
+        <span class="material-symbols-outlined text-[20px]">close</span>
+      </button>
+    </div>
+
+    <div>
+      <!-- Couverture + logo -->
+      <div class="relative h-28 bg-surface-container">
+        <img id="annCover" src="" alt="Couverture" class="hidden w-full h-full object-cover">
+        <div id="annCoverPlaceholder" class="w-full h-full flex items-center justify-center gap-1 font-caption text-caption text-on-surface-variant">
+          <span class="material-symbols-outlined text-[18px]">image</span> Aucune photo de couverture
         </div>
-
-        <div class="p-4 pt-5">
-            <h4 id="annCompany" class="fw-bold text-dark mb-1"></h4>
-            <p id="annSlogan" class="text-muted small mb-3" style="font-style: italic;"></p>
-
-            <hr>
-
-            <div class="mb-3">
-                <label class="fw-bold text-secondary small text-uppercase d-block">Numéro WhatsApp de la Campagne</label>
-                <span id="annWhatsapp" class="fw-bold text-success" style="font-size: 1.1rem;"></span>
-            </div>
-
-            <div class="mb-2">
-                <label class="fw-bold text-secondary small text-uppercase d-block">Description / Bio de l'entreprise</label>
-                <p id="annDescription" class="text-dark bg-light p-2 rounded small border" style="white-space: pre-line;"></p>
-            </div>
+        <div class="absolute -bottom-7 left-space-md">
+          <img id="annProfile" src="" alt="Profil" class="hidden w-16 h-16 rounded-full border-4 border-white object-cover bg-white shadow-sm">
+          <div id="annProfilePlaceholder" class="w-16 h-16 rounded-full border-4 border-white bg-emerald-primary text-white shadow-sm flex items-center justify-center">
+            <span class="material-symbols-outlined text-[26px]">storefront</span>
+          </div>
         </div>
       </div>
-      <div class="modal-footer bg-light border-top-0 justify-content-end p-3">
-        <button type="button" class="btn border-secondary btn-sm fw-bold px-4" data-bs-dismiss="modal">Fermer</button>
+
+      <div class="px-space-md pt-space-lg pb-space-md space-y-space-sm">
+        <div>
+          <h3 id="annCompany" class="font-headline-md text-headline-md text-slate-night"></h3>
+          <p id="annSlogan" class="font-caption text-caption italic text-on-surface-variant"></p>
+        </div>
+
+        <div class="pt-space-xs border-t border-outline-variant/30">
+          <p class="pw-tile-label">Numéro WhatsApp de la campagne</p>
+          <p id="annWhatsapp" class="font-label-numeric-md text-label-numeric-md font-bold text-emerald-deep"></p>
+        </div>
+
+        <div>
+          <p class="pw-tile-label">Description de l'entreprise</p>
+          <p id="annDescription" class="mt-0.5 pw-card-flat font-body-sm text-body-sm text-on-surface" style="white-space: pre-line;"></p>
+        </div>
       </div>
+    </div>
+
+    <div class="pw-modal-foot">
+      <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral pw-modal-close">Fermer</button>
     </div>
   </div>
 </div>
@@ -833,112 +624,131 @@
 
 {% block scripts %}
 <script>
-function showMedia(url, isVideo = false) {
-    const img = document.getElementById('modalImage');
-    const vid = document.getElementById('modalVideo');
+// --- Visualisation d'un media (image ou video) ---
+function showMedia(url, isVideo) {
+  const img = document.getElementById('modalImage');
+  const vid = document.getElementById('modalVideo');
 
-    if (isVideo) {
-        vid.src = url;
-        vid.classList.remove('d-none');
-        img.classList.add('d-none');
-        setTimeout(() => { vid.play().catch(e => console.log("Autoplay bloqué :", e)); }, 300);
-    } else {
-        img.src = url;
-        img.classList.remove('d-none');
-        vid.classList.add('d-none');
-    }
+  if (isVideo) {
+    vid.src = url;
+    vid.classList.remove('hidden');
+    img.classList.add('hidden');
+    setTimeout(function () { vid.play().catch(e => console.log("Lecture automatique bloquée :", e)); }, 300);
+  } else {
+    img.src = url;
+    img.classList.remove('hidden');
+    vid.classList.add('hidden');
+  }
 
-    const modalEl = document.getElementById('mediaModal');
-    const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
-    bsModal.show();
+  const modal = document.getElementById('mediaModal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  document.body.style.overflow = 'hidden';
 }
 
-document.addEventListener('click', function(e) {
-    const btn = e.target.closest('.btn-voir-profil');
-    if (btn) {
-        const companyName = btn.getAttribute('data-company');
-        const whatsapp = btn.getAttribute('data-whatsapp');
-        const slogan = btn.getAttribute('data-slogan');
-        const description = btn.getAttribute('data-bio');
-        const profileUrl = btn.getAttribute('data-profile');
-        const coverUrl = btn.getAttribute('data-cover');
-
-        document.getElementById('annCompany').innerText = companyName;
-        document.getElementById('annWhatsapp').innerText = whatsapp;
-
-        const sloganEl = document.getElementById('annSlogan');
-        if (slogan && slogan !== 'None' && slogan.trim() !== '') {
-            sloganEl.innerText = `« ${slogan} »`;
-            sloganEl.classList.remove('d-none');
-        } else {
-            sloganEl.classList.add('d-none');
-        }
-
-        const descEl = document.getElementById('annDescription');
-        if (description && description !== 'None' && description.trim() !== '') {
-            descEl.innerText = description;
-        } else {
-            descEl.innerText = "Aucune description fournie.";
-        }
-
-        const imgProfile = document.getElementById('annProfile');
-        const placeholderProfile = document.getElementById('annProfilePlaceholder');
-        if (profileUrl && profileUrl.trim() !== '' && !profileUrl.endsWith('None') && !profileUrl.endsWith('default_profile.png')) {
-            imgProfile.src = profileUrl;
-            imgProfile.classList.remove('d-none');
-            placeholderProfile.classList.add('d-none');
-        } else {
-            imgProfile.classList.add('d-none');
-            placeholderProfile.classList.remove('d-none');
-        }
-
-        const imgCover = document.getElementById('annCover');
-        const placeholderCover = document.getElementById('annCoverPlaceholder');
-        if (coverUrl && coverUrl.trim() !== '' && !coverUrl.endsWith('None') && !coverUrl.endsWith('default_cover.png')) {
-            imgCover.src = coverUrl;
-            imgCover.classList.remove('d-none');
-            placeholderCover.classList.add('d-none');
-        } else {
-            imgCover.classList.add('d-none');
-            placeholderCover.classList.remove('d-none');
-        }
-
-        const modalEl = document.getElementById('annonceurModal');
-        const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
-        bsModal.show();
+// Arrete la video quand la fenetre se ferme (croix, fond ou Echap)
+(function () {
+  const modal = document.getElementById('mediaModal');
+  const observer = new MutationObserver(function () {
+    if (modal.classList.contains('hidden')) {
+      const vid = document.getElementById('modalVideo');
+      if (vid) { vid.pause(); vid.src = ""; }
     }
+  });
+  observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
+})();
+
+// --- Profil de l'annonceur ---
+document.addEventListener('click', function (e) {
+  const btn = e.target.closest('.btn-voir-profil');
+  if (!btn) return;
+
+  document.getElementById('annCompany').innerText = btn.getAttribute('data-company');
+  document.getElementById('annWhatsapp').innerText = btn.getAttribute('data-whatsapp');
+
+  const slogan = btn.getAttribute('data-slogan');
+  const sloganEl = document.getElementById('annSlogan');
+  if (slogan && slogan !== 'None' && slogan.trim() !== '') {
+    sloganEl.innerText = '« ' + slogan + ' »';
+    sloganEl.classList.remove('hidden');
+  } else {
+    sloganEl.classList.add('hidden');
+  }
+
+  const description = btn.getAttribute('data-bio');
+  document.getElementById('annDescription').innerText =
+    (description && description !== 'None' && description.trim() !== '')
+      ? description
+      : "Aucune description fournie.";
+
+  const profileUrl = btn.getAttribute('data-profile');
+  const imgProfile = document.getElementById('annProfile');
+  const placeholderProfile = document.getElementById('annProfilePlaceholder');
+  if (profileUrl && profileUrl.trim() !== '' && !profileUrl.endsWith('None') && !profileUrl.endsWith('default_profile.png')) {
+    imgProfile.src = profileUrl;
+    imgProfile.classList.remove('hidden');
+    placeholderProfile.classList.add('hidden');
+  } else {
+    imgProfile.classList.add('hidden');
+    placeholderProfile.classList.remove('hidden');
+  }
+
+  const coverUrl = btn.getAttribute('data-cover');
+  const imgCover = document.getElementById('annCover');
+  const placeholderCover = document.getElementById('annCoverPlaceholder');
+  if (coverUrl && coverUrl.trim() !== '' && !coverUrl.endsWith('None') && !coverUrl.endsWith('default_cover.png')) {
+    imgCover.src = coverUrl;
+    imgCover.classList.remove('hidden');
+    placeholderCover.classList.add('hidden');
+  } else {
+    imgCover.classList.add('hidden');
+    placeholderCover.classList.remove('hidden');
+  }
+
+  const modal = document.getElementById('annonceurModal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  document.body.style.overflow = 'hidden';
 });
 
-document.getElementById('mediaModal').addEventListener('hidden.bs.modal', function () {
-    const vid = document.getElementById('modalVideo');
-    if (vid) {
-        vid.pause();
-        vid.src = "";
-    }
-});
-
-// 🆕 Marque les notifications comme lues dès l'ouverture de la cloche
+// --- Cloche de notifications ---
 document.addEventListener('DOMContentLoaded', function () {
-    const notifWrapper = document.getElementById('notifDropdownWrapper');
-    if (notifWrapper) {
-        notifWrapper.addEventListener('shown.bs.dropdown', function () {
-            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-            const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
-            fetch('/notifications/marquer-lues', {
-                method: 'POST',
-                headers: { 'X-CSRFToken': csrfToken }
-            }).then(function () {
-                const badge = notifWrapper.querySelector('.badge.bg-danger');
-                if (badge) badge.remove();
-                notifWrapper.querySelectorAll('.dropdown-item.fw-bold').forEach(function (item) {
-                    item.classList.remove('fw-bold');
-                    item.classList.add('text-muted');
-                });
-            }).catch(function (err) {
-                console.error('Erreur lors du marquage des notifications :', err);
-            });
-        });
-    }
+  const wrapper = document.getElementById('notifDropdownWrapper');
+  if (!wrapper) return;
+
+  const toggle = document.getElementById('notifToggle');
+  const panel  = document.getElementById('notifPanel');
+  let dejaMarquees = false;
+
+  function marquerCommeLues() {
+    if (dejaMarquees) return;
+    dejaMarquees = true;
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    fetch('/notifications/marquer-lues', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrfMeta ? csrfMeta.getAttribute('content') : '' }
+    }).then(function () {
+      const badge = document.getElementById('notifBadge');
+      if (badge) badge.remove();
+      panel.querySelectorAll('.notif-item.font-semibold').forEach(function (item) {
+        item.classList.remove('font-semibold', 'text-on-surface');
+        item.classList.add('text-on-surface-variant');
+      });
+    }).catch(function (err) {
+      console.error('Erreur lors du marquage des notifications :', err);
+    });
+  }
+
+  toggle.addEventListener('click', function (e) {
+    e.stopPropagation();
+    const ouvert = !panel.classList.contains('hidden');
+    panel.classList.toggle('hidden', ouvert);
+    toggle.setAttribute('aria-expanded', String(!ouvert));
+    if (!ouvert) marquerCommeLues();
+  });
+  document.addEventListener('click', function (e) {
+    if (!wrapper.contains(e.target)) panel.classList.add('hidden');
+  });
 });
 </script>
 {% endblock %}

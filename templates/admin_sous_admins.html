@@ -1,418 +1,177 @@
-{% extends "base.html" %}
+{% extends "base_v2.html" %}
 
 {% block content %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<section class="py-space-lg bg-background">
+<div class="max-w-6xl mx-auto px-margin space-y-space-sm">
 
-<style>
-  .subadmin-page {
-    background: linear-gradient(135deg, #f0f9ff 0%, #e8f5e9 100%);
-    min-height: 100vh;
-    padding: 2.5rem 0 3rem;
-  }
+  <!-- En-tete -->
+  <div class="flex flex-wrap items-end justify-between gap-space-sm">
+    <div class="min-w-0">
+      <span class="pw-badge bg-amber-soft text-amber-rich">Administration</span>
+      <h1 class="mt-1 font-headline-md text-headline-md text-slate-night">Gestion des sous-admins</h1>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">
+        Créez des comptes sous-admin et attribuez-leur uniquement les sections dont ils ont besoin.
+      </p>
+    </div>
+    <a href="{{ url_for('admin_validate') }}" class="pw-btn pw-btn-sm pw-btn-neutral">
+      <span class="material-symbols-outlined text-[18px]">arrow_back</span> Panneau d'administration
+    </a>
+  </div>
 
-  .page-header {
-    background: #fff;
-    border-radius: 16px;
-    padding: 1.75rem 2rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-    margin-bottom: 2.5rem;
-  }
+  <!-- ================= CREER UN SOUS-ADMIN ================= -->
+  <div class="pw-card !p-space-md">
+    <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight mb-space-xs">
+      <span class="material-symbols-outlined text-[20px] text-emerald-primary">person</span>
+      Créer un nouveau sous-admin
+    </h2>
 
-  .page-header h2 {
-    color: #1a1a2e;
-    font-weight: 700;
-  }
+    <form action="{{ url_for('creer_sous_admin') }}" method="POST" class="space-y-space-sm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-  .page-header .text-muted {
-    font-size: 0.95rem;
-  }
-
-  .btn-back-admin {
-    border-radius: 50px;
-    padding: 0.6rem 1.4rem;
-    font-weight: 600;
-    background: #f1f1f1;
-    color: #333;
-    border: none;
-    transition: background 0.2s ease;
-  }
-
-  .btn-back-admin:hover {
-    background: #e4e4e4;
-    color: #111;
-  }
-
-  .section-title {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    font-weight: 700;
-    color: #1a1a2e;
-    margin-bottom: 1.25rem;
-  }
-
-  /* Carte de création */
-  .create-card {
-    border: none;
-    border-radius: 18px;
-    box-shadow: 0 6px 28px rgba(0, 0, 0, 0.07);
-    margin-bottom: 3rem;
-    overflow: hidden;
-  }
-
-  .create-card .card-body {
-    padding: 2rem;
-  }
-
-  .create-card h5 {
-    color: #1a1a2e;
-  }
-
-  .create-card .form-label {
-    font-weight: 600;
-    color: #333;
-    font-size: 0.88rem;
-  }
-
-  .create-card .form-control {
-    border-radius: 10px;
-    border: 1px solid #ddd;
-    padding: 0.6rem 0.9rem;
-  }
-
-  .create-card .form-control:focus {
-    border-color: #27ae60;
-    box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.15);
-  }
-
-  .perm-check {
-    background: #f8faf9;
-    border-radius: 10px;
-    padding: 0.6rem 0.8rem;
-    border: 1px solid #eee;
-    transition: border-color 0.15s ease, background 0.15s ease;
-  }
-
-  .perm-check:has(input:checked) {
-    background: #eafaf0;
-    border-color: #a4e8bf;
-  }
-
-  .form-check-input:checked {
-    background-color: #27ae60;
-    border-color: #27ae60;
-  }
-
-  .btn-create {
-    background: linear-gradient(135deg, #1a1a2e, #33334d);
-    border: none;
-    border-radius: 50px;
-    padding: 0.7rem 1.75rem;
-    font-weight: 600;
-    color: #fff;
-    transition: opacity 0.2s ease;
-  }
-
-  .btn-create:hover {
-    opacity: 0.9;
-    color: #fff;
-  }
-
-  /* Cartes sous-admin */
-  .subadmin-card {
-    border: none;
-    border-radius: 16px;
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
-    height: 100%;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .subadmin-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1);
-  }
-
-  .subadmin-card.inactive {
-    opacity: 0.7;
-  }
-
-  .subadmin-card .card-body {
-    padding: 1.5rem;
-  }
-
-  .status-badge {
-    border-radius: 50px;
-    padding: 0.35rem 0.75rem;
-    font-weight: 600;
-    font-size: 0.75rem;
-  }
-
-  .subadmin-card .perm-label {
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.4px;
-    color: #999;
-  }
-
-  .subadmin-card .form-check {
-    padding-left: 1.75rem;
-  }
-
-  .btn-update-perms {
-    border-radius: 8px;
-    font-weight: 600;
-    border: 1.5px solid #1a1a2e;
-    color: #1a1a2e;
-    background: transparent;
-    transition: all 0.2s ease;
-  }
-
-  .btn-update-perms:hover {
-    background: #1a1a2e;
-    color: #fff;
-  }
-
-  .btn-pause {
-    border-radius: 8px;
-    font-weight: 600;
-    border: 1.5px solid #e67e22;
-    color: #e67e22;
-    background: transparent;
-    transition: all 0.2s ease;
-  }
-
-  .btn-pause:hover {
-    background: #e67e22;
-    color: #fff;
-  }
-
-  .btn-resume {
-    border-radius: 8px;
-    font-weight: 600;
-    border: 1.5px solid #27ae60;
-    color: #27ae60;
-    background: transparent;
-    transition: all 0.2s ease;
-  }
-
-  .btn-resume:hover {
-    background: #27ae60;
-    color: #fff;
-  }
-
-  .btn-delete {
-    border-radius: 8px;
-    font-weight: 600;
-    border: 1.5px solid #e74c3c;
-    color: #e74c3c;
-    background: transparent;
-    transition: all 0.2s ease;
-  }
-
-  .btn-delete:hover {
-    background: #e74c3c;
-    color: #fff;
-  }
-
-  .empty-state {
-    background: #fff;
-    border-radius: 16px;
-    padding: 2rem;
-    text-align: center;
-    color: #888;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  }
-
-  /* Modal */
-  .modal-content {
-    border-radius: 16px;
-    border: none;
-    overflow: hidden;
-  }
-
-  .modal-header {
-    border: none;
-    padding: 1.25rem 1.5rem;
-  }
-
-  .modal-header.bg-danger {
-    background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
-  }
-
-  .modal-body {
-    padding: 1.5rem;
-  }
-
-  .modal-footer {
-    border: none;
-    padding: 1rem 1.5rem 1.5rem;
-  }
-
-  @media (max-width: 768px) {
-    .page-header {
-      padding: 1.5rem;
-      text-align: center;
-      justify-content: center;
-    }
-    .create-card .card-body {
-      padding: 1.5rem;
-    }
-    .subadmin-card .d-flex.gap-2 {
-      flex-direction: column;
-    }
-  }
-</style>
-
-<div class="subadmin-page">
-<div class="container">
-    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-space-sm">
         <div>
-            <h2 class="mb-1">🔑 Gestion des sous-admins</h2>
-            <p class="text-muted mb-0">Créez des comptes sous-admin et attribuez-leur uniquement les sections dont ils ont besoin.</p>
+          <label class="pw-label" for="sa_email">Email</label>
+          <input type="email" name="email" id="sa_email" class="pw-input" placeholder="sousadmin@pubwek.com" required>
         </div>
-        <a href="{{ url_for('admin_validate') }}" class="btn btn-back-admin">
-            ⬅️ Retour au panneau d'administration
-        </a>
+        <div>
+          <label class="pw-label" for="sa_password">Mot de passe</label>
+          <input type="password" name="password" id="sa_password" class="pw-input" minlength="8" placeholder="8 caractères minimum" required>
+        </div>
+        <div>
+          <label class="pw-label" for="sa_pseudo">Pseudo <span class="font-normal text-on-surface-variant">(optionnel)</span></label>
+          <input type="text" name="pseudo" id="sa_pseudo" class="pw-input" placeholder="Ex : Marc">
+        </div>
+      </div>
+
+      <div>
+        <label class="pw-label">Permissions à attribuer</label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-1 gap-x-space-sm">
+          {% for key, label in permissions_disponibles.items() %}
+          <label class="flex items-center gap-space-2xs cursor-pointer select-none">
+            <input class="w-4 h-4 rounded border-outline-variant/60 text-emerald-primary focus:ring-emerald-primary/30"
+                   type="checkbox" name="permissions[]" value="{{ key }}" id="perm_new_{{ key }}">
+            <span class="font-body-sm text-body-sm text-on-surface">{{ label }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <button type="submit" class="pw-btn pw-btn-sm pw-btn-primary">
+        <span class="material-symbols-outlined text-[18px]">add_circle</span> Créer le sous-admin
+      </button>
+    </form>
+  </div>
+
+  <!-- ================= SOUS-ADMINS EXISTANTS ================= -->
+  <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
+    <span class="material-symbols-outlined text-[20px] text-emerald-primary">group</span>
+    Sous-admins existants
+    {% if sous_admins %}<span class="pw-chip pw-chip-neutral">{{ sous_admins | length }}</span>{% endif %}
+  </h2>
+
+  {% if sous_admins %}
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-sm">
+    {% for s in sous_admins %}
+    <div class="pw-tile {{ 'opacity-70' if not s.is_active_admin }}">
+      <div class="flex items-start justify-between gap-space-xs">
+        <div class="min-w-0">
+          <h3 class="font-headline-md text-body-md font-bold text-slate-midnight truncate">{{ s.pseudo or "Sans pseudo" }}</h3>
+          <p class="font-caption text-caption text-on-surface-variant truncate">{{ s.email }}</p>
+        </div>
+        {% if s.is_active_admin %}
+          <span class="pw-chip pw-chip-success shrink-0"><span class="material-symbols-outlined text-[14px]">check_circle</span> Actif</span>
+        {% else %}
+          <span class="pw-chip pw-chip-neutral shrink-0"><span class="material-symbols-outlined text-[14px]">block</span> Désactivé</span>
+        {% endif %}
+      </div>
+
+      <p class="mt-1 font-caption text-caption text-on-surface-variant">
+        Créé le {{ s.created_at | heure_locale("%d/%m/%Y") if s.created_at else "—" }}
+        {% if s.createur %} par {{ s.createur.email }}{% endif %}
+      </p>
+
+      <!-- Permissions -->
+      <form action="{{ url_for('modifier_permissions_sous_admin', sous_admin_id=s.id) }}" method="POST" class="mt-space-xs">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <p class="pw-tile-label mb-1">Permissions</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-1 gap-x-space-sm mb-space-xs">
+          {% for key, label in permissions_disponibles.items() %}
+          <label class="flex items-center gap-space-2xs cursor-pointer select-none">
+            <input class="w-3.5 h-3.5 rounded border-outline-variant/60 text-emerald-primary focus:ring-emerald-primary/30"
+                   type="checkbox" name="permissions[]" value="{{ key }}"
+                   id="perm_{{ s.id }}_{{ key }}" {% if key in s.permissions_liste %}checked{% endif %}>
+            <span class="font-caption text-caption text-on-surface">{{ label }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        <button type="submit" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px]">
+          <span class="material-symbols-outlined text-[16px]">save</span> Mettre à jour les permissions
+        </button>
+      </form>
+
+      <!-- Actions -->
+      <div class="mt-space-xs pt-space-xs border-t border-outline-variant/30 flex flex-col sm:flex-row gap-space-2xs">
+        <form action="{{ url_for('basculer_statut_sous_admin', sous_admin_id=s.id) }}" method="POST" class="flex-1">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          {% if s.is_active_admin %}
+            <button type="submit" class="pw-btn pw-btn-sm pw-btn-neutral w-full !py-1.5 !text-[12px]">
+              <span class="material-symbols-outlined text-[16px]">block</span> Désactiver
+            </button>
+          {% else %}
+            <button type="submit" class="pw-btn pw-btn-sm pw-btn-primary w-full !py-1.5 !text-[12px]">
+              <span class="material-symbols-outlined text-[16px]">restore</span> Réactiver
+            </button>
+          {% endif %}
+        </form>
+        <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral !text-error flex-1 !py-1.5 !text-[12px]"
+                data-pw-modal="deleteSousAdmin{{ s.id }}">
+          <span class="material-symbols-outlined text-[16px]">delete_forever</span> Supprimer
+        </button>
+      </div>
     </div>
+    {% endfor %}
+  </div>
 
-    <!-- ========================================== -->
-    <!-- ➕ CRÉER UN NOUVEAU SOUS-ADMIN -->
-    <!-- ========================================== -->
-    <div class="card create-card">
-        <div class="card-body">
-            <h5 class="fw-bold mb-3"><i class="bi bi-person-plus-fill me-2"></i>Créer un nouveau sous-admin</h5>
-            <form action="{{ url_for('creer_sous_admin') }}" method="POST">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div class="row g-3 mb-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Email</label>
-                        <input type="email" name="email" class="form-control" placeholder="souadmin@pubwek.com" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Mot de passe</label>
-                        <input type="password" name="password" class="form-control" minlength="8" placeholder="8 caractères minimum" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Pseudo <span class="text-muted fw-normal">(optionnel)</span></label>
-                        <input type="text" name="pseudo" class="form-control" placeholder="Ex: Marc">
-                    </div>
-                </div>
+  <!-- Fenetres de confirmation -->
+  {% for s in sous_admins %}
+  <div class="pw-modal fixed inset-0 z-[90] hidden items-center justify-center p-space-md bg-slate-night/80 overflow-y-auto"
+       id="deleteSousAdmin{{ s.id }}" aria-modal="true" role="dialog">
+    <div class="pw-modal-panel w-full max-w-lg my-auto rounded-2xl bg-surface-container-lowest shadow-2xl overflow-hidden">
+      <div class="pw-modal-head bg-error text-white">
+        <span>Supprimer {{ s.email }}</span>
+        <button type="button" class="pw-modal-close opacity-70 hover:opacity-100" aria-label="Fermer">
+          <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+      </div>
 
-                <label class="form-label d-block mb-2">Permissions à attribuer</label>
-                <div class="row g-2 mb-3">
-                    {% for key, label in permissions_disponibles.items() %}
-                    <div class="col-md-6 col-lg-4">
-                        <div class="form-check perm-check">
-                            <input class="form-check-input" type="checkbox" name="permissions[]" value="{{ key }}" id="perm_new_{{ key }}">
-                            <label class="form-check-label small" for="perm_new_{{ key }}">{{ label }}</label>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
+      <div class="pw-modal-body">
+        <p class="font-body-sm text-body-sm text-on-surface">
+          Cette action est <strong class="text-error">définitive et irréversible</strong>. Le compte de
+          <strong class="text-slate-midnight">{{ s.email }}</strong> sera entièrement supprimé de l'application
+          et il perdra immédiatement tout accès.
+        </p>
+      </div>
 
-                <button type="submit" class="btn btn-create">
-                    <i class="bi bi-person-plus-fill me-1"></i> Créer le sous-admin
-                </button>
-            </form>
-        </div>
+      <div class="pw-modal-foot">
+        <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral pw-modal-close">Annuler</button>
+        <form action="{{ url_for('supprimer_sous_admin', sous_admin_id=s.id) }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="pw-btn pw-btn-sm bg-error text-white hover:opacity-90">
+            Oui, supprimer définitivement
+          </button>
+        </form>
+      </div>
     </div>
+  </div>
+  {% endfor %}
 
-    <!-- ========================================== -->
-    <!-- 👥 LISTE DES SOUS-ADMINS -->
-    <!-- ========================================== -->
-    <h4 class="section-title"><i class="bi bi-people-fill"></i>Sous-admins existants</h4>
-
-    {% if sous_admins %}
-    <div class="row g-3">
-        {% for s in sous_admins %}
-        <div class="col-md-6">
-            <div class="card subadmin-card {{ 'inactive' if not s.is_active_admin else '' }}">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <div>
-                            <h6 class="fw-bold mb-0">{{ s.pseudo or "Sans pseudo" }}</h6>
-                            <div class="text-muted small">{{ s.email }}</div>
-                        </div>
-                        {% if s.is_active_admin %}
-                            <span class="status-badge bg-success text-white">🟢 Actif</span>
-                        {% else %}
-                            <span class="status-badge bg-secondary text-white">⏸️ Désactivé</span>
-                        {% endif %}
-                    </div>
-
-                    <div class="small text-muted mb-3">
-                        Créé le {{ s.created_at | heure_locale("%d/%m/%Y") if s.created_at else "-" }}
-                        {% if s.createur %} par {{ s.createur.email }}{% endif %}
-                    </div>
-
-                    <!-- Formulaire de modification des permissions -->
-                    <form action="{{ url_for('modifier_permissions_sous_admin', sous_admin_id=s.id) }}" method="POST" class="mb-3">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <label class="perm-label d-block mb-2 text-uppercase">Permissions</label>
-                        <div class="row g-1 mb-3">
-                            {% for key, label in permissions_disponibles.items() %}
-                            <div class="col-6">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="permissions[]" value="{{ key }}"
-                                           id="perm_{{ s.id }}_{{ key }}" {% if key in s.permissions_liste %}checked{% endif %}>
-                                    <label class="form-check-label small" for="perm_{{ s.id }}_{{ key }}">{{ label }}</label>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        <button type="submit" class="btn btn-update-perms btn-sm">
-                            <i class="bi bi-save me-1"></i> Mettre à jour les permissions
-                        </button>
-                    </form>
-
-                    <div class="d-flex gap-2">
-                        <form action="{{ url_for('basculer_statut_sous_admin', sous_admin_id=s.id) }}" method="POST" class="flex-grow-1">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            {% if s.is_active_admin %}
-                                <button type="submit" class="btn btn-pause btn-sm w-100">⏸️ Désactiver</button>
-                            {% else %}
-                                <button type="submit" class="btn btn-resume btn-sm w-100">▶️ Réactiver</button>
-                            {% endif %}
-                        </form>
-                        <button type="button" class="btn btn-delete btn-sm flex-grow-1" data-bs-toggle="modal" data-bs-target="#deleteModal{{ s.id }}">
-                            🗑️ Supprimer définitivement
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- MODAL : Confirmation de suppression définitive -->
-        <div class="modal fade" id="deleteModal{{ s.id }}" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header bg-danger text-white">
-                        <h5 class="modal-title fw-bold">🗑️ Supprimer {{ s.email }}</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p class="mb-0">
-                            Cette action est <strong>définitive et irréversible</strong>. Le compte de
-                            <strong>{{ s.email }}</strong> sera entièrement supprimé de l'application et il perdra
-                            immédiatement tout accès. Êtes-vous certain de vouloir continuer ?
-                        </p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                        <form action="{{ url_for('supprimer_sous_admin', sous_admin_id=s.id) }}" method="POST">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-danger fw-bold">Oui, supprimer définitivement</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="empty-state">Aucun sous-admin créé pour le moment.</div>
-    {% endif %}
+  {% else %}
+  <div class="pw-card !p-space-lg text-center">
+    <span class="material-symbols-outlined text-[36px] text-on-surface-variant">admin_panel_settings</span>
+    <p class="mt-1 font-body-sm text-body-sm text-on-surface-variant">Aucun sous-admin créé pour le moment.</p>
+  </div>
+  {% endif %}
 
 </div>
-</div>
+</section>
 {% endblock %}

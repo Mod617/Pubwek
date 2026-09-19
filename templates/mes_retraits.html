@@ -1,390 +1,224 @@
-{% extends "base.html" %}
+{% extends "base_v2.html" %}
 
 {% block content %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<section class="py-space-lg bg-background">
+<div class="max-w-5xl mx-auto px-margin space-y-space-sm">
 
-<style>
-  :root{
-    --pf-ink:       #12261F;
-    --pf-emerald:   #0F6B4C;
-    --pf-emerald-2: #14875F;
-    --pf-amber:     #F0A63C;
-    --pf-amber-2:   #E8912A;
-    --pf-bg:        #F4F2EC;
-    --pf-surface:   #FFFFFF;
-    --pf-line:      #E7E3D8;
-    --pf-muted:     #6E7A73;
-    --pf-danger:    #C6493D;
-    --pf-radius:    18px;
-  }
-
-  .pf-wrap{
-    background: var(--pf-bg);
-    padding: 2.25rem 0 4rem;
-    font-family: 'Inter', system-ui, sans-serif;
-    color: var(--pf-ink);
-  }
-  .pf-wrap h2, .pf-wrap h4, .pf-wrap h5{
-    font-family: 'Space Grotesk', 'Inter', sans-serif;
-    letter-spacing: -0.01em;
-  }
-  .pf-mono{
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* ---------- Header ---------- */
-  .pf-header{
-    display:flex; justify-content:space-between; align-items:flex-end;
-    flex-wrap:wrap; gap:1rem; margin-bottom:1.75rem;
-  }
-  .pf-eyebrow{
-    text-transform:uppercase; letter-spacing:.14em; font-size:.72rem;
-    font-weight:600; color: var(--pf-emerald-2); margin-bottom:.35rem;
-  }
-  .pf-header h2{ font-weight:700; font-size:1.9rem; margin:0; color:var(--pf-ink);}
-  .pf-header p{ color: var(--pf-muted); margin:.3rem 0 0; }
-  .pf-btn-back{
-    border:1.5px solid var(--pf-line); background:var(--pf-surface); color:var(--pf-ink);
-    font-weight:600; border-radius:999px; padding:.55rem 1.15rem; font-size:.9rem;
-    transition: all .15s ease; text-decoration:none; white-space:nowrap;
-  }
-  .pf-btn-back:hover{ border-color:var(--pf-emerald); color:var(--pf-emerald); background:var(--pf-surface);}
-  .pf-pdf-link{
-    display:inline-flex; align-items:center; gap:.4rem; font-weight:600; font-size:.88rem;
-    color: var(--pf-ink); text-decoration:none; border-bottom:1.5px dashed var(--pf-line);
-    padding-bottom:2px; transition:.15s;
-  }
-  .pf-pdf-link:hover{ color:var(--pf-emerald); border-color:var(--pf-emerald);}
-
-  /* ---------- Receipt-style balance ticket ---------- */
-  .pf-ticket-row{ display:grid; grid-template-columns: 1.3fr 1fr 1fr; gap:1rem; margin-bottom:2rem;}
-  @media (max-width: 860px){ .pf-ticket-row{ grid-template-columns:1fr; } }
-
-  .pf-ticket{
-    position:relative;
-    background: linear-gradient(135deg, var(--pf-emerald) 0%, #0B5A40 100%);
-    border-radius: var(--pf-radius);
-    padding: 1.75rem 1.75rem 1.5rem;
-    color:#fff;
-    overflow:hidden;
-    box-shadow: 0 14px 30px -14px rgba(15,107,76,.55);
-  }
-  .pf-ticket::after{
-    content:"";
-    position:absolute; right:-40px; top:-40px; width:160px; height:160px;
-    background: radial-gradient(circle, rgba(255,255,255,.10) 0%, transparent 70%);
-  }
-  .pf-ticket .pf-label{
-    font-size:.75rem; text-transform:uppercase; letter-spacing:.12em;
-    opacity:.85; font-weight:600;
-  }
-  .pf-ticket .pf-amount{
-    font-size: clamp(1.9rem, 4vw, 2.5rem);
-    font-weight:700; line-height:1.15; margin:.35rem 0 0;
-  }
-  .pf-ticket .pf-amount small{ font-size:1rem; font-weight:600; opacity:.85; margin-left:.25rem;}
-  /* perforated tear edge, like an SMS receipt stub */
-  .pf-ticket-perf{
-    position:relative; height:14px; margin-top:1.1rem;
-    background-image: radial-gradient(circle at 8px 7px, var(--pf-bg) 6px, transparent 6.5px);
-    background-size: 20px 14px; background-repeat: repeat-x; background-position: -4px 0;
-  }
-  .pf-ticket-perf::before, .pf-ticket-perf::after{
-    content:""; position:absolute; top:0; width:14px; height:14px; border-radius:50%;
-    background: var(--pf-bg);
-  }
-  .pf-ticket-perf::before{ left:-22px; }
-  .pf-ticket-perf::after{ right:-22px; }
-
-  .pf-stat{
-    background: var(--pf-surface); border-radius: var(--pf-radius);
-    padding: 1.5rem 1.6rem; border:1px solid var(--pf-line);
-    display:flex; flex-direction:column; justify-content:center;
-  }
-  .pf-stat .pf-label{ font-size:.75rem; text-transform:uppercase; letter-spacing:.1em; color:var(--pf-muted); font-weight:600;}
-  .pf-stat .pf-value{ font-size:1.5rem; font-weight:700; margin-top:.3rem; color:var(--pf-ink);}
-
-  /* ---------- Cards / sections ---------- */
-  .pf-card{
-    background: var(--pf-surface); border-radius: var(--pf-radius);
-    border:1px solid var(--pf-line); box-shadow: 0 1px 2px rgba(18,38,31,.04);
-    margin-bottom: 2rem;
-  }
-  .pf-card-body{ padding: 1.85rem; }
-  .pf-section-title{
-    font-weight:700; font-size:1.15rem; display:flex; align-items:center; gap:.55rem;
-    margin-bottom:1.25rem; color:var(--pf-ink);
-  }
-  .pf-section-title i{ color: var(--pf-emerald); }
-
-  /* Alerts */
-  .pf-alert{
-    border-radius: 14px; padding:1rem 1.15rem; font-size:.94rem; display:flex; gap:.65rem; align-items:flex-start;
-    border:1px solid transparent;
-  }
-  .pf-alert-info{ background:#EAF4EF; color:#0F5138; border-color:#CFE7DA; }
-  .pf-alert-warning{ background:#FDF3E2; color:#8A5A0C; border-color:#F5DFB2; }
-  .pf-alert i{ margin-top:.15rem; }
-
-  /* Form */
-  .pf-form label{ font-weight:600; font-size:.86rem; color:var(--pf-ink); margin-bottom:.35rem; }
-  .pf-form .form-control, .pf-form .form-select{
-    border-radius: 12px; border:1.5px solid var(--pf-line); padding:.62rem .85rem;
-    font-size:.95rem; background:#FBFAF7;
-  }
-  .pf-form .form-control:focus, .pf-form .form-select:focus{
-    border-color: var(--pf-emerald); box-shadow: 0 0 0 3px rgba(15,107,76,.13); background:#fff;
-  }
-  .pf-form .input-group-text{
-    border-radius: 0 12px 12px 0; border:1.5px solid var(--pf-line); border-left:none;
-    background:#F0EEE6; font-weight:600; color:var(--pf-muted); font-size:.85rem;
-  }
-  .pf-btn-submit{
-    background: var(--pf-amber); border:none; color:#3A2504; font-weight:700;
-    border-radius: 999px; padding:.72rem 1.6rem; font-size:.95rem;
-    box-shadow: 0 10px 20px -10px rgba(232,145,42,.65);
-    transition: transform .15s ease, box-shadow .15s ease;
-  }
-  .pf-btn-submit:hover{ transform: translateY(-1px); box-shadow: 0 14px 24px -10px rgba(232,145,42,.75); color:#3A2504;}
-
-  /* Tables */
-  .pf-table thead th{
-    text-transform:uppercase; font-size:.7rem; letter-spacing:.08em; color:var(--pf-muted);
-    font-weight:700; background:#FAF9F5; border-bottom:1px solid var(--pf-line);
-    padding:.85rem 1rem;
-  }
-  .pf-table tbody td{ padding:.85rem 1rem; font-size:.9rem; border-bottom:1px solid var(--pf-line); }
-  .pf-table tbody tr:last-child td{ border-bottom:none; }
-  .pf-table tbody tr:hover{ background:#FBFAF6; }
-  .pf-amount-cell{ font-family:'JetBrains Mono', monospace; font-weight:600; }
-  .pf-amount-pos{ color: var(--pf-emerald-2); }
-  .pf-amount-neg{ color: var(--pf-danger); }
-
-  .pf-badge{
-    display:inline-flex; align-items:center; gap:.35rem; font-size:.76rem; font-weight:600;
-    padding:.32rem .68rem; border-radius:999px; border:1px solid transparent;
-  }
-  .pf-badge-pending{ background:#FDF3E2; color:#8A5A0C; border-color:#F5DFB2;}
-  .pf-badge-paid{ background:#E7F5EC; color:#137445; border-color:#C6E9D3;}
-  .pf-badge-rejected{ background:#FBEAE8; color:#B8362B; border-color:#F3CBC6;}
-  .pf-badge-click{ background:#E9F0FE; color:#2255C7; border-color:#CFDEFB;}
-  .pf-badge-referral{ background:#F1EBFB; color:#6B3FCB; border-color:#DDCCF6;}
-  .pf-badge-withdrawal{ background:#EFEEEA; color:#5A5A52; border-color:#DFDCD1;}
-  .pf-badge-refund{ background:#FDF3E2; color:#8A5A0C; border-color:#F5DFB2;}
-  .pf-badge-campaign{ background:#E9F0FE; color:#2255C7; border-color:#CFDEFB;}
-
-  .pf-empty{ text-align:center; padding:3rem 1.5rem; color:var(--pf-muted); font-size:.92rem; }
-  .pf-scroll{ max-height: 420px; overflow-y:auto; }
-  .pf-scroll thead th{ position:sticky; top:0; z-index:1; }
-
-  @media (max-width: 575px){
-    .pf-card-body{ padding:1.25rem; }
-    .pf-header h2{ font-size:1.55rem; }
-  }
-</style>
-
-<div class="container pf-wrap">
-
-  <div class="pf-header">
-    <div>
-      <!-- 🆕 Libellé et lien retour adaptés au rôle réel de l'utilisateur -->
-      <div class="pf-eyebrow">{{ "Espace partageur" if current_user.role == "partageur" else "Espace annonceur" }}</div>
-      <h2>Mon portefeuille &amp; retraits</h2>
-      <p>Suivez votre solde, demandez un retrait et consultez votre historique.</p>
+  <!-- En-tete -->
+  <div class="flex flex-wrap items-end justify-between gap-space-sm">
+    <div class="min-w-0">
+      <span class="pw-badge bg-emerald-light text-emerald-deep">
+        {{ "Espace partageur" if current_user.role == "partageur" else "Espace annonceur" }}
+      </span>
+      <h1 class="mt-1 font-headline-md text-headline-md text-slate-night">Mon portefeuille &amp; retraits</h1>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">
+        Suivez votre solde, demandez un retrait et consultez votre historique.
+      </p>
     </div>
-    <a href="{{ url_for('dashboard_partageur' if current_user.role == 'partageur' else 'dashboard_annonceur') }}" class="pf-btn-back">
-      <i class="bi bi-arrow-left me-1"></i>Retour au tableau de bord
-    </a>
-  </div>
-
-  <div class="d-flex justify-content-end mb-3">
-    <a href="{{ url_for('mes_retraits_pdf') }}" class="pf-pdf-link">
-      <i class="bi bi-file-earmark-pdf"></i> Télécharger ma fiche en PDF
-    </a>
-  </div>
-
-  <!-- Résumé du portefeuille -->
-  <div class="pf-ticket-row">
-    <div class="pf-ticket">
-      <div class="pf-label">Solde disponible</div>
-      <div class="pf-amount pf-mono">{{ "{:,.0f}".format(solde_actuel) }}<small>FCFA</small></div>
-      <div class="pf-ticket-perf"></div>
-    </div>
-    <div class="pf-stat">
-      <div class="pf-label">Total déjà retiré</div>
-      <div class="pf-value pf-mono">{{ "{:,.0f}".format(total_retire) }} <span style="font-size:.85rem; font-weight:600; color:var(--pf-muted);">FCFA</span></div>
-    </div>
-    <div class="pf-stat">
-      <div class="pf-label">Retrait minimum</div>
-      <div class="pf-value pf-mono">{{ "{:,.0f}".format(minimum_retrait) }} <span style="font-size:.85rem; font-weight:600; color:var(--pf-muted);">FCFA</span></div>
+    <div class="flex items-center gap-space-xs">
+      <a href="{{ url_for('mes_retraits_pdf') }}" class="pw-btn pw-btn-sm pw-btn-neutral">
+        <span class="material-symbols-outlined text-[18px]">download</span> Fiche PDF
+      </a>
+      <a href="{{ url_for('dashboard_partageur' if current_user.role == 'partageur' else 'dashboard_annonceur') }}"
+         class="pw-btn pw-btn-sm pw-btn-neutral">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Tableau de bord
+      </a>
     </div>
   </div>
 
-  <!-- Formulaire de demande de retrait -->
-  <div class="pf-card">
-    <div class="pf-card-body">
-      <div class="pf-section-title"><i class="bi bi-wallet2"></i>Faire une demande de retrait</div>
-
-      {% set demande_en_cours = demandes | selectattr("status", "equalto", "pending") | list %}
-
-      {% if demande_en_cours %}
-        <div class="pf-alert pf-alert-info">
-          <i class="bi bi-hourglass-split"></i>
-          <div>Vous avez déjà une demande de <strong>{{ "{:,.0f}".format(demande_en_cours[0].amount) }} FCFA</strong> en attente de traitement. Veuillez patienter avant d'en soumettre une nouvelle.</div>
+  <!-- Resume du portefeuille -->
+  <div class="grid grid-cols-1 sm:grid-cols-4 gap-space-sm">
+    <div class="sm:col-span-2 rounded-2xl p-space-md bg-gradient-to-br from-emerald-deep to-slate-night text-white shadow-lg relative overflow-hidden">
+      <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-emerald-bright/20 blur-2xl"></div>
+      <div class="relative">
+        <div class="font-label-caps text-label-caps uppercase tracking-wider text-emerald-bright font-bold">Solde disponible</div>
+        <div class="font-label-numeric-lg text-3xl font-extrabold tracking-tight">
+          {{ "{:,.0f}".format(solde_actuel) }} <span class="text-base font-bold opacity-80">FCFA</span>
         </div>
-      {% elif solde_actuel < minimum_retrait %}
-        <div class="pf-alert pf-alert-warning">
-          <i class="bi bi-exclamation-triangle"></i>
+      </div>
+    </div>
+    <div class="pw-tile flex flex-col justify-center">
+      <span class="pw-tile-label">Total déjà retiré</span>
+      <span class="pw-tile-value">{{ "{:,.0f}".format(total_retire) }} <span class="text-sm">FCFA</span></span>
+    </div>
+    <div class="pw-tile flex flex-col justify-center">
+      <span class="pw-tile-label">Retrait minimum</span>
+      <span class="pw-tile-value">{{ "{:,.0f}".format(minimum_retrait) }} <span class="text-sm">FCFA</span></span>
+    </div>
+  </div>
+
+  <!-- Demande de retrait -->
+  <div class="pw-card !p-space-md">
+    <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight mb-space-xs">
+      <span class="material-symbols-outlined text-[20px] text-emerald-primary">account_balance_wallet</span>
+      Faire une demande de retrait
+    </h2>
+
+    {% set demande_en_cours = demandes | selectattr("status", "equalto", "pending") | list %}
+    {% if demande_en_cours %}
+      <div class="flex items-start gap-space-xs rounded-xl border border-outline-variant/40 bg-surface-container px-space-md py-space-sm">
+        <span class="material-symbols-outlined text-[18px] text-on-surface-variant shrink-0">hourglass_top</span>
+        <p class="font-body-sm text-body-sm text-on-surface">
+          Vous avez déjà une demande de <strong>{{ "{:,.0f}".format(demande_en_cours[0].amount) }} FCFA</strong>
+          en attente de traitement. Veuillez patienter avant d'en soumettre une nouvelle.
+        </p>
+      </div>
+    {% elif solde_actuel < minimum_retrait %}
+      <div class="flex items-start gap-space-xs rounded-xl border border-amber-rich/30 bg-amber-soft px-space-md py-space-sm">
+        <span class="material-symbols-outlined text-[18px] text-amber-rich shrink-0">warning</span>
+        <p class="font-body-sm text-body-sm text-secondary">
+          Votre solde ({{ "{:,.0f}".format(solde_actuel) }} FCFA) est inférieur au minimum de retrait requis
+          ({{ "{:,.0f}".format(minimum_retrait) }} FCFA).
+          {% if current_user.role == "partageur" %}
+            Continuez à partager des campagnes pour augmenter votre solde.
+          {% else %}
+            Ce solde augmente lorsqu'un remboursement de campagne vous est crédité.
+          {% endif %}
+        </p>
+      </div>
+    {% else %}
+      <form action="{{ url_for('demander_retrait') }}" method="POST" class="space-y-space-sm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-space-sm">
           <div>
-            Votre solde ({{ "{:,.0f}".format(solde_actuel) }} FCFA) est inférieur au minimum de retrait requis ({{ "{:,.0f}".format(minimum_retrait) }} FCFA).
-            {% if current_user.role == "partageur" %}
-              Continuez à partager des campagnes pour augmenter votre solde !
-            {% else %}
-              Ce solde augmente lorsqu'un remboursement de campagne vous est crédité.
-            {% endif %}
+            <label class="pw-label" for="amount">Montant à retirer</label>
+            <div class="flex">
+              <input type="number" id="amount" name="amount" class="pw-input rounded-r-none"
+                     min="{{ minimum_retrait }}" max="{{ solde_actuel }}" step="1" value="{{ solde_actuel | int }}" required>
+              <span class="inline-flex items-center rounded-r-xl border border-l-0 border-outline-variant/50 bg-surface-container px-space-sm font-label-numeric-md text-label-numeric-md font-bold text-slate-midnight">FCFA</span>
+            </div>
+          </div>
+          <div>
+            <label class="pw-label" for="payout_channel">Moyen de réception</label>
+            <select id="payout_channel" name="payout_channel" class="pw-select" required>
+              <option value="MTN Mobile Money">MTN Mobile Money</option>
+              <option value="Moov Money">Moov Money</option>
+              <option value="Celtiis Cash">Celtiis Cash</option>
+              <option value="Wave">Wave</option>
+            </select>
+          </div>
+          <div>
+            <label class="pw-label" for="payout_phone">Numéro de réception</label>
+            <input type="tel" id="payout_phone" name="payout_phone" class="pw-input"
+                   placeholder="+229XXXXXXXX" value="{{ current_user.whatsapp_number or '' }}" required>
           </div>
         </div>
-      {% else %}
-        <form action="{{ url_for('demander_retrait') }}" method="POST" class="pf-form">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label">Montant à retirer</label>
-              <div class="input-group">
-                <input type="number" name="amount" class="form-control" min="{{ minimum_retrait }}" max="{{ solde_actuel }}" step="1" value="{{ solde_actuel | int }}" required>
-                <span class="input-group-text">FCFA</span>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Moyen de réception</label>
-              <select name="payout_channel" class="form-select" required>
-                <option value="MTN Mobile Money">MTN Mobile Money</option>
-                <option value="Moov Money">Moov Money</option>
-                <option value="Celtiis Cash">Celtiis Cash</option>
-                <option value="Wave">Wave</option>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Numéro de réception</label>
-              <input type="tel" name="payout_phone" class="form-control" placeholder="+229XXXXXXXX" value="{{ current_user.whatsapp_number or '' }}" required>
-            </div>
-          </div>
-          <button type="submit" class="pf-btn-submit mt-4">
-            <i class="bi bi-send me-1"></i> Envoyer la demande de retrait
-          </button>
-        </form>
-      {% endif %}
-    </div>
+        <button type="submit" class="pw-btn pw-btn-sm pw-btn-primary">
+          <span class="material-symbols-outlined text-[18px]">send</span>
+          Envoyer la demande de retrait
+        </button>
+      </form>
+    {% endif %}
   </div>
 
-  <!-- Historique des demandes de retrait -->
-  <div class="pf-section-title"><i class="bi bi-clock-history"></i>Historique de mes retraits</div>
-  <div class="pf-card">
-    <div class="pf-card-body p-0">
-      {% if demandes %}
-      <div class="table-responsive">
-        <table class="table pf-table mb-0 align-middle">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Montant</th>
-              <th>Moyen</th>
-              <th>Statut</th>
-              <th>Détail</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for d in demandes %}
-            <tr>
-              <td class="text-muted">{{ d.requested_at | heure_locale if d.requested_at else "-" }}</td>
-              <td class="pf-amount-cell">{{ "{:,.0f}".format(d.amount) }} FCFA</td>
-              <td>{{ d.payout_channel }}</td>
-              <td>
-                {% if d.status == "pending" %}
-                  <span class="pf-badge pf-badge-pending"><i class="bi bi-hourglass-split"></i> En attente</span>
-                {% elif d.status == "paid" %}
-                  <span class="pf-badge pf-badge-paid"><i class="bi bi-check-circle"></i> Payé</span>
-                {% elif d.status == "rejected" %}
-                  <span class="pf-badge pf-badge-rejected"><i class="bi bi-x-circle"></i> Refusé</span>
-                {% endif %}
-              </td>
-              <td class="text-muted">
-                {% if d.status == "rejected" and d.admin_note %}
-                  Motif : {{ d.admin_note }}
-                {% elif d.status == "paid" and d.processed_at %}
-                  Payé le {{ d.processed_at | heure_locale("%d/%m/%Y") }}
-                {% else %}
-                  —
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      {% else %}
-      <p class="pf-empty mb-0">Vous n'avez encore effectué aucune demande de retrait.</p>
-      {% endif %}
-    </div>
-  </div>
+  <!-- Historique des retraits -->
+  <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
+    <span class="material-symbols-outlined text-[20px] text-emerald-primary">history</span>
+    Historique de mes retraits
+  </h2>
 
-  <!-- Historique des mouvements du portefeuille -->
-  <!-- 🆕 Titre générique : "clics & parrainage" ne concernait que les partageurs -->
-  <div class="pf-section-title"><i class="bi bi-journal-text"></i>Détail des mouvements de mon portefeuille</div>
-  <div class="pf-card mb-0">
-    <div class="pf-card-body p-0">
-      {% if mouvements %}
-      <div class="table-responsive pf-scroll">
-        <table class="table pf-table mb-0 align-middle">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Type</th>
-              <th>Montant</th>
-              <th>Détail</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for m in mouvements %}
-            <tr>
-              <td class="text-muted">{{ m.created_at | heure_locale if m.created_at else "-" }}</td>
-              <td>
-                {% if m.transaction_type == "click_reward" %}
-                  <span class="pf-badge pf-badge-click"><i class="bi bi-cursor"></i> Clic</span>
-                {% elif m.transaction_type == "referral_reward" %}
-                  <span class="pf-badge pf-badge-referral"><i class="bi bi-gift"></i> Parrainage</span>
-                {% elif m.transaction_type == "withdrawal" %}
-                  <span class="pf-badge pf-badge-withdrawal"><i class="bi bi-cash-coin"></i> Retrait</span>
-                {% elif m.transaction_type == "withdrawal_refund" %}
-                  <span class="pf-badge pf-badge-refund"><i class="bi bi-arrow-counterclockwise"></i> Retrait recrédité</span>
-                {% elif m.transaction_type == "refund_credit" %}
-                  <!-- 🆕 Crédit de remboursement d'une campagne annonceur (voir traiter_remboursement) -->
-                  <span class="pf-badge pf-badge-refund"><i class="bi bi-piggy-bank"></i> Remboursement campagne</span>
-                {% elif m.transaction_type == "campaign_payment" %}
-                  <!-- 🆕 Débit du portefeuille pour payer une campagne (voir confirmer_paiement_wallet) -->
-                  <span class="pf-badge pf-badge-campaign"><i class="bi bi-megaphone"></i> Paiement campagne</span>
-                {% else %}
-                  <span class="pf-badge pf-badge-withdrawal">{{ m.transaction_type }}</span>
-                {% endif %}
-              </td>
-              <td class="pf-amount-cell {{ 'pf-amount-pos' if m.amount > 0 else 'pf-amount-neg' }}">
-                {{ "+" if m.amount > 0 else "" }}{{ "{:,.0f}".format(m.amount) }} FCFA
-              </td>
-              <td class="text-muted">{{ m.description or "-" }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      {% else %}
-      <p class="pf-empty mb-0">Aucun mouvement enregistré pour le moment.</p>
-      {% endif %}
-    </div>
+  {% if demandes %}
+  <div class="pw-table-wrap">
+    <table class="pw-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th class="text-right">Montant</th>
+          <th>Moyen</th>
+          <th>Statut</th>
+          <th>Détail</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in demandes %}
+        <tr>
+          <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">{{ d.requested_at | heure_locale if d.requested_at else "-" }}</td>
+          <td class="text-right font-label-numeric-md text-label-numeric-md font-bold text-slate-midnight whitespace-nowrap">{{ "{:,.0f}".format(d.amount) }} FCFA</td>
+          <td>{{ d.payout_channel }}</td>
+          <td>
+            {% if d.status == "pending" %}
+              <span class="pw-chip pw-chip-warning"><span class="material-symbols-outlined text-[14px]">hourglass_top</span> En attente</span>
+            {% elif d.status == "paid" %}
+              <span class="pw-chip pw-chip-success"><span class="material-symbols-outlined text-[14px]">check_circle</span> Payé</span>
+            {% elif d.status == "rejected" %}
+              <span class="pw-chip pw-chip-danger"><span class="material-symbols-outlined text-[14px]">cancel</span> Refusé</span>
+            {% endif %}
+          </td>
+          <td class="font-caption text-caption text-on-surface-variant">
+            {% if d.status == "rejected" and d.admin_note %}
+              Motif : {{ d.admin_note }}
+            {% elif d.status == "paid" and d.processed_at %}
+              Payé le {{ d.processed_at | heure_locale("%d/%m/%Y") }}
+            {% else %}
+              —
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
+  {% else %}
+  <div class="pw-card !p-space-lg text-center">
+    <span class="material-symbols-outlined text-[36px] text-on-surface-variant">payments</span>
+    <p class="mt-1 font-body-sm text-body-sm text-on-surface-variant">Vous n'avez encore effectué aucune demande de retrait.</p>
+  </div>
+  {% endif %}
+
+  <!-- Mouvements du portefeuille -->
+  <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
+    <span class="material-symbols-outlined text-[20px] text-emerald-primary">receipt_long</span>
+    Détail des mouvements de mon portefeuille
+  </h2>
+
+  {% if mouvements %}
+  <div class="pw-table-wrap max-h-[420px] overflow-y-auto">
+    <table class="pw-table">
+      <thead class="sticky top-0">
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th class="text-right">Montant</th>
+          <th>Détail</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in mouvements %}
+        <tr>
+          <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">{{ m.created_at | heure_locale if m.created_at else "-" }}</td>
+          <td>
+            {% if m.transaction_type == "click_reward" %}
+              <span class="pw-chip pw-chip-success"><span class="material-symbols-outlined text-[14px]">link</span> Clic</span>
+            {% elif m.transaction_type == "referral_reward" %}
+              <span class="pw-chip pw-chip-success"><span class="material-symbols-outlined text-[14px]">group</span> Parrainage</span>
+            {% elif m.transaction_type == "withdrawal" %}
+              <span class="pw-chip pw-chip-neutral"><span class="material-symbols-outlined text-[14px]">payments</span> Retrait</span>
+            {% elif m.transaction_type == "withdrawal_refund" %}
+              <span class="pw-chip pw-chip-warning"><span class="material-symbols-outlined text-[14px]">restore</span> Retrait recrédité</span>
+            {% elif m.transaction_type == "refund_credit" %}
+              <span class="pw-chip pw-chip-warning"><span class="material-symbols-outlined text-[14px]">savings</span> Remboursement campagne</span>
+            {% elif m.transaction_type == "campaign_payment" %}
+              <span class="pw-chip pw-chip-neutral"><span class="material-symbols-outlined text-[14px]">campaign</span> Paiement campagne</span>
+            {% else %}
+              <span class="pw-chip pw-chip-neutral">{{ m.transaction_type }}</span>
+            {% endif %}
+          </td>
+          <td class="text-right font-label-numeric-md text-label-numeric-md font-bold whitespace-nowrap {{ 'text-emerald-deep' if m.amount > 0 else 'text-error' }}">
+            {{ "+" if m.amount > 0 else "" }}{{ "{:,.0f}".format(m.amount) }} FCFA
+          </td>
+          <td class="font-caption text-caption text-on-surface-variant">{{ m.description or "-" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="pw-card !p-space-lg text-center">
+    <span class="material-symbols-outlined text-[36px] text-on-surface-variant">receipt_long</span>
+    <p class="mt-1 font-body-sm text-body-sm text-on-surface-variant">Aucun mouvement enregistré pour le moment.</p>
+  </div>
+  {% endif %}
 
 </div>
+</section>
 {% endblock %}

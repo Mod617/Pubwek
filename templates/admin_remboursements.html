@@ -1,285 +1,192 @@
-{% extends "base.html" %}
+{% extends "base_v2.html" %}
 
 {% block content %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<section class="py-space-lg bg-background">
+<div class="max-w-6xl mx-auto px-margin space-y-space-sm">
 
-<style>
-  .admin-page {
-    background: linear-gradient(135deg, #f0f9ff 0%, #e8f5e9 100%);
-    min-height: 100vh;
-    padding: 2.5rem 0 3rem;
-  }
-
-  .page-header {
-    background: #fff;
-    border-radius: 16px;
-    padding: 1.75rem 2rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-    margin-bottom: 2.5rem;
-  }
-
-  .section-title {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    font-weight: 700;
-    color: #2980b9;
-    margin: 2rem 0 1.25rem;
-  }
-
-  .table-card {
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-    padding: 0.5rem;
-    margin-bottom: 3rem;
-    overflow: hidden;
-  }
-
-  .table-card table { margin-bottom: 0; }
-  .table-card thead tr { background: #1a1a2e !important; }
-  .table-card thead th {
-    border: none;
-    font-weight: 600;
-    font-size: 0.82rem;
-    letter-spacing: 0.3px;
-    padding: 1rem 0.75rem;
-  }
-  .table-card tbody td {
-    padding: 0.85rem 0.75rem;
-    vertical-align: middle;
-    border-color: #f0f0f0;
-    font-size: 0.88rem;
-  }
-  .table-card tbody tr:hover { background-color: #f8fbf9; }
-
-  .btn-back-home {
-    border-radius: 50px;
-    padding: 0.7rem 2rem;
-    font-weight: 600;
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    border: none;
-  }
-  .btn-back-home:hover { opacity: 0.9; }
-
-  .modal-content { border-radius: 16px; border: none; overflow: hidden; }
-  .modal-header.bg-danger { background: linear-gradient(135deg, #e74c3c, #c0392b) !important; }
-  .modal-header.bg-success { background: linear-gradient(135deg, #2ecc71, #27ae60) !important; }
-  .modal-footer { border: none; }
-
-  @media (max-width: 767.98px) {
-    .responsive-table thead { display: none; }
-    .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td {
-      display: block; width: 100%;
-    }
-    .responsive-table tr {
-      background: #fff;
-      border: 1px solid #eee;
-      border-radius: 14px;
-      margin-bottom: 1rem;
-      padding: 0.75rem 1rem;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
-    }
-    .responsive-table td {
-      text-align: right !important;
-      padding: 0.6rem 0 !important;
-      border: none !important;
-      border-bottom: 1px solid #f2f2f2 !important;
-      position: relative;
-      padding-left: 45% !important;
-      min-height: 1.5rem;
-    }
-    .responsive-table td:last-child { border-bottom: none !important; }
-    .responsive-table td::before {
-      content: attr(data-label);
-      position: absolute;
-      left: 0; top: 0.6rem;
-      width: 40%;
-      font-weight: 600;
-      font-size: 0.75rem;
-      color: #888;
-      text-align: left;
-      text-transform: uppercase;
-    }
-    .responsive-table td.left-align { text-align: left !important; }
-    .responsive-table td.empty-row { text-align: center !important; padding-left: 0 !important; }
-    .responsive-table td.empty-row::before { display: none; }
-  }
-</style>
-
-<div class="admin-page">
-<div class="container">
-    <div class="page-header d-flex flex-column flex-md-row justify-content-between align-items-center">
-        <h2 class="mb-0 fw-bold">💸 Demandes de remboursement (campagnes)</h2>
-        <a href="{{ url_for('admin_validate') }}" class="btn btn-outline-dark rounded-pill fw-bold">
-            <i class="bi bi-arrow-left me-1"></i> Retour au panneau
-        </a>
+  <!-- En-tete -->
+  <div class="flex flex-wrap items-end justify-between gap-space-sm">
+    <div class="min-w-0">
+      <span class="pw-badge bg-amber-soft text-amber-rich">Administration</span>
+      <h1 class="mt-1 font-headline-md text-headline-md text-slate-night">Demandes de remboursement</h1>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Campagnes refusées dont l'annonceur réclame le remboursement.</p>
     </div>
+    <a href="{{ url_for('admin_validate') }}" class="pw-btn pw-btn-sm pw-btn-neutral">
+      <span class="material-symbols-outlined text-[18px]">arrow_back</span> Panneau d'administration
+    </a>
+  </div>
 
-    <!-- ========================================== -->
-    <!-- ⏳ EN ATTENTE DE TRAITEMENT -->
-    <!-- ========================================== -->
-    <h4 class="section-title"><i class="bi bi-hourglass-split"></i> En attente de traitement</h4>
-    <div class="table-card">
-    <div class="table-responsive">
-        <table class="table table-striped align-middle mb-0 responsive-table">
-            <thead class="text-white text-center">
-                <tr>
-                    <th>Campagne</th>
-                    <th>Annonceur</th>
-                    <th>Montant à rembourser</th>
-                    <th>Coordonnées fournies</th>
-                    <th>Motif du refus initial</th>
-                    <th>Demandé le</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for d in en_attente %}
-                <tr>
-                    <td class="text-center fw-bold" data-label="Campagne">
-                        {% if d.campaign %}
-                            #{{ d.campaign.id }} — {{ d.campaign.promotion_detail or d.campaign.promotion_type }}
-                        {% else %}
-                            <span class="text-muted">Campagne supprimée</span>
-                        {% endif %}
-                    </td>
-                    <td class="left-align" data-label="Annonceur">
-                        {{ d.demandeur.email if d.demandeur else "Utilisateur supprimé" }}
-                    </td>
-                    <td class="text-center fw-bold text-success" data-label="Montant">
-                        {% if d.campaign %}{{ "{:,.0f}".format(d.campaign.total_cost) }} XOF{% else %}—{% endif %}
-                    </td>
-                    <td class="left-align" data-label="Coordonnées fournies">
-                        {{ d.payment_method_details or "Non précisé" }}
-                    </td>
-                    <td class="left-align" data-label="Motif du refus initial">
-                        <small class="text-muted">{{ d.campaign.rejection_reason if d.campaign else "-" }}</small>
-                    </td>
-                    <td class="text-center" data-label="Demandé le">
-                        {{ d.created_at | heure_locale if d.created_at else "-" }}
-                    </td>
-                    <td class="text-center" data-label="Actions">
-                        <div class="d-flex flex-column gap-1 align-items-center">
-                            <button type="button" class="btn btn-sm btn-success fw-bold" data-bs-toggle="modal" data-bs-target="#traiterModal{{ d.id }}">
-                                ✅ Marquer comme payé
-                            </button>
-                            <button type="button" class="btn btn-sm btn-danger fw-bold" data-bs-toggle="modal" data-bs-target="#refuserModal{{ d.id }}">
-                                ❌ Refuser
-                            </button>
-                        </div>
-                    </td>
-                </tr>
+  <!-- ================= EN ATTENTE ================= -->
+  <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
+    <span class="material-symbols-outlined text-[20px] text-amber-rich">hourglass_top</span>
+    En attente de traitement
+    {% if en_attente %}<span class="pw-chip pw-chip-warning">{{ en_attente | length }}</span>{% endif %}
+  </h2>
 
-                <!-- MODALE : Marquer comme traité -->
-                <div class="modal fade" id="traiterModal{{ d.id }}" tabindex="-1" aria-hidden="true">
-                  <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                      <form action="{{ url_for('traiter_remboursement', refund_id=d.id) }}" method="POST">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <div class="modal-header bg-success text-white">
-                          <h5 class="modal-title">Confirmer le remboursement #{{ d.id }}</h5>
-                          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body text-start">
-                          <p class="small text-muted">
-                            À confirmer uniquement après avoir effectué le virement manuel vers
-                            <strong>{{ d.payment_method_details or "les coordonnées fournies" }}</strong>.
-                          </p>
-                          <label class="form-label fw-bold small">Note (optionnelle)</label>
-                          <textarea name="admin_note" class="form-control" rows="2" placeholder="Ex: Virement effectué le 04/09 via MTN MoMo, réf. XXXX"></textarea>
-                        </div>
-                        <div class="modal-footer">
-                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                          <button type="submit" class="btn btn-success fw-bold">Confirmer le paiement ✅</button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- MODALE : Refuser -->
-                <div class="modal fade" id="refuserModal{{ d.id }}" tabindex="-1" aria-hidden="true">
-                  <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                      <form action="{{ url_for('refuser_remboursement', refund_id=d.id) }}" method="POST">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <div class="modal-header bg-danger text-white">
-                          <h5 class="modal-title">Refuser le remboursement #{{ d.id }}</h5>
-                          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body text-start">
-                          <label class="form-label fw-bold small">Motif du refus <span class="text-danger">*</span></label>
-                          <textarea name="admin_note" class="form-control" rows="3" placeholder="Ex: Numéro de téléphone invalide, merci de le corriger." required></textarea>
-                        </div>
-                        <div class="modal-footer">
-                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                          <button type="submit" class="btn btn-danger fw-bold">Confirmer le refus ❌</button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
+  <div class="pw-table-wrap">
+    <table class="pw-table">
+      <thead>
+        <tr>
+          <th>Campagne</th>
+          <th>Annonceur</th>
+          <th class="text-right">Montant</th>
+          <th>Coordonnées fournies</th>
+          <th>Motif du refus initial</th>
+          <th>Demandé le</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for d in en_attente %}
+        <tr>
+          <td class="font-semibold text-slate-midnight">
+            {% if d.campaign %}
+              #{{ d.campaign.id }} — {{ d.campaign.promotion_detail or d.campaign.promotion_type }}
             {% else %}
-                <tr><td colspan="7" class="empty-row text-center text-muted py-3">Aucune demande en attente.</td></tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    </div>
+              <span class="font-normal text-on-surface-variant">Campagne supprimée</span>
+            {% endif %}
+          </td>
+          <td>{{ d.demandeur.email if d.demandeur else "Utilisateur supprimé" }}</td>
+          <td class="text-right font-label-numeric-md text-label-numeric-md font-bold text-emerald-deep whitespace-nowrap">
+            {% if d.campaign %}{{ "{:,.0f}".format(d.campaign.total_cost) }} XOF{% else %}—{% endif %}
+          </td>
+          <td>{{ d.payment_method_details or "Non précisé" }}</td>
+          <td class="font-caption text-caption text-on-surface-variant">{{ d.campaign.rejection_reason if d.campaign else "—" }}</td>
+          <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">
+            {{ d.created_at | heure_locale if d.created_at else "—" }}
+          </td>
+          <td>
+            <div class="flex flex-col gap-1">
+              <button type="button" class="pw-btn pw-btn-sm pw-btn-primary !py-1.5 !text-[12px]" data-pw-modal="traiterModal{{ d.id }}">
+                <span class="material-symbols-outlined text-[16px]">check_circle</span> Marquer payé
+              </button>
+              <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px] !text-error" data-pw-modal="refuserRembModal{{ d.id }}">
+                <span class="material-symbols-outlined text-[16px]">cancel</span> Refuser
+              </button>
+            </div>
+          </td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="7" class="text-center text-on-surface-variant py-space-md">Aucune demande en attente.</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
-    <!-- ========================================== -->
-    <!-- 📜 HISTORIQUE (traitées / refusées) -->
-    <!-- ========================================== -->
-    <h4 class="section-title"><i class="bi bi-archive"></i> Historique</h4>
-    <div class="table-card">
-    <div class="table-responsive">
-        <table class="table table-striped align-middle mb-0 responsive-table">
-            <thead class="text-white text-center">
-                <tr>
-                    <th>Campagne</th>
-                    <th>Annonceur</th>
-                    <th>Statut</th>
-                    <th>Note admin</th>
-                    <th>Traité le</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for d in traitees %}
-                <tr>
-                    <td class="text-center fw-bold" data-label="Campagne">
-                        {% if d.campaign %}#{{ d.campaign.id }}{% else %}—{% endif %}
-                    </td>
-                    <td class="left-align" data-label="Annonceur">
-                        {{ d.demandeur.email if d.demandeur else "Utilisateur supprimé" }}
-                    </td>
-                    <td class="text-center" data-label="Statut">
-                        {% if d.status == "processed" %}
-                            <span class="badge bg-success">✅ Traité / Payé</span>
-                        {% elif d.status == "rejected" %}
-                            <span class="badge bg-danger">❌ Refusé</span>
-                        {% else %}
-                            <span class="badge bg-secondary">{{ d.status }}</span>
-                        {% endif %}
-                    </td>
-                    <td class="left-align" data-label="Note admin">
-                        <small class="text-muted">{{ d.admin_notes or "-" }}</small>
-                    </td>
-                    <td class="text-center" data-label="Traité le">
-                        {{ d.updated_at | heure_locale if d.updated_at else "-" }}
-                    </td>
-                </tr>
+  <!-- Fenetres par demande -->
+  {% for d in en_attente %}
+  <div class="pw-modal fixed inset-0 z-[90] hidden items-center justify-center p-space-md bg-slate-night/80 overflow-y-auto"
+       id="traiterModal{{ d.id }}" aria-modal="true" role="dialog">
+    <div class="pw-modal-panel w-full max-w-lg my-auto rounded-2xl bg-surface-container-lowest shadow-2xl overflow-hidden">
+      <form action="{{ url_for('traiter_remboursement', refund_id=d.id) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="pw-modal-head bg-emerald-primary text-white">
+          <span>Confirmer le remboursement #{{ d.id }}</span>
+          <button type="button" class="pw-modal-close opacity-70 hover:opacity-100" aria-label="Fermer">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+
+        <div class="pw-modal-body">
+          <p class="font-caption text-caption text-on-surface-variant">
+            À confirmer uniquement après avoir effectué le virement manuel vers
+            <strong class="text-slate-midnight">{{ d.payment_method_details or "les coordonnées fournies" }}</strong>.
+          </p>
+          <div>
+            <label class="pw-label">Note (optionnelle)</label>
+            <textarea name="admin_note" class="pw-input resize-y" rows="2"
+                      placeholder="Ex : virement effectué le 04/09 via MTN MoMo, réf. XXXX"></textarea>
+          </div>
+        </div>
+
+        <div class="pw-modal-foot">
+          <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral pw-modal-close">Annuler</button>
+          <button type="submit" class="pw-btn pw-btn-sm pw-btn-primary">Confirmer le paiement</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="pw-modal fixed inset-0 z-[90] hidden items-center justify-center p-space-md bg-slate-night/80 overflow-y-auto"
+       id="refuserRembModal{{ d.id }}" aria-modal="true" role="dialog">
+    <div class="pw-modal-panel w-full max-w-lg my-auto rounded-2xl bg-surface-container-lowest shadow-2xl overflow-hidden">
+      <form action="{{ url_for('refuser_remboursement', refund_id=d.id) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="pw-modal-head bg-error text-white">
+          <span>Refuser le remboursement #{{ d.id }}</span>
+          <button type="button" class="pw-modal-close opacity-70 hover:opacity-100" aria-label="Fermer">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+
+        <div class="pw-modal-body">
+          <div>
+            <label class="pw-label">Motif du refus <span class="text-error">*</span></label>
+            <textarea name="admin_note" class="pw-input resize-y" rows="3" required
+                      placeholder="Ex : numéro de téléphone invalide, merci de le corriger."></textarea>
+          </div>
+        </div>
+
+        <div class="pw-modal-foot">
+          <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral pw-modal-close">Annuler</button>
+          <button type="submit" class="pw-btn pw-btn-sm bg-error text-white hover:opacity-90">Confirmer le refus</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+
+  <!-- ================= HISTORIQUE ================= -->
+  <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
+    <span class="material-symbols-outlined text-[20px] text-emerald-primary">history</span>
+    Historique
+  </h2>
+
+  <div class="pw-table-wrap">
+    <table class="pw-table">
+      <thead>
+        <tr>
+          <th>Campagne</th>
+          <th>Annonceur</th>
+          <th>Statut</th>
+          <th>Note admin</th>
+          <th>Traité le</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for d in traitees %}
+        <tr>
+          <td class="font-label-numeric-md text-label-numeric-md font-bold text-on-surface-variant">
+            {% if d.campaign %}#{{ d.campaign.id }}{% else %}—{% endif %}
+          </td>
+          <td>{{ d.demandeur.email if d.demandeur else "Utilisateur supprimé" }}</td>
+          <td>
+            {% if d.status == "processed" %}
+              <span class="pw-chip pw-chip-success"><span class="material-symbols-outlined text-[14px]">check_circle</span> Traité / payé</span>
+            {% elif d.status == "rejected" %}
+              <span class="pw-chip pw-chip-danger"><span class="material-symbols-outlined text-[14px]">cancel</span> Refusé</span>
             {% else %}
-                <tr><td colspan="5" class="empty-row text-center text-muted py-3">Aucun historique pour le moment.</td></tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    </div>
+              <span class="pw-chip pw-chip-neutral">{{ d.status }}</span>
+            {% endif %}
+          </td>
+          <td class="font-caption text-caption text-on-surface-variant">{{ d.admin_notes or "—" }}</td>
+          <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">
+            {{ d.updated_at | heure_locale if d.updated_at else "—" }}
+          </td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="5" class="text-center text-on-surface-variant py-space-md">Aucun historique pour le moment.</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
-    <div class="text-center mt-4">
-        <a href="{{ url_for('admin_validate') }}" class="btn btn-back-home text-white">⬅ Retour au panneau</a>
-    </div>
 </div>
-</div>
+</section>
 {% endblock %}

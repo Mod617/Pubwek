@@ -1,760 +1,462 @@
-{% extends "base.html" %}
+{% extends "base_v2.html" %}
+
 {% block content %}
+<section class="py-space-lg bg-background">
+<div class="max-w-6xl mx-auto px-margin space-y-space-md">
 
-<meta name="csrf-token" content="{{ csrf_token() }}">
+  <!-- ================= PROFIL ENTREPRISE ================= -->
+  <div class="rounded-2xl overflow-hidden bg-surface-container-lowest border border-outline-variant/20 shadow-md">
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
-<style>
-  .pubwek-wrap {
-    --paper:        #F5F3ED;
-    --paper-raised: #FFFFFF;
-    --ink:          #1B2A2E;
-    --ink-soft:     #5B6B6C;
-    --line:         #E3DFD3;
-    --emerald:      #2F6F5E;
-    --emerald-dark: #1F4F42;
-    --emerald-tint: #E7F0EC;
-    --amber:        #B8842E;
-    --amber-tint:   #F8EEDD;
-    --clay:         #B0483C;
-    --clay-tint:    #F6E7E3;
-    --violet:       #6b21a8;
-    --violet-tint:  #f3e8ff;
-    --slate-tint:   #EFEDE4;
-
-    background: var(--paper);
-    padding: 2.5rem 1.25rem 4rem;
-    margin: -1.5rem calc(50% - 50vw) 0;
-    padding-left: calc(1.25rem + (50vw - 50%));
-    padding-right: calc(1.25rem + (50vw - 50%));
-    font-family: 'Inter', sans-serif;
-    color: var(--ink);
-    min-height: 100vh;
-  }
-
-  .pubwek-wrap .container { max-width: 980px; }
-
-  /* ---------- 🆕 Cloche de notifications ---------- */
-  .pubwek-wrap .notif-bar {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 1rem;
-  }
-  .pubwek-wrap .notif-bar .btn-light.position-relative {
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    background: var(--paper-raised);
-  }
-
-  /* ---------- Profile hero card ---------- */
-  .pubwek-wrap .profile-hero-card {
-    border-radius: 18px !important;
-    border: 1px solid var(--line) !important;
-    box-shadow: 0 1px 2px rgba(27,42,46,0.05) !important;
-  }
-  .pubwek-wrap .cover-photo-container { background: var(--ink) !important; }
-  .pubwek-wrap .cover-actions .btn {
-    font-family: 'Inter', sans-serif;
-    border-radius: 999px;
-    font-weight: 600;
-    font-size: 0.78rem;
-    border: none;
-  }
-  .pubwek-wrap .cover-actions .btn-light { background: rgba(255,255,255,0.92); color: var(--ink); }
-  .pubwek-wrap .cover-actions .btn-danger { background: var(--clay); }
-  .pubwek-wrap .cover-actions .btn-success { background: var(--emerald); }
-
-  .pubwek-wrap .profile-logo-container {
-    width: 110px; height: 110px;
-    margin-top: -55px;
-    border: 4px solid var(--paper-raised);
-    box-shadow: 0 2px 8px rgba(27,42,46,0.12);
-  }
-  .pubwek-wrap .logo-overlay {
-    position: absolute; inset: 0;
-    background: rgba(27,42,46,0.35);
-    opacity: 0;
-    transition: opacity .15s ease;
-    cursor: pointer;
-  }
-  .pubwek-wrap .profile-logo-container:hover .logo-overlay { opacity: 1; }
-
-  .pubwek-wrap #companyNameText {
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-    color: var(--ink) !important;
-  }
-  .pubwek-wrap .badge.bg-primary {
-    background: var(--emerald) !important;
-    font-family: 'IBM Plex Mono', monospace;
-    font-weight: 500;
-    font-size: 0.7rem;
-    letter-spacing: 0.04em;
-  }
-  .pubwek-wrap .style-bio-text { color: var(--ink-soft) !important; }
-
-  /* ---------- 🆕 Wallet card (portefeuille annonceur) ---------- */
-  .pubwek-wrap .wallet-card {
-    border: 1px solid var(--line) !important;
-    border-radius: 18px !important;
-    box-shadow: 0 1px 2px rgba(27,42,46,0.05) !important;
-    background: linear-gradient(135deg, var(--ink) 0%, #24393D 100%) !important;
-    color: #fff;
-  }
-  .pubwek-wrap .wallet-card .wallet-label {
-    font-family: 'IBM Plex Mono', monospace;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    font-size: 0.72rem;
-    color: rgba(255,255,255,0.65);
-  }
-  .pubwek-wrap .wallet-card .wallet-amount {
-    font-family: 'Fraunces', serif;
-    font-weight: 700;
-    color: var(--amber);
-    font-size: 2rem;
-  }
-  .pubwek-wrap .wallet-card .btn-wallet-action {
-    background: var(--emerald) !important;
-    border: none !important;
-    border-radius: 999px !important;
-    font-weight: 700;
-    color: #fff;
-  }
-  .pubwek-wrap .wallet-card .btn-wallet-action:hover { background: var(--emerald-dark) !important; }
-  .pubwek-wrap .wallet-card .btn-wallet-action:disabled { background: rgba(255,255,255,0.15) !important; color: rgba(255,255,255,0.5); }
-  .pubwek-wrap .wallet-card .wallet-note {
-    color: rgba(255,255,255,0.55);
-    font-size: 0.8rem;
-  }
-
-  /* ---------- Section heading ---------- */
-  .pubwek-wrap h2.mb-4.text-center {
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-    color: var(--ink);
-    margin-top: 1rem;
-  }
-
-  /* ---------- Form card ---------- */
-  .pubwek-wrap .form-card-elegant {
-    border: 1px solid var(--line) !important;
-    border-radius: 18px !important;
-    box-shadow: 0 1px 2px rgba(27,42,46,0.05) !important;
-  }
-
-  .pubwek-wrap .form-label.fw-bold {
-    font-family: 'IBM Plex Mono', monospace;
-    font-weight: 500 !important;
-    font-size: 0.76rem;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    color: var(--ink-soft);
-  }
-
-  .pubwek-wrap .form-control,
-  .pubwek-wrap .form-select {
-    border: 1px solid var(--line);
-    border-radius: 9px;
-    font-family: 'Inter', sans-serif;
-  }
-  .pubwek-wrap .form-control:focus,
-  .pubwek-wrap .form-select:focus {
-    border-color: var(--emerald);
-    box-shadow: 0 0 0 0.2rem var(--emerald-tint);
-  }
-
-  .pubwek-wrap .btn-outline-magic {
-    border-radius: 999px !important;
-    background: var(--violet-tint) !important;
-    color: var(--violet) !important;
-    border: 1px solid #dcb8f7 !important;
-    font-family: 'Inter', sans-serif;
-  }
-
-  .pubwek-wrap #charCount {
-    font-family: 'IBM Plex Mono', monospace;
-    background: var(--slate-tint) !important;
-    color: var(--ink-soft) !important;
-    font-weight: 500;
-  }
-
-  /* ---------- Option cards (A/B/C) ---------- */
-  .pubwek-wrap .option-card {
-    border-radius: 14px !important;
-    transition: transform .12s ease, box-shadow .12s ease;
-  }
-  .pubwek-wrap .option-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(27,42,46,0.08) !important;
-  }
-  .pubwek-wrap .option-card .form-check-label {
-    font-family: 'Fraunces', serif;
-    font-weight: 600 !important;
-    color: var(--ink) !important;
-  }
-  .pubwek-wrap .option-card p.text-muted { color: var(--ink-soft) !important; }
-  .pubwek-wrap .option-card .badge.bg-dark { background: var(--ink) !important; }
-  .pubwek-wrap .option-card .badge.bg-secondary { background: var(--slate-tint) !important; color: var(--ink-soft) !important; }
-  .pubwek-wrap .option-card .badge#badge_option_b { background: var(--emerald) !important; }
-  .pubwek-wrap .form-check-input:checked { background-color: var(--emerald); border-color: var(--emerald); }
-
-  /* ---------- Upload groups ---------- */
-  .pubwek-wrap #videoUploadGroup,
-  .pubwek-wrap #uploadGroup {
-    background: var(--slate-tint) !important;
-    border: 1px solid var(--line) !important;
-    border-radius: 12px;
-  }
-  .pubwek-wrap .text-primary.fw-bold { color: var(--emerald-dark) !important; }
-
-  /* ---------- Zones de diffusion ---------- */
-  .pubwek-wrap #accordionZones .border {
-    border-color: var(--line) !important;
-    border-radius: 10px;
-    overflow: hidden;
-  }
-  .pubwek-wrap #accordionZones .bg-light {
-    background: var(--paper) !important;
-  }
-  .pubwek-wrap #accordionZones .form-check-label { font-weight: 500; }
-  .pubwek-wrap #accordionZones .btn-outline-secondary {
-    border-radius: 999px;
-    font-size: 0.78rem;
-    border-color: var(--line);
-    color: var(--ink-soft);
-  }
-
-  /* ---------- Budget box (signature element) ---------- */
-  .pubwek-wrap .row.mb-4.bg-dark.text-white {
-    background: linear-gradient(135deg, var(--ink) 0%, #24393D 100%) !important;
-    border-radius: 14px !important;
-  }
-  .pubwek-wrap .row.mb-4.bg-dark.text-white .form-label.small {
-    font-family: 'IBM Plex Mono', monospace;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: rgba(255,255,255,0.65);
-  }
-  .pubwek-wrap .row.mb-4.bg-dark.text-white .text-warning {
-    color: var(--amber) !important;
-    font-family: 'IBM Plex Mono', monospace;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    font-size: 0.76rem;
-  }
-  .pubwek-wrap #total_cost_display {
-    font-family: 'Fraunces', serif;
-    font-weight: 700;
-    color: var(--amber) !important;
-  }
-
-  /* ---------- CTA ---------- */
-  .pubwek-wrap .cta-elegant {
-    background: var(--emerald) !important;
-    border: none !important;
-    border-radius: 12px !important;
-    font-family: 'Inter', sans-serif;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-    transition: background .15s ease, transform .15s ease;
-  }
-  .pubwek-wrap .cta-elegant:hover {
-    background: var(--emerald-dark) !important;
-    transform: translateY(-1px);
-  }
-
-  .pubwek-wrap .input-group-text {
-    background: var(--slate-tint);
-    border: 1px solid var(--line);
-    color: var(--ink-soft);
-    font-family: 'IBM Plex Mono', monospace;
-  }
-
-  /* ---------- 🆕 Zone de danger (suppression de compte) ---------- */
-  .pubwek-wrap .danger-zone-card {
-    border: 1px solid var(--clay-tint) !important;
-    border-top: 3px solid var(--clay) !important;
-    border-radius: 18px !important;
-    background: var(--paper-raised);
-  }
-  .pubwek-wrap .danger-zone-card h5 {
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-    color: var(--clay);
-  }
-  .pubwek-wrap .danger-zone-card p.text-muted {
-    color: var(--ink-soft) !important;
-    font-size: 0.9rem;
-  }
-  .pubwek-wrap .btn-danger-zone {
-    border-radius: 999px !important;
-    background: var(--clay-tint) !important;
-    color: var(--clay) !important;
-    border: 1px solid #eac6bf !important;
-    font-weight: 700;
-  }
-  .pubwek-wrap .btn-danger-zone:hover {
-    background: var(--clay) !important;
-    color: #fff !important;
-  }
-</style>
-
-<div class="pubwek-wrap">
-<div class="container mt-5">
-
-  <!-- 🆕 Cloche de notifications -->
-  <div class="notif-bar">
-    <div class="dropdown" id="notifDropdownWrapper">
-      <button class="btn btn-light position-relative shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-        <i class="bi bi-bell-fill fs-5"></i>
-        {% if notifications_non_lues > 0 %}
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                {{ notifications_non_lues }}
-            </span>
-        {% endif %}
-      </button>
-      <ul class="dropdown-menu dropdown-menu-end shadow-lg p-2" style="width: 340px; max-height: 400px; overflow-y: auto;">
-        <li><h6 class="dropdown-header">Notifications</h6></li>
-        {% for notif in notifications %}
-            <li>
-                <a class="dropdown-item small py-2 {{ 'fw-bold' if not notif.is_read else 'text-muted' }}" href="{{ notif.link or '#' }}">
-                    <div class="d-flex align-items-start gap-2">
-                        <span class="badge bg-{{ notif.category }} mt-1">&nbsp;</span>
-                        <div>
-                            <div>{{ notif.title }}</div>
-                            <div class="text-muted" style="font-size: 0.75rem;">{{ notif.message }}</div>
-                        </div>
-                    </div>
-                </a>
-            </li>
-        {% else %}
-            <li><span class="dropdown-item-text text-muted small">Aucune notification pour le moment.</span></li>
-        {% endfor %}
-      </ul>
-    </div>
-  </div>
-
-  <div class="card shadow-sm mb-4 bg-white border-0 rounded-4 overflow-hidden position-relative profile-hero-card">
-    
-    <div class="cover-photo-container position-relative bg-dark" style="height: 250px; cursor: move;" id="coverContainer"
+    <!-- Couverture -->
+    {% set couverture_personnalisee = current_user.cover_photo and current_user.cover_photo != 'default_cover.png' %}
+    <div class="relative h-36 sm:h-44 bg-slate-night cursor-move" id="coverContainer"
          data-pos-x="{{ current_user.cover_position_x or 50 }}" data-pos-y="{{ current_user.cover_position_y or 50 }}">
-      {% if current_user.cover_photo %}
-        <img id="userCoverPreview" src="{{ url_for('serve_upload', filename=current_user.cover_photo) }}" alt="Couverture" class="w-100 h-100 object-fit-cover user-select-none dynamic-cover-pos" draggable="false" data-pos-x="{{ current_user.cover_position_x or 50 }}" data-pos-y="{{ current_user.cover_position_y or 50 }}">
+      {% if couverture_personnalisee %}
+        <img id="userCoverPreview" src="{{ url_for('serve_upload', filename=current_user.cover_photo) }}" alt="Couverture"
+             class="w-full h-full object-cover select-none dynamic-cover-pos" draggable="false" onerror="this.style.visibility='hidden'"
+             data-pos-x="{{ current_user.cover_position_x or 50 }}" data-pos-y="{{ current_user.cover_position_y or 50 }}">
       {% else %}
-        <img id="userCoverPreview" src="{{ url_for('static', filename='uploads/default_cover.png') }}" alt="Couverture" class="w-100 h-100 object-fit-cover user-select-none" draggable="false">
+        <img id="userCoverPreview" src="{{ url_for('static', filename='uploads/default_cover.png') }}" alt="Couverture"
+             class="w-full h-full object-cover select-none" draggable="false" onerror="this.style.visibility='hidden'">
       {% endif %}
-      
-      <div class="cover-actions position-absolute top-2 end-2 d-flex gap-2" style="z-index: 10;">
-        <button type="button" class="btn btn-sm btn-light shadow-sm fw-bold" onclick="triggerCoverUpload()"><i class="fas fa-camera me-1"></i> Changer</button>
-        {% if current_user.cover_photo %}
-        <button type="button" class="btn btn-sm btn-danger shadow-sm fw-bold" id="btnDeleteCover" onclick="deleteCoverViaAjax()"><i class="fas fa-trash me-1"></i> Supprimer</button>
+
+      <div class="absolute top-2 right-2 flex gap-1.5 z-10">
+        <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5" onclick="triggerCoverUpload()">
+          <span class="material-symbols-outlined text-[16px]">photo_camera</span> Changer
+        </button>
+        {% if couverture_personnalisee %}
+        <button type="button" class="pw-btn pw-btn-sm bg-error text-white !py-1.5" id="btnDeleteCover" onclick="deleteCoverViaAjax()">
+          <span class="material-symbols-outlined text-[16px]">delete</span>
+        </button>
         {% endif %}
-        <button type="button" class="btn btn-sm btn-success shadow-sm fw-bold d-none" id="btnSaveCoverPosition" onclick="saveCoverPosition()"><i class="fas fa-save me-1"></i> Enregistrer la position</button>
+        <button type="button" class="pw-btn pw-btn-sm pw-btn-primary !py-1.5 hidden" id="btnSaveCoverPosition" onclick="saveCoverPosition()">
+          <span class="material-symbols-outlined text-[16px]">save</span> Enregistrer la position
+        </button>
+      </div>
+
+      <!-- Cloche de notifications -->
+      <div class="absolute top-2 left-2 z-20" id="notifDropdownWrapper">
+        <button type="button" id="notifToggle" aria-expanded="false"
+                class="relative w-9 h-9 rounded-full bg-white/95 shadow-sm flex items-center justify-center text-slate-midnight hover:bg-white transition-colors">
+          <span class="material-symbols-outlined text-[18px]">notifications</span>
+          {% if notifications_non_lues > 0 %}
+            <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-white font-caption text-[11px] font-bold flex items-center justify-center" id="notifBadge">{{ notifications_non_lues }}</span>
+          {% endif %}
+        </button>
+        <div id="notifPanel" class="hidden absolute left-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl border border-outline-variant/30 bg-surface-container-lowest shadow-xl z-40 p-1.5">
+          <div class="px-space-sm py-1.5 font-label-caps text-label-caps uppercase tracking-wider text-on-surface-variant font-bold">Notifications</div>
+          {% for notif in notifications %}
+            <a class="notif-item flex items-start gap-space-xs rounded-xl px-space-sm py-2 hover:bg-surface-container-low transition-colors {{ 'font-semibold text-on-surface' if not notif.is_read else 'text-on-surface-variant' }}" href="{{ notif.link or '#' }}">
+              <span class="mt-1.5 w-2 h-2 rounded-full shrink-0
+                {%- if notif.category == 'success' %} bg-emerald-primary
+                {%- elif notif.category == 'warning' %} bg-amber-rich
+                {%- elif notif.category == 'danger' %} bg-error
+                {%- else %} bg-outline-variant{% endif %}"></span>
+              <span class="min-w-0">
+                <span class="block font-body-sm text-body-sm truncate">{{ notif.title }}</span>
+                <span class="block font-caption text-caption text-on-surface-variant">{{ notif.message }}</span>
+              </span>
+            </a>
+          {% else %}
+            <p class="px-space-sm py-space-sm font-body-sm text-body-sm text-on-surface-variant">Aucune notification pour le moment.</p>
+          {% endfor %}
+        </div>
       </div>
     </div>
-    <input type="file" id="ajaxCoverInput" accept="image/*" style="display: none;" onchange="uploadCoverViaAjax()">
+    <input type="file" id="ajaxCoverInput" accept="image/*" class="hidden" onchange="uploadCoverViaAjax()">
 
-    <div class="p-4 pt-0 text-start position-relative">
-      <div class="row align-items-end profile-meta-block">
-        
-        <div class="col-md-auto text-center text-md-start position-relative profile-logo-wrapper">
-          <div class="profile-logo-container position-relative rounded-circle bg-white shadow-sm" id="logoContainer" style="cursor: move;"
+    <!-- Identite -->
+    <div class="px-space-md pb-space-md flex flex-col sm:flex-row sm:items-end gap-space-sm -mt-10 sm:-mt-12">
+
+      <div class="relative shrink-0 w-24 h-24 rounded-full bg-white shadow-md cursor-move" id="logoContainer"
+           data-pos-x="{{ current_user.logo_position_x or 50 }}" data-pos-y="{{ current_user.logo_position_y or 50 }}">
+        {% if current_user.logo %}
+          <img id="userLogoPreview" src="{{ url_for('serve_upload', filename=current_user.logo) }}" alt="Logo"
+               class="w-full h-full rounded-full border-4 border-white object-cover select-none dynamic-logo-pos" draggable="false" onerror="this.src='{{ url_for('static', filename='images/logo.png') }}'"
                data-pos-x="{{ current_user.logo_position_x or 50 }}" data-pos-y="{{ current_user.logo_position_y or 50 }}">
-            {% if current_user.logo %}
-              <img id="userLogoPreview" src="{{ url_for('serve_upload', filename=current_user.logo) }}" alt="Logo" class="rounded-circle border border-4 border-white object-fit-cover w-100 h-100 user-select-none dynamic-logo-pos" draggable="false" data-pos-x="{{ current_user.logo_position_x or 50 }}" data-pos-y="{{ current_user.logo_position_y or 50 }}">
-            {% else %}
-              <img id="userLogoPreview" src="{{ url_for('static', filename='uploads/logos/default_company.png') }}" alt="Logo" class="rounded-circle border border-4 border-white object-fit-cover w-100 h-100 user-select-none" draggable="false">
-            {% endif %}
-            <div class="logo-overlay rounded-circle d-flex align-items-center justify-content-center" onclick="triggerLogoUpload()">
-              <i class="fas fa-camera text-white fs-5"></i>
-            </div>
-            {% if current_user.logo %}
-            <button type="button" class="btn btn-xs btn-danger position-absolute top-0 end-0 shadow rounded-circle" id="btnDeleteLogo" onclick="deleteLogoViaAjax()" style="width: 24px; height: 24px; padding: 0; font-size: 10px; z-index:11;" title="Supprimer la photo">
-              <i class="fas fa-times"></i>
-            </button>
-            {% endif %}
-            <button type="button" class="btn btn-xs btn-success position-absolute bottom-0 start-50 translate-middle-x shadow d-none" id="btnSaveLogoPosition" onclick="saveLogoPosition()" style="font-size: 10px; z-index:11;">Enregistrer</button>
-          </div>
-          <input type="file" id="ajaxLogoInput" accept="image/*" style="display: none;" onchange="uploadLogoViaAjax()">
+        {% else %}
+          <img id="userLogoPreview" src="{{ url_for('static', filename='uploads/logos/default_company.png') }}" alt="Logo"
+               class="w-full h-full rounded-full border-4 border-white object-cover select-none" draggable="false" onerror="this.src='{{ url_for('static', filename='images/logo.png') }}'">
+        {% endif %}
+
+        <button type="button" onclick="triggerLogoUpload()"
+                class="absolute inset-0 rounded-full bg-slate-night/0 hover:bg-slate-night/45 text-white/0 hover:text-white flex items-center justify-center transition-all"
+                aria-label="Changer le logo">
+          <span class="material-symbols-outlined text-[22px]">photo_camera</span>
+        </button>
+
+        {% if current_user.logo %}
+        <button type="button" id="btnDeleteLogo" onclick="deleteLogoViaAjax()" title="Supprimer la photo"
+                class="absolute top-0 right-0 z-[11] w-6 h-6 rounded-full bg-error text-white shadow flex items-center justify-center">
+          <span class="material-symbols-outlined text-[14px]">close</span>
+        </button>
+        {% endif %}
+        <button type="button" id="btnSaveLogoPosition" onclick="saveLogoPosition()"
+                class="hidden absolute -bottom-2 left-1/2 -translate-x-1/2 z-[11] pw-btn pw-btn-sm pw-btn-primary !py-1 !px-2 !text-[11px]">
+          Enregistrer
+        </button>
+      </div>
+      <input type="file" id="ajaxLogoInput" accept="image/*" class="hidden" onchange="uploadLogoViaAjax()">
+
+      <div class="min-w-0 flex-1 sm:pb-1">
+        <div class="flex items-center flex-wrap gap-space-2xs">
+          <h1 id="companyNameText" onclick="enableCompanyNameEdit()" title="Modifier le nom"
+              class="font-headline-md text-headline-md text-slate-night cursor-pointer">
+            {{ current_user.company_name or "Nom de votre Entreprise" }}
+          </h1>
+          <button type="button" id="btnEditName" onclick="enableCompanyNameEdit()"
+                  class="w-7 h-7 rounded-full text-on-surface-variant hover:bg-surface-container-low flex items-center justify-center transition-colors"
+                  aria-label="Modifier le nom">
+            <span class="material-symbols-outlined text-[16px]">edit</span>
+          </button>
+          <input type="text" id="companyNameInput" class="pw-input max-w-xs font-bold" style="display: none;"
+                 value="{{ current_user.company_name or '' }}" onblur="saveCompanyNameViaAjax()" onkeydown="handleNameKeydown(event)">
+          <span class="pw-chip pw-chip-success capitalize">{{ current_user.role }}</span>
         </div>
 
-        <div class="col md-top-space mt-3 mt-md-0">
-          <div class="d-flex align-items-center flex-wrap gap-2 mb-2 justify-content-center justify-content-md-start">
-            <h3 id="companyNameText" class="fw-bold mb-0 text-dark" onclick="enableCompanyNameEdit()" style="cursor: pointer;" title="Modifier le nom">
-              {{ current_user.company_name or "Nom de votre Entreprise" }}
-            </h3>
-            <button type="button" id="btnEditName" class="btn btn-sm btn-light text-muted rounded-circle" onclick="enableCompanyNameEdit()">
-              <i class="fas fa-pen small"></i>
-            </button>
-            <input type="text" id="companyNameInput" class="form-control form-control-md fw-bold border-primary shadow-sm" value="{{ current_user.company_name or '' }}" style="display: none; max-width: 320px;" onblur="saveCompanyNameViaAjax()" onkeydown="handleNameKeydown(event)">
-            
-            <span class="badge bg-primary text-capitalize ms-2">{{ current_user.role }}</span>
-          </div>
-
-          <div class="profile-bio-box text-center text-md-start">
-            <p id="companyBioText" class="text-muted mb-0 style-bio-text" onclick="enableCompanyBioEdit()" style="cursor: pointer;" title="Modifier la description">
-              <i class="fas fa-quote-left me-1 opacity-50"></i>{{ current_user.bio or "Ajouter une description ou présentation de votre entreprise à côté de votre profil..." }}
-            </p>
-            <textarea id="companyBioInput" class="form-control form-control-sm mt-1 border-primary shadow-sm" rows="2" style="display: none; max-width: 500px;" onblur="saveCompanyBioViaAjax()" placeholder="Décrivez votre activité...">{{ current_user.bio or '' }}</textarea>
-          </div>
-        </div>
-
+        <p id="companyBioText" onclick="enableCompanyBioEdit()" title="Modifier la description"
+           class="mt-0.5 font-body-sm text-body-sm text-on-surface-variant cursor-pointer">
+          {{ current_user.bio or "Ajouter une description ou présentation de votre entreprise..." }}
+        </p>
+        <textarea id="companyBioInput" class="pw-input mt-1 max-w-xl resize-y" rows="2" style="display: none;"
+                  onblur="saveCompanyBioViaAjax()" placeholder="Décrivez votre activité...">{{ current_user.bio or '' }}</textarea>
       </div>
     </div>
   </div>
 
-  <!-- ========================================== -->
-  <!-- 🆕 MON PORTEFEUILLE — solde disponible + retrait des crédits de remboursement -->
-  <!-- ========================================== -->
-  <div class="card p-4 shadow-sm mb-4 wallet-card">
-    <div class="row align-items-center">
-      <div class="col-md-7 mb-3 mb-md-0">
-        <div class="wallet-label mb-1">💼 Mon Portefeuille</div>
-        <div class="wallet-amount">{{ "{:,.0f}".format(current_user.wallet_balance or 0.0) }} XOF</div>
-        <div class="wallet-note mt-2">
-          Ce solde provient des remboursements de campagnes crédités par l'administration.
-          Vous pouvez le retirer vers Mobile Money, ou l'utiliser pour couvrir une future campagne.
+  <!-- ================= PORTEFEUILLE ================= -->
+  <div class="rounded-2xl p-space-md bg-gradient-to-br from-emerald-deep to-slate-night text-white shadow-lg relative overflow-hidden">
+    <div class="absolute -right-8 -bottom-8 w-32 h-32 rounded-full bg-emerald-bright/20 blur-2xl"></div>
+    <div class="relative flex flex-col md:flex-row md:items-center md:justify-between gap-space-sm">
+      <div class="min-w-0">
+        <div class="flex items-center gap-1.5 font-label-caps text-label-caps uppercase tracking-wider text-emerald-bright font-bold">
+          <span class="material-symbols-outlined text-[16px]">account_balance_wallet</span>
+          Mon portefeuille
         </div>
+        <div class="font-label-numeric-lg text-3xl font-extrabold tracking-tight">{{ "{:,.0f}".format(current_user.wallet_balance or 0.0) }} XOF</div>
+        <p class="font-caption text-caption text-white/70 max-w-xl">
+          Provient des remboursements de campagnes crédités par l'administration. Retirable vers Mobile Money,
+          ou utilisable pour couvrir une future campagne.
+        </p>
       </div>
-      <div class="col-md-5 text-md-end">
+
+      <div class="shrink-0 md:text-right">
         {% if demande_retrait_en_cours %}
-          <button class="btn btn-wallet-action" disabled>⏳ Retrait déjà en cours</button>
-          <div class="wallet-note mt-2">Votre demande précédente est en attente de traitement.</div>
+          <button class="pw-btn pw-btn-sm bg-white/20 text-white" disabled>
+            <span class="material-symbols-outlined text-[18px]">hourglass_top</span> Retrait déjà en cours
+          </button>
+          <p class="mt-1 font-caption text-caption text-white/60">Votre demande précédente est en attente de traitement.</p>
         {% elif (current_user.wallet_balance or 0.0) < config.minimum_withdrawal_amount %}
-          <button class="btn btn-wallet-action" disabled>💸 Demander un retrait</button>
-          <div class="wallet-note mt-2">Minimum de retrait : {{ "{:,.0f}".format(config.minimum_withdrawal_amount) }} XOF.</div>
+          <button class="pw-btn pw-btn-sm bg-white/20 text-white" disabled>
+            <span class="material-symbols-outlined text-[18px]">payments</span> Demander un retrait
+          </button>
+          <p class="mt-1 font-caption text-caption text-white/60">Minimum : {{ "{:,.0f}".format(config.minimum_withdrawal_amount) }} XOF.</p>
         {% else %}
-          <button type="button" class="btn btn-wallet-action" data-bs-toggle="modal" data-bs-target="#walletWithdrawModal">
-            💸 Demander un retrait
+          <button type="button" class="pw-btn pw-btn-sm bg-white text-emerald-deep hover:bg-emerald-light" data-pw-modal="walletWithdrawModal">
+            <span class="material-symbols-outlined text-[18px]">payments</span> Demander un retrait
           </button>
         {% endif %}
       </div>
     </div>
   </div>
 
-  <!-- MODAL : Demande de retrait du portefeuille -->
-  <div class="modal fade" id="walletWithdrawModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <form action="{{ url_for('demander_retrait') }}" method="POST">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <div class="modal-header bg-dark text-white">
-            <h5 class="modal-title fw-bold">💸 Retirer mon portefeuille</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+  <!-- Fenetre : demande de retrait -->
+  <div id="walletWithdrawModal" class="pw-modal fixed inset-0 z-[90] hidden items-center justify-center p-space-md bg-slate-night/80 overflow-y-auto" aria-modal="true" role="dialog">
+    <div class="pw-modal-panel w-full max-w-md my-auto rounded-2xl bg-surface-container-lowest shadow-2xl overflow-hidden">
+      <form action="{{ url_for('demander_retrait') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="flex items-center justify-between gap-space-sm px-space-md py-space-sm bg-slate-night text-white">
+          <h2 class="font-headline-md text-body-md font-bold">Retirer mon portefeuille</h2>
+          <button type="button" class="pw-modal-close opacity-70 hover:opacity-100" aria-label="Fermer">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+
+        <div class="p-space-md space-y-space-sm">
+          <p class="font-caption text-caption text-on-surface-variant">
+            Solde disponible : <strong class="text-slate-midnight">{{ "{:,.0f}".format(current_user.wallet_balance or 0.0) }} XOF</strong>
+            — minimum de retrait : {{ "{:,.0f}".format(config.minimum_withdrawal_amount) }} XOF.
+          </p>
+          <div>
+            <label class="pw-label" for="wallet_amount">Montant à retirer (XOF)</label>
+            <input type="number" id="wallet_amount" name="amount" class="pw-input" min="{{ config.minimum_withdrawal_amount }}"
+                   max="{{ current_user.wallet_balance or 0.0 }}" step="1" required>
           </div>
-          <div class="modal-body">
-            <p class="small text-muted mb-3">
-              Solde disponible : <strong>{{ "{:,.0f}".format(current_user.wallet_balance or 0.0) }} XOF</strong>
-              — minimum de retrait : {{ "{:,.0f}".format(config.minimum_withdrawal_amount) }} XOF.
-            </p>
-            <div class="mb-3">
-              <label class="form-label fw-bold">Montant à retirer (XOF)</label>
-              <input type="number" name="amount" class="form-control" min="{{ config.minimum_withdrawal_amount }}"
-                     max="{{ current_user.wallet_balance or 0.0 }}" step="1" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-bold">Moyen de réception</label>
-              <select name="payout_channel" class="form-select" required>
-                <option value="MTN Mobile Money">MTN Mobile Money</option>
-                <option value="Moov Money">Moov Money</option>
-                <option value="Celtiis Cash">Celtiis Cash</option>
-                <option value="Wave">Wave</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-bold">Numéro de téléphone</label>
-              <input type="tel" name="payout_phone" class="form-control" placeholder="+229XXXXXXXX"
-                     value="{{ current_user.whatsapp_number or '' }}" required>
-            </div>
+          <div>
+            <label class="pw-label" for="payout_channel">Moyen de réception</label>
+            <select id="payout_channel" name="payout_channel" class="pw-select" required>
+              <option value="MTN Mobile Money">MTN Mobile Money</option>
+              <option value="Moov Money">Moov Money</option>
+              <option value="Celtiis Cash">Celtiis Cash</option>
+              <option value="Wave">Wave</option>
+            </select>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-            <button type="submit" class="btn btn-success fw-bold">Confirmer le retrait</button>
+          <div>
+            <label class="pw-label" for="payout_phone">Numéro de téléphone</label>
+            <input type="tel" id="payout_phone" name="payout_phone" class="pw-input" placeholder="+229XXXXXXXX"
+                   value="{{ current_user.whatsapp_number or '' }}" required>
           </div>
-        </form>
-      </div>
+        </div>
+
+        <div class="flex justify-end gap-space-xs px-space-md py-space-sm border-t border-outline-variant/30">
+          <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral pw-modal-close">Annuler</button>
+          <button type="submit" class="pw-btn pw-btn-sm pw-btn-primary">Confirmer le retrait</button>
+        </div>
+      </form>
     </div>
   </div>
 
-  <h2 class="mb-4 text-center">📢 Lancer une Campagne Pubwek</h2>
-  
-  <div class="card p-4 shadow-sm mb-5 form-card-elegant">
+  <!-- ================= NOUVELLE CAMPAGNE ================= -->
+  <div class="pw-card !p-space-md">
+    <div class="flex items-center gap-1.5 mb-space-sm">
+      <span class="material-symbols-outlined text-[22px] text-emerald-primary">campaign</span>
+      <h2 class="font-headline-md text-headline-md text-slate-night">Lancer une campagne</h2>
+    </div>
+
     <form id="campaignForm" method="POST" action="{{ url_for('nouvelle_campagne') }}" enctype="multipart/form-data"
-          data-cost-video="{{ config.cost_per_click_video | default(3.0, true) }}" 
-          data-cost-photo="{{ config.cost_per_click_photo | default(2.0, true) }}" 
+          class="space-y-space-md"
+          data-cost-video="{{ config.cost_per_click_video | default(3.0, true) }}"
+          data-cost-photo="{{ config.cost_per_click_photo | default(2.0, true) }}"
           data-cost-text="{{ config.cost_per_click_text | default(1.0, true) }}"
           data-commission-rate="{{ config.commission_rate | default(10.0, true) }}">
-      
+
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="cached_media_files" id="cached_media_files" value="">
 
-      <div class="row mb-4">
-        <div class="col-md-6 mb-3">
-          <label for="promotion_type" class="form-label fw-bold">Que voulez-vous promouvoir ?</label>
-          <select name="promotion_type" id="promotion_type" class="form-select" required>
+      <!-- Identite de l'offre -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm">
+        <div>
+          <label for="promotion_type" class="pw-label">Que voulez-vous promouvoir ?</label>
+          <select name="promotion_type" id="promotion_type" class="pw-select" required>
             <option value="produit">Produit</option>
             <option value="service">Service</option>
           </select>
         </div>
-        <div class="col-md-6 mb-3">
-          <label for="promotion_detail" class="form-label fw-bold">Nom du produit/service</label>
-          <input type="text" name="promotion_detail" id="promotion_detail" class="form-control" placeholder="Ex: Restaurant Chez Claire" required>
+        <div>
+          <label for="promotion_detail" class="pw-label">Nom du produit / service</label>
+          <input type="text" name="promotion_detail" id="promotion_detail" class="pw-input" placeholder="Ex: Restaurant Chez Claire" required>
         </div>
       </div>
 
-      <div class="mb-4">
-        <label for="description" class="form-label d-flex justify-content-between align-items-center fw-bold">
-          <span id="descriptionLabelText">📝 Description (Texte du statut)</span>
-          <div class="d-flex align-items-center gap-2">
-            <button type="button" class="btn btn-xs btn-outline-magic btn-sm fw-bold shadow-sm" onclick="generateAutoDescription()" style="background-color: #f3e8ff; color: #6b21a8; border: 1px solid #c084fc;">
-              ✨ M'aider à rédiger
+      <!-- Description -->
+      <div>
+        <div class="flex items-center justify-between gap-space-xs mb-1">
+          <label for="description" class="pw-label !mb-0" id="descriptionLabelText">Description (texte du statut)</label>
+          <div class="flex items-center gap-space-2xs">
+            <button type="button" onclick="generateAutoDescription()"
+                    class="pw-btn pw-btn-sm !py-1 !px-2.5 !text-[12px] bg-purple-50 text-purple-800 border border-purple-300 hover:bg-purple-100">
+              <span class="material-symbols-outlined text-[14px]">bolt</span> M'aider à rédiger
             </button>
-            <span id="charCount" class="badge bg-secondary">0 / 150</span>
-          </div>
-        </label>
-        <textarea name="description" id="description" class="form-control" rows="3" maxlength="150" placeholder="Décrivez succinctement votre offre pour le statut (150 car. max)..." required></textarea>
-      </div>
-
-      <label class="form-label fw-bold mb-3">💎 Choisissez votre style de diffusion</label>
-      <div class="row mb-4">
-        <div class="col-md-4 mb-3">
-          <div class="card h-100 option-card shadow-sm p-3" id="cardA" onclick="selectOption('A')" style="cursor:pointer; border: 2px solid #dee2e6;">
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="display_option" id="optionA" value="A" checked>
-              <label class="form-check-label fw-bold text-dark" for="optionA">Option A : Vidéo Publicitaire</label>
-            </div>
-            <p class="small text-muted mt-2">Téléversez votre propre vidéo déjà montée (<strong>30 secondes maximum</strong>, idéale pour un statut WhatsApp).</p>
-            <span class="badge bg-dark mt-1 d-block" style="max-width: max-content;">Prix fixe : {{ config.cost_per_click_video | default(3, true) }} XOF / clic</span>
+            <span id="charCount" class="pw-chip pw-chip-neutral">0 / 150</span>
           </div>
         </div>
-        <div class="col-md-4 mb-3">
-          <div class="card h-100 option-card shadow-sm p-3" id="cardB" onclick="selectOption('B')" style="cursor:pointer; border: 2px solid #dee2e6;">
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="display_option" id="optionB" value="B">
-              <label class="form-check-label fw-bold text-dark" for="optionB">Option B : Multi-Statuts</label>
-            </div>
-            <p class="small text-muted mt-2">Chaque photo est publiée comme un statut séparé. Attention : augmente la visibilité mais aussi le coût.</p>
-            <span class="badge bg-primary" id="badge_option_b">Prix : {{ config.cost_per_click_photo | default(1, true) }} XOF × Nombre d'images / clic</span>
-          </div>
-        </div>
-        <div class="col-md-4 mb-3">
-          <div class="card h-100 option-card shadow-sm p-3" id="cardC" onclick="selectOption('C')" style="cursor:pointer; border: 2px solid #dee2e6;">
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="display_option" id="optionC" value="C">
-              <label class="form-check-label fw-bold text-dark" for="optionC">Option C : Texte Seul</label>
-            </div>
-            <p class="small text-muted mt-2">Pas de photo ni de vidéo : uniquement un texte publié directement en statut WhatsApp. Idéal pour une annonce rapide et sans montage.</p>
-            <span class="badge bg-secondary mt-1 d-block" style="max-width: max-content;">Prix : {{ config.cost_per_click_text | default(1, true) }} XOF / clic</span>
-          </div>
+        <textarea name="description" id="description" class="pw-input resize-y" rows="3" maxlength="150"
+                  placeholder="Décrivez succinctement votre offre pour le statut (150 car. max)..." required></textarea>
+      </div>
+
+      <!-- Style de diffusion -->
+      <div>
+        <label class="pw-label">Style de diffusion</label>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-space-xs">
+
+          <label id="cardA" onclick="selectOption('A')"
+                 class="pw-option cursor-pointer rounded-xl border-2 border-outline-variant/40 p-space-sm transition-all">
+            <input class="sr-only" type="radio" name="display_option" id="optionA" value="A" checked>
+            <span class="flex items-center gap-1.5 font-headline-md text-[14px] font-bold text-slate-midnight">
+              <span class="material-symbols-outlined text-[18px]">smart_display</span> A · Vidéo publicitaire
+            </span>
+            <span class="block mt-1 font-caption text-caption text-on-surface-variant">
+              Votre propre vidéo déjà montée (<strong>30 s maximum</strong>), idéale pour un statut WhatsApp.
+            </span>
+            <span class="pw-chip pw-chip-neutral mt-1.5">{{ config.cost_per_click_video | default(3, true) }} XOF / clic</span>
+          </label>
+
+          <label id="cardB" onclick="selectOption('B')"
+                 class="pw-option cursor-pointer rounded-xl border-2 border-outline-variant/40 p-space-sm transition-all">
+            <input class="sr-only" type="radio" name="display_option" id="optionB" value="B">
+            <span class="flex items-center gap-1.5 font-headline-md text-[14px] font-bold text-slate-midnight">
+              <span class="material-symbols-outlined text-[18px]">layers</span> B · Multi-statuts
+            </span>
+            <span class="block mt-1 font-caption text-caption text-on-surface-variant">
+              Chaque photo devient un statut séparé : plus de visibilité, mais un coût plus élevé.
+            </span>
+            <span class="pw-chip pw-chip-neutral mt-1.5" id="badge_option_b">{{ config.cost_per_click_photo | default(1, true) }} XOF × nb d'images / clic</span>
+          </label>
+
+          <label id="cardC" onclick="selectOption('C')"
+                 class="pw-option cursor-pointer rounded-xl border-2 border-outline-variant/40 p-space-sm transition-all">
+            <input class="sr-only" type="radio" name="display_option" id="optionC" value="C">
+            <span class="flex items-center gap-1.5 font-headline-md text-[14px] font-bold text-slate-midnight">
+              <span class="material-symbols-outlined text-[18px]">description</span> C · Texte seul
+            </span>
+            <span class="block mt-1 font-caption text-caption text-on-surface-variant">
+              Ni photo ni vidéo : un texte publié directement en statut. Idéal pour une annonce rapide.
+            </span>
+            <span class="pw-chip pw-chip-neutral mt-1.5">{{ config.cost_per_click_text | default(1, true) }} XOF / clic</span>
+          </label>
         </div>
       </div>
 
-      <!-- 🎬 OPTION A : Upload direct de la vidéo (max 30s) -->
-      <div class="mb-4 bg-light p-3 rounded border" id="videoUploadGroup">
-        <label for="video_file" class="form-label fw-bold">🎬 Téléversez votre vidéo publicitaire</label>
-        <input type="file" name="video_file" id="video_file" class="form-control" accept="video/mp4,video/quicktime,video/webm">
-        <div class="form-text text-muted">
-          Formats acceptés : MP4, MOV, WEBM — <strong>durée maximale : 30 secondes</strong> — taille maximale : 40 Mo.
-          Votre fichier est vérifié automatiquement avant l'envoi ; une vidéo trop longue ou invalide sera refusée.
-        </div>
-        <div id="videoFileInfo" class="small mt-2 text-primary fw-bold"></div>
-        <video id="videoFilePreview" controls class="mt-2 rounded shadow-sm d-none" style="max-height: 320px;"></video>
+      <!-- Option A : video -->
+      <div class="pw-card-flat" id="videoUploadGroup">
+        <label for="video_file" class="pw-label">Téléversez votre vidéo publicitaire</label>
+        <input type="file" name="video_file" id="video_file" class="pw-file" accept="video/mp4,video/quicktime,video/webm">
+        <p class="pw-help">
+          MP4, MOV, WEBM — <strong>durée maximale : 30 secondes</strong> — taille maximale : 40 Mo.
+          Le fichier est vérifié automatiquement avant l'envoi.
+        </p>
+        <div id="videoFileInfo" class="mt-1 font-caption text-caption font-bold text-emerald-primary"></div>
+        <video id="videoFilePreview" controls class="mt-1.5 rounded-xl shadow-sm hidden max-h-64"></video>
       </div>
 
-      <!-- 🖼️ OPTION B : Upload de plusieurs photos -->
-      <div class="mb-4 bg-light p-3 rounded d-none" id="uploadGroup">
-        <label for="media_files" class="form-label fw-bold">📸 Téléversez vos photos</label>
-        <input type="file" name="media_files" id="media_files" class="form-control" multiple accept="image/*">
-        
-        <div id="imagePreviewsContainer" class="d-flex flex-wrap gap-2 mt-2"></div>
-
-        <div class="form-text text-muted">
-          Maximum : 25 photos.
-        </div>
-        <div id="fileInfo" class="small mt-2 text-primary fw-bold"></div>
+      <!-- Option B : photos -->
+      <div class="pw-card-flat hidden" id="uploadGroup">
+        <label for="media_files" class="pw-label">Téléversez vos photos</label>
+        <input type="file" name="media_files" id="media_files" class="pw-file" multiple accept="image/*">
+        <div id="imagePreviewsContainer" class="flex flex-wrap gap-2 mt-2"></div>
+        <p class="pw-help">Maximum : 25 photos.</p>
+        <div id="fileInfo" class="mt-1 font-caption text-caption font-bold text-emerald-primary"></div>
       </div>
 
-      <!-- 🌍 ZONES DE DIFFUSION : Départements + communes (raffinement optionnel) -->
-      <div class="mb-4">
-        <label class="form-label fw-bold">🌍 Zones de diffusion</label>
-        <div class="form-text text-muted mb-2">
-          Cochez au moins un département. Vous pouvez ensuite cliquer sur "Préciser les communes" pour affiner votre ciblage (optionnel).
-        </div>
+      <!-- Zones de diffusion -->
+      <div>
+        <label class="pw-label">Zones de diffusion</label>
+        <p class="pw-help !mt-0 mb-1.5">
+          Cochez au moins un département. Vous pouvez ensuite préciser les communes pour affiner le ciblage (optionnel).
+        </p>
 
-        <div id="accordionZones">
+        <div id="accordionZones" class="grid grid-cols-1 sm:grid-cols-2 gap-space-2xs">
           {% for departement, communes in departements_communes.items() %}
-          <div class="border rounded mb-2">
-            <div class="d-flex align-items-center justify-content-between p-2 bg-light">
-              <div class="form-check mb-0">
-                <input class="form-check-input dept-checkbox" type="checkbox" name="provinces[]"
-                       value="{{ departement }}" id="dept_{{ departement }}"
+          <div class="rounded-xl border border-outline-variant/30 overflow-hidden">
+            <div class="flex items-center justify-between gap-space-xs px-space-sm py-1.5 bg-surface-container-low">
+              <label class="flex items-center gap-space-2xs cursor-pointer select-none min-w-0">
+                <input class="dept-checkbox w-4 h-4 rounded border-outline-variant/60 text-emerald-primary focus:ring-emerald-primary/30"
+                       type="checkbox" name="provinces[]" value="{{ departement }}" id="dept_{{ departement }}"
                        onchange="toggleCommunesBlock('{{ departement }}')">
-                <label class="form-check-label fw-semibold" for="dept_{{ departement }}">{{ departement }}</label>
-              </div>
-              <button type="button" class="btn btn-sm btn-outline-secondary d-none" id="btnToggle_{{ departement }}"
-                      onclick="toggleCommunesVisibility('{{ departement }}')">
-                Préciser les communes
+                <span class="font-body-sm text-body-sm font-semibold text-slate-midnight truncate">{{ departement }}</span>
+              </label>
+              <button type="button" class="hidden pw-btn pw-btn-sm pw-btn-neutral !py-1 !px-2 !text-[11px] shrink-0"
+                      id="btnToggle_{{ departement }}" onclick="toggleCommunesVisibility('{{ departement }}')">
+                Communes
               </button>
             </div>
 
-            <div class="p-2 d-none" id="communesBlock_{{ departement }}">
-              <div class="row">
-                {% for commune in communes %}
-                <div class="col-6 col-md-4 form-check">
-                  <input class="form-check-input commune-checkbox" type="checkbox" name="communes[]"
-                         value="{{ commune }}" data-departement="{{ departement }}" id="commune_{{ commune }}">
-                  <label class="form-check-label small" for="commune_{{ commune }}">{{ commune }}</label>
-                </div>
-                {% endfor %}
-              </div>
+            <div class="hidden p-space-sm grid grid-cols-2 gap-x-space-xs gap-y-1" id="communesBlock_{{ departement }}">
+              {% for commune in communes %}
+              <label class="flex items-center gap-1.5 cursor-pointer select-none min-w-0">
+                <input class="commune-checkbox w-3.5 h-3.5 rounded border-outline-variant/60 text-emerald-primary focus:ring-emerald-primary/30"
+                       type="checkbox" name="communes[]" value="{{ commune }}" data-departement="{{ departement }}" id="commune_{{ commune }}">
+                <span class="font-caption text-caption text-on-surface truncate">{{ commune }}</span>
+              </label>
+              {% endfor %}
             </div>
           </div>
           {% endfor %}
         </div>
       </div>
 
-      <div class="row mb-4 bg-dark text-white p-3 rounded shadow">
-        <div class="col-md-4 mb-3">
-          <label class="form-label small">🚀 Objectif de clics</label>
-          <input type="number" name="whatsapp_views" id="whatsapp_views" class="form-control" min="100" step="50" value="100" required>
+      <!-- Objectif / duree / budget -->
+      <div class="rounded-2xl bg-slate-night text-white p-space-md grid grid-cols-1 sm:grid-cols-3 gap-space-sm items-start">
+        <div>
+          <label for="whatsapp_views" class="block font-label-caps text-label-caps uppercase tracking-wider text-white/70 font-bold mb-1">Objectif de clics</label>
+          <input type="number" name="whatsapp_views" id="whatsapp_views"
+                 class="w-full rounded-xl border border-white/20 bg-white/10 px-space-sm py-2 font-label-numeric-md text-label-numeric-md font-bold text-white focus:outline-none focus:ring-2 focus:ring-emerald-bright/50"
+                 min="100" step="50" value="100" required>
         </div>
-        <div class="col-md-4 mb-3">
-          <label class="form-label small">⏳ Durée (Jours)</label>
-          <select name="duration_days" id="duration_days" class="form-select">
+        <div>
+          <label for="duration_days" class="block font-label-caps text-label-caps uppercase tracking-wider text-white/70 font-bold mb-1">Durée</label>
+          <select name="duration_days" id="duration_days"
+                  class="w-full rounded-xl border border-white/20 bg-white/10 px-space-sm py-2 font-body-sm text-body-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-bright/50">
             {% for jour in range(1, 31) %}
-              <option value="{{ jour }}" {% if jour == 7 %}selected{% endif %}>{{ jour }} jour{{ 's' if jour > 1 else '' }}</option>
+              <option class="text-slate-night" value="{{ jour }}" {% if jour == 7 %}selected{% endif %}>{{ jour }} jour{{ 's' if jour > 1 else '' }}</option>
             {% endfor %}
           </select>
-          <div class="form-text text-white-50 small mt-1">
-            <i class="fas fa-info-circle me-1"></i>Vos clics seront répartis automatiquement, jour par jour, sur la durée choisie.
-          </div>
+          <p class="mt-1 font-caption text-caption text-white/50">Vos clics sont répartis automatiquement, jour par jour.</p>
         </div>
-        <div class="col-md-4">
-          <label class="form-label fw-bold text-warning">💰 Budget Total</label>
-          <div class="h4 mt-1" id="total_cost_display">0 XOF</div>
+        <div class="sm:text-right">
+          <span class="block font-label-caps text-label-caps uppercase tracking-wider text-amber-vibrant font-bold mb-1">Budget total</span>
+          <div class="font-label-numeric-lg text-2xl font-extrabold tracking-tight" id="total_cost_display">0 XOF</div>
           <input type="hidden" name="total_cost" id="total_cost_hidden" value="0">
         </div>
       </div>
 
-      <div class="mb-4">
-        <label for="whatsapp_number" class="form-label fw-bold">📲 Votre Numéro WhatsApp Business</label>
-        <div class="input-group">
-          <span class="input-group-text">+22901</span>
-          <input type="tel" name="whatsapp_number" id="whatsapp_number" class="form-control"
-                 placeholder="57290905" inputmode="numeric" maxlength="8" required>
+      <!-- Contacts -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm">
+        <div>
+          <label for="whatsapp_number" class="pw-label">Votre numéro WhatsApp Business</label>
+          <div class="flex">
+            <span class="inline-flex items-center rounded-l-xl border border-r-0 border-outline-variant/50 bg-surface-container px-space-sm font-label-numeric-md text-label-numeric-md font-bold text-slate-midnight">+22901</span>
+            <input type="tel" name="whatsapp_number" id="whatsapp_number" class="pw-input rounded-l-none"
+                   placeholder="57290905" inputmode="numeric" maxlength="8" required>
+          </div>
+          <p class="pw-help">Seulement les 8 chiffres après le 01. Le préfixe est ajouté automatiquement.</p>
         </div>
-        <div class="form-text text-muted">Saisissez seulement les 8 chiffres après le 01 (ex : 57290905). Le préfixe +22901 est ajouté automatiquement.</div>
-      </div>
-
-      <div class="mb-4">
-        <label for="website_url" class="form-label fw-bold">
-          🌐 Site web ou application web <span class="text-muted fw-normal small">(optionnel)</span>
-        </label>
-        <input type="url" name="website_url" id="website_url" class="form-control" placeholder="https://votresite.com">
-        <div class="form-text text-muted">
-          Si votre structure possède un site ou une application web, indiquez le lien ici pour que vos clients intéressés puissent y accéder directement.
+        <div>
+          <label for="website_url" class="pw-label">Site web <span class="font-normal text-on-surface-variant">(optionnel)</span></label>
+          <input type="url" name="website_url" id="website_url" class="pw-input" placeholder="https://votresite.com">
+          <p class="pw-help">Vos clients intéressés pourront y accéder directement.</p>
         </div>
       </div>
 
-      <div class="d-grid gap-2">
-        <button type="submit" id="btnSubmitCampaign" class="btn btn-success btn-lg shadow cta-elegant">
-          🚀 Valider ma Campagne
-        </button>
-      </div>
+      <button type="submit" id="btnSubmitCampaign" class="pw-btn pw-btn-md pw-btn-primary w-full">
+        <span class="material-symbols-outlined text-[20px]">rocket_launch</span>
+        Valider ma campagne
+      </button>
     </form>
   </div>
 
-  <!-- ========================================== -->
-  <!-- 🆕 ZONE DE DANGER — DEMANDE DE SUPPRESSION DE COMPTE -->
-  <!-- ========================================== -->
-  <div class="card p-4 shadow-sm mb-4 danger-zone-card">
-    <h5 class="mb-2"><i class="bi bi-exclamation-triangle me-2"></i>Zone de danger</h5>
-    <p class="text-muted mb-3">
-      Vous pouvez demander la suppression de votre compte Pubwek. Votre demande sera examinée par
-      l'administration ; votre compte restera actif jusqu'à ce qu'elle soit traitée. Aucune donnée
-      n'est perdue dans l'immédiat.
-    </p>
-    <button type="button" class="btn btn-danger-zone" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
-      🗑️ Demander la suppression de mon compte
-    </button>
-  </div>
-
-  <!-- MODAL : Demande de suppression de compte -->
-  <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <form action="{{ url_for('demander_suppression_compte') }}" method="POST">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <div class="modal-header bg-danger text-white">
-            <h5 class="modal-title fw-bold">🗑️ Demander la suppression de mon compte</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <p class="small text-muted mb-3">
-              Merci de nous indiquer pourquoi vous souhaitez quitter Pubwek. Votre demande sera
-              examinée par l'administration, qui désactivera votre compte si elle l'approuve.
-              Vous serez notifié(e) de sa décision.
-            </p>
-            <div class="mb-2">
-              <label class="form-label fw-bold small">Motif de votre demande <span class="text-danger">*</span></label>
-              <textarea name="reason" class="form-control" rows="4" maxlength="1000" required
-                        placeholder="Ex: Je n'utilise plus la plateforme, mon activité a fermé..."></textarea>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-            <button type="submit" class="btn btn-danger fw-bold">Envoyer ma demande</button>
-          </div>
-        </form>
-      </div>
+  <!-- ================= ZONE DE DANGER ================= -->
+  <details class="group rounded-2xl border border-error/30 bg-error-container/40">
+    <summary class="flex items-center gap-1.5 cursor-pointer select-none px-space-md py-space-sm font-headline-md text-[14px] font-semibold text-error list-none">
+      <span class="material-symbols-outlined text-[18px]">warning</span>
+      Zone de danger — supprimer mon compte
+      <span class="material-symbols-outlined text-[18px] ml-auto transition-transform group-open:rotate-180">expand_more</span>
+    </summary>
+    <div class="px-space-md pb-space-md">
+      <p class="font-caption text-caption text-on-surface-variant mb-space-xs">
+        Votre demande sera examinée par l'administration ; votre compte restera actif jusqu'à ce qu'elle
+        soit traitée. Aucune donnée n'est perdue dans l'immédiat.
+      </p>
+      <form action="{{ url_for('demander_suppression_compte') }}" method="POST" class="space-y-space-xs">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div>
+          <label class="pw-label" for="reason">Motif de votre demande <span class="text-error">*</span></label>
+          <textarea name="reason" id="reason" class="pw-input resize-y" rows="3" maxlength="1000" required
+                    placeholder="Ex: Je n'utilise plus la plateforme, mon activité a fermé..."></textarea>
+        </div>
+        <button type="submit" class="pw-btn pw-btn-sm bg-error text-white hover:opacity-90">
+          <span class="material-symbols-outlined text-[18px]">delete</span>
+          Envoyer ma demande
+        </button>
+      </form>
     </div>
-  </div>
+  </details>
 
 </div>
+</section>
+
+<!-- Visionneuse d'image (apercus de l'option B) -->
+<div id="pwLightbox" class="hidden fixed inset-0 z-50 items-center justify-center bg-slate-night/80 p-space-md" onclick="fermerLightbox()">
+  <img id="pwLightboxImage" src="" alt="Aperçu" class="max-h-[85vh] max-w-full rounded-2xl shadow-2xl">
 </div>
 
-<!-- Modal Bootstrap pour l'agrandissement des photos -->
-<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content bg-transparent border-0">
-      <div class="modal-header border-0 pb-0">
-        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Fermer"></button>
-      </div>
-      <div class="modal-body text-center p-2">
-        <img id="previewModalImage" src="" class="img-fluid rounded shadow-lg" alt="Aperçu agrandi" style="max-height: 85vh; object-fit: contain;">
-      </div>
-    </div>
-  </div>
-</div>
-
-{% endblock %}
-
-{% block scripts %}
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Gestion des positions d'images de profil
+    // Positions enregistrees des images de profil
     const coverImg = document.querySelector('.dynamic-cover-pos');
     if (coverImg) {
-      const posX = coverImg.getAttribute('data-pos-x') || '50';
-      const posY = coverImg.getAttribute('data-pos-y') || '50';
-      coverImg.style.objectPosition = posX + '% ' + posY + '%';
+      coverImg.style.objectPosition = (coverImg.getAttribute('data-pos-x') || '50') + '% '
+                                    + (coverImg.getAttribute('data-pos-y') || '50') + '%';
     }
-
     const logoImg = document.querySelector('.dynamic-logo-pos');
     if (logoImg) {
-      const posX = logoImg.getAttribute('data-pos-x') || '50';
-      const posY = logoImg.getAttribute('data-pos-y') || '50';
-      logoImg.style.objectPosition = posX + '% ' + posY + '%';
+      logoImg.style.objectPosition = (logoImg.getAttribute('data-pos-x') || '50') + '% '
+                                   + (logoImg.getAttribute('data-pos-y') || '50') + '%';
     }
 
-    // Mise à jour du compteur au chargement si un texte existe déjà
+    // Compteur de caracteres
     const descriptionField = document.getElementById('description');
     if (descriptionField) {
       document.getElementById('charCount').innerText = descriptionField.value.length + " / " + descriptionField.maxLength;
@@ -763,12 +465,12 @@
       });
     }
 
-    // Applique la mise en surbrillance verte sur l'option sélectionnée par défaut (A)
+    // Surbrillance de l'option selectionnee par defaut
     const checkedOption = document.querySelector('input[name="display_option"]:checked');
     selectOption(checkedOption ? checkedOption.value : 'A');
 
-    // 🆕 Numéro WhatsApp : n'autorise que la saisie de chiffres dans le champ,
-    // limité aux 8 chiffres après le préfixe fixe +22901 affiché à côté.
+    // Numero WhatsApp : chiffres uniquement, 8 maximum (le prefixe +22901 est
+    // reconstruit cote serveur dans main.py avant sauvegarde).
     const whatsappInput = document.getElementById('whatsapp_number');
     if (whatsappInput) {
       whatsappInput.addEventListener('input', function() {
@@ -776,88 +478,117 @@
       });
     }
 
-    // ℹ️ Le champ whatsapp_number ne contient plus que les 8 chiffres saisis :
-    // le préfixe +22901 est désormais reconstruit côté serveur (main.py) avant
-    // sauvegarde en base, donc on n'ajoute plus rien avant l'envoi.
+    // Cloche de notifications
+    const wrapper = document.getElementById('notifDropdownWrapper');
+    if (wrapper) {
+      const toggle = document.getElementById('notifToggle');
+      const panel  = document.getElementById('notifPanel');
+      let dejaMarquees = false;
 
-    // 🆕 Marque les notifications comme lues dès l'ouverture de la cloche
-    const notifWrapper = document.getElementById('notifDropdownWrapper');
-    if (notifWrapper) {
-      notifWrapper.addEventListener('shown.bs.dropdown', function () {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+      function marquerCommeLues() {
+        if (dejaMarquees) return;
+        dejaMarquees = true;
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
         fetch('/notifications/marquer-lues', {
           method: 'POST',
-          headers: { 'X-CSRFToken': csrfToken }
+          headers: { 'X-CSRFToken': csrfMeta ? csrfMeta.getAttribute('content') : '' }
         }).then(function () {
-          const badge = notifWrapper.querySelector('.badge.bg-danger');
+          const badge = document.getElementById('notifBadge');
           if (badge) badge.remove();
-          notifWrapper.querySelectorAll('.dropdown-item.fw-bold').forEach(function (item) {
-            item.classList.remove('fw-bold');
-            item.classList.add('text-muted');
+          panel.querySelectorAll('.notif-item.font-semibold').forEach(function (item) {
+            item.classList.remove('font-semibold', 'text-on-surface');
+            item.classList.add('text-on-surface-variant');
           });
         }).catch(function (err) {
           console.error('Erreur lors du marquage des notifications :', err);
         });
+      }
+
+      toggle.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const ouvert = !panel.classList.contains('hidden');
+        panel.classList.toggle('hidden', ouvert);
+        toggle.setAttribute('aria-expanded', String(!ouvert));
+        if (!ouvert) marquerCommeLues();
+      });
+      document.addEventListener('click', function (e) {
+        if (!wrapper.contains(e.target)) panel.classList.add('hidden');
       });
     }
+
+    // Visionneuse des apercus d'images (remplace la fenetre Bootstrap)
+    const previews = document.getElementById('imagePreviewsContainer');
+    if (previews) {
+      previews.addEventListener('click', function (e) {
+        if (e.target.tagName === 'IMG') {
+          document.getElementById('pwLightboxImage').src = e.target.src;
+          const box = document.getElementById('pwLightbox');
+          box.classList.remove('hidden');
+          box.classList.add('flex');
+        }
+      });
+    }
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') fermerLightbox();
+    });
   });
 
-  // --- Bascule entre Option A (vidéo), B (photos) et C (texte seul) ---
+  function fermerLightbox() {
+    const box = document.getElementById('pwLightbox');
+    box.classList.add('hidden');
+    box.classList.remove('flex');
+  }
+
+  // --- Bascule entre Option A (video), B (photos) et C (texte seul) ---
   function selectOption(option) {
     const cardA = document.getElementById('cardA');
     const cardB = document.getElementById('cardB');
     const cardC = document.getElementById('cardC');
     const videoGroup = document.getElementById('videoUploadGroup');
     const photoGroup = document.getElementById('uploadGroup');
-    const radioA = document.getElementById('optionA');
-    const radioB = document.getElementById('optionB');
-    const radioC = document.getElementById('optionC');
     const descriptionField = document.getElementById('description');
     const descriptionLabel = document.getElementById('descriptionLabelText');
     const charCount = document.getElementById('charCount');
 
-    // Réinitialise les 3 cartes à un style neutre identique
     [cardA, cardB, cardC].forEach(function(card) {
-      card.style.border = '2px solid #dee2e6';
-      card.style.backgroundColor = '';
+      card.classList.remove('border-emerald-primary', 'bg-emerald-light');
+      card.classList.add('border-outline-variant/40');
     });
-    videoGroup.classList.add('d-none');
-    photoGroup.classList.add('d-none');
+    videoGroup.classList.add('hidden');
+    photoGroup.classList.add('hidden');
 
+    let carteActive = cardC;
     if (option === 'A') {
-      radioA.checked = true;
-      cardA.style.border = '2px solid #2F6F5E';
-      cardA.style.backgroundColor = '#E7F0EC';
-      videoGroup.classList.remove('d-none');
+      document.getElementById('optionA').checked = true;
+      carteActive = cardA;
+      videoGroup.classList.remove('hidden');
       descriptionField.maxLength = 150;
-      descriptionLabel.textContent = '📝 Description (Texte du statut)';
+      descriptionLabel.textContent = 'Description (texte du statut)';
     } else if (option === 'B') {
-      radioB.checked = true;
-      cardB.style.border = '2px solid #2F6F5E';
-      cardB.style.backgroundColor = '#E7F0EC';
-      photoGroup.classList.remove('d-none');
+      document.getElementById('optionB').checked = true;
+      carteActive = cardB;
+      photoGroup.classList.remove('hidden');
       descriptionField.maxLength = 150;
-      descriptionLabel.textContent = '📝 Description (Texte du statut)';
+      descriptionLabel.textContent = 'Description (texte du statut)';
     } else {
-      radioC.checked = true;
-      cardC.style.border = '2px solid #2F6F5E';
-      cardC.style.backgroundColor = '#E7F0EC';
+      document.getElementById('optionC').checked = true;
       descriptionField.maxLength = 500;
-      descriptionLabel.textContent = '📝 Texte de votre publicité (publié tel quel en statut)';
+      descriptionLabel.textContent = 'Texte de votre publicité (publié tel quel en statut)';
     }
+    carteActive.classList.remove('border-outline-variant/40');
+    carteActive.classList.add('border-emerald-primary', 'bg-emerald-light');
 
     if (descriptionField.value.length > descriptionField.maxLength) {
       descriptionField.value = descriptionField.value.substring(0, descriptionField.maxLength);
     }
     charCount.innerText = descriptionField.value.length + " / " + descriptionField.maxLength;
 
-    // Recalcule le budget total à chaque changement d'option (défini dans script.js)
-    if (typeof window.updateTotal === 'function') {
-      window.updateTotal();
-    }
+    // Recalcule le budget total (defini dans script.js)
+    if (typeof window.updateTotal === 'function') window.updateTotal();
   }
 
-  // --- Aperçu simple de la vidéo sélectionnée avant envoi ---
+  // --- Apercu de la video selectionnee avant envoi ---
   const videoInput = document.getElementById('video_file');
   if (videoInput) {
     videoInput.addEventListener('change', function(e) {
@@ -867,49 +598,48 @@
 
       if (!file) {
         info.textContent = '';
-        preview.classList.add('d-none');
+        preview.classList.add('hidden');
         return;
       }
 
       const tailleMo = (file.size / (1024 * 1024)).toFixed(1);
       info.textContent = `Fichier sélectionné : ${file.name} (${tailleMo} Mo)`;
+      info.classList.remove('text-error');
+      info.classList.add('text-emerald-primary');
 
-      const url = URL.createObjectURL(file);
-      preview.src = url;
-      preview.classList.remove('d-none');
+      preview.src = URL.createObjectURL(file);
+      preview.classList.remove('hidden');
 
       preview.onloadedmetadata = function() {
         if (preview.duration > 30.5) {
-          info.innerHTML = `⚠️ Cette vidéo dure ${preview.duration.toFixed(1)}s — le maximum autorisé est 30 secondes. Veuillez la raccourcir.`;
-          info.classList.remove('text-primary');
-          info.classList.add('text-danger');
+          info.textContent = `Cette vidéo dure ${preview.duration.toFixed(1)}s — le maximum autorisé est 30 secondes. Veuillez la raccourcir.`;
+          info.classList.remove('text-emerald-primary');
+          info.classList.add('text-error');
         } else {
-          info.classList.remove('text-danger');
-          info.classList.add('text-primary');
+          info.classList.remove('text-error');
+          info.classList.add('text-emerald-primary');
         }
       };
     });
   }
 
-  // --- Bascule des blocs de communes selon le département coché ---
+  // --- Bascule des blocs de communes selon le departement coche ---
   function toggleCommunesBlock(departement) {
     const checkbox = document.getElementById('dept_' + departement);
     const btnToggle = document.getElementById('btnToggle_' + departement);
     const communesBlock = document.getElementById('communesBlock_' + departement);
 
     if (checkbox.checked) {
-      btnToggle.classList.remove('d-none');
+      btnToggle.classList.remove('hidden');
     } else {
-      btnToggle.classList.add('d-none');
-      communesBlock.classList.add('d-none');
-      // Décoche toutes les communes de ce département si on décoche le département
+      btnToggle.classList.add('hidden');
+      communesBlock.classList.add('hidden');
       communesBlock.querySelectorAll('.commune-checkbox').forEach(cb => cb.checked = false);
     }
   }
 
   function toggleCommunesVisibility(departement) {
-    const communesBlock = document.getElementById('communesBlock_' + departement);
-    communesBlock.classList.toggle('d-none');
+    document.getElementById('communesBlock_' + departement).classList.toggle('hidden');
   }
 
   function generateAutoDescription() {
@@ -917,9 +647,9 @@
     const promoDetail = document.getElementById('promotion_detail').value.trim();
     const descriptionField = document.getElementById('description');
     const selectedOption = document.querySelector('input[name="display_option"]:checked').value;
-    
+
     if (!promoDetail) {
-      alert("⚠️ S'il vous plaît, entrez d'abord le nom de votre " + promoType + " ci-dessus pour générer une description.");
+      alert("S'il vous plaît, entrez d'abord le nom de votre " + promoType + " ci-dessus pour générer une description.");
       document.getElementById('promotion_detail').focus();
       return;
     }
@@ -928,10 +658,7 @@
 
     fetch('/generer-description-auto', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': csrfToken
-      },
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
       body: JSON.stringify({
         promotion_type: promoType,
         promotion_detail: promoDetail,
@@ -944,12 +671,9 @@
       if (data.success) {
         descriptionField.value = data.description;
         document.getElementById('charCount').innerText = data.description.length + " / " + descriptionField.maxLength;
-        
         descriptionField.style.transition = "background-color 0.3s ease";
-        descriptionField.style.backgroundColor = "#f3e8ff"; 
-        setTimeout(() => {
-          descriptionField.style.backgroundColor = "#fff";
-        }, 500);
+        descriptionField.style.backgroundColor = "#f3e8ff";
+        setTimeout(() => { descriptionField.style.backgroundColor = ""; }, 500);
       } else {
         alert("Erreur : " + data.message);
       }
@@ -963,7 +687,6 @@
   // --- Suppression de la photo de profil (logo) ---
   function deleteLogoViaAjax() {
     if (!confirm("Supprimer votre photo de profil ?")) return;
-
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
     fetch('/dashboard/annonceur/delete_logo_ajax', {
@@ -986,7 +709,6 @@
   // --- Suppression de l'image de couverture ---
   function deleteCoverViaAjax() {
     if (!confirm("Supprimer votre image de couverture ?")) return;
-
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
     fetch('/dashboard/annonceur/delete_cover_ajax', {

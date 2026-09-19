@@ -1,223 +1,90 @@
-{% extends "base.html" %}
+{% extends "base_v2.html" %}
+
 {% block content %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<section class="py-space-lg md:py-space-xl bg-gradient-to-b from-canvas-cream via-surface-container-low to-background">
+<div class="w-full max-w-md mx-auto px-margin">
 
-<style>
-  .login-wrapper {
-    min-height: 80vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem 1rem;
-    background: linear-gradient(135deg, #f0f9ff 0%, #e8f5e9 100%);
-  }
+  <div class="pw-card">
 
-  .login-card {
-    width: 100%;
-    max-width: 440px;
-    background: #fff;
-    border-radius: 20px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-    padding: 2.5rem 2.25rem;
-  }
-
-  .login-card .login-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #2ecc71, #27ae60);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1.25rem;
-    font-size: 1.75rem;
-    color: #fff;
-  }
-
-  .login-card h2 {
-    font-weight: 700;
-    color: #1a1a2e;
-    text-align: center;
-    margin-bottom: 0.25rem;
-  }
-
-  .login-subtitle {
-    text-align: center;
-    color: #777;
-    margin-bottom: 2rem;
-    font-size: 0.95rem;
-  }
-
-  .login-card .form-label {
-    font-weight: 600;
-    color: #333;
-    font-size: 0.9rem;
-  }
-
-  .login-card .form-control {
-    border-radius: 10px;
-    border: 1px solid #ddd;
-    padding: 0.65rem 0.9rem;
-  }
-
-  .login-card .form-control:focus {
-    border-color: #27ae60;
-    box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.15);
-  }
-
-  .login-card .input-group .form-control {
-    border-radius: 10px 0 0 10px;
-  }
-
-  .login-card .input-group .btn-outline-secondary {
-    border-radius: 0 10px 10px 0;
-    border: 1px solid #ddd;
-    border-left: none;
-  }
-
-  .forgot-link {
-    color: #27ae60;
-    font-weight: 600;
-    text-decoration: none;
-  }
-
-  .forgot-link:hover {
-    text-decoration: underline;
-  }
-
-  .form-check-input:checked {
-    background-color: #27ae60;
-    border-color: #27ae60;
-  }
-
-  .form-check-label {
-    font-size: 0.9rem;
-    color: #444;
-  }
-
-  #submitBtnLogin {
-    background: linear-gradient(135deg, #2ecc71, #27ae60);
-    border: none;
-    border-radius: 50px;
-    padding: 0.75rem;
-    font-weight: 600;
-    transition: opacity 0.2s ease;
-  }
-
-  #submitBtnLogin:hover {
-    opacity: 0.9;
-  }
-
-  .btn-back {
-    border-radius: 50px;
-    padding: 0.75rem;
-    font-weight: 600;
-    background: #f1f1f1;
-    color: #333;
-    border: none;
-    transition: background 0.2s ease;
-  }
-
-  .btn-back:hover {
-    background: #e4e4e4;
-    color: #111;
-  }
-
-  .signup-links {
-    text-align: center;
-    margin-top: 1.5rem;
-    font-size: 0.9rem;
-    color: #555;
-  }
-
-  .signup-links a {
-    color: #27ae60;
-    font-weight: 600;
-    text-decoration: none;
-  }
-
-  .signup-links a:hover {
-    text-decoration: underline;
-  }
-
-  .signup-links .divider {
-    color: #ccc;
-    margin: 0 0.35rem;
-  }
-
-  @media (max-width: 576px) {
-    .login-card {
-      padding: 2rem 1.5rem;
-      border-radius: 16px;
-    }
-  }
-</style>
-
-<div class="login-wrapper">
-  <div class="login-card">
-    <div class="login-icon">
-      <i class="bi bi-person-fill"></i>
-    </div>
-    <h2>Connexion</h2>
-    <p class="login-subtitle">Ravi de vous revoir sur Pubwek</p>
-
-    <form method="POST" action="">
-      {{ form.hidden_tag() }}
-      <!-- Email -->
-      <div class="mb-3">
-        {{ form.email.label(class="form-label") }}
-        {{ form.email(class="form-control") }}
+    <!-- En-tete -->
+    <div class="text-center space-y-1 mb-space-md">
+      <div class="w-12 h-12 mx-auto rounded-xl bg-emerald-light text-emerald-deep flex items-center justify-center">
+        <span class="material-symbols-outlined text-[26px]">person</span>
       </div>
+      <h1 class="font-headline-md text-headline-md md:text-headline-lg text-slate-night">Connexion</h1>
+      <p class="font-body-md text-body-md text-on-surface-variant">Ravi de vous revoir sur Pubwek</p>
+    </div>
+
+    <form method="POST" action="" class="space-y-space-sm">
+      {{ form.hidden_tag() }}
+
+      <!-- Email -->
+      <div>
+        {{ form.email.label(class="pw-label") }}
+        {{ form.email(class="pw-input", placeholder="ex: utilisateur@gmail.com") }}
+        {% for error in form.email.errors %}
+          <p class="pw-error">{{ error }}</p>
+        {% endfor %}
+      </div>
+
       <!-- Mot de passe -->
-      <div class="mb-3">
-        {{ form.password.label(class="form-label") }}
-        <div class="input-group">
-          {{ form.password(class="form-control", id="password") }}
-          <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('password', this)" tabindex="-1">
-            <i class="bi bi-eye"></i>
+      <div>
+        {{ form.password.label(class="pw-label") }}
+        <div class="relative">
+          {{ form.password(class="pw-input pr-12", id="password", placeholder="••••••") }}
+          <button type="button" tabindex="-1"
+                  class="absolute inset-y-0 right-0 flex items-center px-space-md text-on-surface-variant hover:text-slate-midnight transition-colors"
+                  onclick="togglePasswordVisibility('password', this)" aria-label="Afficher le mot de passe">
+            <span class="material-symbols-outlined text-[20px]">visibility</span>
           </button>
         </div>
-        <div class="text-end mt-1">
-          <a href="{{ url_for('forgot_password') }}" class="small forgot-link">Mot de passe oublié ?</a>
+        {% for error in form.password.errors %}
+          <p class="pw-error">{{ error }}</p>
+        {% endfor %}
+        <div class="text-right mt-1.5">
+          <a class="font-caption text-caption font-semibold text-emerald-primary hover:text-emerald-deep hover:underline" href="{{ url_for('forgot_password') }}">Mot de passe oublié ?</a>
         </div>
       </div>
+
       <!-- Se souvenir de moi -->
-      <div class="form-check mb-3">
-        {{ form.remember(class="form-check-input") }}
-        {{ form.remember.label(class="form-check-label") }}
-      </div>
-      <!-- Boutons -->
-      <div class="d-grid gap-2 mt-4">
-        {{ form.submit(class="btn btn-lg", id="submitBtnLogin") }}
-        <a href="{{ url_for('index') }}" class="btn btn-back btn-lg">⬅ Retour à l'accueil</a>
+      <label class="flex items-center gap-space-xs cursor-pointer select-none">
+        {{ form.remember(class="w-4 h-4 rounded border-outline-variant/60 text-emerald-primary focus:ring-emerald-primary/30 focus:ring-2") }}
+        <span class="font-body-sm text-body-sm text-on-surface">{{ form.remember.label.text }}</span>
+      </label>
+
+      <!-- Actions -->
+      <div class="pt-space-xs">
+        {{ form.submit(class="pw-btn pw-btn-md pw-btn-primary w-full", id="submitBtnLogin") }}
       </div>
     </form>
 
     <!-- Liens inscription -->
-    <div class="signup-links">
-      <p>
-        Pas encore de compte ?<br>
-        <a href="{{ url_for('register', role='partageur') }}">Inscription Partageur</a>
-        <span class="divider">|</span>
-        <a href="{{ url_for('register', role='annonceur') }}">Inscription Annonceur</a>
-      </p>
+    <div class="mt-space-sm pt-space-sm border-t border-outline-variant/30 flex flex-wrap items-center justify-center gap-x-space-sm gap-y-1 font-body-sm text-body-sm text-on-surface-variant">
+      <span>Pas de compte ?</span>
+      <a class="font-semibold text-emerald-primary hover:text-emerald-deep hover:underline" href="{{ url_for('register', role='partageur') }}">Partageur</a>
+      <span class="text-outline-variant">·</span>
+      <a class="font-semibold text-amber-rich hover:text-secondary hover:underline" href="{{ url_for('register', role='annonceur') }}">Annonceur</a>
+      <span class="text-outline-variant">·</span>
+      <a class="font-semibold text-on-surface-variant hover:text-slate-midnight hover:underline" href="{{ url_for('index') }}">Accueil</a>
     </div>
+
   </div>
 </div>
+</section>
 
 <script>
-// 🆕 Bascule afficher/masquer le mot de passe (identique à register.html)
+// Bascule afficher/masquer le mot de passe (identique a register.html)
 function togglePasswordVisibility(fieldId, btn) {
   const field = document.getElementById(fieldId);
-  const icon = btn.querySelector("i");
+  const icon = btn.querySelector(".material-symbols-outlined");
   if (field.type === "password") {
     field.type = "text";
-    icon.classList.remove("bi-eye");
-    icon.classList.add("bi-eye-slash");
+    icon.textContent = "visibility_off";
+    btn.setAttribute("aria-label", "Masquer le mot de passe");
   } else {
     field.type = "password";
-    icon.classList.remove("bi-eye-slash");
-    icon.classList.add("bi-eye");
+    icon.textContent = "visibility";
+    btn.setAttribute("aria-label", "Afficher le mot de passe");
   }
 }
 </script>

@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================================================================
+   DESIGN SYSTEM PUBWEK — composants reutilisables
+   Echelle definie lors de la refonte : 3 crans de boutons, 1 padding de carte.
+   Utilises par toutes les pages qui etendent base_v2.html.
+   ========================================================================= */
+@layer components {
+
+  /* ----- Boutons : 3 crans ----- */
+  .pw-btn {
+    @apply inline-flex items-center justify-center gap-space-xs rounded-full
+           font-headline-sm font-bold text-center transition-all
+           disabled:opacity-60 disabled:pointer-events-none;
+  }
+  .pw-btn-lg { @apply px-space-md py-3.5 text-body-md sm:whitespace-nowrap; }
+  .pw-btn-md { @apply px-space-lg py-2.5 text-body-md; }
+  .pw-btn-sm { @apply px-space-md py-2 text-[14px] font-headline-md font-semibold; }
+
+  .pw-btn-primary {
+    @apply bg-emerald-primary text-on-primary shadow-lg shadow-emerald-primary/20
+           hover:bg-emerald-deep;
+  }
+  .pw-btn-secondary {
+    @apply bg-amber-rich text-on-primary shadow-lg shadow-amber-rich/20
+           hover:bg-secondary;
+  }
+  .pw-btn-neutral {
+    @apply border border-outline-variant/40 bg-white text-slate-midnight shadow-sm
+           hover:bg-surface-container-low;
+  }
+  .pw-btn-danger {
+    @apply border border-outline-variant/40 bg-white text-error shadow-sm
+           hover:bg-error-container;
+  }
+
+  /* ----- Cartes ----- */
+  .pw-card {
+    @apply bg-surface-container-lowest rounded-2xl p-space-md sm:rounded-3xl sm:p-space-lg
+           shadow-md border border-outline-variant/20;
+  }
+  .pw-card-flat {
+    @apply bg-canvas-cream rounded-2xl p-space-md;
+  }
+
+  /* ----- Formulaires ----- */
+  .pw-label {
+    @apply block font-headline-md text-[13px] font-semibold text-slate-midnight mb-1;
+  }
+  .pw-input {
+    @apply w-full rounded-xl border border-outline-variant/50 bg-white
+           px-space-md py-2.5 font-body-md text-body-md text-on-surface
+           placeholder:text-on-surface-variant/60 transition-all
+           focus:border-emerald-primary focus:outline-none
+           focus:ring-4 focus:ring-emerald-primary/15;
+  }
+  .pw-select {
+    @apply pw-input appearance-none bg-no-repeat pr-10;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236e7a73' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 0.9rem center;
+    background-size: 1.1rem;
+  }
+  .pw-file {
+    @apply w-full rounded-xl border border-outline-variant/50 bg-white
+           px-space-md py-2 font-body-sm text-body-sm text-on-surface-variant
+           file:mr-3 file:rounded-full file:border-0 file:bg-emerald-light
+           file:px-3 file:py-1.5 file:font-headline-md file:text-[13px]
+           file:font-semibold file:text-emerald-deep hover:file:bg-emerald-primary/20;
+  }
+  .pw-help  { @apply mt-1 font-caption text-caption text-on-surface-variant; }
+  .pw-error { @apply mt-1 font-caption text-caption font-semibold text-error; }
+
+  /* ----- Tuiles de statistiques ----- */
+  .pw-tile {
+    @apply bg-surface-container-lowest rounded-2xl p-space-md
+           border border-outline-variant/20 shadow-sm;
+  }
+  .pw-tile-label {
+    @apply font-label-caps text-label-caps uppercase tracking-wider
+           text-on-surface-variant font-bold;
+  }
+  .pw-tile-value {
+    @apply font-label-numeric-lg text-2xl font-extrabold tracking-tight text-slate-night;
+  }
+  .pw-tile-note { @apply font-caption text-caption text-on-surface-variant; }
+
+  /* ----- Tableaux de donnees ----- */
+  .pw-table { @apply w-full text-left border-collapse; }
+  .pw-table thead th {
+    @apply px-space-sm py-2 font-label-caps text-label-caps uppercase tracking-wider
+           text-on-surface-variant font-bold whitespace-nowrap
+           border-b border-outline-variant/40 bg-surface-container-low;
+  }
+  .pw-table tbody td {
+    @apply px-space-sm py-2 font-body-sm text-body-sm align-middle
+           border-b border-outline-variant/20;
+  }
+  .pw-table tbody tr:hover { @apply bg-surface-container-low/60; }
+  .pw-table-wrap {
+    @apply overflow-x-auto rounded-2xl border border-outline-variant/30
+           bg-surface-container-lowest;
+  }
+
+  /* ----- Onglets -----
+     Balisage : un conteneur [data-pw-tabs] > boutons .pw-tab[data-tab="cle"]
+     puis des panneaux .pw-tab-panel[data-panel="cle"]. Le JS de base_v2
+     bascule la classe .is-active. */
+  .pw-tabs {
+    @apply flex flex-wrap gap-space-2xs border-b border-outline-variant/40;
+  }
+  .pw-tab {
+    @apply inline-flex items-center gap-1.5 px-space-md py-2 -mb-px
+           border-b-2 border-transparent
+           font-headline-md text-[14px] font-semibold text-on-surface-variant
+           hover:text-slate-midnight transition-colors cursor-pointer;
+  }
+  .pw-tab.is-active {
+    @apply border-emerald-primary text-emerald-deep;
+  }
+  .pw-tab-panel { @apply hidden pt-space-sm; }
+  .pw-tab-panel.is-active { @apply block; }
+
+  /* ----- Fenetres modales -----
+     Le conteneur .pw-modal et le panneau .pw-modal-panel portent leurs
+     utilitaires directement dans le HTML (systeme deja en place dans
+     base_v2.html : ouverture par [data-pw-modal], fermeture par
+     .pw-modal-close / fond / Echap). On ne definit ici que les sous-parties. */
+  .pw-modal-head {
+    @apply flex items-center justify-between gap-space-sm px-space-md py-space-sm
+           font-headline-md text-body-md font-bold;
+  }
+  .pw-modal-body { @apply p-space-md space-y-space-sm max-h-[70vh] overflow-y-auto; }
+  .pw-modal-foot {
+    @apply flex justify-end gap-space-xs px-space-md py-space-sm
+           border-t border-outline-variant/30;
+  }
+
+  /* ----- Puces d'etat ----- */
+  .pw-chip {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full
+           font-caption text-caption font-bold whitespace-nowrap;
+  }
+  .pw-chip-success { @apply bg-emerald-light text-emerald-deep; }
+  .pw-chip-warning { @apply bg-amber-soft text-secondary; }
+  .pw-chip-danger  { @apply bg-error-container text-on-error-container; }
+  .pw-chip-neutral { @apply bg-surface-container text-on-surface-variant; }
+
+  /* ----- Pastilles ----- */
+  .pw-badge {
+    @apply inline-flex items-center gap-1 px-space-sm py-1 rounded-full
+           font-label-caps text-label-caps font-bold uppercase tracking-wider;
+  }
+}

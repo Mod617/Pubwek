@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<meta name="csrf-token" content="{{ csrf_token() if csrf_token else '' }}">
+
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#047857">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pubwek">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192x192.png') }}">
+
+{% if title %}
+  <title>{{ title }} - Pubwek</title>
+{% else %}
+  <title>Pubwek - Partage sur Statut WhatsApp au Bénin</title>
+{% endif %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pubwek.css') }}">
+<style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}
+html{scrollbar-width:thin;scrollbar-color:#bdc9c1 #f2f3ff;}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-track{background:#f2f3ff;}
+::-webkit-scrollbar-thumb{background:#bdc9c1;border-radius:9999px;border:2px solid #f2f3ff;}
+::-webkit-scrollbar-thumb:hover{background:#6e7a73;}</style>
+{% block head_extra %}{% endblock %}
+</head>
+
+<body class="bg-background font-body-md text-on-surface antialiased selection:bg-emerald-light selection:text-emerald-deep">
+
+<header class="fixed top-0 left-0 w-full z-50 bg-surface-container-lowest/85 backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_1px_8px_rgba(15,23,42,0.03)]"><div class="h-[72px] max-w-6xl mx-auto px-margin flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-sm shrink-0"><a class="flex items-center gap-space-xs group" href="{{ url_for('index') }}"><img alt="Pubwek" class="h-8 w-auto object-contain" src="{{ url_for('static', filename='images/logo.png') }}"><span class="font-headline-sm text-headline-sm text-slate-midnight font-bold tracking-tight">Pubwek</span></a></div>
+
+{% if request.endpoint == 'index' %}
+<nav class="hidden lg:flex items-center gap-space-md font-headline-md text-[14px] font-medium"><a class="text-on-surface-variant hover:text-emerald-primary transition-colors duration-200 py-1 border-b-2 border-transparent hover:border-emerald-primary" href="#comment-ca-marche">Comment ça marche</a><a class="text-on-surface-variant hover:text-emerald-primary transition-colors duration-200 py-1 border-b-2 border-transparent hover:border-emerald-primary" href="#pour-annonceurs">Pour Annonceurs</a><a class="text-on-surface-variant hover:text-emerald-primary transition-colors duration-200 py-1 border-b-2 border-transparent hover:border-emerald-primary" href="#pour-partageurs">Pour Partageurs</a><a class="text-on-surface-variant hover:text-emerald-primary transition-colors duration-200 py-1 border-b-2 border-transparent hover:border-emerald-primary" href="#simulateur">Simulateur &amp; Gains</a><a class="text-on-surface-variant hover:text-emerald-primary transition-colors duration-200 py-1 border-b-2 border-transparent hover:border-emerald-primary" href="#tarifs-faq">Tarifs</a></nav>
+{% endif %}
+
+<div class="flex items-center gap-space-sm shrink-0">
+{% if current_user.is_authenticated %}
+  {% if current_user.role == "annonceur" %}
+    <a class="hidden md:inline-flex items-center gap-1.5 px-3 py-2 font-headline-md text-[14px] font-medium text-on-surface-variant hover:text-slate-midnight transition-colors" href="{{ url_for('mes_campagnes') }}"><span class="material-symbols-outlined text-[18px]">layers</span><span>Mes Campagnes</span></a>
+    <a class="inline-flex items-center gap-1.5 px-space-md py-2.5 rounded-full bg-emerald-primary text-white font-headline-md text-[14px] font-semibold hover:bg-emerald-deep shadow-md shadow-emerald-primary/20 hover:shadow-lg transition-all transform hover:-translate-y-0.5" href="{{ url_for('dashboard_annonceur') }}"><span class="material-symbols-outlined text-[18px]">campaign</span><span>Mon tableau de bord</span></a>
+  {% elif current_user.role == "partageur" %}
+    <a class="inline-flex items-center gap-1.5 px-space-md py-2.5 rounded-full bg-emerald-primary text-white font-headline-md text-[14px] font-semibold hover:bg-emerald-deep shadow-md shadow-emerald-primary/20 hover:shadow-lg transition-all transform hover:-translate-y-0.5" href="{{ url_for('dashboard_partageur') }}"><span class="material-symbols-outlined text-[18px]">link</span><span>Mon tableau de bord</span></a>
+  {% endif %}
+  {% if current_user.role in ("admin", "sous_admin") %}
+    <a class="hidden md:inline-flex items-center gap-1.5 px-space-md py-2.5 rounded-full border border-amber-rich/40 bg-amber-soft text-secondary font-headline-md text-[14px] font-semibold transition-all hover:border-amber-rich" href="{{ url_for('admin_validate') }}"><span class="material-symbols-outlined text-[18px]">settings</span><span>Panneau Admin</span></a>
+  {% endif %}
+  {% if current_user.has_permission("gerer_contacts") %}
+    <a class="hidden lg:inline-flex items-center gap-1.5 px-3 py-2 font-headline-md text-[14px] font-medium text-secondary hover:text-amber-rich transition-colors" href="{{ url_for('admin_contacts') }}"><span class="material-symbols-outlined text-[18px]">mark_email_unread</span><span>Contacts</span></a>
+  {% endif %}
+  <a class="inline-flex items-center gap-1.5 px-space-md py-2.5 rounded-full border border-outline-variant/40 bg-white hover:bg-surface-container-low text-error font-headline-md text-[14px] font-semibold shadow-sm transition-all" href="{{ url_for('logout') }}"><span class="material-symbols-outlined text-[18px]">logout</span><span class="hidden sm:inline">Déconnexion</span></a>
+{% else %}
+  <a class="hidden md:inline-flex items-center px-3 py-2 font-headline-md text-[14px] font-medium text-on-surface-variant hover:text-slate-midnight transition-colors" href="{{ url_for('login') }}">Connexion</a>
+  <a class="hidden xl:inline-flex items-center px-space-md py-2.5 rounded-full border border-outline-variant/40 bg-white hover:bg-surface-container-low text-slate-midnight font-headline-md text-[14px] font-semibold shadow-sm transition-all hover:border-emerald-primary/40" href="{{ url_for('register', role='partageur') }}">Devenir Partageur</a>
+  <a class="inline-flex items-center gap-1.5 px-space-md py-2.5 rounded-full bg-emerald-primary text-white font-headline-md text-[14px] font-semibold hover:bg-emerald-deep shadow-md shadow-emerald-primary/20 hover:shadow-lg transition-all transform hover:-translate-y-0.5" href="{{ url_for('register', role='annonceur') }}"><span class="material-symbols-outlined text-[18px]">rocket_launch</span><span class="">Lancer une campagne</span></a>
+  <div class="w-9 h-9 rounded-full bg-surface-container-high border border-outline-variant/30 flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-slate-midnight text-[18px]">person</span></div>
+{% endif %}
+</div></div></header>
+
+<main class="w-full pt-[72px] bg-background min-h-screen">
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="max-w-6xl mx-auto px-margin pt-space-md space-y-space-xs">
+      {% for category, message in messages %}
+        {% set tone = {
+          'success': 'bg-emerald-light border-emerald-primary/30 text-emerald-deep',
+          'danger':  'bg-error-container border-error/30 text-on-error-container',
+          'warning': 'bg-amber-soft border-amber-rich/30 text-secondary',
+          'info':    'bg-surface-container border-outline-variant/40 text-on-surface'
+        }.get(category, 'bg-surface-container border-outline-variant/40 text-on-surface') %}
+        <div class="pw-flash relative flex items-start gap-space-sm rounded-2xl border px-space-md py-space-sm font-body-sm text-body-sm shadow-sm {{ tone }}" role="alert">
+          <span class="material-symbols-outlined text-[20px] shrink-0">
+            {%- if category == 'success' -%}check_circle
+            {%- elif category == 'danger' -%}error
+            {%- elif category == 'warning' -%}warning
+            {%- else -%}info
+            {%- endif -%}
+          </span>
+          <div class="flex-1">{{ message }}</div>
+          <button type="button" class="pw-flash-close shrink-0 opacity-60 hover:opacity-100 transition-opacity" aria-label="Fermer">
+            <span class="material-symbols-outlined text-[18px]">close</span>
+          </button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+</main>
+
+<footer class="w-full bg-surface-container-low border-t border-outline-variant/30 text-on-surface"><div class="max-w-6xl mx-auto px-margin pt-space-lg pb-space-md"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-space-lg pb-space-lg border-b border-outline-variant/30"><div class="lg:col-span-2 space-y-space-md"><div class="flex items-center gap-space-xs"><img alt="Pubwek" class="h-8 w-auto object-contain" src="{{ url_for('static', filename='images/logo.png') }}"><span class="font-headline-sm text-headline-sm text-slate-midnight tracking-tight">Pubwek</span></div><p class="font-body-md text-body-md text-on-surface-variant max-w-sm">La 1ère plateforme de diffusion publicitaire sur Statuts WhatsApp au Bénin. Connectez marques locales et micro-créateurs vérifiés avec traçabilité intégrale.</p><div class="flex items-center gap-space-sm pt-space-xs"><a aria-label="WhatsApp Channel" class="w-9 h-9 rounded-full bg-surface-container-lowest border border-outline-variant/40 flex items-center justify-center text-on-surface-variant hover:text-emerald-primary hover:border-emerald-primary transition-colors" href="https://whatsapp.com/channel/0029Vb8lW6FDjiOm15Zv8I1x" target="_blank" rel="noopener"><span class="material-symbols-outlined text-[18px]">chat</span></a><a aria-label="Facebook" class="w-9 h-9 rounded-full bg-surface-container-lowest border border-outline-variant/40 flex items-center justify-center text-on-surface-variant hover:text-emerald-primary hover:border-emerald-primary transition-colors" href="https://www.facebook.com/profile.php?id=61592672258762" target="_blank" rel="noopener"><span class="material-symbols-outlined text-[18px]">public</span></a><a aria-label="YouTube" class="w-9 h-9 rounded-full bg-surface-container-lowest border border-outline-variant/40 flex items-center justify-center text-on-surface-variant hover:text-emerald-primary hover:border-emerald-primary transition-colors" href="https://www.youtube.com/channel/UCAYaKvK_5p7fsVaVRpIGF1g" target="_blank" rel="noopener"><span class="material-symbols-outlined text-[18px]">smart_display</span></a><a aria-label="TikTok" class="w-9 h-9 rounded-full bg-surface-container-lowest border border-outline-variant/40 flex items-center justify-center text-on-surface-variant hover:text-emerald-primary hover:border-emerald-primary transition-colors" href="https://www.tiktok.com/@pubwek1?is_from_webapp=1&amp;sender_device=pc" target="_blank" rel="noopener"><span class="material-symbols-outlined text-[18px]">play_circle</span></a></div></div><div><h3 class="font-label-caps text-label-caps uppercase text-on-surface-variant mb-space-xs tracking-wider">Solution</h3><ul class="space-y-space-xs"><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-emerald-primary transition-colors" href="{{ url_for('register', role='annonceur') }}">Campagnes Annonceurs</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-emerald-primary transition-colors" href="{{ url_for('register', role='partageur') }}">Devenir Partageur</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-emerald-primary transition-colors" href="{{ url_for('index') }}#simulateur">Simulateur</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-emerald-primary transition-colors" href="{{ url_for('index') }}#tarifs-faq">Tarifs clics &amp; Packs</a></li></ul></div><div><h3 class="font-label-caps text-label-caps uppercase text-on-surface-variant mb-space-xs tracking-wider">Entreprise</h3><ul class="space-y-space-xs"><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-emerald-primary transition-colors" href="{{ url_for('index') }}#comment-ca-marche">À propos</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-emerald-primary transition-colors" href="{{ url_for('contact') }}">Contact</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-emerald-primary transition-colors" href="https://wa.me/2290157577882" target="_blank" rel="noopener">Support WhatsApp 24/7</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-emerald-primary transition-colors" href="{{ url_for('index') }}#comment-ca-marche">Documentation API</a></li></ul></div><div><h3 class="font-label-caps text-label-caps uppercase text-on-surface-variant mb-space-xs tracking-wider">Légal</h3><ul class="space-y-space-xs"><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-emerald-primary transition-colors cursor-pointer" data-pw-modal="modalCGU" href="#">CGU / CGV</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-emerald-primary transition-colors cursor-pointer" data-pw-modal="modalPrivacy" href="#">Confidentialité APDP</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-emerald-primary transition-colors cursor-pointer" data-pw-modal="modalCGU" href="#">Mentions légales</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-emerald-primary transition-colors cursor-pointer" data-pw-modal="modalCGU" href="#">Sécurité &amp; Anti-fraude</a></li></ul></div></div><div class="py-space-md flex flex-col md:flex-row items-center justify-between gap-space-sm border-b border-outline-variant/20"><div class="flex items-center gap-space-xs text-on-surface-variant font-caption text-caption"><span class="material-symbols-outlined text-[16px] text-emerald-primary">verified_user</span>Passerelles de paiement sécurisées et protocoles SSL 256-bit</div><div class="flex flex-wrap items-center gap-space-xs"><span class="px-2.5 py-1 rounded bg-surface-container-lowest border border-outline-variant/30 text-on-surface font-label-caps text-label-caps font-semibold">FedaPay</span><span class="px-2.5 py-1 rounded bg-momo-yellow/15 border border-momo-yellow/40 text-on-surface font-label-caps text-label-caps font-semibold">MTN MoMo</span><span class="px-2.5 py-1 rounded bg-moov-blue/15 border border-moov-blue/40 text-on-surface font-label-caps text-label-caps font-semibold">Moov Money</span><span class="px-2.5 py-1 rounded bg-celtiis-green/15 border border-celtiis-green/40 text-on-surface font-label-caps text-label-caps font-semibold">Celtiis Cash</span><span class="px-2.5 py-1 rounded bg-emerald-light border border-emerald-primary/30 text-emerald-deep font-label-caps text-label-caps font-semibold inline-flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">lock</span>SSL Secure</span></div></div><div class="pt-space-sm flex flex-col sm:flex-row items-center justify-between gap-space-xs text-on-surface-variant font-caption text-caption"><p class="">Copyright © {{ current_year if current_year else 2026 }} Pubwek. All rights reserved. Cotonou, Bénin.</p><p class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-celtiis-green"></span>Infrastructure AdTech certifiée en République du Bénin</p></div></div></footer>
+
+<!-- MODALE BLOQUANTE : ACCEPTATION OBLIGATOIRE DES CGU / CGV ET POLITIQUE DE CONFIDENTIALITÉ -->
+{% if current_user.is_authenticated and not current_user.has_accepted_terms %}
+<div class="fixed inset-0 z-[100] flex items-center justify-center p-space-md bg-slate-night/85 backdrop-blur-sm" id="forceTermsModal" aria-modal="true" role="dialog">
+  <div class="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl bg-surface-container-lowest shadow-2xl overflow-hidden">
+    <div class="bg-slate-midnight text-white px-space-lg py-space-md flex items-center gap-space-xs shrink-0">
+      <span class="material-symbols-outlined text-amber-vibrant">contract</span>
+      <h5 class="font-headline-sm text-body-md md:text-headline-sm font-bold">Conditions Générales &amp; Politique de Confidentialité — PUBWEK</h5>
+    </div>
+    <div class="p-space-lg overflow-y-auto text-left">
+      <div class="rounded-2xl bg-amber-soft text-secondary px-space-md py-space-sm font-body-sm text-body-sm mb-space-lg flex items-start gap-2">
+        <span class="material-symbols-outlined text-[20px] shrink-0">warning</span>
+        <span>Veuillez lire et accepter l'ensemble des conditions d'utilisation et de la politique de protection des données régissant la plateforme PUBWEK en République du Bénin pour pouvoir continuer.</span>
+      </div>
+
+      <h4 class="font-headline-md text-headline-md text-emerald-deep border-b border-outline-variant/40 pb-2 mb-3">1. CONDITIONS GÉNÉRALES D'UTILISATION ET DE VENTE (CGU / CGV)</h4>
+      <p class="font-caption text-caption text-on-surface-variant font-bold">Dernière mise à jour : Août 2026 | Plateforme : PUBWEK (pubwek1@gmail.com) | Portée géographique : République du Bénin</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">Article 1 – Mentions Légales et Présentation</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">La plateforme web PUBWEK est un service d'intermédiation publicitaire en ligne opérant en République du Bénin.</p>
+      <ul class="font-body-sm text-body-sm text-on-surface-variant list-disc pl-5 space-y-1">
+        <li><strong>Éditeur :</strong> Projet édité à titre individuel (en cours d'immatriculation d'entreprise au Bénin).</li>
+        <li><strong>Contact Support / Officiel :</strong> pubwek1@gmail.com | WhatsApp/Tel : +229 01 57 57 78 82</li>
+        <li><strong>Activité :</strong> Mise en relation entre des Annonceurs (entreprises, commerçants, prestataires) souhaitant promouvoir leurs offres, et des Partageurs/Ambassadeurs (particuliers résidant au Bénin) publiant ces publicités sur leurs statuts WhatsApp personnels contre rémunération au clic.</li>
+      </ul>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">Article 2 – Acceptation Explicite et Obligatoire</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">L'accès, la création de compte et l'utilisation de PUBWEK sont strictement conditionnés par l'acceptation des présentes CGU/CGV. Lors de sa première connexion, chaque utilisateur doit prendre connaissance des présentes conditions et cocher la case d'acceptation. Tout refus d'acceptation bloque immédiatement l'accès à la plateforme.</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">Article 3 – Inscription et Numéro de Téléphone</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">L'accès est réservé aux personnes physiques âgées d'au moins 18 ans ou aux structures professionnelles exerçant au Bénin. L'utilisateur s'engage à fournir des informations exactes (Nom d'entreprise, bio, numéro WhatsApp valide au Bénin). Tout compte créant de fausses identités ou utilisant des numéros de téléphone non attribués sera suspendu.</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">Article 4 – Modalités des Campagnes Publicitaires (Annonceurs)</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mb-1"><strong>4.1. Modèle de Facturation au Clic :</strong> Les campagnes sont facturées exclusivement sur la base des clics réels et uniques générés vers le lien de l'Annonceur (et non à la simple vue du statut). Les tarifs au clic sont différenciés selon le format du contenu (vidéo, image, texte) et sont directement configurables par l'administration de la plateforme.</p>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mb-1"><strong>4.2. Formats de Campagne :</strong></p>
+      <ul class="font-body-sm text-body-sm text-on-surface-variant list-disc pl-5 space-y-1 mb-2">
+        <li><strong>Option A – Pack Vidéo Pro :</strong> Assemblage dynamique des visuels de l'Annonceur en une vidéo publicitaire professionnelle avec son/musique et branding. Facturation au tarif clic spécifique aux vidéos.</li>
+        <li><strong>Option B – Multi-Statuts (Images / Textes) :</strong> Publication de visuels uniques ou multiples avec texte d'accompagnement. Facturation appliquée selon le tarif au clic propre au format choisi.</li>
+      </ul>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mb-1"><strong>4.3. Validation du Rendu Vidéo :</strong> Pour l'Option A, l'Annonceur prévisualise le rendu vidéo. Une fois le bouton "✅ Valider la vidéo" cliqué, le rendu est considéré comme accepté et définitivement validé pour le lancement de la campagne.</p>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mb-1"><strong>4.4. Répartition Journalière et Quotas de Campagne :</strong> L'objectif global de clics acheté par l'Annonceur est automatiquement réparti de manière homogène sur la durée de la campagne (de 1 à 30 jours). Un quota journalier de clics est ainsi défini.</p>
+      <p class="font-body-sm text-body-sm text-on-surface-variant"><strong>4.5. Cibles Géographiques au Bénin :</strong> Les campagnes sont diffusées de manière ciblée dans les 12 départements du Bénin (Alibori, Atacora, Atlantique, Borgou, Collines, Couffo, Donga, Littoral, Mono, Ouémé, Plateau, Zou).</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">Article 5 – Tarifs, Paiements et Politiques de Remboursement</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mb-1"><strong>5.1. Traitement des Paiements :</strong> Tous les paiements sur la plateforme PUBWEK sont effectués en Francs CFA (XOF) via la passerelle de paiement sécurisée FedaPay (MTN Mobile Money Bénin, Moov Money Bénin, Celtiis Cash Bénin, Cartes VISA / Mastercard). PUBWEK ne collecte et ne stocke jamais directement vos données bancaires ou codes secrets Mobile Money.</p>
+      <p class="font-body-sm text-body-sm text-on-surface-variant"><strong>5.2. Politique de Remboursement :</strong> Une campagne payée peut faire l'objet d'un remboursement uniquement si elle n'a <u>jamais été diffusée aux Partageurs</u> — c'est-à-dire lorsqu'elle a été refusée par l'administration après vérification et que l'Annonceur, après correction, estime ne pas pouvoir résoudre le motif du refus. Dans ce cas uniquement, l'Annonceur peut soumettre une demande de remboursement, examinée puis validée par l'administration avant tout virement. <strong>Dès qu'une campagne a été validée et partagée par au moins un Partageur, elle est considérée comme diffusée et ne peut plus faire l'objet d'aucun remboursement</strong>, conformément au Code du Numérique du Bénin (Loi n° 2017-20) encadrant les services numériques exécutés immédiatement.</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">Article 6 – Portefeuille, Gains et Retraits des Partageurs (Ambassadeurs)</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mb-1"><strong>6.1. Rémunération et Portefeuille Interne :</strong> Chaque Partageur dispose d'un portefeuille virtuel interne sur la plateforme. Chaque clic valide généré via son lien de partage crédite automatiquement un montant fixe sur son portefeuille. De même, les commissions attribuées dans le cadre du programme de parrainage (prime sur la première campagne payée et validée d'un filleul) sont directement versées sur ce même portefeuille.</p>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mb-1"><strong>6.2. Atteinte du Quota Journalier :</strong> Dès que le quota de clics alloué pour la journée à une campagne est atteint, les Partageurs participants reçoivent une notification d'arrêt. Dès réception de ce signalement, les Partageurs sont libres de retirer le visuel de leur statut WhatsApp sans que cela n'impacte ni ne réduise la rémunération déjà acquise dans leur portefeuille pour les clics générés.</p>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mb-1"><strong>6.3. Seuil et Conditions de Retrait :</strong> Les retraits s'effectuent à la demande du Partageur dès qu'il atteint le seuil minimum configurable par l'administration (fixé par défaut à 500 FCFA). Un Partageur ne peut maintenir qu'une seule demande de retrait active à la fois.</p>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mb-1"><strong>6.4. Traitement des Retraits et Preuve de Paiement :</strong> Les demandes de retrait sont exécutées soit via un prestataire de paiement automatisé, soit de manière manuelle par l'équipe administrative via transfert Mobile Money (MTN MoMo, Moov Money, Celtiis Cash). Dans le cadre d'un traitement manuel, une capture d'écran faisant office de preuve formelle de transfert est systématiquement enregistrée et conservée dans le système. En cas de rejet ou de refus motivé d'une demande de retrait, le montant correspondant est automatiquement recrédité sur le portefeuille du Partageur.</p>
+      <p class="font-body-sm text-body-sm text-on-surface-variant"><strong>6.5. Lutte contre la Triche et la Fraude :</strong> L'utilisation de bots, clics artificiels, fermes de clics, ou tout autre procédé frauduleux est strictement interdite. Tout comportement suspect entraîne le blocage immédiat du compte et la confiscation définitive du solde du portefeuille.</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">Article 7 – Historiques et Téléchargements de Preuves</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Afin de garantir une transparence totale et d'apporter des éléments probants en cas de contestation, l'ensemble des transactions (rechargements, gains de clics, commissions de parrainage, retraits) fait l'objet d'un suivi détaillé. Annonceurs et Partageurs peuvent à tout moment consulter et télécharger gratuitement leur historique financier au format PDF, servant de preuve opposable en cas de litige.</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">Article 8 – Administration et Sous-Administrateurs</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">L'administration de la plateforme PUBWEK s'effectue via le compte Administrateur Principal ou via des comptes de Sous-Administrateurs secondaires. Ces sous-administrateurs disposent de privilèges d'accès restreints et personnalisés (ex: validation exclusive des inscriptions, modération des campagnes publicitaires, ou gestion des demandes de retraits). Les sous-administrateurs s'engagent à respecter la stricte confidentialité des données auxquelles ils ont accès dans la limite expresse de leurs habilitations.</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">Article 9 – Droit Applicable et Juridiction</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mb-4">Les présentes conditions sont régies par la législation de la République du Bénin. En cas de litige non résolu à l'amiable via le support (pubwek1@gmail.com), les tribunaux de Cotonou seront seuls compétents.</p>
+
+      <h4 class="font-headline-md text-headline-md text-emerald-deep border-b border-outline-variant/40 pb-2 mb-3">2. POLITIQUE DE CONFIDENTIALITÉ ET DE PROTECTION DES DONNÉES</h4>
+      <p class="font-caption text-caption text-on-surface-variant font-bold">Conforme au Code du Numérique de la République du Bénin (Loi n° 2017-20 du 20 avril 2018 - Protection des données à caractère personnel APDP).</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">1. Données Personnelles Collectées</h6>
+      <ul class="font-body-sm text-body-sm text-on-surface-variant list-disc pl-5 space-y-1">
+        <li><strong>Informations de profil :</strong> Nom d'entreprise ou civilité, bio, logo, photo de couverture, slogan publicitaire, numéro WhatsApp (+229), liens de parrainage et relations filleuls.</li>
+        <li><strong>Fichiers médias et contenus :</strong> Images, vidéos, textes et pistes audio téléversés pour la création et la diffusion des campagnes.</li>
+        <li><strong>Données financières, cagnottes et preuves :</strong> Solde du portefeuille interne, historique des transactions et des clics, coordonnées de compte Mobile Money pour les retraits, et captures d'écran/reçus de confirmation de paiement conservés à titre de preuve.</li>
+        <li><strong>Données d'administration et de gestion :</strong> Niveaux d'habilitation et journaux d'actions des sous-administrateurs.</li>
+        <li><strong>Données de navigation et localisation :</strong> Départements de diffusion ciblés au Bénin, adresse IP et identifiants de session.</li>
+      </ul>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">2. Finalités de la Collecte</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Vos données sont traitées pour : assurer le ciblage et la comptabilisation précise des clics sur WhatsApp, procéder au calcul et au crédit automatique des gains et commissions de parrainage sur le portefeuille, exécuter les retraits de fonds (dès le seuil de 500 FCFA atteint) et en conserver les preuves de paiement, permettre la sous-administration sécurisée selon des rôles dédiés, mettre à disposition les historiques téléchargeables en PDF, et lutter efficacement contre la fraude conformément aux règles de l'APDP au Bénin.</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">3. Partage des Données avec des Tiers</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">PUBWEK ne vend et ne loue aucune donnée personnelle à des entreprises tiers. Les seules transmises le sont à <strong>FedaPay / Prestataires de paiement</strong> (exécution sécurisée des rechargements et retraits), aux <strong>Sous-Administrateurs habilités</strong> (strictement restreints aux données nécessaires à leurs missions), et au <strong>Public/Partageurs</strong> (uniquement les visuels, accroches et liens commerciaux de la campagne).</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">4. Vos Droits (Conformité APDP Bénin)</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Conformément au Code du Numérique du Bénin, vous bénéficiez du droit d'accès, de rectification, de téléchargement de vos historiques sous format PDF, ainsi que du droit de suppression de votre compte sur simple demande adressée à pubwek1@gmail.com.</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">5. Sécurité et Cookies</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mb-0">PUBWEK utilise le stockage local (localStorage / sessionStorage) et un jeton CSRF (csrf-token) pour sécuriser vos sessions. Aucune donnée financière sensible n'est conservée en clair dans votre navigateur.</p>
+    </div>
+    <div class="bg-surface-container-low border-t border-outline-variant/30 p-space-md flex flex-col gap-space-sm shrink-0">
+      <label class="flex items-start gap-space-xs font-body-sm text-body-sm font-semibold text-slate-midnight cursor-pointer" for="chkAcceptTerms">
+        <input class="mt-0.5 w-4 h-4 accent-emerald-primary shrink-0" type="checkbox" id="chkAcceptTerms">
+        <span>J'ai lu et j'accepte l'intégralité des Conditions Générales d'Utilisation / de Vente (CGU/CGV) et la Politique de Confidentialité (APDP Bénin) de Pubwek.</span>
+      </label>
+      <button type="button" class="w-full py-3 px-space-xl rounded-full bg-emerald-primary text-white font-headline-sm text-body-md font-bold shadow-lg shadow-emerald-primary/20 hover:bg-emerald-deep transition-all disabled:bg-outline-variant disabled:shadow-none disabled:cursor-not-allowed" id="btnConfirmTerms" disabled onclick="submitTermsAcceptance()">
+        🚀 Valider et continuer sur Pubwek
+      </button>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- MODALE CONSULTATION CGU / CGV (footer) -->
+<div class="pw-modal fixed inset-0 z-[90] hidden items-center justify-center p-space-md bg-slate-night/80 backdrop-blur-sm" id="modalCGU" aria-modal="true" role="dialog">
+  <div class="pw-modal-panel w-full max-w-3xl max-h-[88vh] flex flex-col rounded-3xl bg-surface-container-lowest shadow-2xl overflow-hidden">
+    <div class="bg-slate-midnight text-white px-space-lg py-space-md flex items-center justify-between gap-space-sm shrink-0">
+      <h5 class="font-headline-sm text-body-md md:text-headline-sm font-bold">Conditions Générales d'Utilisation et de Vente (CGU / CGV)</h5>
+      <button type="button" class="pw-modal-close opacity-80 hover:opacity-100 transition-opacity shrink-0" aria-label="Fermer"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="p-space-lg overflow-y-auto text-left space-y-1">
+      <p class="font-caption text-caption text-on-surface-variant font-bold">Dernière mise à jour : Août 2026 | PUBWEK (pubwek1@gmail.com) | République du Bénin</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">Article 1 – Mentions Légales et Présentation</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Plateforme d'intermédiation publicitaire éditée à titre individuel (en cours d'immatriculation au Bénin). Contact : pubwek1@gmail.com | WhatsApp : +229 01 57 57 78 82.</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">Article 2 – Acceptation Explicite</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">L'accès et l'utilisation nécessitent l'acceptation expresse des présentes conditions. Tout refus bloque l'accès au service.</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">Article 3 – Inscription</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Réservé aux personnes de 18 ans et plus ou entreprises au Bénin. Informations exactes et numéro WhatsApp valide obligatoires.</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">Article 4 – Campagnes Publicitaires &amp; Facturation au Clic</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Facturation au clic généré avec tarifs différenciés par format (vidéo, image, texte) configurés par l'admin. Répartition automatique des clics sur la durée choisie (1 à 30 jours) avec quotas journaliers. Diffusion ciblée sur les 12 départements du Bénin.</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">Article 5 – Tarifs, Paiements (FedaPay) &amp; Remboursement</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Paiements en FCFA via MTN MoMo, Moov Money, Celtiis et Cartes bancaires. <strong>Une campagne payée ne peut être remboursée que si elle n'a jamais été diffusée aux Partageurs</strong> (campagne refusée par l'administration et jugée non corrigeable par l'Annonceur), après examen et validation de l'administration. Dès qu'un Partageur a commencé à diffuser la campagne, aucun remboursement n'est plus possible.</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">Article 6 – Portefeuille, Gains &amp; Retraits (Partageurs)</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Crédit automatique sur le portefeuille interne pour chaque clic valide et commission de parrainage. Dès quota journalier atteint, liberté de retirer la publication du statut. Seuil de retrait fixé par défaut à 500 FCFA (une seule demande active). Traitement automatique ou manuel avec preuve enregistrée (capture) ; recrédit du portefeuille en cas de rejet.</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">Article 7 – Historiques et Téléchargements PDF</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Consultation et téléchargement d'historiques complets au format PDF pour partageurs et annonceurs à titre de preuve contractuelle.</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">Article 8 – Administration &amp; Sous-Administrateurs</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Gestion par l'administrateur principal et des sous-administrateurs aux droits restreints et personnalisés (inscriptions, campagnes, retraits) limités à leur périmètre.</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">Article 9 – Droit Applicable</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Régit par la législation béninoise. Juridiction exclusive des tribunaux de Cotonou.</p>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE CONSULTATION POLITIQUE DE CONFIDENTIALITÉ (footer) -->
+<div class="pw-modal fixed inset-0 z-[90] hidden items-center justify-center p-space-md bg-slate-night/80 backdrop-blur-sm" id="modalPrivacy" aria-modal="true" role="dialog">
+  <div class="pw-modal-panel w-full max-w-3xl max-h-[88vh] flex flex-col rounded-3xl bg-surface-container-lowest shadow-2xl overflow-hidden">
+    <div class="bg-slate-midnight text-white px-space-lg py-space-md flex items-center justify-between gap-space-sm shrink-0">
+      <h5 class="font-headline-sm text-body-md md:text-headline-sm font-bold">Politique de Confidentialité (APDP Bénin)</h5>
+      <button type="button" class="pw-modal-close opacity-80 hover:opacity-100 transition-opacity shrink-0" aria-label="Fermer"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="p-space-lg overflow-y-auto text-left space-y-1">
+      <p class="font-caption text-caption text-on-surface-variant font-bold">Conforme au Code du Numérique du Bénin (Loi n° 2017-20)</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">1. Données Collectées</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Profil (entreprise, bio, logo, WhatsApp, parrainage), médias de campagne, solde du portefeuille interne, historique des clics/retraits avec preuves enregistrées (captures), permissions des sous-administrateurs et ciblage départemental.</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">2. Finalités de la Collecte</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Suivi des clics, calcul des rémunérations et parrainages, traitement des retraits à partir du seuil de 500 FCFA, gestion des accès sous-admin, édition de reçus/historiques PDF et prévention de la fraude.</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">3. Partage des Données</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Aucune vente de données. Partage strictement limité à FedaPay/prestataires de paiement, aux sous-administrateurs autorisés selon leurs droits, et au public pour les visuels de campagne.</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">4. Vos Droits</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Droit d'accès, de rectification directe, de téléchargement d'historique PDF et de suppression sur demande à pubwek1@gmail.com.</p>
+
+      <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">5. Sécurité</h6>
+      <p class="font-body-sm text-body-sm text-on-surface-variant">Protection des sessions par jeton CSRF et stockage sécurisé local.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Modales (ouverture via [data-pw-modal], fermeture par croix / fond / Échap)
+  (function () {
+    function ouvrir(modal) {
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+    }
+    function fermer(modal) {
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.body.style.overflow = '';
+    }
+    document.querySelectorAll('[data-pw-modal]').forEach(function (trigger) {
+      trigger.addEventListener('click', function (e) {
+        e.preventDefault();
+        ouvrir(document.getElementById(trigger.getAttribute('data-pw-modal')));
+      });
+    });
+    document.querySelectorAll('.pw-modal').forEach(function (modal) {
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal) fermer(modal);
+      });
+      modal.querySelectorAll('.pw-modal-close').forEach(function (btn) {
+        btn.addEventListener('click', function () { fermer(modal); });
+      });
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      document.querySelectorAll('.pw-modal').forEach(function (modal) {
+        if (!modal.classList.contains('hidden')) fermer(modal);
+      });
+    });
+
+    // Fermeture des messages flash
+    document.querySelectorAll('.pw-flash-close').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var flash = btn.closest('.pw-flash');
+        if (flash) flash.remove();
+      });
+    });
+  })();
+</script>
+
+{% if current_user.is_authenticated and not current_user.has_accepted_terms %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const chk = document.getElementById('chkAcceptTerms');
+  const btn = document.getElementById('btnConfirmTerms');
+  if (chk && btn) {
+    chk.addEventListener('change', function() {
+      btn.disabled = !this.checked;
+    });
+  }
+});
+
+function submitTermsAcceptance() {
+  const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+  const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+  fetch('/accepter-cgu', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': csrfToken
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      location.reload();
+    } else {
+      alert(data.message || 'Une erreur est survenue.');
+    }
+  })
+  .catch(error => {
+    console.error('Erreur:', error);
+    alert('Erreur réseau lors de la validation.');
+  });
+}
+</script>
+{% endif %}
+
+<!-- Service Worker (PWA) -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(registration => {
+          console.log('ServiceWorker enregistré avec succès, scope:', registration.scope);
+        })
+        .catch(error => {
+          console.log('Échec de l\'enregistrement du ServiceWorker:', error);
+        });
+    });
+  }
+</script>
+
+{% if current_user.is_authenticated %}
+<script>
+  function urlBase64ToUint8Array(base64String) {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  }
+
+  async function envoyerAbonnementAuServeur(subscription) {
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    const csrfToken = csrfMeta ? csrfMeta.getAttribute("content") : "";
+
+    await fetch("/push/subscribe", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken,
+      },
+      body: JSON.stringify(subscription),
+    });
+  }
+
+  async function abonnerAuxNotificationsPush() {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      return;
+    }
+
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      let subscription = await registration.pushManager.getSubscription();
+
+      if (!subscription) {
+        if (Notification.permission !== "granted") {
+          const permission = await Notification.requestPermission();
+          if (permission !== "granted") return;
+        }
+
+        const reponseCle = await fetch("/push/vapid-public-key");
+        if (!reponseCle.ok) return;
+        const { publicKey } = await reponseCle.json();
+        if (!publicKey) return;
+
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey),
+        });
+      }
+
+      await envoyerAbonnementAuServeur(subscription);
+    } catch (error) {
+      console.log("Abonnement push non finalisé :", error);
+    }
+  }
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.ready.then(() => {
+      abonnerAuxNotificationsPush();
+    });
+  }
+</script>
+{% endif %}
+
+<script>
+  // Onglets : [data-pw-tabs] > .pw-tab[data-tab] + .pw-tab-panel[data-panel]
+  document.querySelectorAll('[data-pw-tabs]').forEach(function (groupe) {
+    const onglets = groupe.querySelectorAll('.pw-tab');
+    const panneaux = groupe.querySelectorAll('.pw-tab-panel');
+    onglets.forEach(function (onglet) {
+      onglet.addEventListener('click', function () {
+        const cle = onglet.getAttribute('data-tab');
+        onglets.forEach(function (o) {
+          const actif = o === onglet;
+          o.classList.toggle('is-active', actif);
+          o.setAttribute('aria-selected', String(actif));
+        });
+        panneaux.forEach(function (p) {
+          p.classList.toggle('is-active', p.getAttribute('data-panel') === cle);
+        });
+      });
+    });
+  });
+</script>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

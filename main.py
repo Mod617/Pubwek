@@ -3272,6 +3272,7 @@ def dashboard_partageur():
         solde_portefeuille=current_user.wallet_balance or 0.0,
         affiliate_link=affiliate_link,
         recompense_parrainage_partageur=config.referral_reward_partageur_fixe,  # 🆕
+        taux_parrainage_annonceur=config.referral_reward_rate,  # 🆕
         notifications=notifications,
         notifications_non_lues=notifications_non_lues,
         campagnes_disponibles=campagnes_disponibles

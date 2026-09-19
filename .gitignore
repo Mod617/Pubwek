@@ -20,3 +20,6 @@ instance/
 # pour que Railway n'ait aucune etape de build Node a executer.
 node_modules/
 package-lock.json
+
+# Configuration locale du serveur d'apercu (chemins absolus propres a la machine)
+.claude/launch.json

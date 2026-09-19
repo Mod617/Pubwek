@@ -12,13 +12,26 @@ pages migrees : n'affecte ni la base de travail locale ni la production.
 import os, sys, tempfile, datetime
 PROJ = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, PROJ)
-db = os.path.join(tempfile.gettempdir(), "pubwek_preview.db")
+
+
+def _port():
+    """Port d'ecoute : --port <n>, puis PORT, puis 5001 par defaut."""
+    if "--port" in sys.argv:
+        return int(sys.argv[sys.argv.index("--port") + 1])
+    return int(os.environ.get("PORT") or 5001)
+
+
+PORT = _port()
+# Base et dossier de travail distincts par port : deux apercus peuvent tourner
+# en parallele sans que l'un verrouille ou efface les donnees de l'autre.
+_suffixe = "" if PORT == 5001 else f"_{PORT}"
+db = os.path.join(tempfile.gettempdir(), f"pubwek_preview{_suffixe}.db")
 if os.environ.get("APERCU_RESET", "1") == "1" and os.path.exists(db):
     os.remove(db)
 # Dossier de televersement separe : au demarrage, l'application lance un
 # nettoyage des fichiers orphelins. Sans cette isolation, l'apercu supprimerait
 # de vrais fichiers du dossier uploads_secure du projet.
-APERCU_WORKDIR = os.path.join(tempfile.gettempdir(), "pubwek_apercu")
+APERCU_WORKDIR = os.path.join(tempfile.gettempdir(), f"pubwek_apercu{_suffixe}")
 os.makedirs(APERCU_WORKDIR, exist_ok=True)
 
 os.chdir(APERCU_WORKDIR)   # -> UPLOAD_FOLDER = <temp>/uploads_secure
@@ -102,4 +115,4 @@ def _apercu_connexion(role):
     login_user(u, force=True)
     return redirect(request.args.get("next") or "/")
 
-app.run(port=5001, debug=False, threaded=True)
+app.run(port=PORT, debug=False, threaded=True)

@@ -29,7 +29,7 @@
   <div class="pw-card !p-space-md">
     <div class="flex flex-wrap items-center justify-between gap-space-xs mb-space-xs">
       <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight">
-        <span class="material-symbols-outlined text-[20px] text-emerald-primary">calendar_month</span>
+        <span class="material-symbols-outlined text-[20px] text-brand-primary">calendar_month</span>
         Progression de la diffusion
       </h2>
       {% if campaign.is_active and campaign.current_day_number %}
@@ -52,16 +52,16 @@
       </div>
       <div class="pw-card-flat">
         <span class="pw-tile-label">Clics aujourd'hui</span>
-        <div class="pw-tile-value !text-xl text-emerald-deep">{{ campaign.views_today or 0 }} <span class="text-sm text-on-surface-variant">/ {{ quota_jour }}</span></div>
+        <div class="pw-tile-value !text-xl text-brand-deep">{{ campaign.views_today or 0 }} <span class="text-sm text-on-surface-variant">/ {{ quota_jour }}</span></div>
       </div>
       <div class="pw-card-flat">
         <span class="pw-tile-label">Clics totaux / objectif</span>
-        <div class="pw-tile-value !text-xl text-emerald-deep">{{ campaign.whatsapp_views or 0 }} <span class="text-sm text-on-surface-variant">/ {{ campaign.target_whatsapp_views }}</span></div>
+        <div class="pw-tile-value !text-xl text-brand-deep">{{ campaign.whatsapp_views or 0 }} <span class="text-sm text-on-surface-variant">/ {{ campaign.target_whatsapp_views }}</span></div>
       </div>
     </div>
 
     <div class="mt-space-xs h-1.5 rounded-full bg-surface-container overflow-hidden">
-      <div class="h-full rounded-full {{ 'bg-amber-rich' if campaign.daily_quota_paused else 'bg-emerald-primary' }}"
+      <div class="h-full rounded-full {{ 'bg-amber-rich' if campaign.daily_quota_paused else 'bg-brand-primary' }}"
            style="width: {{ [pct_jour, 100] | min }}%;"></div>
     </div>
 
@@ -80,9 +80,9 @@
       <span class="pw-tile-label">Nombre de partageurs</span>
       <span class="pw-tile-value">{{ partageurs | length }}</span>
     </div>
-    <div class="pw-tile border-l-4 border-l-emerald-primary">
+    <div class="pw-tile border-l-4 border-l-brand-primary">
       <span class="pw-tile-label">Clics valides (facturables)</span>
-      <span class="pw-tile-value text-emerald-deep">{{ "{:,}".format(total_clics_valides) }}</span>
+      <span class="pw-tile-value text-brand-deep">{{ "{:,}".format(total_clics_valides) }}</span>
     </div>
     <div class="pw-tile border-l-4 border-l-error">
       <span class="pw-tile-label">Clics frauduleux (bloqués)</span>
@@ -92,7 +92,7 @@
 
   <!-- Partageurs -->
   <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
-    <span class="material-symbols-outlined text-[20px] text-emerald-primary">group</span>
+    <span class="material-symbols-outlined text-[20px] text-brand-primary">group</span>
     Partageurs de la campagne
   </h2>
 
@@ -149,7 +149,7 @@
 
   <!-- Detail clic par clic -->
   <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
-    <span class="material-symbols-outlined text-[20px] text-emerald-primary">sort</span>
+    <span class="material-symbols-outlined text-[20px] text-brand-primary">sort</span>
     Détail des clics
   </h2>
 
@@ -172,7 +172,7 @@
           <td class="font-semibold text-slate-midnight">{{ c.pseudo }}</td>
           <td>
             {% if c.link_type == "whatsapp" %}
-              <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-emerald-primary">chat</span> WhatsApp</span>
+              <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-brand-primary">chat</span> WhatsApp</span>
             {% else %}
               <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-amber-rich">public</span> Site web</span>
             {% endif %}

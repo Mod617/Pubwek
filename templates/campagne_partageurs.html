@@ -7,7 +7,7 @@
   <!-- En-tete -->
   <div class="flex flex-wrap items-end justify-between gap-space-sm">
     <div class="min-w-0">
-      <span class="pw-badge bg-emerald-light text-emerald-deep">Performance de diffusion</span>
+      <span class="pw-badge bg-brand-light text-brand-deep">Performance de diffusion</span>
       <h1 class="mt-1 font-headline-md text-headline-md text-slate-night">Partageurs de la campagne</h1>
       <p class="font-body-sm text-body-sm text-on-surface-variant">
         {{ campaign.promotion_type | capitalize }} — {{ campaign.promotion_detail }}
@@ -24,13 +24,13 @@
       <span class="pw-tile-label">Partageurs</span>
       <span class="pw-tile-value">{{ partageurs | length }}</span>
     </div>
-    <div class="pw-tile border-l-4 border-l-emerald-primary">
+    <div class="pw-tile border-l-4 border-l-brand-primary">
       <span class="pw-tile-label">Total clics valides</span>
-      <span class="pw-tile-value text-emerald-deep">{{ "{:,}".format(total_clics).replace(",", " ") }}</span>
+      <span class="pw-tile-value text-brand-deep">{{ "{:,}".format(total_clics).replace(",", " ") }}</span>
     </div>
     <div class="pw-tile">
       <span class="pw-tile-label flex items-center gap-1">
-        <span class="material-symbols-outlined text-[14px] text-emerald-primary">chat</span> Clics WhatsApp
+        <span class="material-symbols-outlined text-[14px] text-brand-primary">chat</span> Clics WhatsApp
       </span>
       <span class="pw-tile-value">{{ "{:,}".format(total_clics_whatsapp).replace(",", " ") }}</span>
     </div>
@@ -77,12 +77,12 @@
     </div>
 
     <div class="mt-1.5 flex h-2.5 w-full overflow-hidden rounded-full bg-surface-container">
-      <div class="h-full bg-emerald-primary" style="width: {{ [pct_whatsapp, 100] | min }}%;"></div>
+      <div class="h-full bg-brand-primary" style="width: {{ [pct_whatsapp, 100] | min }}%;"></div>
       <div class="h-full bg-amber-rich" style="width: {{ [pct_site, 100 - ([pct_whatsapp, 100] | min)] | min }}%;"></div>
     </div>
 
     <div class="mt-1.5 flex flex-wrap gap-space-sm font-caption text-caption text-on-surface-variant">
-      <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-primary"></span> WhatsApp</span>
+      <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-brand-primary"></span> WhatsApp</span>
       <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-rich"></span> Site web</span>
       <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-surface-container border border-outline-variant/50"></span> Restant à atteindre</span>
     </div>
@@ -106,7 +106,7 @@
           <tr>
             <td>
               <span class="flex items-center gap-space-xs">
-                <span class="w-7 h-7 shrink-0 rounded-full bg-emerald-light text-emerald-deep font-headline-md text-[13px] font-bold flex items-center justify-center uppercase">{{ p.pseudo[0] }}</span>
+                <span class="w-7 h-7 shrink-0 rounded-full bg-brand-light text-brand-deep font-headline-md text-[13px] font-bold flex items-center justify-center uppercase">{{ p.pseudo[0] }}</span>
                 <span class="font-semibold text-slate-midnight">{{ p.pseudo }}</span>
               </span>
             </td>
@@ -142,13 +142,13 @@
       {% for p in partageurs %}
       <div class="pw-tile">
         <div class="flex items-center gap-space-xs">
-          <span class="w-8 h-8 shrink-0 rounded-full bg-emerald-light text-emerald-deep font-headline-md text-[14px] font-bold flex items-center justify-center uppercase">{{ p.pseudo[0] }}</span>
+          <span class="w-8 h-8 shrink-0 rounded-full bg-brand-light text-brand-deep font-headline-md text-[14px] font-bold flex items-center justify-center uppercase">{{ p.pseudo[0] }}</span>
           <strong class="font-headline-md text-body-md text-slate-midnight">{{ p.pseudo }}</strong>
         </div>
         <dl class="mt-1.5 space-y-0.5 font-caption text-caption">
           <div class="flex items-center justify-between gap-space-xs">
             <dt class="flex items-center gap-1 text-on-surface-variant">
-              <span class="material-symbols-outlined text-[14px] text-emerald-primary">chat</span> Clics WhatsApp
+              <span class="material-symbols-outlined text-[14px] text-brand-primary">chat</span> Clics WhatsApp
             </dt>
             <dd>
               {% if p.clics_whatsapp %}
@@ -184,7 +184,7 @@
   {% endif %}
 
   <p class="flex items-start gap-space-xs font-caption text-caption text-on-surface-variant">
-    <span class="material-symbols-outlined text-[16px] text-emerald-primary shrink-0">verified_user</span>
+    <span class="material-symbols-outlined text-[16px] text-brand-primary shrink-0">verified_user</span>
     Pour la sécurité et la confidentialité des partageurs, seul leur pseudo est affiché. Aucune
     information personnelle (numéro, email) n'est communiquée aux annonceurs.
   </p>

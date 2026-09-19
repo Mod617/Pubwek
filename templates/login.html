@@ -8,7 +8,7 @@
 
     <!-- En-tete -->
     <div class="text-center space-y-1 mb-space-md">
-      <div class="w-12 h-12 mx-auto rounded-xl bg-emerald-light text-emerald-deep flex items-center justify-center">
+      <div class="w-12 h-12 mx-auto rounded-xl bg-brand-light text-brand-deep flex items-center justify-center">
         <span class="material-symbols-outlined text-[26px]">person</span>
       </div>
       <h1 class="font-headline-md text-headline-md md:text-headline-lg text-slate-night">Connexion</h1>
@@ -42,13 +42,13 @@
           <p class="pw-error">{{ error }}</p>
         {% endfor %}
         <div class="text-right mt-1.5">
-          <a class="font-caption text-caption font-semibold text-emerald-primary hover:text-emerald-deep hover:underline" href="{{ url_for('forgot_password') }}">Mot de passe oublié ?</a>
+          <a class="font-caption text-caption font-semibold text-brand-primary hover:text-brand-deep hover:underline" href="{{ url_for('forgot_password') }}">Mot de passe oublié ?</a>
         </div>
       </div>
 
       <!-- Se souvenir de moi -->
       <label class="flex items-center gap-space-xs cursor-pointer select-none">
-        {{ form.remember(class="w-4 h-4 rounded border-outline-variant/60 text-emerald-primary focus:ring-emerald-primary/30 focus:ring-2") }}
+        {{ form.remember(class="w-4 h-4 rounded border-outline-variant/60 text-brand-primary focus:ring-brand-primary/30 focus:ring-2") }}
         <span class="font-body-sm text-body-sm text-on-surface">{{ form.remember.label.text }}</span>
       </label>
 
@@ -61,7 +61,7 @@
     <!-- Liens inscription -->
     <div class="mt-space-sm pt-space-sm border-t border-outline-variant/30 flex flex-wrap items-center justify-center gap-x-space-sm gap-y-1 font-body-sm text-body-sm text-on-surface-variant">
       <span>Pas de compte ?</span>
-      <a class="font-semibold text-emerald-primary hover:text-emerald-deep hover:underline" href="{{ url_for('register', role='partageur') }}">Partageur</a>
+      <a class="font-semibold text-brand-primary hover:text-brand-deep hover:underline" href="{{ url_for('register', role='partageur') }}">Partageur</a>
       <span class="text-outline-variant">·</span>
       <a class="font-semibold text-amber-rich hover:text-secondary hover:underline" href="{{ url_for('register', role='annonceur') }}">Annonceur</a>
       <span class="text-outline-variant">·</span>

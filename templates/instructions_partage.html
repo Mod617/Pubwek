@@ -2,7 +2,7 @@
 
 {% macro etape(numero, titre) %}
   <h2 class="flex items-center gap-space-xs font-headline-md text-body-md font-bold text-slate-midnight">
-    <span class="w-6 h-6 shrink-0 rounded-full bg-emerald-primary text-white font-label-numeric-md text-[13px] font-bold flex items-center justify-center">{{ numero }}</span>
+    <span class="w-6 h-6 shrink-0 rounded-full bg-brand-primary text-white font-label-numeric-md text-[13px] font-bold flex items-center justify-center">{{ numero }}</span>
     {{ titre }}
   </h2>
 {% endmacro %}
@@ -15,7 +15,7 @@
 
     <!-- En-tete -->
     <div>
-      <h1 class="flex items-center gap-1.5 font-headline-md text-headline-md text-emerald-deep">
+      <h1 class="flex items-center gap-1.5 font-headline-md text-headline-md text-brand-deep">
         <span class="material-symbols-outlined text-[24px]">check_circle</span>
         Partage enregistré
       </h1>
@@ -37,7 +37,7 @@
         <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral" onclick="copierTexte()">
           <span class="material-symbols-outlined text-[18px]">content_copy</span> Copier le texte complet
         </button>
-        <span id="copieFeedback" class="hidden font-caption text-caption font-semibold text-emerald-primary">Copié</span>
+        <span id="copieFeedback" class="hidden font-caption text-caption font-semibold text-brand-primary">Copié</span>
       </div>
     </div>
 
@@ -56,12 +56,12 @@
       <div>
         <div class="flex">
           <span class="inline-flex items-center rounded-l-xl border border-r-0 border-outline-variant/50 bg-surface-container px-space-sm">
-            <span class="material-symbols-outlined text-[18px] text-emerald-primary">chat</span>
+            <span class="material-symbols-outlined text-[18px] text-brand-primary">chat</span>
           </span>
           <input type="text" class="pw-input rounded-none font-label-numeric-md text-label-numeric-md" id="lienWhatsappTracking" value="{{ lien_whatsapp_tracking }}" readonly>
           <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral rounded-l-none shrink-0" onclick="copierLien('lienWhatsappTracking', 'feedbackWhatsapp')">Copier</button>
         </div>
-        <span id="feedbackWhatsapp" class="hidden font-caption text-caption font-semibold text-emerald-primary">Lien WhatsApp copié</span>
+        <span id="feedbackWhatsapp" class="hidden font-caption text-caption font-semibold text-brand-primary">Lien WhatsApp copié</span>
       </div>
       {% endif %}
 
@@ -69,12 +69,12 @@
       <div>
         <div class="flex">
           <span class="inline-flex items-center rounded-l-xl border border-r-0 border-outline-variant/50 bg-surface-container px-space-sm">
-            <span class="material-symbols-outlined text-[18px] text-emerald-primary">public</span>
+            <span class="material-symbols-outlined text-[18px] text-brand-primary">public</span>
           </span>
           <input type="text" class="pw-input rounded-none font-label-numeric-md text-label-numeric-md" id="lienSiteTracking" value="{{ lien_site_tracking }}" readonly>
           <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral rounded-l-none shrink-0" onclick="copierLien('lienSiteTracking', 'feedbackSite')">Copier</button>
         </div>
-        <span id="feedbackSite" class="hidden font-caption text-caption font-semibold text-emerald-primary">Lien du site copié</span>
+        <span id="feedbackSite" class="hidden font-caption text-caption font-semibold text-brand-primary">Lien du site copié</span>
       </div>
       {% endif %}
     </div>
@@ -157,7 +157,7 @@
             </div>
 
             {% if item.statut == "validee" %}
-              <p class="mt-1 font-caption text-caption text-emerald-deep">
+              <p class="mt-1 font-caption text-caption text-brand-deep">
                 Vos clics du jour {{ item.jour }} ont été validés et ajoutés à votre portefeuille disponible.
               </p>
             {% elif item.statut == "en_attente" %}
@@ -199,7 +199,7 @@
     </div>
 
     <p class="text-center">
-      <a href="{{ url_for('dashboard_partageur') }}" class="font-body-sm text-body-sm font-semibold text-emerald-primary hover:text-emerald-deep hover:underline">
+      <a href="{{ url_for('dashboard_partageur') }}" class="font-body-sm text-body-sm font-semibold text-brand-primary hover:text-brand-deep hover:underline">
         Retour au tableau de bord
       </a>
     </p>

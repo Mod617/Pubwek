@@ -7,7 +7,7 @@
   <!-- En-tete -->
   <div class="flex flex-wrap items-end justify-between gap-space-sm">
     <div class="min-w-0">
-      <span class="pw-badge bg-emerald-light text-emerald-deep">Espace annonceur</span>
+      <span class="pw-badge bg-brand-light text-brand-deep">Espace annonceur</span>
       <h1 class="mt-1 font-headline-md text-headline-md text-slate-night">Mes transactions</h1>
       <p class="font-body-sm text-body-sm text-on-surface-variant">
         Historique complet de vos paiements de campagnes publicitaires.
@@ -25,10 +25,10 @@
 
   <!-- Resume -->
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-space-sm">
-    <div class="sm:col-span-2 rounded-2xl p-space-md bg-gradient-to-br from-emerald-deep to-slate-night text-white shadow-lg relative overflow-hidden">
-      <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-emerald-bright/20 blur-2xl"></div>
+    <div class="sm:col-span-2 rounded-2xl p-space-md bg-gradient-to-br from-brand-deep to-slate-night text-white shadow-lg relative overflow-hidden">
+      <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-brand-bright/20 blur-2xl"></div>
       <div class="relative">
-        <div class="font-label-caps text-label-caps uppercase tracking-wider text-emerald-bright font-bold">Total payé (transactions approuvées)</div>
+        <div class="font-label-caps text-label-caps uppercase tracking-wider text-brand-bright font-bold">Total payé (transactions approuvées)</div>
         <div class="font-label-numeric-lg text-3xl font-extrabold tracking-tight">
           {{ "{:,.0f}".format(total_paye) }} <span class="text-base font-bold opacity-80">FCFA</span>
         </div>
@@ -61,7 +61,7 @@
           <td>
             {% if t.campaign %}
               <a href="{{ url_for('campagne_partageurs', campaign_id=t.campaign.id) }}"
-                 class="font-semibold text-slate-midnight hover:text-emerald-primary hover:underline">
+                 class="font-semibold text-slate-midnight hover:text-brand-primary hover:underline">
                 #{{ t.campaign.id }} — {{ t.campaign.promotion_detail or t.campaign.promotion_type }}
               </a>
             {% else %}
@@ -70,9 +70,9 @@
           </td>
           <td>
             {% if t.transaction_type == "campaign_payment" %}
-              <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-emerald-primary">campaign</span> Paiement de campagne</span>
+              <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-brand-primary">campaign</span> Paiement de campagne</span>
             {% elif "subscription" in t.transaction_type %}
-              <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-emerald-primary">play_circle</span> Abonnement vidéo</span>
+              <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-brand-primary">play_circle</span> Abonnement vidéo</span>
             {% else %}
               <span>{{ t.transaction_type }}</span>
             {% endif %}

@@ -7,7 +7,7 @@
   <!-- ================= EN-TETE ================= -->
   <div class="flex flex-wrap items-end justify-between gap-space-sm">
     <div class="min-w-0">
-      <span class="pw-badge bg-emerald-light text-emerald-deep">Espace annonceur</span>
+      <span class="pw-badge bg-brand-light text-brand-deep">Espace annonceur</span>
       <h1 class="mt-1 font-headline-md text-headline-md text-slate-night">Mes campagnes publicitaires</h1>
     </div>
     <div class="flex items-center gap-space-xs">
@@ -62,7 +62,7 @@
 
         <div class="mt-auto pt-space-xs">
           {% if campaign.refund_status == "processed" %}
-            <p class="flex items-start gap-1 rounded-xl bg-emerald-light px-space-sm py-1.5 font-caption text-caption text-emerald-deep">
+            <p class="flex items-start gap-1 rounded-xl bg-brand-light px-space-sm py-1.5 font-caption text-caption text-brand-deep">
               <span class="material-symbols-outlined text-[14px] shrink-0">check_circle</span>
               <span><strong>Remboursement effectué.</strong>
                 {{ campaign.refund_processed_note or "Le virement a été effectué avec succès." }}</span>
@@ -195,7 +195,7 @@
                 <div class="max-h-44 overflow-y-auto rounded-xl border border-outline-variant/30 p-space-sm grid grid-cols-2 sm:grid-cols-3 gap-y-1 gap-x-space-xs">
                   {% for departement, communes in departements_communes.items() %}
                   <label class="flex items-center gap-1.5 cursor-pointer select-none min-w-0">
-                    <input class="w-3.5 h-3.5 rounded border-outline-variant/60 text-emerald-primary focus:ring-emerald-primary/30"
+                    <input class="w-3.5 h-3.5 rounded border-outline-variant/60 text-brand-primary focus:ring-brand-primary/30"
                            type="checkbox" name="provinces[]" value="{{ departement }}"
                            id="prov_{{ campaign.id }}_{{ departement }}"
                            {% if departement in provinces_actuelles %}checked{% endif %}>
@@ -232,7 +232,7 @@
                     (contenu, zones, contact) reste modifiable.</span>
                 </p>
               {% else %}
-                <p class="rounded-xl bg-emerald-light px-space-sm py-1.5 font-caption text-caption text-emerald-deep">
+                <p class="rounded-xl bg-brand-light px-space-sm py-1.5 font-caption text-caption text-brand-deep">
                   Montant estimé à payer :
                   <strong class="font-label-numeric-md text-label-numeric-md"><span class="js-estimation-output">{{ "{:,.0f}".format(campaign.total_cost) }}</span> XOF</strong>
                   <span class="opacity-70">(commission de {{ config.commission_rate | round(0) }}% incluse)</span>
@@ -389,7 +389,7 @@
   <!-- ================= EN COURS DE DIFFUSION ================= -->
   <div class="space-y-space-xs">
     <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight">
-      <span class="material-symbols-outlined text-[20px] text-emerald-primary">rocket_launch</span>
+      <span class="material-symbols-outlined text-[20px] text-brand-primary">rocket_launch</span>
       En cours de diffusion
       {% if en_cours %}<span class="pw-chip pw-chip-success">{{ en_cours | length }}</span>{% endif %}
     </h2>
@@ -399,7 +399,7 @@
       {% for campaign in en_cours %}
       {% set quota_jour = campaign.quota_effectif_du_jour() %}
       {% set jour_pct = (campaign.views_today / quota_jour * 100) if quota_jour else 0 %}
-      <div id="campagne-{{ campaign.id }}" class="pw-tile border-l-4 border-l-emerald-primary flex flex-col">
+      <div id="campagne-{{ campaign.id }}" class="pw-tile border-l-4 border-l-brand-primary flex flex-col">
         <div class="flex items-start justify-between gap-space-xs mb-1">
           <h3 class="font-headline-md text-body-md font-bold text-slate-midnight leading-snug min-w-0">
             {{ campaign.promotion_type | capitalize }} — {{ campaign.promotion_detail }}
@@ -420,7 +420,7 @@
             </span>
           </div>
           <div class="mt-1 h-1.5 rounded-full bg-surface-container overflow-hidden">
-            <div class="h-full rounded-full {{ 'bg-amber-rich' if campaign.daily_quota_paused else 'bg-emerald-primary' }}"
+            <div class="h-full rounded-full {{ 'bg-amber-rich' if campaign.daily_quota_paused else 'bg-brand-primary' }}"
                  style="width: {{ [jour_pct, 100] | min }}%;"></div>
           </div>
         </div>
@@ -447,7 +447,7 @@
   <!-- ================= TERMINEES ================= -->
   <div class="space-y-space-xs">
     <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight">
-      <span class="material-symbols-outlined text-[20px] text-emerald-primary">task_alt</span>
+      <span class="material-symbols-outlined text-[20px] text-brand-primary">task_alt</span>
       Terminées
       {% if terminees %}<span class="pw-chip pw-chip-neutral">{{ terminees | length }}</span>{% endif %}
     </h2>

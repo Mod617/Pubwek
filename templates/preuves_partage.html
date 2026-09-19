@@ -20,13 +20,13 @@
       <strong class="text-slate-midnight">#{{ camp_filtree.id }} — {{ camp_filtree.promotion_detail or camp_filtree.promotion_type }}</strong>
     </span>
     <a href="{{ url_for('admin_preuves_partage') }}"
-       class="font-body-sm text-body-sm font-semibold text-emerald-primary hover:underline">Voir toutes les campagnes</a>
+       class="font-body-sm text-body-sm font-semibold text-brand-primary hover:underline">Voir toutes les campagnes</a>
   </div>
   {% endif %}
 
   {% if not preuves %}
     <div class="pw-card !p-space-lg text-center">
-      <span class="material-symbols-outlined text-[36px] text-emerald-primary">check_circle</span>
+      <span class="material-symbols-outlined text-[36px] text-brand-primary">check_circle</span>
       <p class="mt-1 font-body-sm text-body-sm text-on-surface-variant">Aucune preuve en attente pour le moment.</p>
     </div>
   {% else %}

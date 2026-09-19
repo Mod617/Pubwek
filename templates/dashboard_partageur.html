@@ -8,7 +8,7 @@
   <div class="flex flex-wrap items-center justify-between gap-space-sm">
     <div>
       <h1 class="font-headline-md text-headline-md text-slate-night">
-        Tableau de bord <span class="text-emerald-primary">Partageur</span>
+        Tableau de bord <span class="text-brand-primary">Partageur</span>
       </h1>
       <p class="font-body-sm text-body-sm text-on-surface-variant">
         Bienvenue, {{ current_user.pseudo or current_user.email }}
@@ -35,7 +35,7 @@
             <a class="notif-item flex items-start gap-space-xs rounded-xl px-space-sm py-2 hover:bg-surface-container-low transition-colors {{ 'font-semibold text-on-surface' if not notif.is_read else 'text-on-surface-variant' }}"
                href="{{ notif.link or '#' }}">
               <span class="mt-1.5 w-2 h-2 rounded-full shrink-0
-                {%- if notif.category == 'success' %} bg-emerald-primary
+                {%- if notif.category == 'success' %} bg-brand-primary
                 {%- elif notif.category == 'warning' %} bg-amber-rich
                 {%- elif notif.category == 'danger' %} bg-error
                 {%- else %} bg-outline-variant{% endif %}"></span>
@@ -60,10 +60,10 @@
   <div class="grid grid-cols-1 lg:grid-cols-5 gap-space-sm">
 
     <!-- Portefeuille -->
-    <div class="lg:col-span-2 rounded-2xl p-space-md bg-gradient-to-br from-emerald-deep to-slate-night text-white shadow-lg relative overflow-hidden">
-      <div class="absolute -right-8 -bottom-8 w-32 h-32 rounded-full bg-emerald-bright/20 blur-2xl"></div>
+    <div class="lg:col-span-2 rounded-2xl p-space-md bg-gradient-to-br from-brand-deep to-slate-night text-white shadow-lg relative overflow-hidden">
+      <div class="absolute -right-8 -bottom-8 w-32 h-32 rounded-full bg-brand-bright/20 blur-2xl"></div>
       <div class="relative space-y-space-xs">
-        <div class="flex items-center gap-1.5 font-label-caps text-label-caps uppercase tracking-wider text-emerald-bright font-bold">
+        <div class="flex items-center gap-1.5 font-label-caps text-label-caps uppercase tracking-wider text-brand-bright font-bold">
           <span class="material-symbols-outlined text-[16px]">account_balance_wallet</span>
           Solde disponible
         </div>
@@ -80,7 +80,7 @@
         </div>
         {% endif %}
 
-        <a href="{{ url_for('mes_retraits') }}" class="pw-btn pw-btn-sm bg-white text-emerald-deep hover:bg-emerald-light w-full">
+        <a href="{{ url_for('mes_retraits') }}" class="pw-btn pw-btn-sm bg-white text-brand-deep hover:bg-brand-light w-full">
           <span class="material-symbols-outlined text-[18px]">payments</span>
           Demander un retrait
         </a>
@@ -90,7 +90,7 @@
     <!-- Filleuls -->
     <div class="pw-tile">
       <div class="flex items-center gap-1.5 mb-1">
-        <span class="material-symbols-outlined text-[18px] text-emerald-primary">group</span>
+        <span class="material-symbols-outlined text-[18px] text-brand-primary">group</span>
         <span class="pw-tile-label">Filleuls</span>
       </div>
       <div class="pw-tile-value">{{ total_filleuls }}</div>
@@ -98,12 +98,12 @@
     </div>
 
     <!-- Gains credites -->
-    <div class="pw-tile border-l-4 border-l-emerald-primary">
+    <div class="pw-tile border-l-4 border-l-brand-primary">
       <div class="flex items-center gap-1.5 mb-1">
-        <span class="material-symbols-outlined text-[18px] text-emerald-primary">paid</span>
+        <span class="material-symbols-outlined text-[18px] text-brand-primary">paid</span>
         <span class="pw-tile-label">Gains crédités</span>
       </div>
-      <div class="pw-tile-value text-emerald-deep">{{ gains_valides | round(0) }} <span class="text-base">FCFA</span></div>
+      <div class="pw-tile-value text-brand-deep">{{ gains_valides | round(0) }} <span class="text-base">FCFA</span></div>
       <p class="pw-tile-note">Déjà ajoutés à votre portefeuille</p>
     </div>
 
@@ -140,14 +140,14 @@
         Copier
       </button>
     </div>
-    <p id="copyFeedback" class="hidden mt-1 font-caption text-caption font-semibold text-emerald-primary">Lien copié avec succès</p>
+    <p id="copyFeedback" class="hidden mt-1 font-caption text-caption font-semibold text-brand-primary">Lien copié avec succès</p>
   </div>
 
   <!-- ================= CAMPAGNES DISPONIBLES ================= -->
   <div id="produitsDisponibles" class="space-y-space-xs">
     <div class="flex items-center justify-between gap-space-sm">
       <h2 class="font-headline-sm text-body-md font-bold text-slate-midnight flex items-center gap-1.5">
-        <span class="material-symbols-outlined text-[20px] text-emerald-primary">storefront</span>
+        <span class="material-symbols-outlined text-[20px] text-brand-primary">storefront</span>
         Campagnes disponibles dans votre zone
       </h2>
       {% if campagnes_disponibles %}
@@ -188,7 +188,7 @@
                 {% elif item.jour_actuel > 0 %}
                   {% set quota_pct = (item.vues_aujourdhui / item.quota_du_jour * 100) if item.quota_du_jour else 0 %}
                   <div class="h-1.5 rounded-full bg-surface-container overflow-hidden">
-                    <div class="h-full rounded-full bg-emerald-primary" style="width: {{ [quota_pct, 100] | min }}%;"></div>
+                    <div class="h-full rounded-full bg-brand-primary" style="width: {{ [quota_pct, 100] | min }}%;"></div>
                   </div>
                   <p class="font-caption text-caption text-on-surface-variant">
                     Jour {{ item.jour_actuel }}/{{ item.duree_totale }} — {{ item.vues_aujourdhui }}/{{ item.quota_du_jour }} clics aujourd'hui
@@ -196,7 +196,7 @@
                 {% endif %}
 
                 <a href="{{ url_for('instructions_partage', campaign_id=camp.id) }}"
-                   class="pw-btn pw-btn-sm pw-btn-neutral w-full !text-emerald-deep">
+                   class="pw-btn pw-btn-sm pw-btn-neutral w-full !text-brand-deep">
                   <span class="material-symbols-outlined text-[18px]">check_circle</span>
                   Voir les instructions
                 </a>

@@ -41,7 +41,7 @@
                   <span class="pw-chip pw-chip-neutral">Compte : {{ m.demandeur.role }}</span>
                 {% endif %}
               </div>
-              <a class="font-caption text-caption text-emerald-primary hover:underline" href="mailto:{{ m.email }}">{{ m.email }}</a>
+              <a class="font-caption text-caption text-brand-primary hover:underline" href="mailto:{{ m.email }}">{{ m.email }}</a>
             </div>
             <span class="font-caption text-caption text-on-surface-variant whitespace-nowrap">{{ m.created_at | heure_locale }}</span>
           </div>
@@ -83,7 +83,7 @@
           <div class="flex flex-wrap items-start justify-between gap-space-xs">
             <div class="min-w-0">
               <strong class="font-headline-md text-body-md text-slate-midnight">{{ m.name }}</strong>
-              <a class="ml-1 font-caption text-caption text-emerald-primary hover:underline" href="mailto:{{ m.email }}">{{ m.email }}</a>
+              <a class="ml-1 font-caption text-caption text-brand-primary hover:underline" href="mailto:{{ m.email }}">{{ m.email }}</a>
             </div>
             <span class="font-caption text-caption text-on-surface-variant whitespace-nowrap">Reçu le {{ m.created_at | heure_locale }}</span>
           </div>
@@ -97,7 +97,7 @@
 
           {% if m.admin_reply %}
           <div class="mt-space-xs pw-card-flat">
-            <p class="flex items-center gap-1 font-caption text-caption font-semibold text-emerald-deep">
+            <p class="flex items-center gap-1 font-caption text-caption font-semibold text-brand-deep">
               <span class="material-symbols-outlined text-[14px]">send</span>
               Réponse envoyée le {{ m.replied_at | heure_locale }}
               {% if m.replied_by %} par {{ m.replied_by.pseudo or m.replied_by.email }}{% endif %}

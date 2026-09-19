@@ -47,7 +47,7 @@
             {% endif %}
           </td>
           <td>{{ d.demandeur.email if d.demandeur else "Utilisateur supprimé" }}</td>
-          <td class="text-right font-label-numeric-md text-label-numeric-md font-bold text-emerald-deep whitespace-nowrap">
+          <td class="text-right font-label-numeric-md text-label-numeric-md font-bold text-brand-deep whitespace-nowrap">
             {% if d.campaign %}{{ "{:,.0f}".format(d.campaign.total_cost) }} XOF{% else %}—{% endif %}
           </td>
           <td>{{ d.payment_method_details or "Non précisé" }}</td>
@@ -83,7 +83,7 @@
       <form action="{{ url_for('traiter_remboursement', refund_id=d.id) }}" method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <div class="pw-modal-head bg-emerald-primary text-white">
+        <div class="pw-modal-head bg-brand-primary text-white">
           <span>Confirmer le remboursement #{{ d.id }}</span>
           <button type="button" class="pw-modal-close opacity-70 hover:opacity-100" aria-label="Fermer">
             <span class="material-symbols-outlined text-[20px]">close</span>
@@ -142,7 +142,7 @@
 
   <!-- ================= HISTORIQUE ================= -->
   <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
-    <span class="material-symbols-outlined text-[20px] text-emerald-primary">history</span>
+    <span class="material-symbols-outlined text-[20px] text-brand-primary">history</span>
     Historique
   </h2>
 

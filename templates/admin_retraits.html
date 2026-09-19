@@ -57,7 +57,7 @@
           <td>{{ d.payout_channel }}</td>
           <td>
             <a href="https://wa.me/{{ d.payout_phone | replace(' ', '') }}" target="_blank" rel="noopener"
-               class="inline-flex items-center gap-1 font-label-numeric-md text-label-numeric-md text-emerald-deep hover:underline">
+               class="inline-flex items-center gap-1 font-label-numeric-md text-label-numeric-md text-brand-deep hover:underline">
               {{ d.payout_phone }} <span class="material-symbols-outlined text-[14px]">chat</span>
             </a>
           </td>
@@ -88,7 +88,7 @@
       <form action="{{ url_for('confirmer_retrait_manuel', withdrawal_id=d.id) }}" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <div class="pw-modal-head bg-emerald-primary text-white">
+        <div class="pw-modal-head bg-brand-primary text-white">
           <span>Confirmer le paiement manuel #{{ d.id }}</span>
           <button type="button" class="pw-modal-close opacity-70 hover:opacity-100" aria-label="Fermer">
             <span class="material-symbols-outlined text-[20px]">close</span>
@@ -160,7 +160,7 @@
 
   <!-- ================= HISTORIQUE ================= -->
   <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
-    <span class="material-symbols-outlined text-[20px] text-emerald-primary">history</span>
+    <span class="material-symbols-outlined text-[20px] text-brand-primary">history</span>
     Historique des demandes traitées
   </h2>
 

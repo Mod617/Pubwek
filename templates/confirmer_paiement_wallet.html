@@ -9,10 +9,10 @@
   <div class="pw-card !p-space-md space-y-space-sm">
 
     <!-- Resume de la campagne -->
-    <div class="rounded-2xl p-space-md bg-gradient-to-br from-emerald-deep to-slate-night text-white relative overflow-hidden">
-      <div class="absolute -right-8 -bottom-8 w-28 h-28 rounded-full bg-emerald-bright/20 blur-2xl"></div>
+    <div class="rounded-2xl p-space-md bg-gradient-to-br from-brand-deep to-slate-night text-white relative overflow-hidden">
+      <div class="absolute -right-8 -bottom-8 w-28 h-28 rounded-full bg-brand-bright/20 blur-2xl"></div>
       <div class="relative">
-        <div class="font-label-caps text-label-caps uppercase tracking-wider text-emerald-bright font-bold">Campagne #{{ campaign.id }}</div>
+        <div class="font-label-caps text-label-caps uppercase tracking-wider text-brand-bright font-bold">Campagne #{{ campaign.id }}</div>
         <p class="font-body-sm text-body-sm">{{ campaign.promotion_type | capitalize }} — {{ campaign.promotion_detail }}</p>
         <div class="mt-space-xs font-label-caps text-label-caps uppercase tracking-wider text-white/70 font-bold">Montant total dû</div>
         <div class="font-label-numeric-lg text-3xl font-extrabold tracking-tight">{{ "{:,.0f}".format(campaign.total_cost) }} XOF</div>
@@ -25,10 +25,10 @@
       <!-- Option portefeuille -->
       <label class="block rounded-2xl border-2 border-outline-variant/40 p-space-sm cursor-pointer transition-all" id="walletOptionBox" for="utiliser_wallet">
         <span class="flex items-center gap-space-xs">
-          <input class="w-4 h-4 rounded border-outline-variant/60 text-emerald-primary focus:ring-emerald-primary/30"
+          <input class="w-4 h-4 rounded border-outline-variant/60 text-brand-primary focus:ring-brand-primary/30"
                  type="checkbox" name="utiliser_wallet" id="utiliser_wallet" checked>
           <span class="flex items-center gap-1.5 font-headline-md text-[14px] font-semibold text-slate-midnight">
-            <span class="material-symbols-outlined text-[18px] text-emerald-primary">account_balance_wallet</span>
+            <span class="material-symbols-outlined text-[18px] text-brand-primary">account_balance_wallet</span>
             Utiliser mon portefeuille pour ce paiement
           </span>
         </span>
@@ -46,7 +46,7 @@
         </div>
         <div class="flex items-center justify-between gap-space-xs" id="ligneWallet">
           <span class="text-on-surface-variant">Payé depuis le portefeuille</span>
-          <span class="font-label-numeric-md text-label-numeric-md font-bold text-emerald-deep">− {{ "{:,.0f}".format(montant_utilisable) }} XOF</span>
+          <span class="font-label-numeric-md text-label-numeric-md font-bold text-brand-deep">− {{ "{:,.0f}".format(montant_utilisable) }} XOF</span>
         </div>
         <div class="flex items-center justify-between gap-space-xs pt-1 border-t border-outline-variant/40">
           <span class="font-semibold text-slate-midnight" id="labelReste">Reste à payer via FedaPay</span>
@@ -90,7 +90,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function majAffichage() {
     if (checkbox.checked) {
       box.classList.remove("border-outline-variant/40");
-      box.classList.add("border-emerald-primary", "bg-emerald-light");
+      box.classList.add("border-brand-primary", "bg-brand-light");
       ligneWallet.style.display = "flex";
       labelReste.textContent = resteAvecWallet <= 0 ? "Reste à payer" : "Reste à payer via FedaPay";
       valeurReste.textContent = formatXOF(resteAvecWallet) + " XOF";
@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", function () {
         : "Continuer — " + formatXOF(resteAvecWallet) + " XOF via FedaPay";
     } else {
       box.classList.add("border-outline-variant/40");
-      box.classList.remove("border-emerald-primary", "bg-emerald-light");
+      box.classList.remove("border-brand-primary", "bg-brand-light");
       ligneWallet.style.display = "none";
       labelReste.textContent = "Reste à payer via FedaPay";
       valeurReste.textContent = formatXOF(totalCost) + " XOF";

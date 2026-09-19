@@ -21,7 +21,7 @@
   <!-- ================= CREER UN SOUS-ADMIN ================= -->
   <div class="pw-card !p-space-md">
     <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight mb-space-xs">
-      <span class="material-symbols-outlined text-[20px] text-emerald-primary">person</span>
+      <span class="material-symbols-outlined text-[20px] text-brand-primary">person</span>
       Créer un nouveau sous-admin
     </h2>
 
@@ -48,7 +48,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-1 gap-x-space-sm">
           {% for key, label in permissions_disponibles.items() %}
           <label class="flex items-center gap-space-2xs cursor-pointer select-none">
-            <input class="w-4 h-4 rounded border-outline-variant/60 text-emerald-primary focus:ring-emerald-primary/30"
+            <input class="w-4 h-4 rounded border-outline-variant/60 text-brand-primary focus:ring-brand-primary/30"
                    type="checkbox" name="permissions[]" value="{{ key }}" id="perm_new_{{ key }}">
             <span class="font-body-sm text-body-sm text-on-surface">{{ label }}</span>
           </label>
@@ -64,7 +64,7 @@
 
   <!-- ================= SOUS-ADMINS EXISTANTS ================= -->
   <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
-    <span class="material-symbols-outlined text-[20px] text-emerald-primary">group</span>
+    <span class="material-symbols-outlined text-[20px] text-brand-primary">group</span>
     Sous-admins existants
     {% if sous_admins %}<span class="pw-chip pw-chip-neutral">{{ sous_admins | length }}</span>{% endif %}
   </h2>
@@ -97,7 +97,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-1 gap-x-space-sm mb-space-xs">
           {% for key, label in permissions_disponibles.items() %}
           <label class="flex items-center gap-space-2xs cursor-pointer select-none">
-            <input class="w-3.5 h-3.5 rounded border-outline-variant/60 text-emerald-primary focus:ring-emerald-primary/30"
+            <input class="w-3.5 h-3.5 rounded border-outline-variant/60 text-brand-primary focus:ring-brand-primary/30"
                    type="checkbox" name="permissions[]" value="{{ key }}"
                    id="perm_{{ s.id }}_{{ key }}" {% if key in s.permissions_liste %}checked{% endif %}>
             <span class="font-caption text-caption text-on-surface">{{ label }}</span>

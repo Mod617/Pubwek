@@ -20,8 +20,8 @@
   .pw-btn-sm { @apply px-space-md py-2 text-[14px] font-headline-md font-semibold; }
 
   .pw-btn-primary {
-    @apply bg-emerald-primary text-on-primary shadow-lg shadow-emerald-primary/20
-           hover:bg-emerald-deep;
+    @apply bg-brand-primary text-on-primary shadow-lg shadow-brand-primary/20
+           hover:bg-brand-deep;
   }
   .pw-btn-secondary {
     @apply bg-amber-rich text-on-primary shadow-lg shadow-amber-rich/20
@@ -53,8 +53,8 @@
     @apply w-full rounded-xl border border-outline-variant/50 bg-white
            px-space-md py-2.5 font-body-md text-body-md text-on-surface
            placeholder:text-on-surface-variant/60 transition-all
-           focus:border-emerald-primary focus:outline-none
-           focus:ring-4 focus:ring-emerald-primary/15;
+           focus:border-brand-primary focus:outline-none
+           focus:ring-4 focus:ring-brand-primary/15;
   }
   .pw-select {
     @apply pw-input appearance-none bg-no-repeat pr-10;
@@ -65,9 +65,9 @@
   .pw-file {
     @apply w-full rounded-xl border border-outline-variant/50 bg-white
            px-space-md py-2 font-body-sm text-body-sm text-on-surface-variant
-           file:mr-3 file:rounded-full file:border-0 file:bg-emerald-light
+           file:mr-3 file:rounded-full file:border-0 file:bg-brand-light
            file:px-3 file:py-1.5 file:font-headline-md file:text-[13px]
-           file:font-semibold file:text-emerald-deep hover:file:bg-emerald-primary/20;
+           file:font-semibold file:text-brand-deep hover:file:bg-brand-primary/20;
   }
   .pw-help  { @apply mt-1 font-caption text-caption text-on-surface-variant; }
   .pw-error { @apply mt-1 font-caption text-caption font-semibold text-error; }
@@ -117,7 +117,7 @@
            hover:text-slate-midnight transition-colors cursor-pointer;
   }
   .pw-tab.is-active {
-    @apply border-emerald-primary text-emerald-deep;
+    @apply border-brand-primary text-brand-deep;
   }
   .pw-tab-panel { @apply hidden pt-space-sm; }
   .pw-tab-panel.is-active { @apply block; }
@@ -142,7 +142,7 @@
     @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full
            font-caption text-caption font-bold whitespace-nowrap;
   }
-  .pw-chip-success { @apply bg-emerald-light text-emerald-deep; }
+  .pw-chip-success { @apply bg-brand-light text-brand-deep; }
   .pw-chip-warning { @apply bg-amber-soft text-secondary; }
   .pw-chip-danger  { @apply bg-error-container text-on-error-container; }
   .pw-chip-neutral { @apply bg-surface-container text-on-surface-variant; }

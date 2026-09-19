@@ -10,7 +10,7 @@
   <td>
     {% if user.whatsapp_number %}
       <a href="https://wa.me/{{ user.whatsapp_number | replace(' ', '') }}" target="_blank" rel="noopener"
-         class="pw-btn pw-btn-sm pw-btn-neutral !py-1 !text-[12px] !text-emerald-deep">
+         class="pw-btn pw-btn-sm pw-btn-neutral !py-1 !text-[12px] !text-brand-deep">
         <span class="material-symbols-outlined text-[16px]">chat</span> Contacter
       </a>
     {% else %}
@@ -119,7 +119,7 @@
           {% for notif in notifications %}
             <a class="notif-item flex items-start gap-space-xs rounded-xl px-space-sm py-2 hover:bg-surface-container-low transition-colors {{ 'font-semibold text-on-surface' if not notif.is_read else 'text-on-surface-variant' }}" href="{{ notif.link or '#' }}">
               <span class="mt-1.5 w-2 h-2 rounded-full shrink-0
-                {%- if notif.category == 'success' %} bg-emerald-primary
+                {%- if notif.category == 'success' %} bg-brand-primary
                 {%- elif notif.category == 'warning' %} bg-amber-rich
                 {%- elif notif.category == 'danger' %} bg-error
                 {%- else %} bg-outline-variant{% endif %}"></span>
@@ -223,7 +223,7 @@
   {% if peut_voir_campagnes %}
 
   <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
-    <span class="material-symbols-outlined text-[20px] text-emerald-primary">campaign</span>
+    <span class="material-symbols-outlined text-[20px] text-brand-primary">campaign</span>
     Campagnes publicitaires
   </h2>
 
@@ -350,7 +350,7 @@
                         <img src="{{ file_url }}" alt="" class="w-full h-full object-cover">
                       </button>
                     {% endif %}
-                    <a href="{{ file_url }}" download class="mt-0.5 inline-flex items-center gap-0.5 font-caption text-[11px] text-emerald-primary hover:underline">
+                    <a href="{{ file_url }}" download class="mt-0.5 inline-flex items-center gap-0.5 font-caption text-[11px] text-brand-primary hover:underline">
                       <span class="material-symbols-outlined text-[12px]">download</span> Télécharger
                     </a>
                   </div>
@@ -394,7 +394,7 @@
           </td>
 
           <!-- Cout -->
-          <td class="text-right font-label-numeric-md text-label-numeric-md font-bold text-emerald-deep whitespace-nowrap">
+          <td class="text-right font-label-numeric-md text-label-numeric-md font-bold text-brand-deep whitespace-nowrap">
             {{ "{:,.0f}".format(camp.total_cost) }} XOF
           </td>
 
@@ -575,7 +575,7 @@
 <div class="pw-modal fixed inset-0 z-[90] hidden items-center justify-center p-space-md bg-slate-night/80 overflow-y-auto"
      id="annonceurModal" aria-modal="true" role="dialog">
   <div class="pw-modal-panel w-full max-w-lg my-auto rounded-2xl bg-surface-container-lowest shadow-2xl overflow-hidden">
-    <div class="pw-modal-head bg-emerald-primary text-white">
+    <div class="pw-modal-head bg-brand-primary text-white">
       <span>Profil de l'annonceur</span>
       <button type="button" class="pw-modal-close opacity-70 hover:opacity-100" aria-label="Fermer">
         <span class="material-symbols-outlined text-[20px]">close</span>
@@ -591,7 +591,7 @@
         </div>
         <div class="absolute -bottom-7 left-space-md">
           <img id="annProfile" src="" alt="Profil" class="hidden w-16 h-16 rounded-full border-4 border-white object-cover bg-white shadow-sm">
-          <div id="annProfilePlaceholder" class="w-16 h-16 rounded-full border-4 border-white bg-emerald-primary text-white shadow-sm flex items-center justify-center">
+          <div id="annProfilePlaceholder" class="w-16 h-16 rounded-full border-4 border-white bg-brand-primary text-white shadow-sm flex items-center justify-center">
             <span class="material-symbols-outlined text-[26px]">storefront</span>
           </div>
         </div>
@@ -605,7 +605,7 @@
 
         <div class="pt-space-xs border-t border-outline-variant/30">
           <p class="pw-tile-label">Numéro WhatsApp de la campagne</p>
-          <p id="annWhatsapp" class="font-label-numeric-md text-label-numeric-md font-bold text-emerald-deep"></p>
+          <p id="annWhatsapp" class="font-label-numeric-md text-label-numeric-md font-bold text-brand-deep"></p>
         </div>
 
         <div>

@@ -48,7 +48,7 @@
           {% for notif in notifications %}
             <a class="notif-item flex items-start gap-space-xs rounded-xl px-space-sm py-2 hover:bg-surface-container-low transition-colors {{ 'font-semibold text-on-surface' if not notif.is_read else 'text-on-surface-variant' }}" href="{{ notif.link or '#' }}">
               <span class="mt-1.5 w-2 h-2 rounded-full shrink-0
-                {%- if notif.category == 'success' %} bg-emerald-primary
+                {%- if notif.category == 'success' %} bg-brand-primary
                 {%- elif notif.category == 'warning' %} bg-amber-rich
                 {%- elif notif.category == 'danger' %} bg-error
                 {%- else %} bg-outline-variant{% endif %}"></span>
@@ -125,11 +125,11 @@
   </div>
 
   <!-- ================= PORTEFEUILLE ================= -->
-  <div class="rounded-2xl p-space-md bg-gradient-to-br from-emerald-deep to-slate-night text-white shadow-lg relative overflow-hidden">
-    <div class="absolute -right-8 -bottom-8 w-32 h-32 rounded-full bg-emerald-bright/20 blur-2xl"></div>
+  <div class="rounded-2xl p-space-md bg-gradient-to-br from-brand-deep to-slate-night text-white shadow-lg relative overflow-hidden">
+    <div class="absolute -right-8 -bottom-8 w-32 h-32 rounded-full bg-brand-bright/20 blur-2xl"></div>
     <div class="relative flex flex-col md:flex-row md:items-center md:justify-between gap-space-sm">
       <div class="min-w-0">
-        <div class="flex items-center gap-1.5 font-label-caps text-label-caps uppercase tracking-wider text-emerald-bright font-bold">
+        <div class="flex items-center gap-1.5 font-label-caps text-label-caps uppercase tracking-wider text-brand-bright font-bold">
           <span class="material-symbols-outlined text-[16px]">account_balance_wallet</span>
           Mon portefeuille
         </div>
@@ -152,7 +152,7 @@
           </button>
           <p class="mt-1 font-caption text-caption text-white/60">Minimum : {{ "{:,.0f}".format(config.minimum_withdrawal_amount) }} XOF.</p>
         {% else %}
-          <button type="button" class="pw-btn pw-btn-sm bg-white text-emerald-deep hover:bg-emerald-light" data-pw-modal="walletWithdrawModal">
+          <button type="button" class="pw-btn pw-btn-sm bg-white text-brand-deep hover:bg-brand-light" data-pw-modal="walletWithdrawModal">
             <span class="material-symbols-outlined text-[18px]">payments</span> Demander un retrait
           </button>
         {% endif %}
@@ -210,7 +210,7 @@
   <!-- ================= NOUVELLE CAMPAGNE ================= -->
   <div class="pw-card !p-space-md">
     <div class="flex items-center gap-1.5 mb-space-sm">
-      <span class="material-symbols-outlined text-[22px] text-emerald-primary">campaign</span>
+      <span class="material-symbols-outlined text-[22px] text-brand-primary">campaign</span>
       <h2 class="font-headline-md text-headline-md text-slate-night">Lancer une campagne</h2>
     </div>
 
@@ -306,7 +306,7 @@
           MP4, MOV, WEBM — <strong>durée maximale : 30 secondes</strong> — taille maximale : 40 Mo.
           Le fichier est vérifié automatiquement avant l'envoi.
         </p>
-        <div id="videoFileInfo" class="mt-1 font-caption text-caption font-bold text-emerald-primary"></div>
+        <div id="videoFileInfo" class="mt-1 font-caption text-caption font-bold text-brand-primary"></div>
         <video id="videoFilePreview" controls class="mt-1.5 rounded-xl shadow-sm hidden max-h-64"></video>
       </div>
 
@@ -316,7 +316,7 @@
         <input type="file" name="media_files" id="media_files" class="pw-file" multiple accept="image/*">
         <div id="imagePreviewsContainer" class="flex flex-wrap gap-2 mt-2"></div>
         <p class="pw-help">Maximum : 25 photos.</p>
-        <div id="fileInfo" class="mt-1 font-caption text-caption font-bold text-emerald-primary"></div>
+        <div id="fileInfo" class="mt-1 font-caption text-caption font-bold text-brand-primary"></div>
       </div>
 
       <!-- Zones de diffusion -->
@@ -331,7 +331,7 @@
           <div class="rounded-xl border border-outline-variant/30 overflow-hidden">
             <div class="flex items-center justify-between gap-space-xs px-space-sm py-1.5 bg-surface-container-low">
               <label class="flex items-center gap-space-2xs cursor-pointer select-none min-w-0">
-                <input class="dept-checkbox w-4 h-4 rounded border-outline-variant/60 text-emerald-primary focus:ring-emerald-primary/30"
+                <input class="dept-checkbox w-4 h-4 rounded border-outline-variant/60 text-brand-primary focus:ring-brand-primary/30"
                        type="checkbox" name="provinces[]" value="{{ departement }}" id="dept_{{ departement }}"
                        onchange="toggleCommunesBlock('{{ departement }}')">
                 <span class="font-body-sm text-body-sm font-semibold text-slate-midnight truncate">{{ departement }}</span>
@@ -345,7 +345,7 @@
             <div class="hidden p-space-sm grid grid-cols-2 gap-x-space-xs gap-y-1" id="communesBlock_{{ departement }}">
               {% for commune in communes %}
               <label class="flex items-center gap-1.5 cursor-pointer select-none min-w-0">
-                <input class="commune-checkbox w-3.5 h-3.5 rounded border-outline-variant/60 text-emerald-primary focus:ring-emerald-primary/30"
+                <input class="commune-checkbox w-3.5 h-3.5 rounded border-outline-variant/60 text-brand-primary focus:ring-brand-primary/30"
                        type="checkbox" name="communes[]" value="{{ commune }}" data-departement="{{ departement }}" id="commune_{{ commune }}">
                 <span class="font-caption text-caption text-on-surface truncate">{{ commune }}</span>
               </label>
@@ -361,13 +361,13 @@
         <div>
           <label for="whatsapp_views" class="block font-label-caps text-label-caps uppercase tracking-wider text-white/70 font-bold mb-1">Objectif de clics</label>
           <input type="number" name="whatsapp_views" id="whatsapp_views"
-                 class="w-full rounded-xl border border-white/20 bg-white/10 px-space-sm py-2 font-label-numeric-md text-label-numeric-md font-bold text-white focus:outline-none focus:ring-2 focus:ring-emerald-bright/50"
+                 class="w-full rounded-xl border border-white/20 bg-white/10 px-space-sm py-2 font-label-numeric-md text-label-numeric-md font-bold text-white focus:outline-none focus:ring-2 focus:ring-brand-bright/50"
                  min="100" step="50" value="100" required>
         </div>
         <div>
           <label for="duration_days" class="block font-label-caps text-label-caps uppercase tracking-wider text-white/70 font-bold mb-1">Durée</label>
           <select name="duration_days" id="duration_days"
-                  class="w-full rounded-xl border border-white/20 bg-white/10 px-space-sm py-2 font-body-sm text-body-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-bright/50">
+                  class="w-full rounded-xl border border-white/20 bg-white/10 px-space-sm py-2 font-body-sm text-body-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-bright/50">
             {% for jour in range(1, 31) %}
               <option class="text-slate-night" value="{{ jour }}" {% if jour == 7 %}selected{% endif %}>{{ jour }} jour{{ 's' if jour > 1 else '' }}</option>
             {% endfor %}
@@ -552,7 +552,7 @@
     const charCount = document.getElementById('charCount');
 
     [cardA, cardB, cardC].forEach(function(card) {
-      card.classList.remove('border-emerald-primary', 'bg-emerald-light');
+      card.classList.remove('border-brand-primary', 'bg-brand-light');
       card.classList.add('border-outline-variant/40');
     });
     videoGroup.classList.add('hidden');
@@ -577,7 +577,7 @@
       descriptionLabel.textContent = 'Texte de votre publicité (publié tel quel en statut)';
     }
     carteActive.classList.remove('border-outline-variant/40');
-    carteActive.classList.add('border-emerald-primary', 'bg-emerald-light');
+    carteActive.classList.add('border-brand-primary', 'bg-brand-light');
 
     if (descriptionField.value.length > descriptionField.maxLength) {
       descriptionField.value = descriptionField.value.substring(0, descriptionField.maxLength);
@@ -605,7 +605,7 @@
       const tailleMo = (file.size / (1024 * 1024)).toFixed(1);
       info.textContent = `Fichier sélectionné : ${file.name} (${tailleMo} Mo)`;
       info.classList.remove('text-error');
-      info.classList.add('text-emerald-primary');
+      info.classList.add('text-brand-primary');
 
       preview.src = URL.createObjectURL(file);
       preview.classList.remove('hidden');
@@ -613,11 +613,11 @@
       preview.onloadedmetadata = function() {
         if (preview.duration > 30.5) {
           info.textContent = `Cette vidéo dure ${preview.duration.toFixed(1)}s — le maximum autorisé est 30 secondes. Veuillez la raccourcir.`;
-          info.classList.remove('text-emerald-primary');
+          info.classList.remove('text-brand-primary');
           info.classList.add('text-error');
         } else {
           info.classList.remove('text-error');
-          info.classList.add('text-emerald-primary');
+          info.classList.add('text-brand-primary');
         }
       };
     });

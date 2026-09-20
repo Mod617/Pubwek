@@ -2766,6 +2766,20 @@ def a_propos():
     return render_template("a_propos.html")
 
 
+# Les deux documents legaux ont chacun leur adresse : on doit pouvoir les
+# envoyer a un prestataire de paiement, a l'APDP ou a un annonceur qui
+# conteste, les mettre en favori et les imprimer. La fenetre d'acceptation
+# a la premiere connexion reste en place, elle pointe desormais ici.
+@app.route("/cgu")
+def cgu():
+    return render_template("cgu.html")
+
+
+@app.route("/confidentialite")
+def confidentialite():
+    return render_template("confidentialite.html")
+
+
 # Deux pages de profil : un commerce et un partageur ne cherchent pas la
 # meme chose, chacun a desormais son argumentaire, son simulateur et sa FAQ.
 # Le simulateur lit les tarifs configures, il ne les invente pas.

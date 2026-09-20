@@ -1,0 +1,85 @@
+{% extends "base_v2.html" %}
+{% import "_blocs/legal.html" as legal %}
+{% set title = "Conditions Générales d'Utilisation et de Vente" %}
+
+{% set articles = [
+  {'id': 'article-1', 'titre': "Mentions Légales et Présentation"},
+  {'id': 'article-2', 'titre': "Acceptation Explicite"},
+  {'id': 'article-3', 'titre': "Inscription"},
+  {'id': 'article-4', 'titre': "Campagnes Publicitaires et Facturation au Clic"},
+  {'id': 'article-5', 'titre': "Tarifs, Paiements et Remboursement"},
+  {'id': 'article-6', 'titre': "Portefeuille, Gains et Retraits"},
+  {'id': 'article-7', 'titre': "Historiques et Téléchargements PDF"},
+  {'id': 'article-8', 'titre': "Administration et Sous-Administrateurs"},
+  {'id': 'article-9', 'titre': "Droit Applicable"}
+] %}
+
+{% block content %}
+<section class="py-space-lg bg-background">
+<div class="max-w-5xl mx-auto px-margin">
+
+  {{ legal.entete(
+       "Document contractuel",
+       "Conditions Générales d'Utilisation et de Vente",
+       "Les règles qui encadrent l'usage de Pubwek, la facturation des campagnes et le versement des gains.",
+       "Dernière mise à jour : août 2026 · PUBWEK · République du Bénin") }}
+
+  <div class="mt-space-lg grid grid-cols-1 lg:grid-cols-[15rem_1fr] gap-space-lg items-start">
+
+    {{ legal.sommaire(articles) }}
+
+    <div class="pw-card !p-space-md space-y-space-sm">
+
+      {{ legal.debut_article("article-1", "Article 1", "Mentions Légales et Présentation") }}
+        <p>Plateforme d'intermédiation publicitaire éditée à titre individuel (en cours d'immatriculation au Bénin).</p>
+        <p>Contact : <a class="text-brand-deep hover:underline" href="mailto:pubwek1@gmail.com">pubwek1@gmail.com</a> ·
+           WhatsApp : <a class="text-brand-deep hover:underline" href="https://wa.me/2290157577882" target="_blank" rel="noopener">+229 01 57 57 78 82</a>.</p>
+      {{ legal.fin_article() }}
+
+      {{ legal.debut_article("article-2", "Article 2", "Acceptation Explicite") }}
+        <p>L'accès et l'utilisation nécessitent l'acceptation expresse des présentes conditions. Tout refus bloque l'accès au service.</p>
+      {{ legal.fin_article() }}
+
+      {{ legal.debut_article("article-3", "Article 3", "Inscription") }}
+        <p>Réservé aux personnes de 18 ans et plus ou entreprises au Bénin. Informations exactes et numéro WhatsApp valide obligatoires.</p>
+      {{ legal.fin_article() }}
+
+      {{ legal.debut_article("article-4", "Article 4", "Campagnes Publicitaires et Facturation au Clic") }}
+        <p>Facturation au clic généré avec tarifs différenciés par format (vidéo, image, texte) configurés par l'admin. Répartition automatique des clics sur la durée choisie (1 à 30 jours) avec quotas journaliers. Diffusion ciblée sur les 12 départements du Bénin.</p>
+      {{ legal.fin_article() }}
+
+      {{ legal.debut_article("article-5", "Article 5", "Tarifs, Paiements (FedaPay) et Remboursement") }}
+        <p>Paiements en FCFA via MTN MoMo, Moov Money, Celtiis et Cartes bancaires.</p>
+        <p class="rounded-xl border border-amber-rich/30 bg-amber-soft px-space-sm py-space-2xs text-secondary">
+          <strong>Une campagne payée ne peut être remboursée que si elle n'a jamais été diffusée aux Partageurs</strong>
+          (campagne refusée par l'administration et jugée non corrigeable par l'Annonceur), après examen et validation
+          de l'administration. Dès qu'un Partageur a commencé à diffuser la campagne, aucun remboursement n'est plus possible.
+        </p>
+      {{ legal.fin_article() }}
+
+      {{ legal.debut_article("article-6", "Article 6", "Portefeuille, Gains et Retraits (Partageurs)") }}
+        <p>Crédit automatique sur le portefeuille interne pour chaque clic valide et commission de parrainage. Dès quota journalier atteint, liberté de retirer la publication du statut. Seuil de retrait fixé par défaut à 500 FCFA (une seule demande active). Traitement automatique ou manuel avec preuve enregistrée (capture) ; recrédit du portefeuille en cas de rejet.</p>
+      {{ legal.fin_article() }}
+
+      {{ legal.debut_article("article-7", "Article 7", "Historiques et Téléchargements PDF") }}
+        <p>Consultation et téléchargement d'historiques complets au format PDF pour partageurs et annonceurs à titre de preuve contractuelle.</p>
+      {{ legal.fin_article() }}
+
+      {{ legal.debut_article("article-8", "Article 8", "Administration et Sous-Administrateurs") }}
+        <p>Gestion par l'administrateur principal et des sous-administrateurs aux droits restreints et personnalisés (inscriptions, campagnes, retraits) limités à leur périmètre.</p>
+      {{ legal.fin_article() }}
+
+      {{ legal.debut_article("article-9", "Article 9", "Droit Applicable") }}
+        <p>Régit par la législation béninoise. Juridiction exclusive des tribunaux de Cotonou.</p>
+      {{ legal.fin_article() }}
+
+    </div>
+  </div>
+
+  {{ legal.renvois(url_for('confidentialite'),
+                   "Politique de confidentialité",
+                   "Quelles données Pubwek collecte, pourquoi, et quels sont vos droits.") }}
+
+</div>
+</section>
+{% endblock %}

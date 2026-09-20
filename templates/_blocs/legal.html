@@ -1,0 +1,82 @@
+{# ===========================================================================
+   Mise en page commune aux pages legales (CGU / CGV et confidentialite).
+
+   Importee, pas incluse :
+     {% import "_blocs/legal.html" as legal %}
+
+   Chaque page fournit sa liste d'articles sous la forme
+   [{'id': 'article-1', 'titre': '...'}, ...] : le sommaire et les ancres du
+   corps de page sont construits a partir de la meme liste, ils ne peuvent
+   donc pas se desynchroniser.
+   =========================================================================== #}
+
+{# En-tete de page : pastille, titre, phrase d'accroche, date de reference. #}
+{% macro entete(pastille, titre, accroche, reference) %}
+  <div class="space-y-space-2xs">
+    <span class="pw-badge bg-brand-light text-brand-deep">{{ pastille }}</span>
+    <h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-slate-night">{{ titre }}</h1>
+    <p class="font-body-md text-body-md text-on-surface-variant">{{ accroche }}</p>
+    <p class="flex items-center gap-1.5 font-caption text-caption text-on-surface-variant">
+      <span class="material-symbols-outlined text-[16px]">schedule</span>{{ reference }}
+    </p>
+  </div>
+{% endmacro %}
+
+{# Sommaire. Colle sous l'en-tete fixe (72 px) sur grand ecran, simple liste
+   au-dessus du texte sur telephone. #}
+{% macro sommaire(articles) %}
+  <nav aria-label="Sommaire" class="lg:sticky lg:top-[88px]">
+    <p class="font-label-caps text-label-caps uppercase tracking-wider font-bold text-on-surface-variant mb-space-2xs">
+      Sommaire
+    </p>
+    <ol class="space-y-0.5">
+      {% for a in articles %}
+        <li>
+          <a class="block rounded-lg px-2 py-1 font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container hover:text-brand-primary transition-colors"
+             href="#{{ a.id }}">{{ a.titre }}</a>
+        </li>
+      {% endfor %}
+    </ol>
+  </nav>
+{% endmacro %}
+
+{# Un article. scroll-mt degage le titre de l'en-tete fixe quand on arrive
+   dessus depuis le sommaire. #}
+{% macro debut_article(id, numero, titre) %}
+  <article id="{{ id }}" class="scroll-mt-[88px] pt-space-sm first:pt-0 border-t first:border-t-0 border-outline-variant/30">
+    <h2 class="font-headline-md text-body-lg text-slate-midnight mb-space-2xs">
+      {% if numero %}<span class="text-on-surface-variant font-normal">{{ numero }}.</span> {% endif %}{{ titre }}
+    </h2>
+    <div class="space-y-space-2xs font-body-md text-body-md text-on-surface-variant leading-relaxed">
+{% endmacro %}
+
+{% macro fin_article() %}
+    </div>
+  </article>
+{% endmacro %}
+
+{# Bas de page : renvoi vers l'autre document et vers le contact. #}
+{% macro renvois(lien, libelle_lien, description_lien) %}
+  <div class="pw-card !p-space-sm mt-space-lg">
+    <div class="flex flex-wrap items-center justify-between gap-space-sm">
+      <div class="min-w-0">
+        <p class="font-headline-sm text-body-md font-bold text-slate-midnight">{{ libelle_lien }}</p>
+        <p class="font-caption text-caption text-on-surface-variant">{{ description_lien }}</p>
+      </div>
+      <a href="{{ lien }}" class="pw-btn pw-btn-sm pw-btn-neutral shrink-0">
+        Lire <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="mt-space-sm flex flex-wrap items-center gap-space-sm font-caption text-caption text-on-surface-variant">
+    <span class="flex items-center gap-1.5">
+      <span class="material-symbols-outlined text-[16px]">mail</span>
+      <a class="hover:text-brand-primary transition-colors" href="mailto:pubwek1@gmail.com">pubwek1@gmail.com</a>
+    </span>
+    <span class="flex items-center gap-1.5">
+      <span class="material-symbols-outlined text-[16px]">chat</span>
+      <a class="hover:text-brand-primary transition-colors" href="https://wa.me/2290157577882" target="_blank" rel="noopener">+229 01 57 57 78 82</a>
+    </span>
+  </div>
+{% endmacro %}

@@ -1,0 +1,62 @@
+{% extends "base_v2.html" %}
+{% import "_blocs/legal.html" as legal %}
+{% set title = "Politique de confidentialité" %}
+
+{% set articles = [
+  {'id': 'section-1', 'titre': "Données Collectées"},
+  {'id': 'section-2', 'titre': "Finalités de la Collecte"},
+  {'id': 'section-3', 'titre': "Partage des Données"},
+  {'id': 'section-4', 'titre': "Vos Droits"},
+  {'id': 'section-5', 'titre': "Sécurité et Cookies"}
+] %}
+
+{% block content %}
+<section class="py-space-lg bg-background">
+<div class="max-w-5xl mx-auto px-margin">
+
+  {{ legal.entete(
+       "Protection des données",
+       "Politique de Confidentialité",
+       "Ce que Pubwek enregistre sur vous, à quoi cela sert, et ce que vous pouvez exiger à tout moment.",
+       "Conforme au Code du Numérique du Bénin (Loi n° 2017-20) · APDP Bénin") }}
+
+  <div class="mt-space-lg grid grid-cols-1 lg:grid-cols-[15rem_1fr] gap-space-lg items-start">
+
+    {{ legal.sommaire(articles) }}
+
+    <div class="pw-card !p-space-md space-y-space-sm">
+
+      {{ legal.debut_article("section-1", "1", "Données Collectées") }}
+        <p>Profil (entreprise, bio, logo, WhatsApp, parrainage), médias de campagne, solde du portefeuille interne, historique des clics et retraits avec preuves enregistrées (captures), permissions des sous-administrateurs et ciblage départemental.</p>
+      {{ legal.fin_article() }}
+
+      {{ legal.debut_article("section-2", "2", "Finalités de la Collecte") }}
+        <p>Suivi des clics, calcul des rémunérations et parrainages, traitement des retraits à partir du seuil de 500 FCFA, gestion des accès sous-admin, édition de reçus et historiques PDF, et prévention de la fraude.</p>
+      {{ legal.fin_article() }}
+
+      {{ legal.debut_article("section-3", "3", "Partage des Données") }}
+        <p class="rounded-xl border border-brand-primary/30 bg-brand-light px-space-sm py-space-2xs text-slate-midnight">
+          <strong>Aucune vente de données.</strong> Partage strictement limité à FedaPay et aux prestataires de paiement,
+          aux sous-administrateurs autorisés selon leurs droits, et au public pour les visuels de campagne.
+        </p>
+      {{ legal.fin_article() }}
+
+      {{ legal.debut_article("section-4", "4", "Vos Droits") }}
+        <p>Droit d'accès, de rectification directe, de téléchargement d'historique PDF et de suppression sur demande à
+           <a class="text-brand-deep hover:underline" href="mailto:pubwek1@gmail.com">pubwek1@gmail.com</a>.</p>
+      {{ legal.fin_article() }}
+
+      {{ legal.debut_article("section-5", "5", "Sécurité et Cookies") }}
+        <p>PUBWEK utilise le stockage local (localStorage et sessionStorage) et un jeton CSRF pour sécuriser vos sessions. Aucune donnée financière sensible n'est conservée en clair dans votre navigateur.</p>
+      {{ legal.fin_article() }}
+
+    </div>
+  </div>
+
+  {{ legal.renvois(url_for('cgu'),
+                   "Conditions Générales d'Utilisation et de Vente",
+                   "Facturation au clic, remboursements, retraits et droit applicable.") }}
+
+</div>
+</section>
+{% endblock %}

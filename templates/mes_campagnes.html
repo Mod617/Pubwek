@@ -24,7 +24,6 @@
   {% if refusees %}
   <div class="space-y-space-xs">
     <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-error">
-      <span class="material-symbols-outlined text-[20px]">warning</span>
       Campagnes refusées ou à corriger
       <span class="pw-chip pw-chip-danger">{{ refusees | length }}</span>
     </h2>
@@ -313,7 +312,6 @@
   {% if non_payees %}
   <div class="space-y-space-xs">
     <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-secondary">
-      <span class="material-symbols-outlined text-[20px]">price_check</span>
       Paiement en attente
       <span class="pw-chip pw-chip-warning">{{ non_payees | length }}</span>
     </h2>
@@ -353,7 +351,6 @@
   <!-- ================= EN ATTENTE DE VALIDATION ================= -->
   <div class="space-y-space-xs">
     <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight">
-      <span class="material-symbols-outlined text-[20px] text-amber-rich">hourglass_top</span>
       En attente de validation
       {% if en_attente %}<span class="pw-chip pw-chip-warning">{{ en_attente | length }}</span>{% endif %}
     </h2>
@@ -389,7 +386,6 @@
   <!-- ================= EN COURS DE DIFFUSION ================= -->
   <div class="space-y-space-xs">
     <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight">
-      <span class="material-symbols-outlined text-[20px] text-brand-primary">rocket_launch</span>
       En cours de diffusion
       {% if en_cours %}<span class="pw-chip pw-chip-success">{{ en_cours | length }}</span>{% endif %}
     </h2>
@@ -447,7 +443,6 @@
   <!-- ================= TERMINEES ================= -->
   <div class="space-y-space-xs">
     <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight">
-      <span class="material-symbols-outlined text-[20px] text-brand-primary">task_alt</span>
       Terminées
       {% if terminees %}<span class="pw-chip pw-chip-neutral">{{ terminees | length }}</span>{% endif %}
     </h2>

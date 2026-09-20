@@ -1,5 +1,40 @@
 {% extends "base_v2.html" %}
 
+{% block head_extra %}
+<style>
+/* Le defile de statuts du telephone du hero. Ces regles ne servent qu'ici,
+   elles restent donc dans la page plutot que dans le design system. */
+.pw-statut{position:absolute;inset:0;opacity:0;visibility:hidden;
+  transition:opacity .42s ease,visibility .42s ease;}
+.pw-statut[data-actif]{opacity:1;visibility:visible;}
+.pw-statut-fond{display:block;transform-origin:52% 46%;}
+.pw-statut[data-actif] .pw-statut-zoom{animation:pw-statut-zoom 7.5s ease-out both;}
+@keyframes pw-statut-zoom{from{transform:scale(1.005);}to{transform:scale(1.08);}}
+
+.pw-statut-barre{position:relative;display:block;flex:1 1 0;height:2.5px;
+  border-radius:9999px;background:rgba(255,255,255,.3);overflow:hidden;}
+.pw-statut-barre i{position:absolute;top:0;bottom:0;left:0;display:block;width:0;
+  border-radius:9999px;background:#fff;}
+.pw-statut-barre[data-etat="vu"] i{width:100%;}
+.pw-statut-barre[data-etat="encours"] i{animation:pw-statut-remplir var(--pw-duree,5s) linear forwards;}
+@keyframes pw-statut-remplir{from{width:0;}to{width:100%;}}
+
+/* La notification descend, rebondit a peine, puis reste posee. */
+.pw-statut-lien{color:#6fd0ff;text-decoration:underline;text-underline-offset:2px;
+  text-decoration-thickness:1px;font-weight:700;}
+
+.pw-statut-notif{opacity:0;transform:translate3d(0,-18px,0) scale(.93);
+  transition:opacity .38s cubic-bezier(.2,.9,.3,1),transform .46s cubic-bezier(.2,1.25,.4,1);}
+.pw-statut-notif[data-visible]{opacity:1;transform:none;}
+
+@media (prefers-reduced-motion:reduce){
+  .pw-statut-notif{opacity:1;transform:none;}
+  .pw-statut[data-actif] .pw-statut-zoom{animation:none;}
+  .pw-statut-barre[data-etat="encours"] i{animation:none;width:45%;}
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <!-- SECTION 1: HERO MAJESTUEUX (AdTech & FinTech West Africa) -->
 <section class="relative overflow-hidden bg-gradient-to-b from-canvas-cream via-surface-container-low to-background py-space-lg md:py-space-xl">
@@ -103,9 +138,73 @@
 <div class="relative w-full h-full rounded-[34px] overflow-hidden bg-black select-none"
      style="box-shadow:inset 0 0 12px rgba(0,0,0,.95),inset 0 .5px 0 rgba(255,255,255,.22),inset 0 -.5px 0 rgba(255,255,255,.08);">
 
-<!-- contenu : un statut WhatsApp en cours de lecture -->
-<div class="absolute inset-0 bg-cover bg-center"
-     style="background-image:linear-gradient(to bottom,rgba(0,0,0,.72) 0%,rgba(0,0,0,.05) 26%,rgba(0,0,0,.12) 58%,rgba(0,0,0,.9) 100%),url('{{ url_for('static', filename='images/hero-statut-burger.jpg') }}');"></div>
+<!-- contenu : quatre statuts qui defilent comme sur WhatsApp.
+     Chaque article porte son heure, sa duree d'affichage et son pied de
+     page ; le script du bas de page ne fait que passer de l'un a l'autre.
+     Sans script, le premier statut reste affiche tel quel. -->
+<div class="absolute inset-0 z-0" id="pw-statuts">
+
+<!-- 1. la veille au soir : le menu du restaurant -->
+<article class="pw-statut" data-pw-statut data-actif data-pw-heure="Il y a 19 h" data-pw-duree="5200">
+<span class="pw-statut-fond pw-statut-zoom absolute inset-0 bg-cover bg-center"
+      style="background-image:linear-gradient(to bottom,rgba(0,0,0,.72) 0%,rgba(0,0,0,.05) 26%,rgba(0,0,0,.12) 58%,rgba(0,0,0,.9) 100%),url('{{ url_for('static', filename='images/hero-statut-burger.jpg') }}');"></span>
+<div class="absolute left-0 right-0 z-30" style="bottom:22px;">
+<div class="text-white" style="background:rgba(0,0,0,.42);padding:8px 12px;">
+<p class="text-[10px] font-semibold leading-snug"><strong>Saveurs &amp; D&eacute;lices Akpakpa :</strong> offre week-end Menu Burger Gourmet + Frites + Boisson &agrave; 4 500 FCFA. Commandez sur WhatsApp via <span class="pw-statut-lien">pubwek.com/r/delices-akp</span></p>
+</div>
+<div class="flex items-center justify-center gap-[5px] text-white/95" style="margin-top:9px;">
+<span class="material-symbols-outlined text-[15px]">visibility</span>
+<span class="font-label-numeric-md text-[10px] font-bold tracking-tight">1 420</span>
+</div>
+</div>
+</article>
+
+<!-- 2. ce matin : la boutique d'electromenager en promotion -->
+<article class="pw-statut" data-pw-statut data-pw-heure="Il y a 8 h" data-pw-duree="4800">
+<span class="pw-statut-fond pw-statut-zoom absolute inset-0 bg-cover bg-center"
+      style="background-image:linear-gradient(to bottom,rgba(0,0,0,.72) 0%,rgba(0,0,0,.05) 26%,rgba(0,0,0,.12) 58%,rgba(0,0,0,.9) 100%),url('{{ url_for('static', filename='images/hero-statut-electro.jpg') }}');"></span>
+<div class="absolute left-0 right-0 z-30" style="bottom:22px;">
+<div class="text-white" style="background:rgba(0,0,0,.42);padding:8px 12px;">
+<p class="text-[10px] font-semibold leading-snug"><strong>Ets Gb&egrave;do &Eacute;lectro :</strong> d&eacute;stockage jusqu&rsquo;&agrave; samedi, livraison offerte dans Cotonou. Catalogue et prix sur <span class="pw-statut-lien">pubwek.com/r/gbedo-electro</span></p>
+</div>
+<div class="flex items-center justify-center gap-[5px] text-white/95" style="margin-top:9px;">
+<span class="material-symbols-outlined text-[15px]">visibility</span>
+<span class="font-label-numeric-md text-[10px] font-bold tracking-tight">903</span>
+</div>
+</div>
+</article>
+
+<!-- 3. en milieu de journee : un statut texte, fond uni, comme on en poste -->
+<article class="pw-statut" data-pw-statut data-pw-heure="Il y a 3 h" data-pw-duree="4800">
+<span class="pw-statut-fond absolute inset-0"
+      style="background-image:linear-gradient(to bottom,rgba(0,0,0,.72) 0%,rgba(0,0,0,.05) 26%,rgba(0,0,0,.12) 58%,rgba(0,0,0,.9) 100%),linear-gradient(158deg,#4f46e5 0%,#3730a3 52%,#1e1b4b 100%);"></span>
+<span class="absolute text-center text-white" style="top:78px;left:18px;right:18px;bottom:64px;display:flex;flex-direction:column;justify-content:center;">
+<span class="block font-bold" style="font-size:14px;line-height:1.42;">Arrivage du jour : Tecno Spark 20 et Infinix Hot 50, garantie 12 mois. Facilit&eacute;s de paiement accept&eacute;es. <span class="pw-statut-lien">pubwek.com/r/cotonou-phone</span></span>
+</span>
+<div class="absolute left-0 right-0 z-30" style="bottom:22px;">
+<div class="flex items-center justify-center gap-[5px] text-white/95">
+<span class="material-symbols-outlined text-[15px]">visibility</span>
+<span class="font-label-numeric-md text-[10px] font-bold tracking-tight">512</span>
+</div>
+</div>
+</article>
+
+<!-- 4. il y a une heure : les jus, statut sur lequel tombe le paiement -->
+<article class="pw-statut" data-pw-statut data-pw-heure="Il y a 1 h" data-pw-duree="6600">
+<span class="pw-statut-fond pw-statut-zoom absolute inset-0 bg-cover bg-center"
+      style="background-image:linear-gradient(to bottom,rgba(0,0,0,.72) 0%,rgba(0,0,0,.05) 26%,rgba(0,0,0,.12) 58%,rgba(0,0,0,.9) 100%),url('{{ url_for('static', filename='images/hero-statut-jus.jpg') }}');"></span>
+<div class="absolute left-0 right-0 z-30" style="bottom:22px;">
+<div class="text-white" style="background:rgba(0,0,0,.42);padding:8px 12px;">
+<p class="text-[10px] font-semibold leading-snug"><strong>Ayaba Jus Naturels :</strong> bissap, gingembre et ananas press&eacute;s du jour, sans conservateur. Commandez avant 17 h sur <span class="pw-statut-lien">pubwek.com/r/ayaba-jus</span></p>
+</div>
+<div class="flex items-center justify-center gap-[5px] text-white/95" style="margin-top:9px;">
+<span class="material-symbols-outlined text-[15px]">visibility</span>
+<span class="font-label-numeric-md text-[10px] font-bold tracking-tight">168</span>
+</div>
+</div>
+</article>
+
+</div>
 
 <!-- barre d'etat -->
 <div class="absolute top-0 left-0 right-0 h-[42px] z-30 flex items-end justify-between px-[18px] pb-[7px] text-white">
@@ -127,9 +226,10 @@
 
 <!-- barres de progression du statut -->
 <div class="absolute top-[46px] left-[10px] right-[10px] z-30 flex items-center gap-[3px]">
-<span class="h-[2.5px] flex-1 rounded-full bg-white shadow-sm"></span>
-<span class="h-[2.5px] flex-1 rounded-full bg-white/35"></span>
-<span class="h-[2.5px] flex-1 rounded-full bg-white/25"></span>
+<span class="pw-statut-barre" data-pw-barre data-etat="encours" style="--pw-duree:5200ms"><i></i></span>
+<span class="pw-statut-barre" data-pw-barre><i></i></span>
+<span class="pw-statut-barre" data-pw-barre><i></i></span>
+<span class="pw-statut-barre" data-pw-barre><i></i></span>
 </div>
 
 <!-- en-tete du statut -->
@@ -142,39 +242,25 @@
 </span>
 <span class="block leading-tight">
 <span class="block text-[11.5px] font-bold">Mon statut</span>
-<span class="block text-[9px] text-white/70">Il y a 12 min</span>
+<span class="block text-[9px] text-white/70" id="pw-statut-heure">Il y a 19 h</span>
 </span>
 </div>
 <span class="material-symbols-outlined text-[18px] text-white/85">more_vert</span>
 </div>
 
-<!-- notification Mobile Money qui descend par-dessus -->
-<div class="absolute top-[96px] left-[10px] right-[10px] z-30 rounded-[14px] bg-white/90 backdrop-blur-xl p-[7px] flex items-center gap-[6px] text-slate-midnight"
-     style="box-shadow:0 10px 22px -8px rgba(2,6,23,.55),inset 0 0 0 .5px rgba(255,255,255,.9);">
+<!-- notification Mobile Money : elle descend sur le dernier statut du
+     defile, puis repart avec lui. -->
+<div class="pw-statut-notif absolute left-[10px] right-[10px] z-40 rounded-[14px] bg-white/90 backdrop-blur-xl p-[7px] flex items-center gap-[6px] text-slate-midnight"
+     id="pw-statut-notif"
+     style="top:53px;box-shadow:0 10px 22px -8px rgba(2,6,23,.55),inset 0 0 0 .5px rgba(255,255,255,.9);">
 <span class="w-[22px] h-[22px] rounded-[7px] bg-momo-yellow flex items-center justify-center shrink-0 shadow-sm">
 <span class="font-black text-slate-900 text-[7px] tracking-tighter">MoMo</span></span>
 <span class="flex-1 min-w-0 block">
 <span class="flex items-center justify-between">
 <span class="text-[9px] font-bold truncate">MTN Mobile Money</span>
-<span class="text-[8px] text-on-surface-variant font-medium shrink-0 ml-1">3 min</span></span>
+<span class="text-[8px] text-on-surface-variant font-medium shrink-0 ml-1">&agrave; l&rsquo;instant</span></span>
 <span class="block text-[10px] text-brand-deep font-bold leading-tight">+1 250 FCFA re&ccedil;us de Pubwek</span>
 </span>
-</div>
-
-<!-- bas du statut : le lien tracable, le texte de l'annonce, les vues -->
-<div class="absolute bottom-[24px] left-[10px] right-[10px] z-30 space-y-[9px]">
-<div class="flex justify-center">
-<span class="inline-flex items-center gap-1 px-[9px] py-[4px] rounded-full bg-white text-slate-900 text-[9.5px] font-bold tracking-tight shadow-lg">
-<span class="material-symbols-outlined text-brand-primary text-[12px]">link</span>pubwek.com/r/delices-akp</span>
-</div>
-<div class="p-[8px] rounded-[14px] bg-black/60 backdrop-blur-md text-white"
-     style="box-shadow:inset 0 0 0 .5px rgba(255,255,255,.14);">
-<p class="text-[10px] font-semibold leading-snug"><strong>Saveurs &amp; D&eacute;lices Akpakpa :</strong> Offre week-end Menu Burger Gourmet + Frites + Boisson &agrave; 4 500 FCFA. Cliquez sur le lien pour commander sur WhatsApp</p>
-</div>
-<div class="flex items-center justify-center gap-[5px] text-white/95">
-<span class="material-symbols-outlined text-[15px]">visibility</span>
-<span class="font-label-numeric-md text-[10px] font-bold tracking-tight">1 420</span>
-</div>
 </div>
 
 <!-- barre d'accueil -->
@@ -326,4 +412,109 @@ Vous pouvez tenir les deux r&ocirc;les avec deux comptes distincts.
 
 {% set cta_public = 'tous' %}
 {% include "_blocs/cta.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // ===================================================================
+  // LE DEFILE DE STATUTS DU HERO
+  // Quatre statuts s'enchainent comme sur WhatsApp : la barre du haut se
+  // remplit, l'heure de publication change, et le paiement Mobile Money
+  // tombe en cours de lecture du dernier. Si ce script ne tourne pas, le
+  // premier statut reste affiche et la page ne perd rien.
+  // ===================================================================
+  (function () {
+    var scene = document.getElementById('pw-statuts');
+    if (!scene) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var statuts = Array.prototype.slice.call(scene.querySelectorAll('[data-pw-statut]'));
+    var barres = Array.prototype.slice.call(document.querySelectorAll('[data-pw-barre]'));
+    var heure = document.getElementById('pw-statut-heure');
+    var notif = document.getElementById('pw-statut-notif');
+    if (statuts.length < 2 || barres.length !== statuts.length) return;
+
+    var courant = 0;
+    var minuteries = [];
+    var endormi = false;
+
+    function oublier() {
+      minuteries.forEach(clearTimeout);
+      minuteries = [];
+    }
+
+    function plusTard(action, delai) {
+      minuteries.push(setTimeout(action, delai));
+    }
+
+    function afficher(i) {
+      oublier();
+      courant = i;
+      var duree = parseInt(statuts[i].getAttribute('data-pw-duree'), 10) || 5000;
+
+      statuts.forEach(function (statut, n) {
+        if (n === i) statut.setAttribute('data-actif', '');
+        else statut.removeAttribute('data-actif');
+      });
+
+      // On vide l'etat de toutes les barres, on force un recalcul, puis on
+      // le repose : sans ce passage a vide, l'animation de remplissage ne
+      // repartirait pas de zero au tour suivant.
+      barres.forEach(function (barre) {
+        barre.removeAttribute('data-etat');
+        barre.style.removeProperty('--pw-duree');
+      });
+      void scene.offsetWidth;
+      barres.forEach(function (barre, n) {
+        if (n < i) barre.setAttribute('data-etat', 'vu');
+      });
+      barres[i].style.setProperty('--pw-duree', duree + 'ms');
+      barres[i].setAttribute('data-etat', 'encours');
+
+      if (heure) heure.textContent = statuts[i].getAttribute('data-pw-heure') || '';
+
+      if (notif) {
+        if (i === statuts.length - 1) {
+          // Le retrait arrive pendant la lecture, pas des l'ouverture :
+          // c'est ce decalage qui le fait lire comme une vraie alerte.
+          plusTard(function () { notif.setAttribute('data-visible', ''); }, 1600);
+        } else {
+          notif.removeAttribute('data-visible');
+        }
+      }
+
+      plusTard(function () { afficher((i + 1) % statuts.length); }, duree);
+    }
+
+    function suspendre() {
+      if (endormi) return;
+      endormi = true;
+      oublier();
+    }
+
+    function reprendre() {
+      if (endormi === false) return;
+      endormi = false;
+      afficher(courant);
+    }
+
+    // Rien ne tourne quand le telephone est sorti de l'ecran ou quand
+    // l'onglet passe en arriere-plan : personne ne le regarde.
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entrees) {
+        entrees.forEach(function (entree) {
+          if (entree.isIntersecting) reprendre();
+          else suspendre();
+        });
+      }, { threshold: 0.2 }).observe(scene);
+    }
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) suspendre();
+      else reprendre();
+    });
+
+    afficher(0);
+  })();
+</script>
 {% endblock %}

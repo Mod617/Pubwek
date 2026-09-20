@@ -94,19 +94,19 @@ module.exports = {
         "space-xs": "0.5rem"
       },
       fontFamily: {
-        "label-numeric-lg": ["JetBrains Mono"],
-        "display-hero-mobile": ["Plus Jakarta Sans"],
-        "body-xl": ["Inter"],
-        "headline-sm": ["Plus Jakarta Sans"],
-        "headline-md": ["Plus Jakarta Sans"],
-        "label-numeric-md": ["JetBrains Mono"],
-        "display-hero": ["Plus Jakarta Sans"],
-        "body-sm": ["Inter"],
-        "body-md": ["Inter"],
-        "label-caps": ["Inter"],
-        "headline-lg-mobile": ["Plus Jakarta Sans"],
-        "caption": ["Inter"],
-        "headline-lg": ["Plus Jakarta Sans"]
+        "label-numeric-lg": ["JetBrains Mono", "Mono Secours", "ui-monospace", "monospace"],
+        "display-hero-mobile": ["Plus Jakarta Sans", "Jakarta Secours", "system-ui", "sans-serif"],
+        "body-xl": ["Inter", "Inter Secours", "system-ui", "sans-serif"],
+        "headline-sm": ["Plus Jakarta Sans", "Jakarta Secours", "system-ui", "sans-serif"],
+        "headline-md": ["Plus Jakarta Sans", "Jakarta Secours", "system-ui", "sans-serif"],
+        "label-numeric-md": ["JetBrains Mono", "Mono Secours", "ui-monospace", "monospace"],
+        "display-hero": ["Plus Jakarta Sans", "Jakarta Secours", "system-ui", "sans-serif"],
+        "body-sm": ["Inter", "Inter Secours", "system-ui", "sans-serif"],
+        "body-md": ["Inter", "Inter Secours", "system-ui", "sans-serif"],
+        "label-caps": ["Inter", "Inter Secours", "system-ui", "sans-serif"],
+        "headline-lg-mobile": ["Plus Jakarta Sans", "Jakarta Secours", "system-ui", "sans-serif"],
+        "caption": ["Inter", "Inter Secours", "system-ui", "sans-serif"],
+        "headline-lg": ["Plus Jakarta Sans", "Jakarta Secours", "system-ui", "sans-serif"]
       },
       fontSize: {
         "label-numeric-lg": ["27px", { lineHeight: "31px", letterSpacing: "-0.02em", fontWeight: "700" }],

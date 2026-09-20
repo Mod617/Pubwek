@@ -152,4 +152,196 @@
     @apply inline-flex items-center gap-1 px-space-sm py-1 rounded-full
            font-label-caps text-label-caps font-bold uppercase tracking-wider;
   }
+
+  /* ----- Piste de carrousel (temoignages) -----
+     Defilement horizontal au doigt ou aux fleches, sans barre visible. */
+  .pw-piste-carrousel {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .pw-piste-carrousel::-webkit-scrollbar { display: none; }
+
+  /* ----- Navigation du panneau d'administration -----
+     Une seule bande de liens courts, au lieu de boutons melanges aux
+     actions de l'en-tete. */
+  .pw-admin-lien {
+    @apply inline-flex items-center px-space-sm py-1.5 rounded-xl
+           font-headline-md text-[13px] font-semibold text-on-surface-variant
+           hover:bg-surface-container-low hover:text-slate-midnight transition-colors;
+  }
+  .pw-admin-lien.is-active {
+    @apply bg-brand-primary text-white hover:bg-brand-primary hover:text-white;
+  }
+
+  /* ===================================================================
+     APPARITIONS AU DEFILEMENT
+     Tout passe par transform / opacity / filter, les trois proprietes
+     que le navigateur sait animer sans recalculer la mise en page :
+     indispensable sur les telephones d'entree de gamme.
+
+     Rien n'est masque tant que .pw-anim-prete n'est pas pose sur <html>
+     par le script d'amorce. Si le JavaScript ne s'execute pas, la page
+     reste entierement lisible au lieu de rester blanche.
+     =================================================================== */
+  .pw-anim-prete [data-pw-anim] {
+    opacity: 0;
+    transition:
+      opacity 700ms cubic-bezier(.22, 1, .36, 1),
+      transform 700ms cubic-bezier(.22, 1, .36, 1),
+      filter 700ms cubic-bezier(.22, 1, .36, 1);
+    transition-delay: calc(var(--pw-retard, 0) * 65ms);
+  }
+  .pw-anim-prete [data-pw-anim="monte"]  { transform: translate3d(0, 26px, 0); }
+  .pw-anim-prete [data-pw-anim="gauche"] { transform: translate3d(-26px, 0, 0); }
+  .pw-anim-prete [data-pw-anim="droite"] { transform: translate3d(26px, 0, 0); }
+  .pw-anim-prete [data-pw-anim="zoom"]   { transform: scale(.955); }
+  /* Le flou se dissipe : reserve aux blocs d'introduction, c'est la seule
+     animation un peu couteuse et il n'y en a jamais deux a l'ecran. */
+  .pw-anim-prete [data-pw-anim="net"] {
+    transform: translate3d(0, 16px, 0);
+    filter: blur(9px);
+  }
+  .pw-anim-prete [data-pw-anim].is-visible {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  /* Titre decoupe mot a mot : chaque mot se redresse a son tour. */
+  .pw-anim-prete .pw-mot {
+    display: inline-block;
+    opacity: 0;
+    transform: translate3d(0, .45em, 0) rotate(2.5deg);
+    transform-origin: 0 100%;
+    transition:
+      opacity 620ms cubic-bezier(.22, 1, .36, 1),
+      transform 620ms cubic-bezier(.22, 1, .36, 1);
+    transition-delay: calc(var(--pw-retard, 0) * 45ms);
+  }
+  .pw-anim-prete .is-visible .pw-mot { opacity: 1; transform: none; }
+
+  /* Fil de progression du defilement, en haut de la fenetre.
+     Amelioration progressive : n'apparait que la ou le navigateur sait
+     animer sur la position de defilement, sans une ligne de JavaScript. */
+  .pw-progression { display: none; }
+  @supports (animation-timeline: scroll()) {
+    .pw-anim-prete .pw-progression {
+      display: block;
+      position: fixed;
+      inset: 0 0 auto 0;
+      height: 2px;
+      z-index: 60;
+      transform-origin: 0 50%;
+      transform: scaleX(0);
+      background: linear-gradient(90deg, #066FA7, #1EADEC 55%, #F59E0B);
+      animation: pw-progression linear both;
+      animation-timeline: scroll(root block);
+    }
+  }
+  @keyframes pw-progression { to { transform: scaleX(1); } }
+}
+
+/* ===========================================================================
+   ANTI-SAUT DE MISE EN PAGE AU CHARGEMENT
+
+   1. Les icones. Tant que la police d'icones n'est pas arrivee, le navigateur
+      reserve la largeur du mot ecrit dans le HTML ("rocket_launch") avec la
+      police de secours : les boutons s'etirent, puis se retractent d'un coup.
+      Une icone Material fait exactement 1 em de large : on fige donc cette
+      largeur des le depart, le texte de remplacement est rogne et plus rien
+      ne bouge.
+   2. Les textes. Chaque pile de polices se termine par une police locale dont
+      les proportions sont recalees sur la vraie police : largeur moyenne
+      (size-adjust) et hauteur des jambages (ascent / descent). Arial ne
+      possede que deux graisses reelles la ou Inter et Plus Jakarta Sans sont
+      variables : le recalage est donc declare par tranche de graisse, sinon
+      les titres gras restent trop etroits pendant le chargement.
+
+   Valeurs mesurees sur les fichiers .woff2 du dossier static/fonts et
+   verifiees dans le navigateur. A recalculer si les polices changent.
+   =========================================================================== */
+
+.material-symbols-outlined {
+  width: 1em;
+  overflow: hidden;
+}
+
+@font-face {
+  font-family: 'Inter Secours';
+  font-weight: 100 449;
+  src: local('Arial'), local('Helvetica Neue'), local('Liberation Sans');
+  size-adjust: 106.01%;
+  ascent-override: 91.38%;
+  descent-override: 22.75%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Inter Secours';
+  font-weight: 450 549;
+  src: local('Arial'), local('Helvetica Neue'), local('Liberation Sans');
+  size-adjust: 107.06%;
+  ascent-override: 90.49%;
+  descent-override: 22.53%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Inter Secours';
+  font-weight: 550 649;
+  src: local('Arial'), local('Helvetica Neue'), local('Liberation Sans');
+  size-adjust: 108.08%;
+  ascent-override: 89.63%;
+  descent-override: 22.32%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Inter Secours';
+  font-weight: 650 900;
+  src: local('Arial'), local('Helvetica Neue'), local('Liberation Sans');
+  size-adjust: 109.12%;
+  ascent-override: 88.78%;
+  descent-override: 22.11%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Jakarta Secours';
+  font-weight: 100 649;
+  src: local('Arial'), local('Helvetica Neue'), local('Liberation Sans');
+  size-adjust: 106.53%;
+  ascent-override: 97.44%;
+  descent-override: 20.84%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Jakarta Secours';
+  font-weight: 650 749;
+  src: local('Arial'), local('Helvetica Neue'), local('Liberation Sans');
+  size-adjust: 107.43%;
+  ascent-override: 96.62%;
+  descent-override: 20.66%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Jakarta Secours';
+  font-weight: 750 900;
+  src: local('Arial'), local('Helvetica Neue'), local('Liberation Sans');
+  size-adjust: 108.29%;
+  ascent-override: 95.85%;
+  descent-override: 20.50%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Mono Secours';
+  font-weight: 100 900;
+  src: local('Courier New'), local('Liberation Mono');
+  size-adjust: 99.99%;
+  ascent-override: 102.01%;
+  descent-override: 30.00%;
+  line-gap-override: 0%;
 }

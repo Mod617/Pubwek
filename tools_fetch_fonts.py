@@ -1,4 +1,11 @@
-"""Rapatrie les polices Google utilisees par le design Pubwek en local."""
+"""Rapatrie les polices Google utilisees par le design Pubwek en local.
+
+ATTENTION : static/css/fonts.css est entierement reecrit a chaque execution.
+Ne rien y ajouter a la main. Les polices de secours qui evitent le saut de
+mise en page pendant le chargement vivent dans static/css/tailwind-input.css,
+au chapitre ANTI-SAUT ; leurs valeurs sont calculees sur les fichiers .woff2
+telecharges ici et sont a verifier si la liste des graisses change.
+"""
 import os
 import re
 import urllib.request

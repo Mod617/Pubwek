@@ -627,6 +627,26 @@ with app.app_context():
         logger.error("Erreur migration colonnes system_config : %s", e)
 
 
+# Migration legere : colonne ajoutee sur `campaigns` apres la creation de la
+# table (whatsapp_garder_01, voir models.py). Elle est declaree NOT NULL cote
+# modele, donc sans ce bloc la moindre lecture de Campaign echouerait sur une
+# base deja en place : la redirection de clic /t/<token>/whatsapp lit
+# camp.whatsapp_garder_01 a chaque visite. DEFAULT FALSE reproduit exactement
+# l'ancien comportement (le 01 est retire du numero) pour toutes les
+# campagnes existantes, comme prevu par le modele.
+with app.app_context():
+    from sqlalchemy import text
+    try:
+        db.session.execute(text(
+            "ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS whatsapp_garder_01 BOOLEAN NOT NULL DEFAULT FALSE"
+        ))
+        db.session.commit()
+        logger.info("Migration campaigns.whatsapp_garder_01 verifiee.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Erreur migration colonnes campaigns : %s", e)
+
+
 with app.app_context():
     # FIX: Les deux variables sont obligatoires — aucune valeur par défaut codée en dur
     admin_email = os.environ.get("ADMIN_EMAIL")

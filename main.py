@@ -602,6 +602,51 @@ with app.app_context():
         db.session.rollback()
         logger.error("Erreur migration colonnes contact_messages : %s", e)
 
+# 🆕 Migration légère : colonnes de configuration ajoutées sur `system_config`
+# après la création initiale de la table (exiger_preuve_partage,
+# exiger_validation_partageur, referral_reward_partageur_fixe) — même raison
+# que pour transactions/users/contact_messages ci-dessus : db.create_all() ne
+# modifie jamais une table déjà existante.
+with app.app_context():
+    from sqlalchemy import text
+    try:
+        db.session.execute(text(
+            "ALTER TABLE system_config ADD COLUMN IF NOT EXISTS exiger_preuve_partage BOOLEAN NOT NULL DEFAULT TRUE"
+        ))
+        db.session.execute(text(
+            "ALTER TABLE system_config ADD COLUMN IF NOT EXISTS exiger_validation_partageur BOOLEAN NOT NULL DEFAULT TRUE"
+        ))
+        # 🆕 Montant fixe du parrainage partageur → partageur (voir models.py)
+        db.session.execute(text(
+            "ALTER TABLE system_config ADD COLUMN IF NOT EXISTS referral_reward_partageur_fixe FLOAT NOT NULL DEFAULT 200"
+        ))
+        db.session.commit()
+        logger.info("Migration system_config.exiger_preuve_partage / exiger_validation_partageur / referral_reward_partageur_fixe vérifiée.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Erreur migration colonnes system_config : %s", e)
+
+
+# Migration legere : colonne ajoutee sur `campaigns` apres la creation de la
+# table (whatsapp_garder_01, voir models.py). Elle est declaree NOT NULL cote
+# modele, donc sans ce bloc la moindre lecture de Campaign echouerait sur une
+# base deja en place : la redirection de clic /t/<token>/whatsapp lit
+# camp.whatsapp_garder_01 a chaque visite. DEFAULT FALSE reproduit exactement
+# l'ancien comportement (le 01 est retire du numero) pour toutes les
+# campagnes existantes, comme prevu par le modele.
+with app.app_context():
+    from sqlalchemy import text
+    try:
+        db.session.execute(text(
+            "ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS whatsapp_garder_01 BOOLEAN NOT NULL DEFAULT FALSE"
+        ))
+        db.session.commit()
+        logger.info("Migration campaigns.whatsapp_garder_01 verifiee.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Erreur migration colonnes campaigns : %s", e)
+
+
 with app.app_context():
     # FIX: Les deux variables sont obligatoires — aucune valeur par défaut codée en dur
     admin_email = os.environ.get("ADMIN_EMAIL")
@@ -1083,6 +1128,18 @@ def nouvelle_campagne():
             flash(MESSAGE_NUMERO_INVALIDE, "danger")
             return redirect(url_for("dashboard_annonceur"))
 
+        # 🆕 Format wa.me confirmé par l'annonceur via le test à deux boutons
+        # (voir dashboard_annonceur.html). Défense en profondeur : même si le
+        # JS est contourné, on refuse la campagne sans confirmation explicite.
+        whatsapp_garder_01_raw = request.form.get("whatsapp_garder_01", "").strip()
+        if whatsapp_number and whatsapp_garder_01_raw not in ("0", "1"):
+            flash(
+                "Merci de tester les deux liens WhatsApp et de confirmer le bon format avant de valider votre campagne. ⚠️",
+                "danger"
+            )
+            return redirect(url_for("dashboard_annonceur"))
+        whatsapp_garder_01 = whatsapp_garder_01_raw == "1"
+
         # --- Champ optionnel : site web / application web de la structure ---
         website_url = request.form.get("website_url", "").strip()
         if website_url:
@@ -1233,6 +1290,7 @@ def nouvelle_campagne():
             views_per_day=views_per_day,
             total_cost=total_cost,
             whatsapp_number=whatsapp_number or "",
+            whatsapp_garder_01=whatsapp_garder_01,
 
             # --- MISES À JOUR DU WORKFLOW ET DES STATUTS ---
             status="non_payee",
@@ -2668,6 +2726,26 @@ def webhook_fedapay():
 
 @app.route("/")
 def index():
+    # Capture du parrain des l'accueil, pour que le meme lien de parrainage
+    # fonctionne peu importe le role choisi ensuite (annonceur ou partageur).
+    # register() capture aussi le ref directement de son cote : les anciens
+    # liens deja partages (vers /register/annonceur?ref=...) continuent donc
+    # de fonctionner sans rien changer. La capture passe avant la redirection
+    # ci-dessous : un visiteur deja connecte n'est pas concerne, mais l'ordre
+    # garde le comportement d'origine intact pour tous les autres.
+    ref_param = request.args.get("ref")
+    if ref_param:
+        if ref_param.isdigit():
+            referrer = User.query.filter(
+                (User.pseudo == ref_param) | (User.id == int(ref_param))
+            ).first()
+        else:
+            referrer = User.query.filter(User.pseudo == ref_param).first()
+
+        if referrer:
+            session["referrer_id"] = referrer.id
+            logger.info("Parrain détecté et stocké en session (accueil) : %s (ID: %s)", referrer.pseudo, referrer.id)
+
     # Un visiteur connecte n'a plus rien a faire sur la page de presentation :
     # on l'envoie directement la ou il travaille. La page d'accueil reste
     # accessible aux visiteurs non connectes et apres une deconnexion.
@@ -2837,9 +2915,6 @@ def register(role):
     # =========================================================================
     ref_param = request.args.get("ref")
     if ref_param:
-        # On cherche si le parrain existe (soit par son Pseudo, soit par son ID)
-        # ⚠️ User.id est un entier : on ne le compare que si ref_param est numérique,
-        # sinon PostgreSQL lève une erreur de conversion et casse toute la requête.
         if ref_param.isdigit():
             referrer = User.query.filter(
                 (User.pseudo == ref_param) | (User.id == int(ref_param))
@@ -2856,24 +2931,16 @@ def register(role):
     if form.validate_on_submit():
         existing_user = User.query.filter_by(email=form.email.data).first()
 
-        # =========================================================================
-        # 📞 === RECONSTRUCTION DU NUMÉRO WHATSAPP COMPLET ===
-        # form.whatsapp_number.data ne contient que les 8 chiffres saisis par
-        # l'utilisateur (le champ n'accepte plus le préfixe). On reconstruit ici
-        # le numéro complet au format béninois avant toute validation/sauvegarde.
-        # =========================================================================
         whatsapp_number = form.whatsapp_number.data
         if whatsapp_number:
             whatsapp_number = "+22901" + whatsapp_number.strip()
 
-        # FIX: Anti-énumération — même message que l'email soit pris ou non
         email_ou_whatsapp_pris = False
 
         if existing_user:
             email_ou_whatsapp_pris = True
 
         if whatsapp_number and not email_ou_whatsapp_pris:
-            # Même règle que le formulaire (forms.NUMERO_WHATSAPP_REGEX)
             if not numero_whatsapp_valide(whatsapp_number):
                 flash(MESSAGE_NUMERO_INVALIDE, "danger")
                 return render_template("register.html", form=form, role=role, departements_communes=DEPARTEMENTS_COMMUNES)
@@ -2881,12 +2948,19 @@ def register(role):
                 email_ou_whatsapp_pris = True
 
         if email_ou_whatsapp_pris:
-            # Message générique : ne révèle pas si c'est l'email ou le WhatsApp qui est pris
             flash("Un compte avec ces informations existe déjà. Vérifiez vos données ou connectez-vous.", "danger")
             return render_template("register.html", form=form, role=role, departements_communes=DEPARTEMENTS_COMMUNES)
 
         hashed_pw = bcrypt.generate_password_hash(form.password.data).decode("utf-8")
-        is_confirmed = (role == "annonceur")
+
+        # =====================================================================
+        # 🆕 Un annonceur est toujours confirmé d'office. Un partageur est
+        # confirmé d'office UNIQUEMENT si l'exigence de validation admin a été
+        # désactivée par le super-admin (SystemConfig.exiger_validation_partageur).
+        # =====================================================================
+        config = SystemConfig.get_config()
+        validation_partageur_desactivee = role == "partageur" and not config.exiger_validation_partageur
+        is_confirmed = (role == "annonceur") or validation_partageur_desactivee
 
         pseudo_base = form.email.data.split("@")[0]
         pseudo = f"{pseudo_base}{random.randint(100, 999)}"
@@ -2902,9 +2976,6 @@ def register(role):
                 logo_filename = generer_nom_unique(logo_file.filename)
                 logo_file.save(os.path.join(current_app.config["UPLOAD_FOLDER"], logo_filename))
 
-        # =========================================================================
-        # 🔗 === PARRAINAGE : RÉCUPÉRATION DU PARRAIN DEPUIS LA SESSION ===
-        # =========================================================================
         referrer_id_to_save = session.get("referrer_id")
 
         new_user = User(
@@ -2913,12 +2984,11 @@ def register(role):
             role=role,
             company_name=form.company_name.data if role == "annonceur" else None,
             province=form.province.data or "Non spécifiée",
-            commune=form.commune.data if role == "partageur" else None,  # 🆕
+            commune=form.commune.data if role == "partageur" else None,
             whatsapp_number=whatsapp_number,
             pseudo=pseudo,
             is_confirmed=is_confirmed,
             logo=logo_filename,
-            # Association du parrain
             referrer_id=referrer_id_to_save,
             has_launched_first_campaign=False
         )
@@ -2927,29 +2997,172 @@ def register(role):
             db.session.add(new_user)
             db.session.commit()
 
-            # Le logo a été écrit sur disque avant que l'utilisateur n'existe :
-            # on ne peut lui attribuer un propriétaire qu'une fois l'id connu.
             if logo_filename:
                 enregistrer_upload(logo_filename, new_user.id, kind="logo")
                 db.session.commit()
 
-            # Une fois inscrit, on nettoie la session pour éviter les effets de bord
+            # 🆕 Parrainage partageur → partageur : crédit fixe immédiat du
+            # parrain, uniquement si le PARRAIN est lui aussi un partageur
+            # (le parrainage annonceur, en %, reste géré ailleurs par
+            # validate_campaign()). S'applique que le filleul soit
+            # auto-confirmé ou en attente de validation admin.
+            if role == "partageur" and referrer_id_to_save:
+                parrain = db.session.get(User, referrer_id_to_save)
+                if parrain and parrain.role == "partageur":
+                    crediter_parrainage_partageur(parrain, new_user, ip_client())
+                    db.session.commit()
+
             session.pop("referrer_id", None)
 
             logger.info("Nouvel utilisateur inscrit (role: %s, parrainé_par: %s).", role, referrer_id_to_save)
-            
+
             if role == "partageur":
-                flash(f"Merci {pseudo} Votre demande est enregistrée et en attente de validation.", "info")
-                return redirect(url_for("index"))
+                if validation_partageur_desactivee:
+                    # =============================================================
+                    # 🆕 Validation admin désactivée : connexion automatique,
+                    # même traitement que l'annonceur ci-dessous.
+                    # =============================================================
+                    login_user(new_user)
+                    envoyer_notification(
+                        new_user,
+                        "Bienvenue sur Pubwek",
+                        (
+                            "Votre compte partageur est actif. Voici comment ça marche :\n\n"
+                            "• Vous n'avez jamais rien à payer. C'est l'annonceur qui paie sa campagne.\n"
+                            "• Vous publiez le statut WhatsApp fourni par Pubwek sur votre propre compte : "
+                            "ce sont vos contacts qui le voient et cliquent, vous n'avez pas besoin d'audience particulière.\n"
+                            f"• Chaque clic vous rapporte de l'argent : {config.reward_per_click_video:.0f} FCFA par clic pour une vidéo, "
+                            f"{config.reward_per_click_photo:.0f} FCFA par photo chargée par l'annonceur (donc {config.reward_per_click_photo * 25:.0f} FCFA "
+                            f"par clic si l'annonceur a mis 25 photos, par exemple), "
+                            f"et {config.reward_per_click_text:.0f} FCFA par clic pour un texte seul.\n"
+                            f"• Vos gains s'accumulent dans votre portefeuille Pubwek, retirable dès {config.minimum_withdrawal_amount:.0f} FCFA "
+                            "(Mobile Money, Moov Money, Celtiis Cash ou Wave)."
+                        ),
+                        category="info",
+                        link=url_for("dashboard_partageur"),
+                    )
+                    db.session.commit()
+
+                    flash(f"Bienvenue {pseudo} ! Votre compte partageur est actif.", "success")
+                    return redirect(url_for("dashboard_partageur"))
+                else:
+                    # =============================================================
+                    # 🆕 Notification de bienvenue explicative — répond à l'avance
+                    # aux questions les plus fréquentes des partageurs, pour réduire
+                    # les allers-retours manuels une fois le compte confirmé.
+                    # =============================================================
+                    envoyer_notification(
+                        new_user,
+                        "Bienvenue sur Pubwek",
+                        (
+                            "Votre inscription est enregistrée et en attente de validation par l'administration. "
+                            "Une fois votre compte confirmé, voici comment ça marche :\n\n"
+                            "• Vous n'avez jamais rien à payer. C'est l'annonceur qui paie sa campagne.\n"
+                            "• Vous publiez le statut WhatsApp fourni par Pubwek sur votre propre compte : "
+                            "ce sont vos contacts qui le voient et cliquent, vous n'avez pas besoin d'audience particulière.\n"
+                            f"• Chaque clic vous rapporte de l'argent : {config.reward_per_click_video:.0f} FCFA par clic pour une vidéo, "
+                            f"{config.reward_per_click_photo:.0f} FCFA par photo chargée par l'annonceur (donc {config.reward_per_click_photo * 25:.0f} FCFA "
+                            f"par clic si l'annonceur a mis 25 photos, par exemple), "
+                            f"et {config.reward_per_click_text:.0f} FCFA par clic pour un texte seul.\n"
+                            f"• Vos gains s'accumulent dans votre portefeuille Pubwek, retirable dès {config.minimum_withdrawal_amount:.0f} FCFA "
+                            "(Mobile Money, Moov Money, Celtiis Cash ou Wave)."
+                        ),
+                        category="info",
+                        link=url_for("login"),
+                    )
+                    db.session.commit()
+
+                    flash(f"Merci {pseudo}. Votre demande est enregistrée et en attente de validation.", "info")
+                    return redirect(url_for("index"))
             else:
-                flash("Compte annonceur créé avec succès", "success")
-                return redirect(url_for("login"))
+                # =============================================================
+                # 🆕 Connexion automatique de l'annonceur juste après son
+                # inscription.
+                # =============================================================
+                login_user(new_user)
+
+                envoyer_notification(
+                    new_user,
+                    "Bienvenue sur Pubwek",
+                    (
+                        "Votre compte annonceur est créé et actif. Voici comment lancer votre première campagne :\n\n"
+                        "• Choisissez votre format : vidéo (30 secondes max), plusieurs photos, ou texte seul.\n"
+                        "• Définissez votre zone de diffusion (département ou commune précise) et votre objectif de clics.\n"
+                        f"• Le coût par clic dépend du format choisi : {config.cost_per_click_video:.0f} FCFA pour une vidéo, "
+                        f"{config.cost_per_click_photo:.0f} FCFA par photo chargée (multiplié par le nombre de photos), "
+                        f"et {config.cost_per_click_text:.0f} FCFA pour un texte seul, avec une commission de {config.commission_rate:.0f}% en plus.\n"
+                        "• Une fois votre campagne créée, procédez au paiement : elle sera ensuite transmise à "
+                        "l'administration pour validation avant d'être diffusée par nos partageurs.\n"
+                        "• Vous pouvez suivre vos statistiques de clics et de partageurs à tout moment depuis "
+                        "\"Mes campagnes\"."
+                    ),
+                    category="info",
+                    link=url_for("dashboard_annonceur"),
+                )
+                db.session.commit()
+
+                flash(f"Bienvenue {pseudo} ! Votre compte annonceur a été créé avec succès.", "success")
+                return redirect(url_for("dashboard_annonceur"))
         except Exception as e:
             db.session.rollback()
             flash("Une erreur est survenue lors de l'enregistrement.", "danger")
             logger.error("Erreur DB inscription : %s", e)
 
     return render_template("register.html", form=form, role=role, departements_communes=DEPARTEMENTS_COMMUNES)
+
+
+def crediter_parrainage_partageur(parrain, filleul, ip_filleul):
+    """Crédite le parrain d'un montant FIXE (SystemConfig.referral_reward_partageur_fixe)
+    quand son filleul, lui aussi partageur, vient de s'inscrire.
+
+    Anti-abus : si l'IP du filleul correspond à la dernière IP connue du
+    parrain (même appareil/réseau), on soupçonne un auto-parrainage via un
+    second compte — le lien de parrainage reste enregistré (referrer_id),
+    mais AUCUN crédit n'est versé, et l'incident est journalisé pour audit.
+
+    ⚠️ Pas encore appelée nulle part dans le code (étape 3/5 du déploiement
+    du parrainage partageur→partageur) — voir register() pour le branchement.
+    """
+    if parrain.last_seen_ip and ip_filleul and parrain.last_seen_ip == ip_filleul:
+        logger.warning(
+            "[ANTI-FRAUDE] Parrainage partageur suspect : filleul id=%d et parrain id=%d "
+            "partagent la même IP (%s). Crédit bloqué.",
+            filleul.id, parrain.id, ip_filleul
+        )
+        return False
+
+    config = SystemConfig.get_config()
+    montant = config.referral_reward_partageur_fixe or 0.0
+    if montant <= 0:
+        return False
+
+    parrain.wallet_balance = (parrain.wallet_balance or 0.0) + montant
+    db.session.add(WalletTransaction(
+        user_id=parrain.id,
+        amount=montant,
+        balance_after=parrain.wallet_balance,
+        transaction_type="referral_reward",
+        description=(
+            f"Parrainage partageur : inscription de {filleul.pseudo or filleul.email}"
+        )
+    ))
+    envoyer_notification(
+        parrain,
+        "Gain de parrainage crédité 🎁",
+        (
+            f"Vous avez gagné {montant:.0f} FCFA suite à l'inscription de votre filleul "
+            f"{filleul.pseudo or filleul.email} sur Pubwek ! Ce montant a été ajouté à "
+            f"votre portefeuille."
+        ),
+        category="success",
+        link=url_for("mes_retraits"),
+    )
+    logger.info(
+        "[PARRAINAGE PARTAGEUR] %s gagne %.2f FCFA grâce à l'inscription de %s.",
+        parrain.pseudo or parrain.email, montant, filleul.pseudo or filleul.email
+    )
+    return True
+
 
 
 @app.route("/dashboard/annonceur")
@@ -3008,11 +3221,13 @@ def dashboard_partageur():
     from models import SystemConfig, User, Campaign, Notification, WalletTransaction
     config = SystemConfig.get_config()
     
-    # Récupération des filleuls (les annonceurs parrainés par ce partageur)
+    # Récupération des filleuls (les annonceurs ET partageurs parrainés par ce partageur)
     filleuls = User.query.filter_by(referrer_id=current_user.id).all()
     total_filleuls = len(filleuls)
 
     # 🆕 Gains de parrainage déjà crédités (vraie donnée du portefeuille, plus de calcul dupliqué)
+    # Couvre à la fois le parrainage annonceur (%) et le parrainage partageur (montant fixe),
+    # puisque les deux utilisent le même transaction_type="referral_reward".
     gains_valides = (
         db.session.query(func.coalesce(func.sum(WalletTransaction.amount), 0.0))
         .filter(
@@ -3022,9 +3237,13 @@ def dashboard_partageur():
         .scalar()
     )
 
-    # Gains encore EN ATTENTE : filleuls dont la première campagne n'est pas encore payée+validée
+    # Gains encore EN ATTENTE : filleuls ANNONCEURS dont la première campagne
+    # n'est pas encore payée+validée. Ne concerne pas les filleuls partageurs :
+    # leur crédit (montant fixe) est immédiat à l'inscription, jamais "en attente".
     gains_en_attente = 0.0
     for filleul in filleuls:
+        if filleul.role != "annonceur":
+            continue  # 🆕 Le parrainage partageur est crédité immédiatement, rien à calculer ici
         if filleul.has_launched_first_campaign:
             continue  # Déjà validée (et donc déjà créditée ci-dessus) — on ne recompte pas
 
@@ -3043,8 +3262,13 @@ def dashboard_partageur():
     # =========================================================================
     clics_en_attente_validation = montant_en_attente_validation(current_user)
 
-    # Lien d'affiliation unique du partageur (redirige vers l'inscription d'un annonceur avec sa réf)
-    affiliate_link = url_for("register", role="annonceur", ref=current_user.pseudo or current_user.id, _external=True)
+    # 🆕 Lien d'affiliation unique du partageur : pointe désormais vers
+    # l'accueil (et non plus directement /register/annonceur), capté dès
+    # l'arrivée sur le site — fonctionne donc pour parrainer indifféremment
+    # un annonceur OU un partageur. Les anciens liens déjà partagés
+    # (vers /register/annonceur?ref=...) continuent de fonctionner
+    # normalement, register() captant aussi le ref de son côté.
+    affiliate_link = url_for("index", ref=current_user.pseudo or current_user.id, _external=True)
 
     # =========================================================================
     # 🆕 NOTIFICATIONS DU PARTAGEUR
@@ -3088,6 +3312,7 @@ def dashboard_partageur():
             "duree_totale": camp.duration_days,
             "vues_aujourdhui": camp.views_today or 0,
             "quota_du_jour": camp.views_per_day or 0,
+            "recompense_par_clic": recompense_pour(camp, config),  # 🆕 gain affiché au partageur
         })
 
     return render_template(
@@ -3098,6 +3323,8 @@ def dashboard_partageur():
         clics_en_attente_validation=round(clics_en_attente_validation, 2),
         solde_portefeuille=current_user.wallet_balance or 0.0,
         affiliate_link=affiliate_link,
+        recompense_parrainage_partageur=config.referral_reward_partageur_fixe,  # 🆕
+        taux_parrainage_annonceur=config.referral_reward_rate,  # 🆕
         notifications=notifications,
         notifications_non_lues=notifications_non_lues,
         campagnes_disponibles=campagnes_disponibles
@@ -3337,10 +3564,11 @@ def admin_settings():
 
             comm_rate = float(request.form.get("commission_rate", 10.0))
             ref_rate = float(request.form.get("referral_reward_rate", 3.0))
+            ref_partageur_fixe = float(request.form.get("referral_reward_partageur_fixe", 200.0))  # 🆕
             min_withdrawal = float(request.form.get("minimum_withdrawal_amount", 500.0))
 
             # Validations de sécurité de base
-            valeurs_a_verifier = [cost_video, cost_photo, cost_text, reward_video, reward_photo, reward_text, comm_rate, ref_rate, min_withdrawal]
+            valeurs_a_verifier = [cost_video, cost_photo, cost_text, reward_video, reward_photo, reward_text, comm_rate, ref_rate, ref_partageur_fixe, min_withdrawal]
             if any(v < 0 for v in valeurs_a_verifier):
                 flash("Les valeurs ne peuvent pas être négatives", "danger")
                 return redirect(url_for("admin_settings"))
@@ -3364,6 +3592,7 @@ def admin_settings():
             config.reward_per_click_text = reward_text
             config.commission_rate = comm_rate
             config.referral_reward_rate = ref_rate
+            config.referral_reward_partageur_fixe = ref_partageur_fixe  # 🆕
             config.minimum_withdrawal_amount = min_withdrawal
 
             db.session.commit()
@@ -3416,6 +3645,41 @@ def toggle_preuve_partage():
         flash("Exigence de preuve de partage réactivée. Les nouveaux clics attendront à nouveau une preuve validée.", "success")
 
     return redirect(url_for("admin_validate"))
+
+# ==========================================
+# 🆕 ROUTE : BASCULE DE L'EXIGENCE DE VALIDATION ADMIN (INSCRIPTION PARTAGEUR)
+# Réservée au VRAI super-admin uniquement — voir verifier_super_admin_strict().
+# Ne s'applique qu'aux NOUVELLES inscriptions à partir du basculement : les
+# partageurs déjà en attente restent en attente, aucun rattrapage rétroactif.
+# ==========================================
+@app.route("/admin/toggle-validation-partageur", methods=["POST"])
+@login_required
+def toggle_validation_partageur():
+    verifier_super_admin_strict()
+
+    config = SystemConfig.get_config()
+    config.exiger_validation_partageur = not config.exiger_validation_partageur
+    db.session.commit()
+
+    if config.exiger_validation_partageur:
+        logger.warning(
+            "[ACTION SUPER-ADMIN] Validation admin à l'inscription partageur RÉACTIVÉE par admin id=%d.",
+            current_user.id
+        )
+        flash("Validation admin réactivée. Les nouvelles inscriptions partageur repassent en file d'attente. ✅", "success")
+    else:
+        logger.warning(
+            "[ACTION SUPER-ADMIN] Validation admin à l'inscription partageur DÉSACTIVÉE par admin id=%d.",
+            current_user.id
+        )
+        flash(
+            "Validation admin désactivée. Les nouveaux partageurs seront désormais confirmés et connectés "
+            "automatiquement à l'inscription. Les demandes déjà en attente restent inchangées. ✅",
+            "success"
+        )
+
+    return redirect(url_for("admin_validate"))
+
 
 
 @app.route("/admin/validate")
@@ -3699,10 +3963,12 @@ def instructions_partage(campaign_id):
     lien_whatsapp_tracking = url_for("tracking_redirect_whatsapp", token=share.tracking_token, _external=True) if camp.whatsapp_number else None
     lien_site_tracking = url_for("tracking_redirect_site", token=share.tracking_token, _external=True) if camp.website_url else None
 
-    # 🆕 État des preuves de fin de journée, pour chaque jour déjà entamé,
-    # avec gestion de la fenêtre de rattrapage de 48h.
+    # 🆕 Si l'exigence de preuve est désactivée globalement, on ne calcule
+    # même pas les états de preuve : la section ne doit plus apparaître.
+    config = SystemConfig.get_config()
+
     jour_actuel = camp.jour_diffusion_campagne()
-    jours_preuves = etats_preuves_partage(share, camp)
+    jours_preuves = etats_preuves_partage(share, camp) if config.exiger_preuve_partage else []
 
     return render_template(
         "instructions_partage.html",
@@ -3713,8 +3979,9 @@ def instructions_partage(campaign_id):
         lien_site_tracking=lien_site_tracking,
         jour_actuel=jour_actuel,
         jours_preuves=jours_preuves,
+        exiger_preuve_partage=config.exiger_preuve_partage,  # 🆕
+        recompense_par_clic=recompense_pour(camp, config),  # 🆕 gain rappelé au partageur
     )
-
 
 # ==========================================
 # ROUTE : REFUS D'UNE CAMPAGNE (ADMIN)
@@ -5351,13 +5618,17 @@ def admin_preuves_partage():
 # nouveau format officiel, seul valide pour les SMS/appels réseau) — elle ne
 # sert qu'à construire le numéro tel que wa.me doit le recevoir.
 # =========================================================================
-def numero_pour_wa_me(numero):
+def numero_pour_wa_me(numero, garder_01=False):
     """Retire le "01" du numéro stocké (+22901XXXXXXXX -> 229XXXXXXXX),
     pour contourner le décalage entre la réforme de numérotation béninoise
     et l'indexation interne des comptes WhatsApp créés avant celle-ci.
+
+    garder_01=True : ne retire rien, pour les comptes dont WhatsApp a
+    indexé le numéro AVEC le "01" (nouveau format) — voir
+    Campaign.whatsapp_garder_01.
     """
     chiffres = re.sub(r"[^0-9]", "", numero or "")
-    if chiffres.startswith("22901"):
+    if not garder_01 and chiffres.startswith("22901"):
         chiffres = "229" + chiffres[5:]
     return chiffres
 
@@ -5372,7 +5643,7 @@ def tracking_redirect_whatsapp(token):
     if not camp or not camp.whatsapp_number:
         abort(404)
     # La destination est calculée d'abord : le visiteur ne doit jamais attendre
-    numero = numero_pour_wa_me(camp.whatsapp_number)
+    numero = numero_pour_wa_me(camp.whatsapp_number, garder_01=camp.whatsapp_garder_01)
     message = urllib.parse.quote(
         f"Bonjour, je suis intéressé(e) par : {camp.promotion_detail or camp.promotion_type}"
     )
@@ -5403,6 +5674,10 @@ def relancer_rappels_preuves():
     relatif codé en dur plutôt que url_for() : cette fonction tourne hors
     contexte de requête HTTP (tâche de fond), où url_for() n'est pas fiable.
     """
+    config = SystemConfig.get_config()
+    if not config.exiger_preuve_partage:
+        return  # 🆕 La preuve n'est plus exigée : rien à rappeler
+
     campagnes_actives = Campaign.query.filter_by(is_active=True, paid=True, validated=True).all()
     total_alertes = 0
 
@@ -5470,16 +5745,22 @@ def lancer_rappels_preuves_periodique(application, intervalle_secondes=3600):
 def _notifier_partageurs_quota_atteint(camp):
     """
     Notifie tous les partageurs actifs d'une campagne que le quota de clics du jour
-    est atteint, afin qu'ils puissent retirer leur statut WhatsApp s'ils le souhaitent,
-    et leur rappelle d'envoyer leur preuve de fin de journée pour faire créditer
-    leurs clics. Ils ne sont jamais rémunérés pour les clics au-delà du quota,
-    donc aucune obligation de retirer le statut.
+    est atteint, afin qu'ils puissent retirer leur statut WhatsApp s'ils le souhaitent.
+    Le rappel d'envoi de la preuve de fin de journée n'est ajouté que si l'exigence
+    de preuve est actuellement activée (SystemConfig.exiger_preuve_partage) — sinon
+    il n'y a rien à rappeler. Ils ne sont jamais rémunérés pour les clics au-delà
+    du quota, donc aucune obligation de retirer le statut.
     """
     try:
+        config = SystemConfig.get_config()
         shares = CampaignShare.query.filter_by(campaign_id=camp.id).all()
         for s in shares:
             partageur = db.session.get(User, s.sharer_id)
             if partageur:
+                rappel_preuve = (
+                    "N'oubliez surtout pas d'envoyer votre capture de fin de journée : "
+                    "c'est elle qui permet de faire valider et créditer vos clics du jour. "
+                ) if config.exiger_preuve_partage else ""
                 envoyer_notification(
                     partageur,
                     "Quota du jour atteint",
@@ -5488,8 +5769,7 @@ def _notifier_partageurs_quota_atteint(camp):
                         f"« {camp.promotion_detail or camp.promotion_type} » sont atteints. "
                         f"Vous pouvez retirer votre statut WhatsApp si vous le souhaitez, "
                         f"vous ne serez pas rémunéré(e) au-delà de ce quota. "
-                        f"N'oubliez surtout pas d'envoyer votre capture de fin de journée : "
-                        f"c'est elle qui permet de faire valider et créditer vos clics du jour. "
+                        f"{rappel_preuve}"
                         f"La diffusion reprendra demain."
                     ),
                     category="warning",
@@ -5499,7 +5779,6 @@ def _notifier_partageurs_quota_atteint(camp):
         logger.info("[QUOTA] Alerte quota envoyée à %d partageur(s) pour campagne #%d", len(shares), camp.id)
     except Exception as e:
         logger.error("Erreur notification quota atteint (campagne %d) : %s", camp.id, e)
-
 
 @app.route("/t/<token>/site")
 def tracking_redirect_site(token):
@@ -5739,122 +6018,7 @@ def confirmer_retrait_manuel(withdrawal_id):
 
     return redirect(url_for("admin_retraits"))
 
-# ==========================================
-# 🧹 ROUTE TEMPORAIRE DE NETTOYAGE AVANT PRODUCTION
-# ⚠️ À SUPPRIMER DU CODE UNE FOIS UTILISÉE — voir note en bas de fonction.
-# ==========================================
-@app.route("/admin/nettoyage-production", methods=["GET", "POST"])
-@login_required
-@limiter.limit("5 per hour")
-def nettoyage_production():
-    """
-    Vide toutes les données de test avant le vrai lancement : campagnes,
-    transactions, utilisateurs annonceurs/partageurs, messages de contact,
-    notifications, et les tables de détection de fraude jamais utilisées par
-    l'application. Conserve : comptes admin/sous-admin, system_config,
-    video_generation_config.
 
-    Réservée au VRAI super-admin (jamais un sous-admin), protégée par une
-    phrase de confirmation tapée manuellement pour éviter tout clic accidentel.
-    """
-    verifier_super_admin_strict()
-
-    if request.method == "POST":
-        confirmation = request.form.get("confirmation", "").strip()
-        if confirmation != "SUPPRIMER TOUT":
-            flash("Phrase de confirmation incorrecte. Rien n'a été supprimé.", "danger")
-            return redirect(url_for("nettoyage_production"))
-
-        from sqlalchemy import text
-
-        tables_a_vider = [
-            "campaign_clicks",
-            "campaign_share_proofs",
-            "campaign_shares",
-            "campaigns",
-            "wallet_transactions",
-            "withdrawal_requests",
-            "refund_requests",
-            "transactions",
-            "document_certifications",
-            "contact_messages",
-            "notifications",
-            "push_subscriptions",
-            "uploaded_files",
-            "account_deletion_requests",
-            "user_subscriptions",
-            "clicks",
-            "shares",
-            "products",
-            "views",
-            "fraud_logs",
-            "device_history",
-            "device_risk_history",
-            "device_sessions",
-            "devices",
-            "device_clusters",
-            "network_clusters",
-            "ip_addresses",
-            "user_sessions",
-        ]
-
-        try:
-            # 1️⃣ Vidage des tables de données (métier + tables de fraude jamais utilisées)
-            db.session.execute(text(
-                "TRUNCATE TABLE " + ", ".join(tables_a_vider) + " RESTART IDENTITY CASCADE"
-            ))
-
-            # 2️⃣ On retire les auto-références sur users AVANT de supprimer les
-            # comptes de test, pour ne jamais bloquer sur une contrainte de clé
-            # étrangère (referrer_id, created_by_admin_id, contacted_by_id,
-            # disabled_by_admin_id pointent tous vers users.id).
-            db.session.execute(text(
-                "UPDATE users SET referrer_id = NULL, created_by_admin_id = NULL, "
-                "contacted_by_id = NULL, disabled_by_admin_id = NULL"
-            ))
-
-            # 3️⃣ On garde uniquement les comptes admin et sous_admin
-            resultat = db.session.execute(text(
-                "DELETE FROM users WHERE role NOT IN ('admin', 'sous_admin')"
-            ))
-            nb_utilisateurs_supprimes = resultat.rowcount
-
-            db.session.commit()
-
-        except Exception as e:
-            db.session.rollback()
-            logger.error("[NETTOYAGE PRODUCTION] Échec du nettoyage base de données : %s", e)
-            flash(f"Erreur lors du nettoyage de la base : {e}", "danger")
-            return redirect(url_for("nettoyage_production"))
-
-        # 4️⃣ Suppression physique des fichiers uploadés
-        nb_fichiers_supprimes = 0
-        upload_folder = current_app.config["UPLOAD_FOLDER"]
-        try:
-            for nom in os.listdir(upload_folder):
-                chemin = os.path.join(upload_folder, nom)
-                if os.path.isfile(chemin):
-                    os.remove(chemin)
-                    nb_fichiers_supprimes += 1
-        except Exception as e:
-            logger.error("[NETTOYAGE PRODUCTION] Échec suppression fichiers uploads : %s", e)
-            flash(f"Base nettoyée, mais erreur lors de la suppression des fichiers : {e}", "warning")
-            return redirect(url_for("admin_validate"))
-
-        logger.warning(
-            "[NETTOYAGE PRODUCTION] Effectué par admin id=%d — %d utilisateur(s) supprimé(s), "
-            "%d fichier(s) supprimé(s).",
-            current_user.id, nb_utilisateurs_supprimes, nb_fichiers_supprimes
-        )
-        flash(
-            f"Nettoyage terminé : {nb_utilisateurs_supprimes} utilisateur(s) de test supprimé(s), "
-            f"{nb_fichiers_supprimes} fichier(s) supprimé(s). Pensez à retirer cette route du code "
-            f"maintenant qu'elle a été utilisée.",
-            "success"
-        )
-        return redirect(url_for("admin_validate"))
-
-    return render_template("nettoyage_production.html")
 
 
 # ==========================================

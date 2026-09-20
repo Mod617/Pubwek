@@ -634,6 +634,17 @@ class Campaign(db.Model):
 
     total_cost = db.Column(db.Float, nullable=False)
     whatsapp_number = db.Column(db.String(20), nullable=True)
+
+    # =========================================================================
+    # 🆕 FORMAT wa.me CONFIRMÉ POUR CE NUMÉRO (nouveau vs ancien numérotage Bénin)
+    #
+    # Certains comptes WhatsApp (créés/réindexés après la réforme du
+    # 30/11/2024) sont indexés AVEC le "01" du numéro stocké — pour eux,
+    # numero_pour_wa_me() ne doit pas le retirer. False par défaut = reproduit
+    # exactement l'ancien comportement pour toutes les campagnes existantes ;
+    # confirmé au cas par cas via le test à deux boutons côté formulaire.
+    # =========================================================================
+    whatsapp_garder_01 = db.Column(db.Boolean, nullable=False, default=False)
     
     # =========================================================================
     # 🎯 STATUTS ET WORKFLOW DE VALIDATION / PAIEMENT / REMBOURSEMENT
@@ -1269,6 +1280,15 @@ class SystemConfig(db.Model):
     commission_rate = db.Column(db.Float, default=10.0)     # Par défaut 10%
     referral_reward_rate = db.Column(db.Float, default=3.0) # Par défaut 3% du montant total de la commission
 
+    # =========================================================================
+    # 🆕 PARRAINAGE PARTAGEUR → PARTAGEUR : montant FIXE (distinct du % ci-dessus,
+    # qui ne s'applique qu'au parrainage d'un annonceur). Crédité immédiatement
+    # à l'inscription du filleul partageur — voir crediter_parrainage_partageur()
+    # dans app.py. Colonne ajoutée le 19/09/2026, pas encore utilisée par le code
+    # tant que les étapes suivantes ne sont pas déployées.
+    # =========================================================================
+    referral_reward_partageur_fixe = db.Column(db.Float, default=200.0, nullable=False)
+
     # 🆕 Seuil minimum de retrait pour les partageurs (portefeuille)
     minimum_withdrawal_amount = db.Column(db.Float, default=500.0)
 
@@ -1309,6 +1329,22 @@ class SystemConfig(db.Model):
     # =========================================================================
     exiger_preuve_partage = db.Column(db.Boolean, default=True, nullable=False)
 
+    # =========================================================================
+    # 🆕 EXIGENCE DE VALIDATION ADMIN À L'INSCRIPTION (partageurs)
+    #
+    # True (défaut) : chaque partageur reste en attente (is_confirmed=False)
+    # après son inscription, jusqu'à validation manuelle par un admin — c'est
+    # le comportement actuel, inchangé.
+    #
+    # False : le compte partageur est confirmé et connecté automatiquement à
+    # l'inscription, sans passer par la file d'attente admin. Ne s'applique
+    # qu'AUX NOUVELLES inscriptions à partir du basculement — les comptes déjà
+    # en attente à ce moment-là restent en attente, à traiter manuellement.
+    # Réservé au VRAI super-admin uniquement (jamais un sous-admin) — voir la
+    # route de bascule dans app.py.
+    # =========================================================================
+    exiger_validation_partageur = db.Column(db.Boolean, default=True, nullable=False)
+
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     @classmethod
@@ -1325,12 +1361,14 @@ class SystemConfig(db.Model):
                 reward_per_click_text=0.3,
                 commission_rate=10.0,
                 referral_reward_rate=3.0,
+                referral_reward_partageur_fixe=200.0,
                 minimum_withdrawal_amount=500.0,
                 click_dedup_hours=24,
                 max_paid_clicks_per_share_per_day=50,
                 max_paid_clicks_per_ip_per_day=20,
                 min_seconds_between_paid_clicks=20,
                 exiger_preuve_partage=True,
+                exiger_validation_partageur=True,
             )
             db.session.add(config)
             db.session.commit()

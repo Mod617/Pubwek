@@ -88,7 +88,7 @@
     <div class="pw-tile">
       <span class="pw-tile-label">Filleuls</span>
       <div class="pw-tile-value">{{ total_filleuls }}</div>
-      <p class="pw-tile-note">Annonceurs inscrits via votre lien</p>
+      <p class="pw-tile-note">Annonceurs ou partageurs inscrits via votre lien</p>
     </div>
 
     <!-- Gains credites -->
@@ -102,7 +102,7 @@
     <div class="pw-tile">
       <span class="pw-tile-label">En attente</span>
       <div class="pw-tile-value text-amber-rich">{{ gains_en_attente | round(0) }} <span class="text-base">FCFA</span></div>
-      <p class="pw-tile-note">Campagne du filleul pas encore payée</p>
+      <p class="pw-tile-note">Campagne d'un filleul annonceur pas encore payée</p>
     </div>
   </div>
 
@@ -115,10 +115,30 @@
           Boostez vos gains avec le parrainage
         </h2>
         <p class="font-caption text-caption text-on-surface-variant">
-          Commission de <strong class="text-slate-midnight">3%</strong> sur la première campagne de chaque filleul annonceur.
+          Un seul lien, deux façons de gagner : il sert à parrainer un annonceur comme un autre partageur.
         </p>
       </div>
-      <span class="pw-chip pw-chip-warning">Gagnez 3% par filleul</span>
+      <span class="pw-chip pw-chip-warning">Double récompense</span>
+    </div>
+
+    <!-- Les deux gains cote a cote. Ils ne se declenchent pas au meme moment :
+         le pourcentage attend la premiere campagne payee du filleul annonceur,
+         le montant fixe tombe des l'inscription d'un filleul partageur. -->
+    <div class="flex flex-wrap gap-space-2xs mb-space-xs">
+      <div class="flex items-center gap-space-xs flex-1 min-w-[15rem] rounded-xl border border-outline-variant/50 bg-surface-container px-space-sm py-2">
+        <span class="material-symbols-outlined text-[20px] text-brand-primary shrink-0">campaign</span>
+        <span class="min-w-0">
+          <span class="block font-label-numeric-md text-label-numeric-md font-bold text-slate-midnight">{{ taux_parrainage_annonceur }} %</span>
+          <span class="block font-caption text-caption text-on-surface-variant">sur la première campagne d'un filleul <strong>annonceur</strong></span>
+        </span>
+      </div>
+      <div class="flex items-center gap-space-xs flex-1 min-w-[15rem] rounded-xl border border-brand-primary/30 bg-brand-light px-space-sm py-2">
+        <span class="material-symbols-outlined text-[20px] text-brand-deep shrink-0">group</span>
+        <span class="min-w-0">
+          <span class="block font-label-numeric-md text-label-numeric-md font-bold text-slate-midnight">{{ "%.0f"|format(recompense_parrainage_partageur) }} FCFA</span>
+          <span class="block font-caption text-caption text-on-surface-variant">tout de suite, dès l'inscription d'un filleul <strong>partageur</strong></span>
+        </span>
+      </div>
     </div>
 
     <div class="flex flex-wrap gap-space-2xs">
@@ -157,6 +177,13 @@
               </span>
               <span class="pw-chip bg-slate-midnight text-white">{{ camp.target_whatsapp_views }} clics visés</span>
             </div>
+
+            <!-- Ce que rapporte CETTE campagne, au clic : le partageur n'a pas
+                 a le deduire du format de la campagne. -->
+            <span class="pw-chip pw-chip-success mb-1.5 self-start">
+              <span class="material-symbols-outlined text-[14px]">paid</span>
+              {{ "%.0f"|format(item.recompense_par_clic) }} FCFA / clic
+            </span>
 
             <h3 class="font-headline-md text-body-md font-bold text-slate-midnight leading-snug">{{ camp.promotion_detail or "Campagne #" ~ camp.id }}</h3>
             {% if camp.description %}

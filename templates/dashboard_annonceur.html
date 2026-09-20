@@ -398,6 +398,51 @@
         </div>
       </div>
 
+      <!-- Verification du format wa.me. Depuis la reforme de numerotation au
+           Benin, certains comptes WhatsApp sont indexes avec le 01 et d'autres
+           sans : seul l'annonceur peut dire lequel ouvre bien sa conversation.
+           Le champ cache est aussi controle cote serveur (main.py), le test ne
+           peut donc pas etre saute en desactivant le JavaScript. -->
+      <input type="hidden" name="whatsapp_garder_01" id="whatsapp_garder_01" value="">
+
+      <div id="whatsappTestBlock" class="hidden rounded-xl border border-outline-variant/50 bg-surface-container p-space-sm space-y-space-xs">
+        <p class="flex items-center gap-1.5 font-headline-md text-[14px] font-bold text-slate-midnight">
+          <span class="material-symbols-outlined text-[18px] text-amber-rich">warning</span>
+          Vérification obligatoire avant validation
+        </p>
+        <p class="font-caption text-caption text-on-surface-variant">
+          Ouvrez les deux liens ci-dessous. Le bon format est celui qui ouvre une conversation
+          vers <strong>votre propre compte WhatsApp</strong>.
+        </p>
+        <div class="flex flex-wrap gap-space-2xs">
+          <a href="#" id="btnTestAvec01" target="_blank" rel="noopener" class="pw-btn pw-btn-sm pw-btn-neutral">
+            <span class="material-symbols-outlined text-[16px]">chat</span> Tester avec le 01
+          </a>
+          <a href="#" id="btnTestSans01" target="_blank" rel="noopener" class="pw-btn pw-btn-sm pw-btn-neutral">
+            <span class="material-symbols-outlined text-[16px]">chat</span> Tester sans le 01
+          </a>
+        </div>
+        <p class="font-label-caps text-label-caps uppercase tracking-wider font-bold text-on-surface-variant">
+          Lequel a ouvert une conversation vers vous ?
+        </p>
+        <div class="flex flex-wrap gap-space-2xs">
+          <label id="carteAvec01"
+                 class="pw-option cursor-pointer flex-1 min-w-[9rem] rounded-xl border-2 border-outline-variant/40 px-space-sm py-2 text-center font-semibold text-slate-midnight transition-all">
+            <input class="sr-only" type="radio" name="whatsapp_format_choix" id="choixAvec01">
+            Avec le 01
+          </label>
+          <label id="carteSans01"
+                 class="pw-option cursor-pointer flex-1 min-w-[9rem] rounded-xl border-2 border-outline-variant/40 px-space-sm py-2 text-center font-semibold text-slate-midnight transition-all">
+            <input class="sr-only" type="radio" name="whatsapp_format_choix" id="choixSans01">
+            Sans le 01
+          </label>
+        </div>
+        <p id="whatsappFormatConfirme" class="hidden flex items-center gap-1.5 font-caption text-caption font-bold text-success">
+          <span class="material-symbols-outlined text-[16px]">check_circle</span>
+          Format confirmé, vous pouvez valider votre campagne.
+        </p>
+      </div>
+
       <button type="submit" id="btnSubmitCampaign" class="pw-btn pw-btn-md pw-btn-primary w-full">
         <span class="material-symbols-outlined text-[20px]">rocket_launch</span>
         Valider ma campagne
@@ -471,9 +516,83 @@
     // Numero WhatsApp : chiffres uniquement, 8 maximum (le prefixe +22901 est
     // reconstruit cote serveur dans main.py avant sauvegarde).
     const whatsappInput = document.getElementById('whatsapp_number');
+    const whatsappTestBlock = document.getElementById('whatsappTestBlock');
+    const btnTestAvec01 = document.getElementById('btnTestAvec01');
+    const btnTestSans01 = document.getElementById('btnTestSans01');
+    const choixAvec01 = document.getElementById('choixAvec01');
+    const choixSans01 = document.getElementById('choixSans01');
+    const whatsappGarder01Hidden = document.getElementById('whatsapp_garder_01');
+    const whatsappFormatConfirme = document.getElementById('whatsappFormatConfirme');
+
+    function majTestWhatsapp() {
+      const chiffres = whatsappInput.value.replace(/\D/g, '');
+
+      // Tout changement du numéro invalide le test précédent : à refaire.
+      whatsappGarder01Hidden.value = '';
+      choixAvec01.checked = false;
+      choixSans01.checked = false;
+      whatsappFormatConfirme.classList.add('hidden');
+      marquerChoix(null);
+
+      if (chiffres.length === 8) {
+        whatsappTestBlock.classList.remove('hidden');
+        btnTestAvec01.href = 'https://wa.me/22901' + chiffres;
+        btnTestSans01.href = 'https://wa.me/229' + chiffres;
+      } else {
+        whatsappTestBlock.classList.add('hidden');
+      }
+    }
+
+    // Meme mise en evidence que les cartes de format ci-dessus.
+    function marquerChoix(carteActive) {
+      [document.getElementById('carteAvec01'), document.getElementById('carteSans01')]
+        .forEach(function (carte) {
+          if (!carte) return;
+          carte.classList.remove('border-brand-primary', 'bg-brand-light');
+          carte.classList.add('border-outline-variant/40');
+        });
+      if (carteActive) {
+        carteActive.classList.remove('border-outline-variant/40');
+        carteActive.classList.add('border-brand-primary', 'bg-brand-light');
+      }
+    }
+
     if (whatsappInput) {
       whatsappInput.addEventListener('input', function() {
         this.value = this.value.replace(/\D/g, '').slice(0, 8);
+        majTestWhatsapp();
+      });
+    }
+
+    if (choixAvec01) {
+      choixAvec01.addEventListener('change', function() {
+        if (this.checked) {
+          whatsappGarder01Hidden.value = '1';
+          marquerChoix(document.getElementById('carteAvec01'));
+          whatsappFormatConfirme.classList.remove('hidden');
+        }
+      });
+    }
+    if (choixSans01) {
+      choixSans01.addEventListener('change', function() {
+        if (this.checked) {
+          whatsappGarder01Hidden.value = '0';
+          marquerChoix(document.getElementById('carteSans01'));
+          whatsappFormatConfirme.classList.remove('hidden');
+        }
+      });
+    }
+
+    // Empêche la soumission tant que le format n'a pas été testé et confirmé
+    const campaignFormEl = document.getElementById('campaignForm');
+    if (campaignFormEl) {
+      campaignFormEl.addEventListener('submit', function(e) {
+        const chiffres = whatsappInput.value.replace(/\D/g, '');
+        if (chiffres.length === 8 && whatsappGarder01Hidden.value === '') {
+          e.preventDefault();
+          alert("Merci de tester les deux liens WhatsApp et de sélectionner le bon format avant de valider votre campagne.");
+          whatsappTestBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
       });
     }
 

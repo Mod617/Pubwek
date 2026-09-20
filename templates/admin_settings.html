@@ -41,7 +41,7 @@
   </div>
 
   <!-- Recapitulatif -->
-  <div class="grid grid-cols-2 lg:grid-cols-6 gap-space-xs">
+  <div class="grid grid-cols-2 lg:grid-cols-7 gap-space-xs">
     <div class="pw-tile !p-space-sm">
       <span class="pw-tile-label">Vidéo (A)</span>
       <span class="pw-tile-value !text-xl">{{ config.cost_per_click_video }}</span>
@@ -62,8 +62,13 @@
       <span class="pw-tile-value !text-xl text-brand-deep">{{ config.commission_rate }} %</span>
     </div>
     <div class="pw-tile !p-space-sm">
-      <span class="pw-tile-label">Parrainage</span>
+      <span class="pw-tile-label">Parrain. annonceur</span>
       <span class="pw-tile-value !text-xl text-brand-deep">{{ config.referral_reward_rate }} %</span>
+    </div>
+    <div class="pw-tile !p-space-sm">
+      <span class="pw-tile-label">Parrain. partageur</span>
+      <span class="pw-tile-value !text-xl text-brand-deep">{{ config.referral_reward_partageur_fixe | int }}</span>
+      <span class="pw-tile-note">FCFA</span>
     </div>
     <div class="pw-tile !p-space-sm">
       <span class="pw-tile-label">Retrait min.</span>
@@ -128,8 +133,13 @@
                  pas="0.1", maxi=100) }}
         {{ champ("referral_reward_rate", "referral_reward_rate", "Part reversée au parrain",
                  config.referral_reward_rate, "group", "% d'affiliation",
-                 "Pourcentage reversé au parrain lors du premier achat de son filleul.",
+                 "Pourcentage reversé au parrain lors du premier achat de son filleul, quand ce filleul est un annonceur.",
                  pas="0.1", maxi=100) }}
+        {{ champ("referral_reward_partageur_fixe", "referral_reward_partageur_fixe",
+                 "Parrainage d'un partageur",
+                 config.referral_reward_partageur_fixe, "savings", "FCFA",
+                 "Montant fixe crédité au parrain dès l'inscription d'un filleul partageur. Il est distinct du pourcentage ci-dessus, qui ne concerne que le parrainage d'un annonceur.",
+                 pas="1", note="Montant fixe") }}
       </div>
 
       <!-- Retraits -->

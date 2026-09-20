@@ -149,6 +149,23 @@
           </button>
         {% endif %}
       </form>
+
+      <!-- Seconde bascule, ajoutee en production : les nouvelles inscriptions
+           de partageurs passent-elles par la file d'attente admin ?
+           Elle n'a rien a voir avec la preuve de partage ci-dessus. -->
+      <form action="{{ url_for('toggle_validation_partageur') }}" method="POST" class="inline"
+            onsubmit="return confirm('{{ 'Désactiver' if config_systeme.exiger_validation_partageur else 'Réactiver' }} la validation admin pour les nouvelles inscriptions partageur ? {{ 'Les nouveaux partageurs seront confirmés et connectés automatiquement, sans passer par vous. Les demandes déjà en attente ne sont pas concernées.' if config_systeme.exiger_validation_partageur else '' }}');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if config_systeme.exiger_validation_partageur %}
+          <button type="submit" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px]" title="Chaque nouveau partageur attend votre validation. Cliquez pour désactiver.">
+            <span class="material-symbols-outlined text-[16px]">verified_user</span> Validation partageur exigée
+          </button>
+        {% else %}
+          <button type="submit" class="pw-btn pw-btn-sm bg-error text-white hover:opacity-90 !py-1.5 !text-[12px]" title="Les nouveaux partageurs sont confirmés automatiquement. Cliquez pour réactiver.">
+            <span class="material-symbols-outlined text-[16px]">warning</span> Validation partageur désactivée
+          </button>
+        {% endif %}
+      </form>
       {% endif %}
     </div>
   </div>

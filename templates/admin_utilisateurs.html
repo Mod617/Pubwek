@@ -60,6 +60,9 @@
           <th>Entreprise</th>
           <th>WhatsApp</th>
           <th>Inscrit le</th>
+          {% if current_user.role == "admin" %}
+          <th class="text-right">Portefeuille</th>
+          {% endif %}
         </tr>
       </thead>
       <tbody>
@@ -82,10 +85,15 @@
           <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">
             {{ user.created_at | heure_locale if user.created_at else "-" }}
           </td>
+          {% if current_user.role == "admin" %}
+          <td class="text-right font-label-numeric-md text-label-numeric-md font-bold text-slate-midnight whitespace-nowrap">
+            {{ "%.0f"|format(user.wallet_balance or 0) }} FCFA
+          </td>
+          {% endif %}
         </tr>
       {% else %}
         <tr>
-          <td colspan="6" class="text-center text-on-surface-variant py-space-md">
+          <td colspan="{{ 7 if current_user.role == 'admin' else 6 }}" class="text-center text-on-surface-variant py-space-md">
             Aucun utilisateur dans cet onglet{{ " pour cette recherche" if recherche }}.
           </td>
         </tr>

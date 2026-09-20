@@ -1,12 +1,12 @@
 {
-  "name": "PubWek",
-  "short_name": "PubWek",
-  "description": "Connect. Share. Grow.",
+  "name": "Pubwek",
+  "short_name": "Pubwek",
+  "description": "Diffusion publicitaire sur les statuts WhatsApp au Bénin.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#F5F3ED",
-  "theme_color": "#2F6F5E",
+  "background_color": "#faf8ff",
+  "theme_color": "#066FA7",
   "orientation": "portrait-primary",
   "icons": [
     {

@@ -313,7 +313,7 @@ def valider_video(file_storage, max_duration=MAX_VIDEO_DURATION_SECONDES, max_si
             return False, "Analyse vidéo indisponible sur le serveur (ffprobe introuvable).", None
         except subprocess.TimeoutExpired:
             os.remove(tmp_path)
-            return False, "Analyse du fichier trop longue — fichier suspect rejeté.", None
+            return False, "Analyse du fichier trop longue, fichier suspect rejeté.", None
 
         if result.returncode != 0:
             os.remove(tmp_path)
@@ -676,23 +676,23 @@ def generer_description_auto():
 
     # 1. Banques de mots magiques (utilisées pour A/B ET comme base pour C)
     accroches = [
-        "🔥 Alerte pépite !",
-        "✨ Craquez pour notre",
-        "📢 Ne manquez pas",
-        "🎯 Le meilleur",
-        "💎 Qualité premium :",
-        "🚀 Envie de nouveauté ?",
-        "⚡ Offre exclusive :",
-        "🌟 Du nouveau chez nous :",
+        "Alerte pépite !",
+        "Craquez pour notre",
+        "Ne manquez pas",
+        "Le meilleur",
+        "Qualité premium :",
+        "Envie de nouveauté ?",
+        "Offre exclusive :",
+        "Du nouveau chez nous :",
     ]
 
     appels_action = [
-        "📥 Contactez-nous vite !",
-        "📲 Infos & Commandes en DM !",
-        "🛍️ Commandez le vôtre ici !",
-        "📞 Dispo dès maintenant !",
-        "👉 Cliquez pour commander !",
-        "🔥 Faites vite votre choix !",
+        "Contactez-nous vite !",
+        "Infos & Commandes en DM !",
+        "Commandez le vôtre ici !",
+        "Dispo dès maintenant !",
+        "Cliquez pour commander !",
+        "Faites vite votre choix !",
     ]
 
     qualificatifs = [
@@ -735,17 +735,17 @@ def generer_description_auto():
     # =====================================================================
     if display_option == "C":
         accroches_longues = [
-            "🔥 Chers clients, on a une pépite pour vous aujourd'hui !",
-            "✨ Attention, ceci va vous plaire !",
-            "📢 Grande nouvelle pour vous à Cotonou et partout au Bénin !",
-            "🎯 On ne présente plus ça, venez découvrir !",
-            "💎 Du sérieux, rien que du sérieux, pour vous aujourd'hui !",
+            "Chers clients, on a une pépite pour vous aujourd'hui !",
+            "Attention, ceci va vous plaire !",
+            "Grande nouvelle pour vous à Cotonou et partout au Bénin !",
+            "On ne présente plus ça, venez découvrir !",
+            "Du sérieux, rien que du sérieux, pour vous aujourd'hui !",
         ]
 
         arguments = [
             f"Notre {promo_type} *{promo_detail}* est fait pour vous simplifier la vie et vous faire gagner en qualité.",
             f"Que vous soyez à Cotonou, Porto-Novo, Parakou ou ailleurs, *{promo_detail}* est disponible pour vous, {random.choice(qualificatifs)}.",
-            f"Beaucoup de nos clients sont déjà satisfaits de *{promo_detail}* — c'est du solide, du vrai, pas de blabla.",
+            f"Beaucoup de nos clients sont déjà satisfaits de *{promo_detail}*, c'est du solide, du vrai, pas de blabla.",
             f"Ici, pas de mauvaise surprise : *{promo_detail}* c'est la qualité qu'on vous promet, {random.choice(qualificatifs)}.",
         ]
 
@@ -757,10 +757,10 @@ def generer_description_auto():
         ]
 
         appels_action_longs = [
-            "📞 Appelez-nous dès maintenant, on répond directement sur WhatsApp !",
-            "📲 Un clic, un appel, et c'est réglé — contactez-nous tout de suite !",
-            "👉 N'attendez plus, appelez-nous et on s'occupe du reste !",
-            "🔥 Faites-nous confiance, appelez-nous dès à présent !",
+            "Appelez-nous dès maintenant, on répond directement sur WhatsApp !",
+            "Un clic, un appel, et c'est réglé, contactez-nous tout de suite !",
+            "N'attendez plus, appelez-nous et on s'occupe du reste !",
+            "Faites-nous confiance, appelez-nous dès à présent !",
         ]
 
         if slogan:
@@ -810,12 +810,12 @@ def generer_description_auto():
 
     # Structure 3 : Direct et punchy
     structures.append(
-        f"⚡ Besoin d'un {promo_type} ? Découvrez *{promo_detail}* ! {random.choice(qualificatifs)}. {random.choice(appels_action)}"
+        f"Besoin d'un {promo_type} ? Découvrez *{promo_detail}* ! {random.choice(qualificatifs)}. {random.choice(appels_action)}"
     )
 
     # Structure 4 : Style Recommandation
     structures.append(
-        f"🌟 Testé et approuvé ! Découvrez notre {promo_type} *{promo_detail}*. {random.choice(appels_action)}"
+        f"Testé et approuvé ! Découvrez notre {promo_type} *{promo_detail}*. {random.choice(appels_action)}"
     )
 
     # Choix aléatoire de la structure
@@ -894,7 +894,7 @@ def peut_acceder_au_fichier(user, safe_filename):
 
     Règles, de la plus large à la plus restrictive :
       1. L'administrateur (super-admin) accède à tout.
-      2. 🆕 Un sous-admin actif ayant une permission de modération liée aux
+      2. Un sous-admin actif ayant une permission de modération liée aux
          fichiers (campagnes, utilisateurs, preuves de partage) accède à tout
          également — sans cela, il ne peut pas voir les médias qu'il doit
          justement valider ou rejeter.
@@ -1022,7 +1022,7 @@ def serve_upload(filename):
 @limiter.limit("20 per hour")
 def nouvelle_campagne():
     if current_user.role != "annonceur":
-        flash("Accès refusé 🚫", "danger")
+        flash("Accès refusé", "danger")
         return redirect(url_for("index"))
 
     from models import SystemConfig  # Importation de la configuration administrative
@@ -1035,7 +1035,7 @@ def nouvelle_campagne():
         description = request.form.get("description", "")
 
         if description and len(description) > 500:
-            flash("La description ne peut pas dépasser 500 caractères ⚠️", "warning")
+            flash("La description ne peut pas dépasser 500 caractères", "warning")
             return redirect(url_for("dashboard_annonceur"))
 
         # Nettoyage XSS des champs texte libres
@@ -1053,19 +1053,19 @@ def nouvelle_campagne():
             target_views = int(request.form.get("whatsapp_views", 0))
             duration_days = int(request.form.get("duration_days", 7))
         except (TypeError, ValueError):
-            flash("Le nombre de clics et la durée doivent être des nombres entiers. ⚠️", "danger")
+            flash("Le nombre de clics et la durée doivent être des nombres entiers.", "danger")
             return redirect(url_for("dashboard_annonceur"))
 
         if target_views < MIN_CLICS_CAMPAGNE or target_views > MAX_CLICS_CAMPAGNE:
             flash(
                 f"Le nombre de clics doit être compris entre {MIN_CLICS_CAMPAGNE} "
-                f"et {MAX_CLICS_CAMPAGNE:,}. ⚠️".replace(",", " "),
+                f"et {MAX_CLICS_CAMPAGNE:,}.".replace(",", " "),
                 "danger"
             )
             return redirect(url_for("dashboard_annonceur"))
 
         if duration_days < 1 or duration_days > 30:
-            flash("La durée de diffusion doit être comprise entre 1 et 30 jours maximum. ⚠️", "danger")
+            flash("La durée de diffusion doit être comprise entre 1 et 30 jours maximum.", "danger")
             return redirect(url_for("dashboard_annonceur"))
 
         # =========================================================================
@@ -1130,7 +1130,7 @@ def nouvelle_campagne():
 
             video_file = request.files.get("video_file")
             if not video_file or not video_file.filename:
-                flash("Veuillez téléverser une vidéo pour l'option A (durée maximale : 30 secondes). ⚠️", "danger")
+                flash("Veuillez téléverser une vidéo pour l'option A (durée maximale : 30 secondes).", "danger")
                 return redirect(url_for("dashboard_annonceur"))
 
             ok, err, tmp_path = valider_video(video_file)
@@ -1154,7 +1154,7 @@ def nouvelle_campagne():
             media_type = "texte"
 
             if not description or not description.strip():
-                flash("Veuillez rédiger le texte de votre publicité pour l'option C. ⚠️", "danger")
+                flash("Veuillez rédiger le texte de votre publicité pour l'option C.", "danger")
                 return redirect(url_for("dashboard_annonceur"))
 
             medias_pour_db = ""
@@ -1189,7 +1189,7 @@ def nouvelle_campagne():
                 return redirect(url_for("dashboard_annonceur"))
 
             if not noms_fichiers:
-                flash("Veuillez téléverser au moins une photo pour l'option B. ⚠️", "danger")
+                flash("Veuillez téléverser au moins une photo pour l'option B.", "danger")
                 return redirect(url_for("dashboard_annonceur"))
 
             medias_pour_db = ",".join(noms_fichiers)
@@ -1200,7 +1200,7 @@ def nouvelle_campagne():
         # ⚠️ Sécurité : toute autre valeur est rejetée explicitement
         # =====================================================================
         else:
-            flash("Option de diffusion invalide. ⚠️", "danger")
+            flash("Option de diffusion invalide.", "danger")
             return redirect(url_for("dashboard_annonceur"))
 
         # 2️⃣ CALCULS DES COÛTS ET DES TARIFS
@@ -1332,12 +1332,12 @@ def categorie_admin_campagne(c):
 
 
 ONGLETS_CAMPAGNES = {
-    "resoumises":  {"label": "🔄 Resoumises",        "champ_tri": lambda: Campaign.resubmitted_at.asc()},
-    "a_valider":   {"label": "🆕 À valider",          "champ_tri": lambda: Campaign.created_at.asc()},
-    "non_payees":  {"label": "⚠️ Non payées",         "champ_tri": lambda: Campaign.created_at.desc()},
-    "validees":    {"label": "✅ Validées / actives", "champ_tri": lambda: Campaign.created_at.desc()},
-    "terminees":   {"label": "🏁 Terminées",          "champ_tri": lambda: Campaign.created_at.desc()},
-    "rejetees":    {"label": "❌ Rejetées",           "champ_tri": lambda: Campaign.created_at.desc()},
+    "resoumises":  {"label": "Resoumises",        "champ_tri": lambda: Campaign.resubmitted_at.asc()},
+    "a_valider":   {"label": "À valider",          "champ_tri": lambda: Campaign.created_at.asc()},
+    "non_payees":  {"label": "Non payées",         "champ_tri": lambda: Campaign.created_at.desc()},
+    "validees":    {"label": "Validées / actives", "champ_tri": lambda: Campaign.created_at.desc()},
+    "terminees":   {"label": "Terminées",          "champ_tri": lambda: Campaign.created_at.desc()},
+    "rejetees":    {"label": "Rejetées",           "champ_tri": lambda: Campaign.created_at.desc()},
 }
 
 
@@ -1419,7 +1419,7 @@ def categorie_affichage_campagne(c):
 @login_required
 def mes_campagnes():
     if current_user.role != "annonceur":
-        flash("Accès réservé aux annonceurs. 🚫", "danger")
+        flash("Accès réservé aux annonceurs.", "danger")
         return redirect(url_for("index"))
 
     # 🆕 Configuration des tarifs, nécessaire pour l'estimation en temps réel
@@ -1458,18 +1458,18 @@ def mes_campagnes():
 @login_required
 def campagne_partageurs(campaign_id):
     if current_user.role != "annonceur":
-        flash("Accès réservé aux annonceurs. 🚫", "danger")
+        flash("Accès réservé aux annonceurs.", "danger")
         return redirect(url_for("index"))
 
     camp = db.session.get(Campaign, campaign_id)
     if not camp or camp.user_id != current_user.id:
-        flash("Campagne introuvable. ⚠️", "danger")
+        flash("Campagne introuvable.", "danger")
         return redirect(url_for("mes_campagnes"))
 
     # Sécurité supplémentaire : on ne montre les partageurs
     # que sur une campagne payée et validée par l'admin
     if not camp.paid or not camp.validated:
-        flash("Les statistiques de partage ne sont disponibles qu'une fois la campagne validée. ⚠️", "warning")
+        flash("Les statistiques de partage ne sont disponibles qu'une fois la campagne validée.", "warning")
         return redirect(url_for("mes_campagnes"))
 
     # 1️⃣ Liste des partageurs de cette campagne (pseudo + date + id du CampaignShare)
@@ -1569,7 +1569,7 @@ def campagne_partageurs(campaign_id):
 @login_required
 def campagne_en_attente():
     if current_user.role != "annonceur":
-        flash("Accès réservé aux annonceurs. 🚫", "danger")
+        flash("Accès réservé aux annonceurs.", "danger")
         return redirect(url_for("index"))
 
     # Récupère les campagnes payées mais non encore validées par l'admin
@@ -1649,7 +1649,7 @@ def _lancer_paiement_fedapay(camp, montant):
 
     except Exception as e:
         logger.error("Erreur création paiement FedaPay (campagne %d) : %s", camp.id, e)
-        flash("Impossible de générer le paiement pour le moment. Réessayez. ⚠️", "danger")
+        flash("Impossible de générer le paiement pour le moment. Réessayez.", "danger")
         return redirect(url_for("mes_campagnes"))
 
     transaction = Transaction(
@@ -1675,22 +1675,22 @@ def _lancer_paiement_fedapay(camp, montant):
 @login_required
 def payer_campagne(campaign_id):
     if current_user.role != "annonceur":
-        flash("Accès refusé 🚫", "danger")
+        flash("Accès refusé", "danger")
         return redirect(url_for("index"))
 
     camp = db.session.get(Campaign, campaign_id)
     if not camp or camp.user_id != current_user.id:
-        flash("Campagne introuvable. ⚠️", "danger")
+        flash("Campagne introuvable.", "danger")
         return redirect(url_for("mes_campagnes"))
 
     # Vérification du statut de paiement
     if camp.paid or camp.payment_status == "paid" or camp.status == "active":
-        flash("Cette campagne est déjà payée et traitée. ✅", "info")
+        flash("Cette campagne est déjà payée et traitée.", "info")
         return redirect(url_for("mes_campagnes"))
 
     # Vérification du montant avant d'initier la transaction FedaPay
     if not camp.total_cost or camp.total_cost <= 0:
-        flash("Montant de la campagne invalide. ⚠️", "danger")
+        flash("Montant de la campagne invalide.", "danger")
         return redirect(url_for("mes_campagnes"))
 
     # =====================================================================
@@ -1720,16 +1720,16 @@ def payer_campagne(campaign_id):
 @login_required
 def confirmer_paiement_wallet(campaign_id):
     if current_user.role != "annonceur":
-        flash("Accès refusé 🚫", "danger")
+        flash("Accès refusé", "danger")
         return redirect(url_for("index"))
 
     camp = db.session.get(Campaign, campaign_id)
     if not camp or camp.user_id != current_user.id:
-        flash("Campagne introuvable. ⚠️", "danger")
+        flash("Campagne introuvable.", "danger")
         return redirect(url_for("mes_campagnes"))
 
     if camp.paid or camp.payment_status == "paid" or camp.status == "active":
-        flash("Cette campagne est déjà payée et traitée. ✅", "info")
+        flash("Cette campagne est déjà payée et traitée.", "info")
         return redirect(url_for("mes_campagnes"))
 
     utiliser_wallet = request.form.get("utiliser_wallet") == "on"
@@ -1749,14 +1749,14 @@ def confirmer_paiement_wallet(campaign_id):
         .first()
     )
     if utilisateur is None:
-        flash("Compte introuvable. ⚠️", "danger")
+        flash("Compte introuvable.", "danger")
         return redirect(url_for("mes_campagnes"))
 
     solde_actuel = utilisateur.wallet_balance or 0.0
     montant_wallet = min(solde_actuel, camp.total_cost)
 
     if montant_wallet <= 0:
-        flash("Votre solde est insuffisant pour être appliqué. Redirection vers le paiement classique. ⚠️", "warning")
+        flash("Votre solde est insuffisant pour être appliqué. Redirection vers le paiement classique.", "warning")
         return _lancer_paiement_fedapay(camp, camp.total_cost)
 
     utilisateur.wallet_balance = solde_actuel - montant_wallet
@@ -1804,7 +1804,7 @@ def confirmer_paiement_wallet(campaign_id):
         )
         flash(
             f"Paiement effectué avec {montant_wallet:,.0f} XOF de votre portefeuille ! "
-            f"Votre campagne a été transmise pour validation. 🎉",
+            f"Votre campagne a été transmise pour validation.",
             "success"
         )
         return redirect(url_for("mes_campagnes"))
@@ -1823,16 +1823,16 @@ def confirmer_paiement_wallet(campaign_id):
 @limiter.limit("20 per hour")
 def resoumettre_campagne(campaign_id):
     if current_user.role != "annonceur":
-        flash("Accès refusé 🚫", "danger")
+        flash("Accès refusé", "danger")
         return redirect(url_for("index"))
 
     camp = db.session.get(Campaign, campaign_id)
     if not camp or camp.user_id != current_user.id:
-        flash("Campagne introuvable. ⚠️", "danger")
+        flash("Campagne introuvable.", "danger")
         return redirect(url_for("mes_campagnes"))
 
     if camp.admin_status != "rejected" and camp.status != "rejete":
-        flash("Seule une campagne rejetée peut être corrigée et resoumise. ⚠️", "warning")
+        flash("Seule une campagne rejetée peut être corrigée et resoumise.", "warning")
         return redirect(url_for("mes_campagnes"))
 
     from models import SystemConfig
@@ -1843,12 +1843,12 @@ def resoumettre_campagne(campaign_id):
     description = request.form.get("description", "").strip()
 
     if not promotion_detail or not description:
-        flash("Veuillez remplir tous les champs obligatoires. ⚠️", "warning")
+        flash("Veuillez remplir tous les champs obligatoires.", "warning")
         return redirect(url_for("mes_campagnes"))
 
     max_len = 500 if camp.display_option == "C" else 150
     if len(description) > max_len:
-        flash(f"La description ne peut pas dépasser {max_len} caractères pour cette option. ⚠️", "warning")
+        flash(f"La description ne peut pas dépasser {max_len} caractères pour cette option.", "warning")
         return redirect(url_for("mes_campagnes"))
 
     camp.promotion_detail = bleach.clean(promotion_detail)
@@ -1875,17 +1875,17 @@ def resoumettre_campagne(campaign_id):
             try:
                 camp.target_whatsapp_views = int(target_views_raw)
             except ValueError:
-                flash("Objectif de clics invalide. ⚠️", "danger")
+                flash("Objectif de clics invalide.", "danger")
                 return redirect(url_for("mes_campagnes"))
 
         if duration_days_raw:
             try:
                 duration_days = int(duration_days_raw)
             except ValueError:
-                flash("Durée invalide. ⚠️", "danger")
+                flash("Durée invalide.", "danger")
                 return redirect(url_for("mes_campagnes"))
             if duration_days < 1 or duration_days > 30:
-                flash("La durée de diffusion doit être comprise entre 1 et 30 jours maximum. ⚠️", "danger")
+                flash("La durée de diffusion doit être comprise entre 1 et 30 jours maximum.", "danger")
                 return redirect(url_for("mes_campagnes"))
             camp.duration_days = duration_days
 
@@ -1940,7 +1940,7 @@ def resoumettre_campagne(campaign_id):
                 flash(
                     f"Cette campagne est déjà payée : vous ne pouvez pas mettre plus de "
                     f"{nombre_photos_originales} photo(s), le nombre payé initialement. "
-                    f"Vous pouvez en mettre autant ou moins. ⚠️",
+                    f"Vous pouvez en mettre autant ou moins.",
                     "danger"
                 )
                 return redirect(url_for("mes_campagnes"))
@@ -1956,7 +1956,7 @@ def resoumettre_campagne(campaign_id):
                 fichier.save(path)
                 noms_fichiers.append(filename)
             if not noms_fichiers:
-                flash("Aucune photo valide n'a pu être enregistrée. ⚠️", "danger")
+                flash("Aucune photo valide n'a pu être enregistrée.", "danger")
                 return redirect(url_for("mes_campagnes"))
             camp.media_files = ",".join(noms_fichiers)
             nombre_fichiers = len(noms_fichiers)
@@ -2010,14 +2010,14 @@ def resoumettre_campagne(campaign_id):
 
         notifier_admins_avec_permission(
             "valider_campagnes",
-            "Campagne corrigée 🔄",
+            "Campagne corrigée",
             f"L'annonceur a soumis les corrections pour la campagne #{camp.id}.",
             category="warning",
             link=url_for("admin_validate"),
         )
         db.session.commit()
 
-        flash("Vos corrections ont été enregistrées. La campagne a été renvoyée à l'administration pour validation. 🚀", "success")
+        flash("Vos corrections ont été enregistrées. La campagne a été renvoyée à l'administration pour validation.", "success")
         redirect_target = url_for("mes_campagnes")
     else:
         # Jamais payée : doit repasser par le paiement AVANT de revenir dans la file d'attente admin
@@ -2043,7 +2043,7 @@ def resoumettre_campagne(campaign_id):
 
         db.session.commit()
 
-        flash("Vos corrections ont été enregistrées. Veuillez maintenant procéder au paiement pour envoyer votre campagne à l'administration. 💳", "info")
+        flash("Vos corrections ont été enregistrées. Veuillez maintenant procéder au paiement pour envoyer votre campagne à l'administration.", "info")
         redirect_target = url_for("payer_campagne", campaign_id=camp.id)
 
     logger.info(
@@ -2147,7 +2147,7 @@ def admin_transactions_globales():
 @login_required
 def mes_transactions():
     if current_user.role != "annonceur":
-        flash("Accès réservé aux annonceurs. 🚫", "danger")
+        flash("Accès réservé aux annonceurs.", "danger")
         return redirect(url_for("index"))
 
     transactions = (
@@ -2256,7 +2256,7 @@ def mes_retraits_pdf():
     # les deux partagent le même portefeuille (wallet_balance) et le même
     # circuit de retrait (WithdrawalRequest / WalletTransaction).
     if current_user.role not in ("partageur", "annonceur"):
-        flash("Accès réservé aux partageurs et annonceurs. 🚫", "danger")
+        flash("Accès réservé aux partageurs et annonceurs.", "danger")
         return redirect(url_for("index"))
 
     from models import WithdrawalRequest, WalletTransaction
@@ -2293,7 +2293,7 @@ def mes_retraits_pdf():
             },
         )
     except ValueError:
-        flash("Impossible de générer le PDF pour le moment. Réessayez. ⚠️", "danger")
+        flash("Impossible de générer le PDF pour le moment. Réessayez.", "danger")
         return redirect(url_for("mes_retraits"))
 
 
@@ -2305,7 +2305,7 @@ def mes_retraits_pdf():
 @login_required
 def mes_transactions_pdf():
     if current_user.role != "annonceur":
-        flash("Accès réservé aux annonceurs. 🚫", "danger")
+        flash("Accès réservé aux annonceurs.", "danger")
         return redirect(url_for("index"))
 
     transactions = (
@@ -2334,7 +2334,7 @@ def mes_transactions_pdf():
             },
         )
     except ValueError:
-        flash("Impossible de générer le PDF pour le moment. Réessayez. ⚠️", "danger")
+        flash("Impossible de générer le PDF pour le moment. Réessayez.", "danger")
         return redirect(url_for("mes_transactions"))
 
 
@@ -2403,13 +2403,13 @@ def appliquer_paiement_confirme(transaction, details=None):
             if annonceur:
                 nom_campagne = camp.promotion_detail or camp.promotion_type or f"#{camp.id}"
                 if camp.is_active:
-                    titre = "Paiement confirmé — Campagne active ✅"
+                    titre = "Paiement confirmé : campagne active"
                     message = (
                         f"Votre paiement de {transaction.amount:,.0f} FCFA pour la campagne "
                         f"« {nom_campagne} » a été confirmé. Elle est déjà validée et diffusée."
                     )
                 else:
-                    titre = "Paiement confirmé 💳"
+                    titre = "Paiement confirmé"
                     message = (
                         f"Votre paiement de {transaction.amount:,.0f} FCFA pour la campagne "
                         f"« {nom_campagne} » a été confirmé. Elle est maintenant transmise à "
@@ -2459,7 +2459,7 @@ def paiement_callback():
     fedapay_id = request.args.get("id") or request.args.get("transaction_id")
 
     if not fedapay_id:
-        flash("Aucun identifiant de transaction n'a été fourni. ⚠️", "warning")
+        flash("Aucun identifiant de transaction n'a été fourni.", "warning")
         return redirect(url_for("mes_campagnes"))
 
     # 1. Recherche de la transaction locale correspondante
@@ -2469,7 +2469,7 @@ def paiement_callback():
     ).first()
 
     if not transaction:
-        flash("Transaction introuvable dans notre système. ⚠️", "danger")
+        flash("Transaction introuvable dans notre système.", "danger")
         return redirect(url_for("mes_campagnes"))
 
     # Si la transaction a déjà été traitée (webhook plus rapide, ou rechargement)
@@ -2479,13 +2479,13 @@ def paiement_callback():
         if transaction.campaign_id:
             flash(
                 Markup(
-                    'Votre paiement a déjà été validé avec succès ! ✅ '
+                    'Votre paiement a déjà été validé avec succès ! '
                     '<a href="{link}" class="btn btn-sm btn-success ms-2">Voir ma campagne</a>'
                 ).format(link=url_for("mes_campagnes", _anchor=f"campagne-{transaction.campaign_id}")),
                 "success"
             )
         else:
-            flash("Votre paiement a déjà été validé avec succès ! ✅", "success")
+            flash("Votre paiement a déjà été validé avec succès !", "success")
         return redirect(url_for("mes_campagnes"))
 
     # 2. Vérification côté serveur via verifier_transaction()
@@ -2505,12 +2505,12 @@ def paiement_callback():
                     # vers toute la liste — l'annonceur n'a plus à la chercher.
                     nom_campagne = camp.promotion_detail or camp.promotion_type or f"#{camp.id}"
                     suite = (
-                        "Elle est déjà validée et diffusée. 🎉" if camp.is_active
+                        "Elle est déjà validée et diffusée." if camp.is_active
                         else "Elle est maintenant transmise à l'administration pour validation."
                     )
                     flash(
                         Markup(
-                            'Paiement de {montant} FCFA confirmé pour « {nom} » ✅ {suite} '
+                            'Paiement de {montant} FCFA confirmé pour « {nom} » {suite} '
                             '<a href="{link}" class="btn btn-sm btn-success ms-2">Voir ma campagne</a>'
                         ).format(
                             montant=f"{transaction.amount:,.0f}",
@@ -2521,11 +2521,11 @@ def paiement_callback():
                         "success"
                     )
                 else:
-                    flash("Paiement effectué avec succès ! Votre campagne a été transmise pour validation. 🎉", "success")
+                    flash("Paiement effectué avec succès ! Votre campagne a été transmise pour validation.", "success")
             elif resultat == "abonnement":
-                flash("Félicitations ! Votre abonnement de génération vidéo est actif. 🚀", "success")
+                flash("Félicitations ! Votre abonnement de génération vidéo est actif.", "success")
             else:
-                flash("Paiement validé avec succès ! ✅", "success")
+                flash("Paiement validé avec succès !", "success")
 
         elif status_fedapay in ["canceled", "declined"]:
             appliquer_paiement_echoue(transaction, status_fedapay)
@@ -2541,7 +2541,7 @@ def paiement_callback():
                 motif = "refusé par votre opérateur ou votre banque" if status_fedapay == "declined" else "annulé"
                 flash(
                     Markup(
-                        'Le paiement pour « {nom} » a été {motif}. ⚠️ Aucune somme n\'a été débitée. '
+                        'Le paiement pour « {nom} » a été {motif}. Aucune somme n\'a été débitée. '
                         '<a href="{link}" class="btn btn-sm btn-warning ms-2">Relancer le paiement</a>'
                     ).format(
                         nom=escape(nom_campagne),
@@ -2551,7 +2551,7 @@ def paiement_callback():
                     "warning"
                 )
             else:
-                flash("Le paiement a été annulé ou a échoué. Vous pouvez réessayer. ⚠️", "warning")
+                flash("Le paiement a été annulé ou a échoué. Vous pouvez réessayer.", "warning")
 
         else:  # Statut encore 'pending'
             flash("Le paiement est toujours en cours de traitement. Un moment svp... ⏳", "info")
@@ -2645,7 +2645,7 @@ def webhook_fedapay():
         elif statut in ["canceled", "declined"]:
             appliquer_paiement_echoue(transaction, statut)
             db.session.commit()
-            logger.info("[PAIEMENT] Webhook FedaPay : transaction %s → %s", fedapay_id, statut)
+            logger.info("[PAIEMENT] Webhook FedaPay : transaction %s %s", fedapay_id, statut)
 
     except Exception as e:
         db.session.rollback()
@@ -2668,7 +2668,37 @@ def webhook_fedapay():
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    # Un visiteur connecte n'a plus rien a faire sur la page de presentation :
+    # on l'envoie directement la ou il travaille. La page d'accueil reste
+    # accessible aux visiteurs non connectes et apres une deconnexion.
+    if current_user.is_authenticated:
+        if current_user.role in ("admin", "sous_admin"):
+            return redirect(url_for("admin_validate"))
+        if current_user.role == "annonceur":
+            return redirect(url_for("dashboard_annonceur"))
+        if current_user.role == "partageur":
+            return redirect(url_for("dashboard_partageur"))
+    # Le simulateur doit annoncer les tarifs reellement appliques, pas des
+    # valeurs figees dans le gabarit.
+    return render_template("index.html", config=SystemConfig.get_config())
+
+
+@app.route("/a-propos")
+def a_propos():
+    return render_template("a_propos.html")
+
+
+# Deux pages de profil : un commerce et un partageur ne cherchent pas la
+# meme chose, chacun a desormais son argumentaire, son simulateur et sa FAQ.
+# Le simulateur lit les tarifs configures, il ne les invente pas.
+@app.route("/pour-les-annonceurs")
+def page_annonceurs():
+    return render_template("annonceurs.html", config=SystemConfig.get_config())
+
+
+@app.route("/pour-les-partageurs")
+def page_partageurs():
+    return render_template("partageurs.html", config=SystemConfig.get_config())
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -2685,32 +2715,32 @@ def login():
             if user.is_disabled:
                 flash(
                     "Ce compte a été désactivé suite à une demande de suppression. "
-                    "Si vous pensez qu'il s'agit d'une erreur, contactez l'administration. 🚫",
+                    "Si vous pensez qu'il s'agit d'une erreur, contactez l'administration.",
                     "danger"
                 )
                 logger.warning("Tentative de connexion sur compte désactivé : %s", form.email.data)
                 return redirect(url_for("login"))
 
             if not user.is_confirmed and user.role not in ("admin", "sous_admin"):
-                flash("Votre compte doit être confirmé avant connexion 🚫", "danger")
+                flash("Votre compte doit être confirmé avant connexion", "danger")
                 logger.warning("Tentative de connexion sur compte non confirmé : %s", form.email.data)
                 return redirect(url_for("login"))
 
             # 🆕 Un sous-admin désactivé ne peut plus se connecter du tout
             if user.role == "sous_admin" and not user.is_active_admin:
-                flash("Votre compte administrateur a été désactivé. Contactez l'administration. 🚫", "danger")
+                flash("Votre compte administrateur a été désactivé. Contactez l'administration.", "danger")
                 logger.warning("Tentative de connexion sur compte sous-admin désactivé : %s", form.email.data)
                 return redirect(url_for("login"))
 
             login_user(user, remember=form.remember.data)
-            flash("Connexion réussie ✅", "success")
+            flash("Connexion réussie", "success")
             logger.info("Connexion réussie pour l'utilisateur (role: %s)", user.role)
 
             # 🆕 admin ET sous_admin sont tous deux redirigés vers le panneau d'administration
             if user.role in ("admin", "sous_admin"):
                 return redirect(url_for("admin_validate"))
             return redirect(url_for(f"dashboard_{user.role}"))
-        flash("Email ou mot de passe invalide ❌", "danger")
+        flash("Email ou mot de passe invalide", "danger")
         logger.warning("[AUTH] Échec de connexion depuis IP=%s", request.remote_addr)
     return render_template("login.html", form=form)
 
@@ -2723,18 +2753,18 @@ def login():
 @login_required
 def reclamer_remboursement(campaign_id):
     if current_user.role != "annonceur":
-        flash("Accès refusé 🚫", "danger")
+        flash("Accès refusé", "danger")
         return redirect(url_for("index"))
 
     camp = db.session.get(Campaign, campaign_id)
     if not camp or camp.user_id != current_user.id:
-        flash("Campagne introuvable. ⚠️", "danger")
+        flash("Campagne introuvable.", "danger")
         return redirect(url_for("mes_campagnes"))
 
     # 🐞 FIX : double vérification serveur — impossible de rembourser une campagne jamais payée,
     # même si can_claim_refund avait été forcé à True par erreur ailleurs, ou l'URL appelée directement.
     if not camp.paid:
-        flash("Aucun remboursement n'est possible : cette campagne n'a jamais été payée. ⚠️", "warning")
+        flash("Aucun remboursement n'est possible : cette campagne n'a jamais été payée.", "warning")
         return redirect(url_for("mes_campagnes"))
 
     # 🆕 Vérification de l'autorisation de remboursement : soit c'est une
@@ -2742,14 +2772,14 @@ def reclamer_remboursement(campaign_id):
     # après le refus d'une demande précédente — dans les deux cas, l'annonceur
     # peut soumettre. Toute autre valeur (None, "requested", "processed") bloque.
     if camp.refund_status not in ("available", "rejected"):
-        flash("L'option de remboursement n'est pas (ou plus) disponible pour cette campagne. ⚠️", "warning")
+        flash("L'option de remboursement n'est pas (ou plus) disponible pour cette campagne.", "warning")
         return redirect(url_for("mes_campagnes"))
 
     phone_number = request.form.get("refund_phone", "").strip()
     payment_method = request.form.get("refund_method", "").strip()
 
     if not phone_number or not payment_method:
-        flash("Veuillez renseigner le moyen et le numéro de téléphone pour le remboursement. ⚠️", "warning")
+        flash("Veuillez renseigner le moyen et le numéro de téléphone pour le remboursement.", "warning")
         return redirect(url_for("mes_campagnes"))
 
     # Sauvegarde et nettoyage XSS des détails
@@ -2770,7 +2800,7 @@ def reclamer_remboursement(campaign_id):
     # prévenu qu'un virement est à effectuer.
     notifier_admins_avec_permission(
         "gerer_remboursements",
-        "Remboursement à traiter 💸",
+        "Remboursement à traiter",
         f"L'annonceur de la campagne #{camp.id} a transmis ses coordonnées de remboursement.",
         category="warning",
         link=url_for("admin_validate"),
@@ -2798,7 +2828,7 @@ def reclamer_remboursement(campaign_id):
 @limiter.limit("10 per hour")
 def register(role):
     if role not in ["annonceur", "partageur"]:
-        flash("Rôle invalide 🚫", "danger")
+        flash("Rôle invalide", "danger")
         return redirect(url_for("index"))
 
     # =========================================================================
@@ -2909,14 +2939,14 @@ def register(role):
             logger.info("Nouvel utilisateur inscrit (role: %s, parrainé_par: %s).", role, referrer_id_to_save)
             
             if role == "partageur":
-                flash(f"Merci {pseudo} 🙏 Votre demande est enregistrée et en attente de validation.", "info")
+                flash(f"Merci {pseudo} Votre demande est enregistrée et en attente de validation.", "info")
                 return redirect(url_for("index"))
             else:
-                flash("Compte annonceur créé avec succès 🎉", "success")
+                flash("Compte annonceur créé avec succès", "success")
                 return redirect(url_for("login"))
         except Exception as e:
             db.session.rollback()
-            flash("Une erreur est survenue lors de l'enregistrement. ⚠️", "danger")
+            flash("Une erreur est survenue lors de l'enregistrement.", "danger")
             logger.error("Erreur DB inscription : %s", e)
 
     return render_template("register.html", form=form, role=role, departements_communes=DEPARTEMENTS_COMMUNES)
@@ -2926,7 +2956,7 @@ def register(role):
 @login_required
 def dashboard_annonceur():
     if current_user.role != "annonceur":
-        flash("Accès refusé 🚫", "danger")
+        flash("Accès refusé", "danger")
         return redirect(url_for("index"))
         
     # Configuration globale (tarifs, commissions, garde-fous anti-fraude)
@@ -2969,7 +2999,7 @@ def dashboard_annonceur():
 @login_required
 def dashboard_partageur():
     if current_user.role != "partageur":
-        flash("Accès refusé 🚫", "danger")
+        flash("Accès refusé", "danger")
         return redirect(url_for("index"))
         
     # =========================================================================
@@ -3126,11 +3156,11 @@ def admin_suivi_campagne(campaign_id):
 
     camp = db.session.get(Campaign, campaign_id)
     if not camp:
-        flash("Campagne introuvable. ⚠️", "danger")
+        flash("Campagne introuvable.", "danger")
         return redirect(url_for("admin_validate"))
 
     if not camp.paid or not camp.validated:
-        flash("Le suivi détaillé n'est disponible que pour les campagnes payées et validées. ⚠️", "warning")
+        flash("Le suivi détaillé n'est disponible que pour les campagnes payées et validées.", "warning")
         return redirect(url_for("admin_validate"))
 
     # 1️⃣ Liste des partageurs de cette campagne (pseudo + email + date + id du CampaignShare)
@@ -3213,7 +3243,7 @@ def admin_suivi_campagne(campaign_id):
             s = shares_par_id.get(c.campaign_share_id)
             clics_detail.append({
                 "pseudo": (s.pseudo or "Partageur anonyme") if s else "Inconnu",
-                "heure": heure_locale(c.clicked_at, "%d/%m/%Y %H:%M:%S") if c.clicked_at else "—",
+                "heure": heure_locale(c.clicked_at, "%d/%m/%Y %H:%M:%S") if c.clicked_at else "-",
                 "link_type": c.link_type,
                 "is_paid": c.is_paid,
                 "motif": MOTIFS_REJET_LIBELLES.get(c.rejection_reason, c.rejection_reason) if not c.is_paid else None,
@@ -3312,17 +3342,17 @@ def admin_settings():
             # Validations de sécurité de base
             valeurs_a_verifier = [cost_video, cost_photo, cost_text, reward_video, reward_photo, reward_text, comm_rate, ref_rate, min_withdrawal]
             if any(v < 0 for v in valeurs_a_verifier):
-                flash("Les valeurs ne peuvent pas être négatives ⚠️", "danger")
+                flash("Les valeurs ne peuvent pas être négatives", "danger")
                 return redirect(url_for("admin_settings"))
 
             if comm_rate > 100 or ref_rate > 100:
-                flash("Les taux de commission ou de parrainage ne peuvent pas dépasser 100% ⚠️", "danger")
+                flash("Les taux de commission ou de parrainage ne peuvent pas dépasser 100%", "danger")
                 return redirect(url_for("admin_settings"))
 
             # 🆕 Sécurité métier : la récompense du partageur ne doit jamais dépasser
             # le prix facturé à l'annonceur pour le même type de contenu (marge négative sinon)
             if reward_video > cost_video or reward_photo > cost_photo or reward_text > cost_text:
-                flash("La récompense par clic d'un partageur ne peut pas dépasser le prix facturé à l'annonceur pour le même type de contenu ⚠️", "danger")
+                flash("La récompense par clic d'un partageur ne peut pas dépasser le prix facturé à l'annonceur pour le même type de contenu", "danger")
                 return redirect(url_for("admin_settings"))
 
             # Mise à jour de la configuration globale
@@ -3337,15 +3367,15 @@ def admin_settings():
             config.minimum_withdrawal_amount = min_withdrawal
 
             db.session.commit()
-            flash("Configurations mises à jour avec succès ! ⚙️✅", "success")
+            flash("Configurations mises à jour avec succès !", "success")
             return redirect(url_for("admin_settings"))
 
         except ValueError:
-            flash("Veuillez entrer des nombres valides. ⚠️", "danger")
+            flash("Veuillez entrer des nombres valides.", "danger")
         except Exception as e:
             db.session.rollback()
             logger.error("Erreur lors de la mise à jour des paramètres admin : %s", e)
-            flash("Une erreur système est survenue. ⚠️", "danger")
+            flash("Une erreur système est survenue.", "danger")
 
     return render_template("admin_settings.html", config=config)
 
@@ -3375,7 +3405,7 @@ def toggle_preuve_partage():
         )
         flash(
             f"Exigence de preuve désactivée. {nb} clic(s) en attente ont été crédités "
-            f"immédiatement pour un total de {montant:,.0f} FCFA. ✅",
+            f"immédiatement pour un total de {montant:,.0f} FCFA.",
             "success"
         )
     else:
@@ -3383,7 +3413,7 @@ def toggle_preuve_partage():
             "[ACTION SUPER-ADMIN] Exigence de preuve de partage RÉACTIVÉE par admin id=%d.",
             current_user.id
         )
-        flash("Exigence de preuve de partage réactivée. Les nouveaux clics attendront à nouveau une preuve validée. ✅", "success")
+        flash("Exigence de preuve de partage réactivée. Les nouveaux clics attendront à nouveau une preuve validée.", "success")
 
     return redirect(url_for("admin_validate"))
 
@@ -3421,7 +3451,7 @@ def admin_validate():
                 u.whatsapp_message = urllib.parse.quote(
                     f"Bonjour,\n\nNous vous remercions pour votre inscription sur Pubwek. "
                     f"Votre dossier est en cours de vérification.\n\n"
-                    f"Merci de confirmer votre lieu de résidence.\n\n— L'équipe Pubwek"
+                    f"Merci de confirmer votre lieu de résidence.\n\nL'équipe Pubwek"
                 )
             else:
                 u.whatsapp_message = ""
@@ -3487,8 +3517,8 @@ def admin_validate():
 # 🆕 ROUTE ADMIN : CONSULTATION DES UTILISATEURS VALIDÉS (onglets + pagination)
 # ==========================================
 ONGLETS_UTILISATEURS = {
-    "annonceurs": {"label": "📢 Annonceurs", "role": "annonceur"},
-    "partageurs": {"label": "🤝 Partageurs", "role": "partageur"},
+    "annonceurs": {"label": "Annonceurs", "role": "annonceur"},
+    "partageurs": {"label": "Partageurs", "role": "partageur"},
 }
 
 
@@ -3554,22 +3584,22 @@ def admin_utilisateurs():
 @limiter.limit("30 per hour")
 def partager_campagne_partageur(campaign_id):
     if current_user.role != "partageur":
-        flash("Accès réservé aux partageurs. 🚫", "danger")
+        flash("Accès réservé aux partageurs.", "danger")
         return redirect(url_for("index"))
 
     camp = db.session.get(Campaign, campaign_id)
     if not camp:
-        flash("Campagne introuvable. ⚠️", "danger")
+        flash("Campagne introuvable.", "danger")
         return redirect(url_for("dashboard_partageur"))
 
     if not camp.validated or not camp.shared_to_partageurs or not camp.is_active:
-        flash("Cette campagne n'est plus disponible au partage. ⚠️", "warning")
+        flash("Cette campagne n'est plus disponible au partage.", "warning")
         return redirect(url_for("dashboard_partageur"))
 
     # Vérification de zone (sécurité : empêche de forcer l'URL d'une campagne
     # qui ne cible pas la zone du partageur)
     if not campagne_cible_utilisateur(camp, current_user):
-        flash("Cette campagne ne cible pas votre zone. 🚫", "danger")
+        flash("Cette campagne ne cible pas votre zone.", "danger")
         return redirect(url_for("dashboard_partageur"))
 
     # Vérifie si déjà partagée par ce partageur (une seule fois autorisée)
@@ -3651,15 +3681,15 @@ def etats_preuves_partage(share, camp):
 @login_required
 def instructions_partage(campaign_id):
     if current_user.role != "partageur":
-        flash("Accès réservé aux partageurs. 🚫", "danger")
+        flash("Accès réservé aux partageurs.", "danger")
         return redirect(url_for("index"))
     camp = db.session.get(Campaign, campaign_id)
     if not camp:
-        flash("Campagne introuvable. ⚠️", "danger")
+        flash("Campagne introuvable.", "danger")
         return redirect(url_for("dashboard_partageur"))
     share = CampaignShare.query.filter_by(campaign_id=camp.id, sharer_id=current_user.id).first()
     if not share:
-        flash('Veuillez d\'abord cliquer sur "Partager cette campagne" depuis votre tableau de bord. ⚠️', "warning")
+        flash('Veuillez d\'abord cliquer sur "Partager cette campagne" depuis votre tableau de bord.', "warning")
         return redirect(url_for("dashboard_partageur"))
     media_urls = []
     if camp.media_files:
@@ -3696,17 +3726,17 @@ def refuse_campaign(campaign_id):
     verifier_droits_admin("valider_campagnes")
     camp = db.session.get(Campaign, campaign_id)
     if not camp:
-        flash("Campagne introuvable. ⚠️", "danger")
+        flash("Campagne introuvable.", "danger")
         return redirect(url_for("admin_validate"))
     if camp.validated or camp.status == "valide":
-        flash("Impossible de refuser une campagne déjà validée. ⚠️", "danger")
+        flash("Impossible de refuser une campagne déjà validée.", "danger")
         return redirect(url_for("admin_validate"))
     # Récupération et nettoyage de la raison
     reason = request.form.get("rejection_reason")
     if reason:
         reason = bleach.clean(reason.strip())
     if not reason:
-        flash("Veuillez obligatoirement fournir un motif de refus. ⚠️", "warning")
+        flash("Veuillez obligatoirement fournir un motif de refus.", "warning")
         return redirect(url_for("admin_validate"))
     annonceur = db.session.get(User, camp.user_id)
     # 1. Mise à jour des statuts de la campagne
@@ -3726,7 +3756,7 @@ def refuse_campaign(campaign_id):
     if annonceur:
         envoyer_notification(
             annonceur,
-            "Campagne refusée ❌",
+            "Campagne refusée",
             notif_msg,
             category="danger",
             link=url_for("mes_campagnes"),
@@ -3739,7 +3769,7 @@ def refuse_campaign(campaign_id):
     # 3. Notification WhatsApp facultative avec lien direct
     if annonceur and annonceur.whatsapp_number:
         wa_message = (
-            f"Bonjour, votre campagne #{camp.id} a été REFUSÉE ❌.\n"
+            f"Bonjour, votre campagne #{camp.id} a été REFUSÉE .\n"
             f"Motif : {reason}\n"
             f"Connectez-vous à votre espace pour corriger et relancer votre campagne ou demander un remboursement."
         )
@@ -3748,14 +3778,14 @@ def refuse_campaign(campaign_id):
 
         flash(
             Markup(
-                f'Campagne #{escape(camp.id)} refusée et enregistrée avec motif ❌. '
+                f'Campagne #{escape(camp.id)} refusée et enregistrée avec motif . '
                 f'<a href="{escape(wa_link)}" target="_blank" rel="noopener" '
-                f'class="btn btn-sm btn-outline-danger ms-2">📱 Notification WhatsApp</a>'
+                f'class="btn btn-sm btn-outline-danger ms-2"> Notification WhatsApp</a>'
             ),
             "warning"
         )
     else:
-        flash(f"Campagne #{camp.id} refusée avec succès. Motif transmis à l'annonceur ❌", "warning")
+        flash(f"Campagne #{camp.id} refusée avec succès. Motif transmis à l'annonceur", "warning")
     return redirect(url_for("admin_validate"))
 
 
@@ -3767,17 +3797,17 @@ def validate_campaign(campaign_id):
 
     camp = db.session.get(Campaign, campaign_id)
     if not camp:
-        flash("Campagne introuvable. ⚠️", "danger")
+        flash("Campagne introuvable.", "danger")
         return redirect(url_for("admin_validate"))
 
     # 🔒 Blocage : impossible de valider une campagne dont le paiement n'a pas été confirmé par FedaPay
     if not camp.paid:
-        flash("Impossible de valider une campagne dont le paiement n'a pas été confirmé. Le client doit d'abord payer. ⚠️", "danger")
+        flash("Impossible de valider une campagne dont le paiement n'a pas été confirmé. Le client doit d'abord payer.", "danger")
         return redirect(url_for("admin_validate"))
 
     # Vérification si déjà validée
     if camp.validated or camp.admin_status == "approved" or camp.status == "valide":
-        flash(f"La campagne #{camp.id} est déjà validée. ⚠️", "warning")
+        flash(f"La campagne #{camp.id} est déjà validée.", "warning")
         return redirect(url_for("admin_validate"))
 
     # 1️⃣ Validation et mise à jour des statuts
@@ -3827,7 +3857,7 @@ def validate_campaign(campaign_id):
                 # 🆕 Notification au parrain
                 envoyer_notification(
                     parrain,
-                    "Gain de parrainage crédité 🎁",
+                    "Gain de parrainage crédité",
                     (
                         f"Vous avez gagné {gain_parrain:.0f} FCFA suite au lancement de la première "
                         f"campagne de votre filleul {annonceur.pseudo or annonceur.email} ! "
@@ -3850,7 +3880,7 @@ def validate_campaign(campaign_id):
         # 🆕 Notification interne pour l'annonceur
         envoyer_notification(
             annonceur,
-            "Campagne validée ✅",
+            "Campagne validée",
             f"Votre campagne « {camp.promotion_detail or f'#{camp.id}'} » a été validée et est maintenant active !",
             category="success",
             link=url_for("mes_campagnes"),
@@ -3860,21 +3890,21 @@ def validate_campaign(campaign_id):
 
     # 3️⃣ Notification WhatsApp facultative
     if annonceur and annonceur.whatsapp_number:
-        message = f"Bonjour, votre campagne #{camp.id} a été VALIDÉE ✅."
+        message = f"Bonjour, votre campagne #{camp.id} a été VALIDÉE ."
         encoded = urllib.parse.quote(message)
         wa_link = f"https://wa.me/{numero_pour_wa_me(annonceur.whatsapp_number)}?text={encoded}"
         # Markup() : ce message contient du HTML construit par nous. Le gabarit
         # échappe tout le reste par défaut.
         flash(
             Markup(
-                f'Campagne #{escape(camp.id)} validée avec succès !{escape(parrain_notifie_str)} ✅ '
+                f'Campagne #{escape(camp.id)} validée avec succès !{escape(parrain_notifie_str)} '
                 f'<a href="{escape(wa_link)}" target="_blank" rel="noopener" '
-                f'class="btn btn-sm btn-success ms-2">📱 Message WhatsApp</a>'
+                f'class="btn btn-sm btn-success ms-2"> Message WhatsApp</a>'
             ),
             "success"
         )
     else:
-        flash(f"Campagne #{camp.id} validée{parrain_notifie_str} ✅", "success")
+        flash(f"Campagne #{camp.id} validée{parrain_notifie_str}", "success")
 
     return redirect(url_for("admin_validate"))
 
@@ -3890,15 +3920,15 @@ def partager_campagne_admin(campaign_id):
 
     camp = db.session.get(Campaign, campaign_id)
     if not camp:
-        flash("Campagne introuvable. ⚠️", "danger")
+        flash("Campagne introuvable.", "danger")
         return redirect(url_for("admin_validate"))
 
     if not camp.validated or camp.admin_status != "approved":
-        flash("Seule une campagne validée peut être partagée aux partageurs. ⚠️", "danger")
+        flash("Seule une campagne validée peut être partagée aux partageurs.", "danger")
         return redirect(url_for("admin_validate"))
 
     if camp.shared_to_partageurs:
-        flash(f"La campagne #{camp.id} a déjà été partagée aux partageurs. ⚠️", "warning")
+        flash(f"La campagne #{camp.id} a déjà été partagée aux partageurs.", "warning")
         return redirect(url_for("admin_validate"))
 
     # 1️⃣ Détermination des zones ciblées par la campagne
@@ -3923,14 +3953,14 @@ def partager_campagne_admin(campaign_id):
     partageurs_cibles = query.all()
 
     if not partageurs_cibles:
-        flash(f"Aucun partageur trouvé dans les zones ciblées pour la campagne #{camp.id}. ⚠️", "warning")
+        flash(f"Aucun partageur trouvé dans les zones ciblées pour la campagne #{camp.id}.", "warning")
         return redirect(url_for("admin_validate"))
 
     # 3️⃣ Création d'une notification pour chaque partageur ciblé
-    titre_notif = "🚀 Nouvelle campagne disponible !"
+    titre_notif = "Nouvelle campagne disponible !"
     message_notif = (
         f"Une nouvelle campagne « {camp.promotion_detail or 'Sans nom'} » est disponible dans votre zone. "
-        f"Faites vite, d'autres partageurs de votre région peuvent en profiter avant vous ! 🔥"
+        f"Faites vite, d'autres partageurs de votre région peuvent en profiter avant vous !"
     )
 
     for partageur in partageurs_cibles:
@@ -3952,7 +3982,7 @@ def partager_campagne_admin(campaign_id):
         campaign_id, len(partageurs_cibles), current_user.id
     )
 
-    flash(f"Campagne #{camp.id} partagée avec succès à {len(partageurs_cibles)} partageur(s) ! 📤", "success")
+    flash(f"Campagne #{camp.id} partagée avec succès à {len(partageurs_cibles)} partageur(s) !", "success")
     return redirect(url_for("admin_validate"))  
 
 
@@ -3969,7 +3999,7 @@ def autoriser_remboursement_admin(campaign_id):
 
     camp = db.session.get(Campaign, campaign_id)
     if not camp:
-        flash("Campagne introuvable. ⚠️", "danger")
+        flash("Campagne introuvable.", "danger")
         return redirect(url_for("admin_validate"))
 
     # 🆕 🐞 FIX : impossible d'autoriser un remboursement sur une campagne
@@ -3978,11 +4008,11 @@ def autoriser_remboursement_admin(campaign_id):
     # certes déjà côté annonceur — mais le bouton ne devait jamais être
     # activable côté admin pour commencer.
     if not camp.paid:
-        flash("Impossible d'autoriser un remboursement : cette campagne n'a jamais été payée. ⚠️", "warning")
+        flash("Impossible d'autoriser un remboursement : cette campagne n'a jamais été payée.", "warning")
         return redirect(url_for("admin_validate"))
 
     if camp.admin_status != "rejected" and camp.status != "rejete":
-        flash("Seule une campagne rejetée peut faire l'objet d'une autorisation de remboursement. ⚠️", "warning")
+        flash("Seule une campagne rejetée peut faire l'objet d'une autorisation de remboursement.", "warning")
         return redirect(url_for("admin_validate"))
 
     # Activation de la possibilité pour l'annonceur de demander son remboursement
@@ -3994,7 +4024,7 @@ def autoriser_remboursement_admin(campaign_id):
     if annonceur:
         envoyer_notification(
             annonceur,
-            "Remboursement disponible 💰",
+            "Remboursement disponible",
             f"L'administration a activé l'option de remboursement pour votre campagne #{camp.id}. Vous pouvez désormais soumettre vos coordonnées.",
             category="info",
             link=url_for("mes_campagnes"),
@@ -4007,7 +4037,7 @@ def autoriser_remboursement_admin(campaign_id):
         campaign_id, current_user.id
     )
 
-    flash(f"L'option de remboursement a été activée avec succès pour l'annonceur sur la campagne #{camp.id}. 🟢", "success")
+    flash(f"L'option de remboursement a été activée avec succès pour l'annonceur sur la campagne #{camp.id}.", "success")
     return redirect(url_for("admin_validate"))
 
 
@@ -4048,16 +4078,16 @@ def traiter_remboursement(refund_id):
 
     demande = db.session.get(RefundRequest, refund_id)
     if not demande:
-        flash("Demande de remboursement introuvable. ⚠️", "danger")
+        flash("Demande de remboursement introuvable.", "danger")
         return redirect(url_for("admin_remboursements"))
 
     if demande.status != "pending":
-        flash("Cette demande a déjà été traitée. ⚠️", "warning")
+        flash("Cette demande a déjà été traitée.", "warning")
         return redirect(url_for("admin_remboursements"))
 
     camp = db.session.get(Campaign, demande.campaign_id)
     if not camp:
-        flash("Campagne associée introuvable. ⚠️", "danger")
+        flash("Campagne associée introuvable.", "danger")
         return redirect(url_for("admin_remboursements"))
 
     montant_rembourse = camp.total_cost
@@ -4075,7 +4105,7 @@ def traiter_remboursement(refund_id):
         .first()
     )
     if not annonceur:
-        flash("Compte de l'annonceur introuvable. ⚠️", "danger")
+        flash("Compte de l'annonceur introuvable.", "danger")
         return redirect(url_for("admin_remboursements"))
 
     annonceur.wallet_balance = (annonceur.wallet_balance or 0.0) + montant_rembourse
@@ -4102,7 +4132,7 @@ def traiter_remboursement(refund_id):
 
     envoyer_notification(
         annonceur,
-        "Remboursement crédité 💰",
+        "Remboursement crédité",
         (
             f"Le remboursement de {montant_rembourse:,.0f} FCFA pour votre campagne #{camp.id} "
             f"a été crédité sur votre portefeuille Pubwek. Vous pouvez l'utiliser pour lancer une "
@@ -4117,7 +4147,7 @@ def traiter_remboursement(refund_id):
         "[REMBOURSEMENT] Demande #%d créditée sur le portefeuille de l'annonceur id=%d (montant=%.2f) par admin id=%d",
         refund_id, annonceur.id, montant_rembourse, current_user.id
     )
-    flash(f"Remboursement #{demande.id} : {montant_rembourse:,.0f} FCFA crédités sur le portefeuille de l'annonceur. ✅", "success")
+    flash(f"Remboursement #{demande.id} : {montant_rembourse:,.0f} FCFA crédités sur le portefeuille de l'annonceur.", "success")
     return redirect(url_for("admin_remboursements"))
 
 
@@ -4135,16 +4165,16 @@ def refuser_remboursement(refund_id):
 
     demande = db.session.get(RefundRequest, refund_id)
     if not demande:
-        flash("Demande de remboursement introuvable. ⚠️", "danger")
+        flash("Demande de remboursement introuvable.", "danger")
         return redirect(url_for("admin_remboursements"))
 
     if demande.status != "pending":
-        flash("Cette demande a déjà été traitée. ⚠️", "warning")
+        flash("Cette demande a déjà été traitée.", "warning")
         return redirect(url_for("admin_remboursements"))
 
     motif = request.form.get("admin_note", "").strip()
     if not motif:
-        flash("Veuillez indiquer un motif de refus. ⚠️", "warning")
+        flash("Veuillez indiquer un motif de refus.", "warning")
         return redirect(url_for("admin_remboursements"))
 
     demande.status = "rejected"
@@ -4169,7 +4199,7 @@ def refuser_remboursement(refund_id):
     if annonceur:
         envoyer_notification(
             annonceur,
-            "Demande de remboursement refusée ⚠️",
+            "Demande de remboursement refusée",
             (
                 f"Votre demande de remboursement pour la campagne #{demande.campaign_id} a été refusée. "
                 f"Motif : {motif}. Merci de corriger vos coordonnées et de renvoyer votre demande."
@@ -4183,7 +4213,7 @@ def refuser_remboursement(refund_id):
         "[REMBOURSEMENT] Demande #%d refusée par admin id=%d (motif: %s)",
         refund_id, current_user.id, motif
     )
-    flash("Demande de remboursement refusée. L'annonceur a été notifié et peut renvoyer une demande corrigée. ✅", "success")
+    flash("Demande de remboursement refusée. L'annonceur a été notifié et peut renvoyer une demande corrigée.", "success")
     return redirect(url_for("admin_remboursements"))
 
 
@@ -4196,12 +4226,12 @@ def confirm_user(user_id):
     verifier_droits_admin("valider_utilisateurs")
     user = db.session.get(User, user_id)
     if not user:
-        flash("Utilisateur introuvable. ⚠️", "danger")
+        flash("Utilisateur introuvable.", "danger")
         return redirect(url_for("admin_validate"))
 
     # 🆕 Seul celui qui a envoyé le message de vérification peut confirmer (le vrai admin passe toujours)
     if current_user.role != "admin" and user.contacted_by_id and user.contacted_by_id != current_user.id:
-        flash("Ce dossier est pris en charge par un autre administrateur. Vous ne pouvez pas le traiter. 🚫", "danger")
+        flash("Ce dossier est pris en charge par un autre administrateur. Vous ne pouvez pas le traiter.", "danger")
         return redirect(url_for("admin_validate"))
 
     user.is_confirmed = True
@@ -4212,7 +4242,7 @@ def confirm_user(user_id):
     )
 
     pseudo_or_name = user.pseudo or user.email.split("@")[0]
-    message = f"Bonjour {pseudo_or_name}, votre compte Pubwek a été VALIDÉ ✅."
+    message = f"Bonjour {pseudo_or_name}, votre compte Pubwek a été VALIDÉ ."
 
     if user.whatsapp_number:
         numero_propre = numero_pour_wa_me(user.whatsapp_number)
@@ -4221,16 +4251,16 @@ def confirm_user(user_id):
             wa_link = f"https://wa.me/{numero_propre}?text={encoded}"
             flash(
                 Markup(
-                    'Utilisateur {email} confirmé ✅. '
+                    'Utilisateur {email} confirmé . '
                     '<a href="{link}" target="_blank" rel="noopener noreferrer" '
-                    'class="btn btn-sm btn-success ms-2">📱 Message de confirmation</a>'
+                    'class="btn btn-sm btn-success ms-2"> Message de confirmation</a>'
                 ).format(email=escape(user.email), link=wa_link),
                 "success"
             )
         else:
-            flash(f"Utilisateur {escape(user.email)} confirmé ✅ (numéro WhatsApp invalide).", "success")
+            flash(f"Utilisateur {escape(user.email)} confirmé (numéro WhatsApp invalide).", "success")
     else:
-        flash(f"Utilisateur {escape(user.email)} confirmé ✅", "success")
+        flash(f"Utilisateur {escape(user.email)} confirmé", "success")
 
     return redirect(url_for("admin_validate"))
 
@@ -4242,12 +4272,12 @@ def refuse_user(user_id):
     verifier_droits_admin("valider_utilisateurs")
     user = db.session.get(User, user_id)
     if not user:
-        flash("Utilisateur introuvable. ⚠️", "danger")
+        flash("Utilisateur introuvable.", "danger")
         return redirect(url_for("admin_validate"))
 
     # 🆕 Seul celui qui a envoyé le message de vérification peut refuser (le vrai admin passe toujours)
     if current_user.role != "admin" and user.contacted_by_id and user.contacted_by_id != current_user.id:
-        flash("Ce dossier est pris en charge par un autre administrateur. Vous ne pouvez pas le traiter. 🚫", "danger")
+        flash("Ce dossier est pris en charge par un autre administrateur. Vous ne pouvez pas le traiter.", "danger")
         return redirect(url_for("admin_validate"))
 
     whatsapp = user.whatsapp_number
@@ -4267,16 +4297,16 @@ def refuse_user(user_id):
             wa_link = f"https://wa.me/{numero_propre}?text={encoded}"
             flash(
                 Markup(
-                    'Utilisateur {email} supprimé ❌. '
+                    'Utilisateur {email} supprimé . '
                     '<a href="{link}" target="_blank" rel="noopener noreferrer" '
-                    'class="btn btn-sm btn-outline-danger ms-2">📱 Notification WhatsApp</a>'
+                    'class="btn btn-sm btn-outline-danger ms-2"> Notification WhatsApp</a>'
                 ).format(email=escape(email_log), link=wa_link),
                 "warning"
             )
         else:
-            flash(f"Utilisateur {escape(email_log)} supprimé ✅ (numéro WhatsApp invalide).", "warning")
+            flash(f"Utilisateur {escape(email_log)} supprimé (numéro WhatsApp invalide).", "warning")
     else:
-        flash("Utilisateur supprimé ✅", "warning")
+        flash("Utilisateur supprimé", "warning")
 
     return redirect(url_for("admin_validate"))
 
@@ -4290,17 +4320,17 @@ def contacter_partageur_verification(user_id):
     verifier_droits_admin("valider_utilisateurs")
     user = db.session.get(User, user_id)
     if not user:
-        flash("Utilisateur introuvable. ⚠️", "danger")
+        flash("Utilisateur introuvable.", "danger")
         return redirect(url_for("admin_validate"))
     if user.is_confirmed:
-        flash("Cet utilisateur est déjà confirmé. ⚠️", "warning")
+        flash("Cet utilisateur est déjà confirmé.", "warning")
         return redirect(url_for("admin_validate"))
 
     # 🆕 Verrouillage : si un autre admin/sous-admin a déjà pris ce dossier, on bloque
     if user.contacted_by_id and user.contacted_by_id != current_user.id:
         contacteur = db.session.get(User, user.contacted_by_id)
         nom_contacteur = contacteur.pseudo or contacteur.email if contacteur else "un autre administrateur"
-        flash(f"Ce dossier est déjà pris en charge par {escape(nom_contacteur)}. ⚠️", "warning")
+        flash(f"Ce dossier est déjà pris en charge par {escape(nom_contacteur)}.", "warning")
         return redirect(url_for("admin_validate"))
 
     # 🆕 Verrouillage du dossier sur l'admin/sous-admin qui envoie le message
@@ -4331,7 +4361,7 @@ def contacter_partageur_verification(user_id):
         if not numero_propre:
             flash(
                 f"Dossier de {escape(user.email)} verrouillé, mais le numéro WhatsApp "
-                f"enregistré est invalide. ⚠️",
+                f"enregistré est invalide.",
                 "warning"
             )
             return redirect(url_for("admin_validate"))
@@ -4347,12 +4377,12 @@ def contacter_partageur_verification(user_id):
             Markup(
                 'Dossier de {email} verrouillé sur votre compte. '
                 '<a href="{link}" target="_blank" rel="noopener noreferrer" '
-                'class="btn btn-sm btn-primary ms-2">📱 Envoyer le message de vérification</a>'
+                'class="btn btn-sm btn-primary ms-2"> Envoyer le message de vérification</a>'
             ).format(email=escape(user.email), link=wa_link),
             "info"
         )
     else:
-        flash(f"Dossier de {escape(user.email)} verrouillé, mais aucun numéro WhatsApp disponible. ⚠️", "warning")
+        flash(f"Dossier de {escape(user.email)} verrouillé, mais aucun numéro WhatsApp disponible.", "warning")
 
     return redirect(url_for("admin_validate"))    
 
@@ -4363,7 +4393,7 @@ def contacter_partageur_verification(user_id):
 @login_required
 def logout():
     logout_user()
-    flash("Déconnexion réussie 👋", "info")
+    flash("Déconnexion réussie", "info")
     return redirect(url_for("index"))
 
 
@@ -4823,7 +4853,7 @@ def evaluer_clic(share, camp, ip, user_agent, config, maintenant=None):
 def recompense_pour(camp, config):
     """Montant reversé au partageur pour un clic, selon le type de contenu.
 
-    🆕 Option B (multi-statuts) : le partageur doit publier TOUTES les photos
+    Option B (multi-statuts) : le partageur doit publier TOUTES les photos
     de la campagne comme des statuts séparés pour respecter son engagement —
     il est donc rémunéré proportionnellement au nombre de photos qu'il doit
     publier, jamais d'un montant fixe déconnecté du nombre réel de statuts.
@@ -5011,7 +5041,7 @@ def envoyer_preuve_partage(share_id, day_number):
     et l'envoi est refusé.
     """
     if current_user.role != "partageur":
-        flash("Accès refusé 🚫", "danger")
+        flash("Accès refusé", "danger")
         return redirect(url_for("index"))
 
     share = CampaignShare.query.filter_by(id=share_id, sharer_id=current_user.id).first()
@@ -5020,7 +5050,7 @@ def envoyer_preuve_partage(share_id, day_number):
 
     camp = share.campaign
     if not (camp.is_active and camp.paid and camp.validated):
-        flash("Cette campagne n'est plus active. ⚠️", "warning")
+        flash("Cette campagne n'est plus active.", "warning")
         return redirect(url_for("dashboard_partageur"))
 
     jour_courant = camp.jour_diffusion_campagne()
@@ -5028,21 +5058,21 @@ def envoyer_preuve_partage(share_id, day_number):
     # Le jour visé doit être un jour déjà entamé de cette campagne (jamais un
     # jour futur), et encore dans sa fenêtre de rattrapage.
     if day_number < 1 or day_number > jour_courant:
-        flash("Jour de diffusion invalide. ⚠️", "danger")
+        flash("Jour de diffusion invalide.", "danger")
         return redirect(url_for("dashboard_partageur"))
 
     if not camp.jour_encore_reclamable(day_number):
         flash(
             f"Le délai pour envoyer la preuve du jour {day_number} est dépassé "
             f"({camp.FENETRE_RATTRAPAGE_HEURES}h après la fin de ce jour). "
-            f"Les clics de ce jour sont malheureusement perdus. ⚠️",
+            f"Les clics de ce jour sont malheureusement perdus.",
             "danger"
         )
         return redirect(url_for("dashboard_partageur"))
 
     fichier = request.files.get("preuve")
     if not fichier or not fichier.filename:
-        flash("Veuillez sélectionner une capture d'écran. ⚠️", "danger")
+        flash("Veuillez sélectionner une capture d'écran.", "danger")
         return redirect(url_for("dashboard_partageur"))
 
     ok, err = valider_image(fichier)
@@ -5060,7 +5090,7 @@ def envoyer_preuve_partage(share_id, day_number):
     ).first()
 
     if preuve and preuve.status == "validee":
-        flash("Cette preuve a déjà été validée, impossible de la remplacer. ⚠️", "warning")
+        flash("Cette preuve a déjà été validée, impossible de la remplacer.", "warning")
         return redirect(url_for("dashboard_partageur"))
 
     if preuve:
@@ -5081,7 +5111,7 @@ def envoyer_preuve_partage(share_id, day_number):
         db.session.add(preuve)
 
     db.session.commit()
-    flash(f"Preuve du jour {day_number} envoyée, en attente de validation. ✅", "success")
+    flash(f"Preuve du jour {day_number} envoyée, en attente de validation.", "success")
     return redirect(url_for("dashboard_partageur"))
 
 
@@ -5180,7 +5210,7 @@ def crediter_tous_les_clics_en_attente():
                 campaign_click_id=click.id,
                 description=(
                     f"Clic généré sur la campagne #{camp.id} (jour {click.day_number}) "
-                    f"— crédité automatiquement suite à la désactivation de l'exigence de preuve"
+                    f"Crédité automatiquement suite à la désactivation de l'exigence de preuve"
                 ),
             ))
             total += recompense
@@ -5201,7 +5231,7 @@ def valider_preuve_partage(proof_id, decision):
     preuve = CampaignShareProof.query.get_or_404(proof_id)
 
     if preuve.status != "en_attente":
-        flash("Cette preuve a déjà été traitée. ⚠️", "warning")
+        flash("Cette preuve a déjà été traitée.", "warning")
         return redirect(url_for("admin_preuves_partage"))
 
     preuve.reviewed_at = datetime.utcnow()
@@ -5227,18 +5257,18 @@ def valider_preuve_partage(proof_id, decision):
             if partageur:
                 envoyer_notification(
                     partageur,
-                    f"Clics du jour {preuve.day_number} validés ✅",
+                    f"Clics du jour {preuve.day_number} validés",
                     (
                         f"Votre preuve du jour {preuve.day_number} pour la campagne "
                         f"« {nom_campagne} » a été validée. {nb} clic(s) pour {montant:.0f} FCFA "
-                        f"ont été ajoutés à votre portefeuille disponible. 💰"
+                        f"ont été ajoutés à votre portefeuille disponible."
                     ),
                     category="success",
                     link=url_for("mes_retraits"),
                 )
             db.session.commit()
 
-        flash(f"Preuve validée. {nb} clic(s) crédité(s) pour {montant:.0f} FCFA. ✅", "success")
+        flash(f"Preuve validée. {nb} clic(s) crédité(s) pour {montant:.0f} FCFA.", "success")
     else:
         motif = request.form.get("motif", "").strip()
         preuve.status = "rejetee"
@@ -5254,7 +5284,7 @@ def valider_preuve_partage(proof_id, decision):
             if partageur:
                 envoyer_notification(
                     partageur,
-                    f"Preuve du jour {preuve.day_number} rejetée ⚠️",
+                    f"Preuve du jour {preuve.day_number} rejetée",
                     (
                         f"Votre preuve du jour {preuve.day_number} a été rejetée. "
                         f"Motif : {preuve.rejection_reason}. Veuillez en renvoyer une nouvelle "
@@ -5266,7 +5296,7 @@ def valider_preuve_partage(proof_id, decision):
                 )
             db.session.commit()
 
-        flash("Preuve rejetée. Le partageur devra en renvoyer une nouvelle. ⚠️", "warning")
+        flash("Preuve rejetée. Le partageur devra en renvoyer une nouvelle.", "warning")
 
     return redirect(url_for("admin_preuves_partage"))
 
@@ -5452,11 +5482,11 @@ def _notifier_partageurs_quota_atteint(camp):
             if partageur:
                 envoyer_notification(
                     partageur,
-                    "Quota du jour atteint 🎯",
+                    "Quota du jour atteint",
                     (
                         f"Les clics prévus aujourd'hui pour la campagne "
                         f"« {camp.promotion_detail or camp.promotion_type} » sont atteints. "
-                        f"Vous pouvez retirer votre statut WhatsApp si vous le souhaitez — "
+                        f"Vous pouvez retirer votre statut WhatsApp si vous le souhaitez, "
                         f"vous ne serez pas rémunéré(e) au-delà de ce quota. "
                         f"N'oubliez surtout pas d'envoyer votre capture de fin de journée : "
                         f"c'est elle qui permet de faire valider et créditer vos clics du jour. "
@@ -5497,7 +5527,7 @@ def demander_retrait():
     # (crédits de remboursement) : les deux partagent le même portefeuille
     # (User.wallet_balance) et le même circuit de retrait manuel.
     if current_user.role not in ("partageur", "annonceur"):
-        flash("Accès réservé aux partageurs et annonceurs. 🚫", "danger")
+        flash("Accès réservé aux partageurs et annonceurs.", "danger")
         return redirect(url_for("index"))
 
     # 🆕 Redirection vers le bon tableau de bord selon le rôle, à chaque
@@ -5515,20 +5545,20 @@ def demander_retrait():
     try:
         montant = float(montant_raw)
     except (ValueError, TypeError):
-        flash("Montant invalide. ⚠️", "danger")
+        flash("Montant invalide.", "danger")
         return redirect(url_for(dashboard_retour))
 
     if montant <= 0:
-        flash("Le montant du retrait doit être positif. ⚠️", "danger")
+        flash("Le montant du retrait doit être positif.", "danger")
         return redirect(url_for(dashboard_retour))
 
     if montant < config.minimum_withdrawal_amount:
-        flash(f"Le montant minimum de retrait est de {config.minimum_withdrawal_amount:.0f} FCFA. ⚠️", "warning")
+        flash(f"Le montant minimum de retrait est de {config.minimum_withdrawal_amount:.0f} FCFA.", "warning")
         return redirect(url_for(dashboard_retour))
 
     # 2️⃣ Validation des coordonnées de réception
     if payout_channel not in ["MTN Mobile Money", "Moov Money", "Celtiis Cash", "Wave"]:
-        flash("Moyen de réception invalide. ⚠️", "danger")
+        flash("Moyen de réception invalide.", "danger")
         return redirect(url_for(dashboard_retour))
 
     if not re.match(r"^\+?[0-9]{7,15}$", payout_phone):
@@ -5543,12 +5573,12 @@ def demander_retrait():
         .first()
     )
     if utilisateur is None:
-        flash("Compte introuvable. ⚠️", "danger")
+        flash("Compte introuvable.", "danger")
         return redirect(url_for(dashboard_retour))
 
     current_balance = utilisateur.wallet_balance or 0.0
     if montant > current_balance:
-        flash(f"Solde insuffisant. Votre solde disponible est de {current_balance:.0f} FCFA. ⚠️", "danger")
+        flash(f"Solde insuffisant. Votre solde disponible est de {current_balance:.0f} FCFA.", "danger")
         return redirect(url_for(dashboard_retour))
 
     # 4️⃣ Vérification qu'il n'y a pas déjà une demande en cours (évite le double retrait du même argent)
@@ -5585,7 +5615,7 @@ def demander_retrait():
         # 7️⃣ Notification aux admins habilités
         notifier_admins_avec_permission(
             "gerer_retraits",
-            "Nouvelle demande de retrait 💰",
+            "Nouvelle demande de retrait",
             f"{current_user.pseudo or current_user.email} demande un retrait de {montant:.0f} FCFA.",
             category="info",
             link=url_for("admin_retraits"),
@@ -5597,12 +5627,12 @@ def demander_retrait():
             current_user.id, current_user.role, montant, demande.id
         )
 
-        flash(f"Votre demande de retrait de {montant:.0f} FCFA a été envoyée. Elle sera traitée sous peu. ✅", "success")
+        flash(f"Votre demande de retrait de {montant:.0f} FCFA a été envoyée. Elle sera traitée sous peu.", "success")
 
     except Exception as e:
         db.session.rollback()
         logger.error("Erreur lors de la demande de retrait (user %d) : %s", current_user.id, e)
-        flash("Une erreur est survenue lors de votre demande. Réessayez. ⚠️", "danger")
+        flash("Une erreur est survenue lors de votre demande. Réessayez.", "danger")
 
     return redirect(url_for(dashboard_retour))
 
@@ -5650,17 +5680,17 @@ def confirmer_retrait_manuel(withdrawal_id):
         .first()
     )
     if not demande:
-        flash("Demande introuvable. ⚠️", "danger")
+        flash("Demande introuvable.", "danger")
         return redirect(url_for("admin_retraits"))
 
     if demande.status != "pending":
-        flash("Cette demande a déjà été traitée. ⚠️", "warning")
+        flash("Cette demande a déjà été traitée.", "warning")
         return redirect(url_for("admin_retraits"))
 
     # 🆕 Preuve de paiement OBLIGATOIRE — capture d'écran du virement effectué
     proof_file = request.files.get("proof_file")
     if not proof_file or not proof_file.filename:
-        flash("Une preuve de paiement (capture d'écran) est obligatoire pour confirmer un retrait manuel. ⚠️", "danger")
+        flash("Une preuve de paiement (capture d'écran) est obligatoire pour confirmer un retrait manuel.", "danger")
         return redirect(url_for("admin_retraits"))
 
     ok, err = valider_image(proof_file)
@@ -5686,10 +5716,10 @@ def confirmer_retrait_manuel(withdrawal_id):
         if beneficiaire:
             envoyer_notification(
                 beneficiaire,
-                "Retrait effectué ✅",
+                "Retrait effectué",
                 (
                     f"Votre retrait de {demande.amount:.0f} FCFA a été crédité sur votre "
-                    f"{demande.payout_channel} ({demande.payout_phone}). Merci pour vos efforts sur Pubwek ! 🎉"
+                    f"{demande.payout_channel} ({demande.payout_phone}). Merci pour vos efforts sur Pubwek !"
                 ),
                 category="success",
                 link=url_for("mes_retraits"),
@@ -5700,12 +5730,12 @@ def confirmer_retrait_manuel(withdrawal_id):
             "[RETRAIT] Demande #%d payée manuellement par admin id=%d",
             demande.id, current_user.id
         )
-        flash("Retrait confirmé et preuve enregistrée. Le partageur a été notifié. ✅", "success")
+        flash("Retrait confirmé et preuve enregistrée. Le partageur a été notifié.", "success")
 
     except Exception as e:
         db.session.rollback()
         logger.error("Erreur confirmation retrait manuel #%d : %s", withdrawal_id, e)
-        flash("Une erreur est survenue. Réessayez. ⚠️", "danger")
+        flash("Une erreur est survenue. Réessayez.", "danger")
 
     return redirect(url_for("admin_retraits"))
 
@@ -5732,7 +5762,7 @@ def nettoyage_production():
     if request.method == "POST":
         confirmation = request.form.get("confirmation", "").strip()
         if confirmation != "SUPPRIMER TOUT":
-            flash("Phrase de confirmation incorrecte. Rien n'a été supprimé. ⚠️", "danger")
+            flash("Phrase de confirmation incorrecte. Rien n'a été supprimé.", "danger")
             return redirect(url_for("nettoyage_production"))
 
         from sqlalchemy import text
@@ -5794,7 +5824,7 @@ def nettoyage_production():
         except Exception as e:
             db.session.rollback()
             logger.error("[NETTOYAGE PRODUCTION] Échec du nettoyage base de données : %s", e)
-            flash(f"Erreur lors du nettoyage de la base : {e} ⚠️", "danger")
+            flash(f"Erreur lors du nettoyage de la base : {e}", "danger")
             return redirect(url_for("nettoyage_production"))
 
         # 4️⃣ Suppression physique des fichiers uploadés
@@ -5808,7 +5838,7 @@ def nettoyage_production():
                     nb_fichiers_supprimes += 1
         except Exception as e:
             logger.error("[NETTOYAGE PRODUCTION] Échec suppression fichiers uploads : %s", e)
-            flash(f"Base nettoyée, mais erreur lors de la suppression des fichiers : {e} ⚠️", "warning")
+            flash(f"Base nettoyée, mais erreur lors de la suppression des fichiers : {e}", "warning")
             return redirect(url_for("admin_validate"))
 
         logger.warning(
@@ -5817,9 +5847,9 @@ def nettoyage_production():
             current_user.id, nb_utilisateurs_supprimes, nb_fichiers_supprimes
         )
         flash(
-            f"✅ Nettoyage terminé : {nb_utilisateurs_supprimes} utilisateur(s) de test supprimé(s), "
+            f"Nettoyage terminé : {nb_utilisateurs_supprimes} utilisateur(s) de test supprimé(s), "
             f"{nb_fichiers_supprimes} fichier(s) supprimé(s). Pensez à retirer cette route du code "
-            f"maintenant qu'elle a été utilisée. 🧹",
+            f"maintenant qu'elle a été utilisée.",
             "success"
         )
         return redirect(url_for("admin_validate"))
@@ -5846,16 +5876,16 @@ def refuser_retrait(withdrawal_id):
         .first()
     )
     if not demande:
-        flash("Demande introuvable. ⚠️", "danger")
+        flash("Demande introuvable.", "danger")
         return redirect(url_for("admin_retraits"))
 
     if demande.status != "pending":
-        flash("Cette demande a déjà été traitée. ⚠️", "warning")
+        flash("Cette demande a déjà été traitée.", "warning")
         return redirect(url_for("admin_retraits"))
 
     motif = request.form.get("admin_note", "").strip()
     if not motif:
-        flash("Veuillez indiquer un motif de refus. ⚠️", "warning")
+        flash("Veuillez indiquer un motif de refus.", "warning")
         return redirect(url_for("admin_retraits"))
 
     try:
@@ -5881,7 +5911,7 @@ def refuser_retrait(withdrawal_id):
         if partageur:
             envoyer_notification(
                 partageur,
-                "Demande de retrait refusée ⚠️",
+                "Demande de retrait refusée",
                 f"Votre demande de retrait de {demande.amount:.0f} FCFA a été refusée. Motif : {motif}. Le montant a été recrédité sur votre portefeuille.",
                 category="warning",
                 link=url_for("mes_retraits"),
@@ -5889,12 +5919,12 @@ def refuser_retrait(withdrawal_id):
         db.session.commit()
 
         logger.info("[RETRAIT] Demande #%d refusée par admin id=%d", demande.id, current_user.id)
-        flash("Demande refusée. Le montant a été recrédité au partageur. ✅", "success")
+        flash("Demande refusée. Le montant a été recrédité au partageur.", "success")
 
     except Exception as e:
         db.session.rollback()
         logger.error("Erreur refus retrait #%d : %s", withdrawal_id, e)
-        flash("Une erreur est survenue. Réessayez. ⚠️", "danger")
+        flash("Une erreur est survenue. Réessayez.", "danger")
 
     return redirect(url_for("admin_retraits"))             
           
@@ -5914,7 +5944,7 @@ def mes_retraits():
     # Avant ce correctif, un annonceur cliquant sur la notification "Retrait
     # effectué" (qui pointe vers cette route) se heurtait à un refus d'accès.
     if current_user.role not in ("partageur", "annonceur"):
-        flash("Accès réservé aux partageurs et annonceurs. 🚫", "danger")
+        flash("Accès réservé aux partageurs et annonceurs.", "danger")
         return redirect(url_for("index"))
 
     from models import WithdrawalRequest, WalletTransaction, SystemConfig
@@ -6006,7 +6036,7 @@ def admin_gestion_sous_admins():
 @limiter.limit("5 per hour")
 def demander_suppression_compte():
     if current_user.role not in ("annonceur", "partageur"):
-        flash("Accès refusé 🚫", "danger")
+        flash("Accès refusé", "danger")
         return redirect(url_for("index"))
 
     dashboard_retour = "dashboard_annonceur" if current_user.role == "annonceur" else "dashboard_partageur"
@@ -6022,11 +6052,11 @@ def demander_suppression_compte():
 
     motif = request.form.get("reason", "").strip()
     if not motif:
-        flash("Veuillez indiquer le motif de votre demande de suppression. ⚠️", "warning")
+        flash("Veuillez indiquer le motif de votre demande de suppression.", "warning")
         return redirect(url_for(dashboard_retour))
 
     if len(motif) > 1000:
-        flash("Le motif ne peut pas dépasser 1000 caractères. ⚠️", "warning")
+        flash("Le motif ne peut pas dépasser 1000 caractères.", "warning")
         return redirect(url_for(dashboard_retour))
 
     motif_propre = bleach.clean(motif)
@@ -6043,7 +6073,7 @@ def demander_suppression_compte():
     # qu'une demande attend d'être examinée.
     notifier_admins_avec_permission(
         "gerer_suppressions_compte",
-        "Demande de suppression de compte 🗑️",
+        "Demande de suppression de compte",
         f"{current_user.pseudo or current_user.email} ({current_user.role}) a demandé la suppression de son compte.",
         category="warning",
         link=url_for("admin_suppressions_compte"),
@@ -6076,25 +6106,25 @@ def creer_sous_admin():
 
     # Validation de base
     if not email or not password:
-        flash("Email et mot de passe sont obligatoires. ⚠️", "danger")
+        flash("Email et mot de passe sont obligatoires.", "danger")
         return redirect(url_for("admin_gestion_sous_admins"))
 
     if len(password) < LONGUEUR_MIN_MOT_DE_PASSE:
         flash(
             f"Le mot de passe doit contenir au moins "
-            f"{LONGUEUR_MIN_MOT_DE_PASSE} caractères. ⚠️", "danger"
+            f"{LONGUEUR_MIN_MOT_DE_PASSE} caractères.", "danger"
         )
         return redirect(url_for("admin_gestion_sous_admins"))
 
     if User.query.filter_by(email=email).first():
-        flash("Un compte existe déjà avec cet email. ⚠️", "danger")
+        flash("Un compte existe déjà avec cet email.", "danger")
         return redirect(url_for("admin_gestion_sous_admins"))
 
     # On ne garde que les permissions réellement valides (sécurité contre l'injection de valeurs arbitraires)
     permissions_valides = [p for p in permissions_cochees if p in PERMISSIONS_DISPONIBLES]
 
     if not permissions_valides:
-        flash("Veuillez attribuer au moins une permission au sous-admin. ⚠️", "warning")
+        flash("Veuillez attribuer au moins une permission au sous-admin.", "warning")
         return redirect(url_for("admin_gestion_sous_admins"))
 
     try:
@@ -6116,12 +6146,12 @@ def creer_sous_admin():
             "[ACTION SUPER-ADMIN] Sous-admin créé : %s (permissions: %s) par admin id=%d",
             email, ", ".join(permissions_valides), current_user.id
         )
-        flash(f"Sous-admin {email} créé avec succès. ✅", "success")
+        flash(f"Sous-admin {email} créé avec succès.", "success")
 
     except Exception as e:
         db.session.rollback()
         logger.error("Erreur création sous-admin : %s", e)
-        flash("Une erreur est survenue lors de la création. ⚠️", "danger")
+        flash("Une erreur est survenue lors de la création.", "danger")
 
     return redirect(url_for("admin_gestion_sous_admins"))
 
@@ -6134,7 +6164,7 @@ def modifier_permissions_sous_admin(sous_admin_id):
 
     sous_admin = db.session.get(User, sous_admin_id)
     if not sous_admin or sous_admin.role != "sous_admin":
-        flash("Sous-admin introuvable. ⚠️", "danger")
+        flash("Sous-admin introuvable.", "danger")
         return redirect(url_for("admin_gestion_sous_admins"))
 
     permissions_cochees = request.form.getlist("permissions[]")
@@ -6147,7 +6177,7 @@ def modifier_permissions_sous_admin(sous_admin_id):
         "[ACTION SUPER-ADMIN] Permissions du sous-admin id=%d modifiées (%s) par admin id=%d",
         sous_admin_id, ", ".join(permissions_valides) or "aucune", current_user.id
     )
-    flash(f"Permissions de {sous_admin.email} mises à jour. ✅", "success")
+    flash(f"Permissions de {sous_admin.email} mises à jour.", "success")
 
     return redirect(url_for("admin_gestion_sous_admins"))
 
@@ -6161,7 +6191,7 @@ def basculer_statut_sous_admin(sous_admin_id):
 
     sous_admin = db.session.get(User, sous_admin_id)
     if not sous_admin or sous_admin.role != "sous_admin":
-        flash("Sous-admin introuvable. ⚠️", "danger")
+        flash("Sous-admin introuvable.", "danger")
         return redirect(url_for("admin_gestion_sous_admins"))
 
     sous_admin.is_active_admin = not sous_admin.is_active_admin
@@ -6172,7 +6202,7 @@ def basculer_statut_sous_admin(sous_admin_id):
         "[ACTION SUPER-ADMIN] Sous-admin id=%d %s par admin id=%d",
         sous_admin_id, statut, current_user.id
     )
-    flash(f"Sous-admin {sous_admin.email} {statut}. ✅", "success")
+    flash(f"Sous-admin {sous_admin.email} {statut}.", "success")
 
     return redirect(url_for("admin_gestion_sous_admins"))
 
@@ -6189,7 +6219,7 @@ def supprimer_sous_admin(sous_admin_id):
 
     sous_admin = db.session.get(User, sous_admin_id)
     if not sous_admin or sous_admin.role != "sous_admin":
-        flash("Sous-admin introuvable. ⚠️", "danger")
+        flash("Sous-admin introuvable.", "danger")
         return redirect(url_for("admin_gestion_sous_admins"))
 
     email_supprime = sous_admin.email
@@ -6202,12 +6232,12 @@ def supprimer_sous_admin(sous_admin_id):
             "[ACTION SUPER-ADMIN] Sous-admin SUPPRIMÉ DÉFINITIVEMENT : %s (id=%d) par admin id=%d",
             email_supprime, sous_admin_id, current_user.id
         )
-        flash(f"Le sous-admin {email_supprime} a été supprimé définitivement de l'application. 🗑️", "warning")
+        flash(f"Le sous-admin {email_supprime} a été supprimé définitivement de l'application.", "warning")
 
     except Exception as e:
         db.session.rollback()
         logger.error("Erreur suppression sous-admin id=%d : %s", sous_admin_id, e)
-        flash("Une erreur est survenue lors de la suppression. ⚠️", "danger")
+        flash("Une erreur est survenue lors de la suppression.", "danger")
 
     return redirect(url_for("admin_gestion_sous_admins"))
 
@@ -6264,7 +6294,7 @@ def forgot_password():
         if not current_app.config.get("RESEND_API_KEY"):
             flash(
                 "L'envoi automatique est momentanément indisponible. "
-                "Contactez le support pour réinitialiser votre mot de passe. ⚠️",
+                "Contactez le support pour réinitialiser votre mot de passe.",
                 "warning"
             )
             return redirect(url_for("login"))
@@ -6285,7 +6315,7 @@ def forgot_password():
             thread.start()
 
         # ⚠️ Message identique que l'email existe ou non (anti-énumération, même logique que register)
-        flash("Si un compte existe avec cet email, un lien de réinitialisation vient de vous être envoyé. 📧", "info")
+        flash("Si un compte existe avec cet email, un lien de réinitialisation vient de vous être envoyé.", "info")
         return redirect(url_for("login"))
 
     return render_template("forgot_password.html")
@@ -6304,7 +6334,7 @@ def reset_password(token):
     if not user:
         flash(
             "Ce lien de réinitialisation est invalide, a expiré ou a déjà été "
-            "utilisé. Veuillez en redemander un. ⚠️", "danger"
+            "utilisé. Veuillez en redemander un.", "danger"
         )
         return redirect(url_for("forgot_password"))
 
@@ -6331,7 +6361,7 @@ def reset_password(token):
         logger.info("Mot de passe réinitialisé pour l'utilisateur id=%s", user.id)
         flash(
             "Votre mot de passe a été réinitialisé. Toutes vos sessions ouvertes "
-            "ont été fermées, vous pouvez vous reconnecter. 🎉", "success"
+            "ont été fermées, vous pouvez vous reconnecter.", "success"
         )
         return redirect(url_for("login"))
 
@@ -6464,22 +6494,22 @@ def desactiver_compte_suite_demande(demande_id):
         .first()
     )
     if not demande:
-        flash("Demande introuvable. ⚠️", "danger")
+        flash("Demande introuvable.", "danger")
         return redirect(url_for("admin_suppressions_compte"))
 
     if demande.status != "pending":
-        flash("Cette demande a déjà été traitée. ⚠️", "warning")
+        flash("Cette demande a déjà été traitée.", "warning")
         return redirect(url_for("admin_suppressions_compte"))
 
     utilisateur = db.session.get(User, demande.user_id)
     if not utilisateur:
-        flash("Le compte associé à cette demande est introuvable. ⚠️", "danger")
+        flash("Le compte associé à cette demande est introuvable.", "danger")
         return redirect(url_for("admin_suppressions_compte"))
 
     # Jamais le super-admin ni un autre admin/sous-admin, même par accident
     # (ex: URL forgée) — cette action ne concerne que les comptes annonceur/partageur.
     if utilisateur.role not in ("annonceur", "partageur"):
-        flash("Impossible de désactiver un compte administrateur via cette voie. 🚫", "danger")
+        flash("Impossible de désactiver un compte administrateur via cette voie.", "danger")
         return redirect(url_for("admin_suppressions_compte"))
 
     note = request.form.get("admin_note", "").strip()
@@ -6500,7 +6530,7 @@ def desactiver_compte_suite_demande(demande_id):
         utilisateur.id, utilisateur.email, demande.id, current_user.id
     )
 
-    flash(f"Le compte de {utilisateur.email} a été désactivé. ✅", "success")
+    flash(f"Le compte de {utilisateur.email} a été désactivé.", "success")
     return redirect(url_for("admin_suppressions_compte"))
 
 
@@ -6520,16 +6550,16 @@ def refuser_suppression_compte(demande_id):
         .first()
     )
     if not demande:
-        flash("Demande introuvable. ⚠️", "danger")
+        flash("Demande introuvable.", "danger")
         return redirect(url_for("admin_suppressions_compte"))
 
     if demande.status != "pending":
-        flash("Cette demande a déjà été traitée. ⚠️", "warning")
+        flash("Cette demande a déjà été traitée.", "warning")
         return redirect(url_for("admin_suppressions_compte"))
 
     motif = request.form.get("admin_note", "").strip()
     if not motif:
-        flash("Veuillez indiquer un motif de refus. ⚠️", "warning")
+        flash("Veuillez indiquer un motif de refus.", "warning")
         return redirect(url_for("admin_suppressions_compte"))
 
     demande.status = "rejected"
@@ -6544,7 +6574,7 @@ def refuser_suppression_compte(demande_id):
         demande.id, current_user.id, motif
     )
 
-    flash("Demande refusée. Le compte reste actif. ✅", "success")
+    flash("Demande refusée. Le compte reste actif.", "success")
     return redirect(url_for("admin_suppressions_compte"))
 
 
@@ -6664,13 +6694,13 @@ def envoyer_email_contact_async(app, contact_msg_id):
                     "from": "Pubwek <noreply@pubwek.com>",
                     "to": ["pubwek1@gmail.com"],
                     "reply_to": contact_msg.email,
-                    "subject": f"📬 Nouveau message de contact : {contact_msg.subject or 'Sans objet'}",
+                    "subject": f"Nouveau message de contact : {contact_msg.subject or 'Sans objet'}",
                     "text": (
                         f"Nom : {contact_msg.name}\n"
                         f"Email : {contact_msg.email}\n"
                         f"Objet : {contact_msg.subject or '(non précisé)'}\n\n"
                         f"Message :\n{contact_msg.message}\n\n"
-                        f"— Voir dans l'admin : /admin/contacts"
+                        f"Voir dans l'admin : /admin/contacts"
                     ),
                 },
                 timeout=10,
@@ -6692,16 +6722,16 @@ def contact():
         message = bleach.clean(request.form.get("message", "").strip())
 
         if not name or not email or not message:
-            flash("Veuillez remplir tous les champs obligatoires. ⚠️", "danger")
+            flash("Veuillez remplir tous les champs obligatoires.", "danger")
             return render_template("contact.html", name=name, email=email, subject=subject, message=message)
 
         if len(message) > 3000:
-            flash("Votre message est trop long (3000 caractères maximum). ⚠️", "warning")
+            flash("Votre message est trop long (3000 caractères maximum).", "warning")
             return render_template("contact.html", name=name, email=email, subject=subject, message=message)
 
         # Validation basique de l'email
         if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
-            flash("Veuillez saisir une adresse email valide. ⚠️", "danger")
+            flash("Veuillez saisir une adresse email valide.", "danger")
             return render_template("contact.html", name=name, email=email, subject=subject, message=message)
 
         contact_msg = ContactMessage(
@@ -6720,14 +6750,14 @@ def contact():
         # remboursements ou les retraits.
         notifier_admins_avec_permission(
             "gerer_contacts",
-            "Nouveau message de contact 📬",
+            "Nouveau message de contact",
             f"{contact_msg.name} ({contact_msg.email}) a envoyé un message : « {contact_msg.subject or contact_msg.message[:60]} »",
             category="info",
             link=url_for("admin_contacts"),
         )
         db.session.commit()
 
-        flash("Votre message a bien été envoyé ! Nous vous répondrons dans les plus brefs délais. ✅", "success")
+        flash("Votre message a bien été envoyé ! Nous vous répondrons dans les plus brefs délais.", "success")
         return redirect(url_for("contact"))
 
     return render_template("contact.html")
@@ -6770,20 +6800,20 @@ def repondre_message_contact(message_id):
 
     msg = db.session.get(ContactMessage, message_id)
     if not msg:
-        flash("Message introuvable. ⚠️", "danger")
+        flash("Message introuvable.", "danger")
         return redirect(url_for("admin_contacts"))
 
     if msg.status == "traite":
-        flash("Une réponse a déjà été envoyée pour ce message. ⚠️", "warning")
+        flash("Une réponse a déjà été envoyée pour ce message.", "warning")
         return redirect(url_for("admin_contacts"))
 
     reply_text = request.form.get("reply_message", "").strip()
     if not reply_text:
-        flash("Veuillez rédiger une réponse avant de l'envoyer. ⚠️", "warning")
+        flash("Veuillez rédiger une réponse avant de l'envoyer.", "warning")
         return redirect(url_for("admin_contacts"))
 
     if len(reply_text) > 5000:
-        flash("La réponse est trop longue (5000 caractères maximum). ⚠️", "warning")
+        flash("La réponse est trop longue (5000 caractères maximum).", "warning")
         return redirect(url_for("admin_contacts"))
 
     msg.admin_reply = bleach.clean(reply_text)
@@ -6799,11 +6829,11 @@ def repondre_message_contact(message_id):
         )
         thread.daemon = True
         thread.start()
-        flash(f"Réponse envoyée à {msg.email}. ✅", "success")
+        flash(f"Réponse envoyée à {msg.email}.", "success")
     else:
         flash(
             "Réponse enregistrée, mais l'envoi automatique d'email est indisponible "
-            "pour le moment (RESEND_API_KEY manquante). ⚠️",
+            "pour le moment (RESEND_API_KEY manquante).",
             "warning"
         )
 
@@ -6838,7 +6868,7 @@ def envoyer_email_reponse_contact_async(app, contact_msg_id):
                     "text": (
                         f"Bonjour {contact_msg.name},\n\n"
                         f"{contact_msg.admin_reply}\n\n"
-                        f"— L'équipe Pubwek\n\n"
+                        f"L'équipe Pubwek\n\n"
                         f"---\n"
                         f"Votre message initial :\n{contact_msg.message}"
                     ),

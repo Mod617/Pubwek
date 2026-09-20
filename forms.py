@@ -246,4 +246,4 @@ class CampaignForm(FlaskForm):
         ],
     )
 
-    submit = SubmitField("🚀 Lancer ma campagne")
+    submit = SubmitField("Lancer ma campagne")

@@ -248,7 +248,7 @@
             {% for t in transactions %}
             <tr>
                 <td class="ref-cell">{{ t.reference }}</td>
-                <td>{{ "#" ~ t.campaign_id if t.campaign_id else "—" }}</td>
+                <td>{{ "#" ~ t.campaign_id if t.campaign_id else "-" }}</td>
                 <td>
                     {% if t.transaction_type == "campaign_payment" %}Paiement de campagne
                     {% elif "subscription" in t.transaction_type %}Abonnement vidéo
@@ -261,7 +261,7 @@
                     {% elif t.status == "declined" %}<span class="badge badge-danger">Déclinée</span>
                     {% else %}<span class="badge badge-secondary">{{ t.status }}</span>{% endif %}
                 </td>
-                <td class="fedapay-cell">{{ t.fedapay_transaction_id or "—" }}</td>
+                <td class="fedapay-cell">{{ t.fedapay_transaction_id or "-" }}</td>
                 <td>{{ t.created_at | heure_locale if t.created_at else "-" }}</td>
             </tr>
             {% endfor %}
@@ -288,7 +288,7 @@
     {% endif %}
 
     <div class="footer">
-        Document généré automatiquement par la plateforme <span class="brandmark">Pubwek</span> — Ce document constitue une preuve officielle de paiement pour les transactions listées ci-dessus.
+        Document généré automatiquement par la plateforme <span class="brandmark">Pubwek</span>. Ce document constitue une preuve officielle de paiement pour les transactions listées ci-dessus.
     </div>
 
 </body>

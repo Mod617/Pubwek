@@ -10,7 +10,7 @@
       <span class="pw-badge bg-brand-light text-brand-deep">Performance de diffusion</span>
       <h1 class="mt-1 font-headline-md text-headline-md text-slate-night">Partageurs de la campagne</h1>
       <p class="font-body-sm text-body-sm text-on-surface-variant">
-        {{ campaign.promotion_type | capitalize }} — {{ campaign.promotion_detail }}
+        {{ campaign.promotion_type | capitalize }} · {{ campaign.promotion_detail }}
       </p>
     </div>
     <a href="{{ url_for('mes_campagnes') }}" class="pw-btn pw-btn-sm pw-btn-neutral">
@@ -24,7 +24,7 @@
       <span class="pw-tile-label">Partageurs</span>
       <span class="pw-tile-value">{{ partageurs | length }}</span>
     </div>
-    <div class="pw-tile border-l-4 border-l-brand-primary">
+    <div class="pw-tile">
       <span class="pw-tile-label">Total clics valides</span>
       <span class="pw-tile-value text-brand-deep">{{ "{:,}".format(total_clics).replace(",", " ") }}</span>
     </div>
@@ -117,7 +117,7 @@
                   {{ "{:,}".format(p.clics_whatsapp) }} clic{{ 's' if p.clics_whatsapp != 1 else '' }}
                 </span>
               {% else %}
-                <span class="text-on-surface-variant">—</span>
+                <span class="text-on-surface-variant">-</span>
               {% endif %}
             </td>
             <td>
@@ -127,10 +127,10 @@
                   {{ "{:,}".format(p.clics_site) }} clic{{ 's' if p.clics_site != 1 else '' }}
                 </span>
               {% else %}
-                <span class="text-on-surface-variant">—</span>
+                <span class="text-on-surface-variant">-</span>
               {% endif %}
             </td>
-            <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">{{ p.partage_le or "—" }}</td>
+            <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">{{ p.partage_le or "-" }}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -153,7 +153,7 @@
             <dd>
               {% if p.clics_whatsapp %}
                 <span class="pw-chip pw-chip-success">{{ "{:,}".format(p.clics_whatsapp) }} clic{{ 's' if p.clics_whatsapp != 1 else '' }}</span>
-              {% else %}<span class="text-on-surface-variant">—</span>{% endif %}
+              {% else %}<span class="text-on-surface-variant">-</span>{% endif %}
             </dd>
           </div>
           <div class="flex items-center justify-between gap-space-xs">
@@ -163,12 +163,12 @@
             <dd>
               {% if p.clics_site %}
                 <span class="pw-chip pw-chip-warning">{{ "{:,}".format(p.clics_site) }} clic{{ 's' if p.clics_site != 1 else '' }}</span>
-              {% else %}<span class="text-on-surface-variant">—</span>{% endif %}
+              {% else %}<span class="text-on-surface-variant">-</span>{% endif %}
             </dd>
           </div>
           <div class="flex items-center justify-between gap-space-xs">
             <dt class="text-on-surface-variant">A partagé le</dt>
-            <dd class="text-on-surface-variant">{{ p.partage_le or "—" }}</dd>
+            <dd class="text-on-surface-variant">{{ p.partage_le or "-" }}</dd>
           </div>
         </dl>
       </div>

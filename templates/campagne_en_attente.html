@@ -99,7 +99,7 @@
           <tr>
             <td class="font-label-numeric-md text-label-numeric-md font-bold text-on-surface-variant">#{{ c.id }}</td>
             <td><span class="pw-chip pw-chip-neutral">{{ c.promotion_type | capitalize }}</span></td>
-            <td class="font-semibold text-slate-midnight">{{ c.promotion_detail or "—" }}</td>
+            <td class="font-semibold text-slate-midnight">{{ c.promotion_detail or "-" }}</td>
             <td class="font-caption text-caption text-on-surface-variant max-w-[14rem] truncate" title="{{ c.provinces }}">{{ c.provinces }}</td>
             <td class="text-right font-label-numeric-md text-label-numeric-md font-bold text-slate-midnight whitespace-nowrap">
               {{ "{:,.0f}".format(c.total_cost).replace(",", " ") }} XOF
@@ -133,7 +133,7 @@
           </div>
           <div class="flex justify-between gap-space-xs">
             <dt class="text-on-surface-variant">Détails</dt>
-            <dd class="font-semibold text-slate-midnight text-right">{{ c.promotion_detail or "—" }}</dd>
+            <dd class="font-semibold text-slate-midnight text-right">{{ c.promotion_detail or "-" }}</dd>
           </div>
           <div class="flex justify-between gap-space-xs">
             <dt class="text-on-surface-variant">Provinces</dt>

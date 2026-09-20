@@ -11,7 +11,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Pubwek">
-<link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192x192.png') }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
+
+<!-- Icone affichee dans l'onglet du navigateur -->
+<link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icons/favicon-32x32.png') }}">
+<link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='icons/favicon-16x16.png') }}">
+<link rel="shortcut icon" href="{{ url_for('static', filename='icons/favicon-32x32.png') }}">
 
 {% if title %}
   <title>{{ title }} - Pubwek</title>
@@ -19,6 +24,12 @@
   <title>Pubwek - Partage sur Statut WhatsApp au Bénin</title>
 {% endif %}
 
+<!-- Prechargement des polices du premier ecran : sans cela le navigateur ne
+     les demande qu'apres avoir lu la feuille de style, et la page s'affiche
+     d'abord avec les polices de secours avant de se recomposer. -->
+<link rel="preload" as="font" type="font/woff2" crossorigin href="{{ url_for('static', filename='fonts/material-symbols-subset.woff2') }}">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="{{ url_for('static', filename='fonts/v20-UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2') }}">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="{{ url_for('static', filename='fonts/v12-LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko20yw.woff2') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pubwek.css') }}">
 <style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}
@@ -27,27 +38,42 @@ html{scrollbar-width:thin;scrollbar-color:#bdc9c1 #f2f3ff;}
 ::-webkit-scrollbar-track{background:#f2f3ff;}
 ::-webkit-scrollbar-thumb{background:#bdc9c1;border-radius:9999px;border:2px solid #f2f3ff;}
 ::-webkit-scrollbar-thumb:hover{background:#6e7a73;}</style>
+<script>
+  // Pose avant le premier rendu : si ce script ne s'execute pas, aucune
+  // regle d'apparition ne s'applique et la page reste lisible telle quelle.
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      && 'IntersectionObserver' in window) {
+    document.documentElement.classList.add('pw-anim-prete');
+  }
+</script>
 {% block head_extra %}{% endblock %}
 </head>
 
 <body class="bg-background font-body-md text-on-surface antialiased selection:bg-brand-light selection:text-brand-deep">
 
+<div class="pw-progression" aria-hidden="true"></div>
+
 <header class="fixed top-0 left-0 w-full z-50 bg-surface-container-lowest/85 backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_1px_8px_rgba(15,23,42,0.03)]"><div class="h-[72px] max-w-6xl mx-auto px-margin flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-sm shrink-0"><a class="flex items-center gap-space-xs group" href="{{ url_for('index') }}"><img alt="Pubwek" class="h-8 w-auto object-contain" src="{{ url_for('static', filename='images/logo.png') }}"><span class="font-headline-sm text-headline-sm text-slate-midnight font-bold tracking-tight">Pubwek</span></a></div>
 
-{% if request.endpoint == 'index' %}
-<nav class="hidden lg:flex items-center gap-space-md font-headline-md text-[14px] font-medium"><a class="text-on-surface-variant hover:text-brand-primary transition-colors duration-200 py-1 border-b-2 border-transparent hover:border-brand-primary" href="#comment-ca-marche">Comment ça marche</a><a class="text-on-surface-variant hover:text-brand-primary transition-colors duration-200 py-1 border-b-2 border-transparent hover:border-brand-primary" href="#pour-annonceurs">Pour Annonceurs</a><a class="text-on-surface-variant hover:text-brand-primary transition-colors duration-200 py-1 border-b-2 border-transparent hover:border-brand-primary" href="#pour-partageurs">Pour Partageurs</a><a class="text-on-surface-variant hover:text-brand-primary transition-colors duration-200 py-1 border-b-2 border-transparent hover:border-brand-primary" href="#simulateur">Simulateur &amp; Gains</a><a class="text-on-surface-variant hover:text-brand-primary transition-colors duration-200 py-1 border-b-2 border-transparent hover:border-brand-primary" href="#tarifs-faq">Tarifs</a></nav>
+{% if request.endpoint in ('index', 'page_annonceurs', 'page_partageurs', 'a_propos', 'contact') %}
+<nav class="hidden lg:flex items-center gap-space-md font-headline-md text-[14px] font-medium">
+<a class="text-on-surface-variant hover:text-brand-primary transition-colors duration-200 py-1 border-b-2 {{ 'border-brand-primary text-brand-primary' if request.endpoint == 'page_annonceurs' else 'border-transparent hover:border-brand-primary' }}" href="{{ url_for('page_annonceurs') }}">Pour les annonceurs</a>
+<a class="text-on-surface-variant hover:text-brand-primary transition-colors duration-200 py-1 border-b-2 {{ 'border-brand-primary text-brand-primary' if request.endpoint == 'page_partageurs' else 'border-transparent hover:border-brand-primary' }}" href="{{ url_for('page_partageurs') }}">Pour les partageurs</a>
+<a class="text-on-surface-variant hover:text-brand-primary transition-colors duration-200 py-1 border-b-2 {{ 'border-brand-primary text-brand-primary' if request.endpoint == 'a_propos' else 'border-transparent hover:border-brand-primary' }}" href="{{ url_for('a_propos') }}">À propos</a>
+<a class="text-on-surface-variant hover:text-brand-primary transition-colors duration-200 py-1 border-b-2 {{ 'border-brand-primary text-brand-primary' if request.endpoint == 'contact' else 'border-transparent hover:border-brand-primary' }}" href="{{ url_for('contact') }}">Contact</a>
+</nav>
 {% endif %}
 
 <div class="flex items-center gap-space-sm shrink-0">
 {% if current_user.is_authenticated %}
   {% if current_user.role == "annonceur" %}
-    <a class="hidden md:inline-flex items-center gap-1.5 px-3 py-2 font-headline-md text-[14px] font-medium text-on-surface-variant hover:text-slate-midnight transition-colors" href="{{ url_for('mes_campagnes') }}"><span class="material-symbols-outlined text-[18px]">layers</span><span>Mes Campagnes</span></a>
-    <a class="inline-flex items-center gap-1.5 px-space-md py-2.5 rounded-full bg-brand-primary text-white font-headline-md text-[14px] font-semibold hover:bg-brand-deep shadow-md shadow-brand-primary/20 hover:shadow-lg transition-all transform hover:-translate-y-0.5" href="{{ url_for('dashboard_annonceur') }}"><span class="material-symbols-outlined text-[18px]">campaign</span><span class="hidden min-[440px]:inline">Mon tableau de bord</span></a>
+    {% if request.endpoint != 'mes_campagnes' %}<a class="hidden md:inline-flex items-center gap-1.5 px-3 py-2 font-headline-md text-[14px] font-medium text-on-surface-variant hover:text-slate-midnight transition-colors" href="{{ url_for('mes_campagnes') }}"><span class="material-symbols-outlined text-[18px]">layers</span><span>Mes Campagnes</span></a>{% endif %}
+    {% if request.endpoint != 'dashboard_annonceur' %}<a class="inline-flex items-center gap-1.5 px-space-md py-2.5 rounded-full bg-brand-primary text-white font-headline-md text-[14px] font-semibold hover:bg-brand-deep shadow-md shadow-brand-primary/20 hover:shadow-lg transition-all transform hover:-translate-y-0.5" href="{{ url_for('dashboard_annonceur') }}"><span class="material-symbols-outlined text-[18px]">campaign</span><span class="hidden min-[440px]:inline">Mon tableau de bord</span></a>{% endif %}
   {% elif current_user.role == "partageur" %}
-    <a class="inline-flex items-center gap-1.5 px-space-md py-2.5 rounded-full bg-brand-primary text-white font-headline-md text-[14px] font-semibold hover:bg-brand-deep shadow-md shadow-brand-primary/20 hover:shadow-lg transition-all transform hover:-translate-y-0.5" href="{{ url_for('dashboard_partageur') }}"><span class="material-symbols-outlined text-[18px]">link</span><span class="hidden min-[440px]:inline">Mon tableau de bord</span></a>
+    {% if request.endpoint != 'dashboard_partageur' %}<a class="inline-flex items-center gap-1.5 px-space-md py-2.5 rounded-full bg-brand-primary text-white font-headline-md text-[14px] font-semibold hover:bg-brand-deep shadow-md shadow-brand-primary/20 hover:shadow-lg transition-all transform hover:-translate-y-0.5" href="{{ url_for('dashboard_partageur') }}"><span class="material-symbols-outlined text-[18px]">link</span><span class="hidden min-[440px]:inline">Mon tableau de bord</span></a>{% endif %}
   {% endif %}
   {% if current_user.role in ("admin", "sous_admin") %}
-    <a class="hidden md:inline-flex items-center gap-1.5 px-space-md py-2.5 rounded-full border border-amber-rich/40 bg-amber-soft text-secondary font-headline-md text-[14px] font-semibold transition-all hover:border-amber-rich" href="{{ url_for('admin_validate') }}"><span class="material-symbols-outlined text-[18px]">settings</span><span>Panneau Admin</span></a>
+    {% if request.endpoint != 'admin_validate' %}<a class="hidden md:inline-flex items-center gap-1.5 px-space-md py-2.5 rounded-full border border-amber-rich/40 bg-amber-soft text-secondary font-headline-md text-[14px] font-semibold transition-all hover:border-amber-rich" href="{{ url_for('admin_validate') }}"><span class="material-symbols-outlined text-[18px]">settings</span><span>Panneau Admin</span></a>{% endif %}
   {% endif %}
   {% if current_user.has_permission("gerer_contacts") %}
     <a class="hidden lg:inline-flex items-center gap-1.5 px-3 py-2 font-headline-md text-[14px] font-medium text-secondary hover:text-amber-rich transition-colors" href="{{ url_for('admin_contacts') }}"><span class="material-symbols-outlined text-[18px]">mark_email_unread</span><span>Contacts</span></a>
@@ -93,7 +119,7 @@ html{scrollbar-width:thin;scrollbar-color:#bdc9c1 #f2f3ff;}
 {% block content %}{% endblock %}
 </main>
 
-<footer class="w-full bg-surface-container-low border-t border-outline-variant/30 text-on-surface"><div class="max-w-6xl mx-auto px-margin pt-space-lg pb-space-md"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-space-lg pb-space-lg border-b border-outline-variant/30"><div class="lg:col-span-2 space-y-space-md"><div class="flex items-center gap-space-xs"><img alt="Pubwek" class="h-8 w-auto object-contain" src="{{ url_for('static', filename='images/logo.png') }}"><span class="font-headline-sm text-headline-sm text-slate-midnight tracking-tight">Pubwek</span></div><p class="font-body-md text-body-md text-on-surface-variant max-w-sm">La 1ère plateforme de diffusion publicitaire sur Statuts WhatsApp au Bénin. Connectez marques locales et micro-créateurs vérifiés avec traçabilité intégrale.</p><div class="flex items-center gap-space-sm pt-space-xs"><a aria-label="WhatsApp Channel" class="w-9 h-9 rounded-full bg-surface-container-lowest border border-outline-variant/40 flex items-center justify-center text-on-surface-variant hover:text-brand-primary hover:border-brand-primary transition-colors" href="https://whatsapp.com/channel/0029Vb8lW6FDjiOm15Zv8I1x" target="_blank" rel="noopener"><span class="material-symbols-outlined text-[18px]">chat</span></a><a aria-label="Facebook" class="w-9 h-9 rounded-full bg-surface-container-lowest border border-outline-variant/40 flex items-center justify-center text-on-surface-variant hover:text-brand-primary hover:border-brand-primary transition-colors" href="https://www.facebook.com/profile.php?id=61592672258762" target="_blank" rel="noopener"><span class="material-symbols-outlined text-[18px]">public</span></a><a aria-label="YouTube" class="w-9 h-9 rounded-full bg-surface-container-lowest border border-outline-variant/40 flex items-center justify-center text-on-surface-variant hover:text-brand-primary hover:border-brand-primary transition-colors" href="https://www.youtube.com/channel/UCAYaKvK_5p7fsVaVRpIGF1g" target="_blank" rel="noopener"><span class="material-symbols-outlined text-[18px]">smart_display</span></a><a aria-label="TikTok" class="w-9 h-9 rounded-full bg-surface-container-lowest border border-outline-variant/40 flex items-center justify-center text-on-surface-variant hover:text-brand-primary hover:border-brand-primary transition-colors" href="https://www.tiktok.com/@pubwek1?is_from_webapp=1&amp;sender_device=pc" target="_blank" rel="noopener"><span class="material-symbols-outlined text-[18px]">play_circle</span></a></div></div><div><h3 class="font-label-caps text-label-caps uppercase text-on-surface-variant mb-space-xs tracking-wider">Solution</h3><ul class="space-y-space-xs"><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-brand-primary transition-colors" href="{{ url_for('register', role='annonceur') }}">Campagnes Annonceurs</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-brand-primary transition-colors" href="{{ url_for('register', role='partageur') }}">Devenir Partageur</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-brand-primary transition-colors" href="{{ url_for('index') }}#simulateur">Simulateur</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-brand-primary transition-colors" href="{{ url_for('index') }}#tarifs-faq">Tarifs clics &amp; Packs</a></li></ul></div><div><h3 class="font-label-caps text-label-caps uppercase text-on-surface-variant mb-space-xs tracking-wider">Entreprise</h3><ul class="space-y-space-xs"><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-brand-primary transition-colors" href="{{ url_for('index') }}#comment-ca-marche">À propos</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-brand-primary transition-colors" href="{{ url_for('contact') }}">Contact</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-brand-primary transition-colors" href="https://wa.me/2290157577882" target="_blank" rel="noopener">Support WhatsApp 24/7</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-brand-primary transition-colors" href="{{ url_for('index') }}#comment-ca-marche">Documentation API</a></li></ul></div><div><h3 class="font-label-caps text-label-caps uppercase text-on-surface-variant mb-space-xs tracking-wider">Légal</h3><ul class="space-y-space-xs"><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-brand-primary transition-colors cursor-pointer" data-pw-modal="modalCGU" href="#">CGU / CGV</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-brand-primary transition-colors cursor-pointer" data-pw-modal="modalPrivacy" href="#">Confidentialité APDP</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-brand-primary transition-colors cursor-pointer" data-pw-modal="modalCGU" href="#">Mentions légales</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-brand-primary transition-colors cursor-pointer" data-pw-modal="modalCGU" href="#">Sécurité &amp; Anti-fraude</a></li></ul></div></div><div class="pt-space-sm flex flex-col sm:flex-row items-center justify-between gap-space-xs text-on-surface-variant font-caption text-caption"><p class="">Copyright © {{ current_year if current_year else 2026 }} Pubwek. All rights reserved. Cotonou, Bénin.</p></div></div></footer>
+<footer class="w-full bg-surface-container-low border-t border-outline-variant/30 text-on-surface"><div class="max-w-6xl mx-auto px-margin pt-space-lg pb-space-md"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-space-lg pb-space-lg border-b border-outline-variant/30"><div class="lg:col-span-2 space-y-space-md"><div class="flex items-center gap-space-xs"><img alt="Pubwek" class="h-8 w-auto object-contain" src="{{ url_for('static', filename='images/logo.png') }}"><span class="font-headline-sm text-headline-sm text-slate-midnight tracking-tight">Pubwek</span></div><p class="font-body-md text-body-md text-on-surface-variant max-w-sm">Au Bénin, l'audience est déjà sur WhatsApp. Pubwek y place vos annonces via des partageurs vérifiés, compte chaque clic et ne vous facture que ceux qui sont réels.</p><div class="flex items-center gap-space-sm pt-space-xs"><a aria-label="WhatsApp" class="w-9 h-9 rounded-full bg-surface-container-lowest border border-outline-variant/40 flex items-center justify-center text-on-surface-variant hover:text-[#25D366] hover:border-[#25D366]/60 transition-colors" href="https://whatsapp.com/channel/0029Vb8lW6FDjiOm15Zv8I1x" target="_blank" rel="noopener"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></a><a aria-label="Facebook" class="w-9 h-9 rounded-full bg-surface-container-lowest border border-outline-variant/40 flex items-center justify-center text-on-surface-variant hover:text-[#1877F2] hover:border-[#1877F2]/60 transition-colors" href="https://www.facebook.com/profile.php?id=61592672258762" target="_blank" rel="noopener"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/></svg></a><a aria-label="YouTube" class="w-9 h-9 rounded-full bg-surface-container-lowest border border-outline-variant/40 flex items-center justify-center text-on-surface-variant hover:text-[#FF0000] hover:border-[#FF0000]/60 transition-colors" href="https://www.youtube.com/channel/UCAYaKvK_5p7fsVaVRpIGF1g" target="_blank" rel="noopener"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814ZM9.545 15.568V8.432L15.818 12l-6.273 3.568Z"/></svg></a><a aria-label="TikTok" class="w-9 h-9 rounded-full bg-surface-container-lowest border border-outline-variant/40 flex items-center justify-center text-on-surface-variant hover:text-slate-night hover:border-slate-night/60 transition-colors" href="https://www.tiktok.com/@pubwek1?is_from_webapp=1&amp;sender_device=pc" target="_blank" rel="noopener"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a></div></div><div><h3 class="font-label-caps text-label-caps uppercase text-on-surface-variant mb-space-xs tracking-wider">Solution</h3><ul class="space-y-space-xs"><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-brand-primary transition-colors" href="{{ url_for('page_annonceurs') }}">Pour les annonceurs</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-brand-primary transition-colors" href="{{ url_for('page_partageurs') }}">Pour les partageurs</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-brand-primary transition-colors" href="{{ url_for('page_partageurs') }}#simulateur">Simulateur de gains</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-brand-primary transition-colors" href="{{ url_for('page_annonceurs') }}#simulateur">Tarifs au clic</a></li></ul></div><div><h3 class="font-label-caps text-label-caps uppercase text-on-surface-variant mb-space-xs tracking-wider">Entreprise</h3><ul class="space-y-space-xs"><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-brand-primary transition-colors" href="{{ url_for('a_propos') }}">À propos</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-brand-primary transition-colors" href="{{ url_for('contact') }}">Contact</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-brand-primary transition-colors" href="https://wa.me/2290157577882" target="_blank" rel="noopener">Support WhatsApp</a></li></ul></div><div><h3 class="font-label-caps text-label-caps uppercase text-on-surface-variant mb-space-xs tracking-wider">Légal</h3><ul class="space-y-space-xs"><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-brand-primary transition-colors cursor-pointer" data-pw-modal="modalCGU" href="#">CGU / CGV</a></li><li class="font-body-sm text-body-sm"><a class="text-on-surface-variant hover:text-brand-primary transition-colors cursor-pointer" data-pw-modal="modalPrivacy" href="#">Confidentialité APDP</a></li></ul></div></div><div class="pt-space-sm flex flex-col sm:flex-row items-center justify-between gap-space-xs text-on-surface-variant font-caption text-caption"><p class="">Copyright © {{ current_year if current_year else 2026 }} Pubwek. Tous droits réservés.</p></div></div></footer>
 
 <!-- MODALE BLOQUANTE : ACCEPTATION OBLIGATOIRE DES CGU / CGV ET POLITIQUE DE CONFIDENTIALITÉ -->
 {% if current_user.is_authenticated and not current_user.has_accepted_terms %}
@@ -101,7 +127,7 @@ html{scrollbar-width:thin;scrollbar-color:#bdc9c1 #f2f3ff;}
   <div class="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl bg-surface-container-lowest shadow-2xl overflow-hidden">
     <div class="bg-slate-midnight text-white px-space-lg py-space-md flex items-center gap-space-xs shrink-0">
       <span class="material-symbols-outlined text-amber-vibrant">contract</span>
-      <h5 class="font-headline-sm text-body-md md:text-headline-sm font-bold">Conditions Générales &amp; Politique de Confidentialité — PUBWEK</h5>
+      <h5 class="font-headline-sm text-body-md md:text-headline-sm font-bold">Conditions Générales &amp; Politique de Confidentialité de PUBWEK</h5>
     </div>
     <div class="p-space-lg overflow-y-auto text-left">
       <div class="rounded-2xl bg-amber-soft text-secondary px-space-md py-space-sm font-body-sm text-body-sm mb-space-lg flex items-start gap-2">
@@ -133,13 +159,13 @@ html{scrollbar-width:thin;scrollbar-color:#bdc9c1 #f2f3ff;}
         <li><strong>Option A – Pack Vidéo Pro :</strong> Assemblage dynamique des visuels de l'Annonceur en une vidéo publicitaire professionnelle avec son/musique et branding. Facturation au tarif clic spécifique aux vidéos.</li>
         <li><strong>Option B – Multi-Statuts (Images / Textes) :</strong> Publication de visuels uniques ou multiples avec texte d'accompagnement. Facturation appliquée selon le tarif au clic propre au format choisi.</li>
       </ul>
-      <p class="font-body-sm text-body-sm text-on-surface-variant mb-1"><strong>4.3. Validation du Rendu Vidéo :</strong> Pour l'Option A, l'Annonceur prévisualise le rendu vidéo. Une fois le bouton "✅ Valider la vidéo" cliqué, le rendu est considéré comme accepté et définitivement validé pour le lancement de la campagne.</p>
+      <p class="font-body-sm text-body-sm text-on-surface-variant mb-1"><strong>4.3. Validation du Rendu Vidéo :</strong> Pour l'Option A, l'Annonceur prévisualise le rendu vidéo. Une fois le bouton " Valider la vidéo" cliqué, le rendu est considéré comme accepté et définitivement validé pour le lancement de la campagne.</p>
       <p class="font-body-sm text-body-sm text-on-surface-variant mb-1"><strong>4.4. Répartition Journalière et Quotas de Campagne :</strong> L'objectif global de clics acheté par l'Annonceur est automatiquement réparti de manière homogène sur la durée de la campagne (de 1 à 30 jours). Un quota journalier de clics est ainsi défini.</p>
       <p class="font-body-sm text-body-sm text-on-surface-variant"><strong>4.5. Cibles Géographiques au Bénin :</strong> Les campagnes sont diffusées de manière ciblée dans les 12 départements du Bénin (Alibori, Atacora, Atlantique, Borgou, Collines, Couffo, Donga, Littoral, Mono, Ouémé, Plateau, Zou).</p>
 
       <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">Article 5 – Tarifs, Paiements et Politiques de Remboursement</h6>
       <p class="font-body-sm text-body-sm text-on-surface-variant mb-1"><strong>5.1. Traitement des Paiements :</strong> Tous les paiements sur la plateforme PUBWEK sont effectués en Francs CFA (XOF) via la passerelle de paiement sécurisée FedaPay (MTN Mobile Money Bénin, Moov Money Bénin, Celtiis Cash Bénin, Cartes VISA / Mastercard). PUBWEK ne collecte et ne stocke jamais directement vos données bancaires ou codes secrets Mobile Money.</p>
-      <p class="font-body-sm text-body-sm text-on-surface-variant"><strong>5.2. Politique de Remboursement :</strong> Une campagne payée peut faire l'objet d'un remboursement uniquement si elle n'a <u>jamais été diffusée aux Partageurs</u> — c'est-à-dire lorsqu'elle a été refusée par l'administration après vérification et que l'Annonceur, après correction, estime ne pas pouvoir résoudre le motif du refus. Dans ce cas uniquement, l'Annonceur peut soumettre une demande de remboursement, examinée puis validée par l'administration avant tout virement. <strong>Dès qu'une campagne a été validée et partagée par au moins un Partageur, elle est considérée comme diffusée et ne peut plus faire l'objet d'aucun remboursement</strong>, conformément au Code du Numérique du Bénin (Loi n° 2017-20) encadrant les services numériques exécutés immédiatement.</p>
+      <p class="font-body-sm text-body-sm text-on-surface-variant"><strong>5.2. Politique de Remboursement :</strong> Une campagne payée peut faire l'objet d'un remboursement uniquement si elle n'a <u>jamais été diffusée aux Partageurs</u>, c'est-à-dire lorsqu'elle a été refusée par l'administration après vérification et que l'Annonceur, après correction, estime ne pas pouvoir résoudre le motif du refus. Dans ce cas uniquement, l'Annonceur peut soumettre une demande de remboursement, examinée puis validée par l'administration avant tout virement. <strong>Dès qu'une campagne a été validée et partagée par au moins un Partageur, elle est considérée comme diffusée et ne peut plus faire l'objet d'aucun remboursement</strong>, conformément au Code du Numérique du Bénin (Loi n° 2017-20) encadrant les services numériques exécutés immédiatement.</p>
 
       <h6 class="font-headline-sm text-body-md font-bold mt-3 text-slate-midnight">Article 6 – Portefeuille, Gains et Retraits des Partageurs (Ambassadeurs)</h6>
       <p class="font-body-sm text-body-sm text-on-surface-variant mb-1"><strong>6.1. Rémunération et Portefeuille Interne :</strong> Chaque Partageur dispose d'un portefeuille virtuel interne sur la plateforme. Chaque clic valide généré via son lien de partage crédite automatiquement un montant fixe sur son portefeuille. De même, les commissions attribuées dans le cadre du programme de parrainage (prime sur la première campagne payée et validée d'un filleul) sont directement versées sur ce même portefeuille.</p>
@@ -187,7 +213,7 @@ html{scrollbar-width:thin;scrollbar-color:#bdc9c1 #f2f3ff;}
         <span>J'ai lu et j'accepte l'intégralité des Conditions Générales d'Utilisation / de Vente (CGU/CGV) et la Politique de Confidentialité (APDP Bénin) de Pubwek.</span>
       </label>
       <button type="button" class="w-full py-3 px-space-xl rounded-full bg-brand-primary text-white font-headline-sm text-body-md font-bold shadow-lg shadow-brand-primary/20 hover:bg-brand-deep transition-all disabled:bg-outline-variant disabled:shadow-none disabled:cursor-not-allowed" id="btnConfirmTerms" disabled onclick="submitTermsAcceptance()">
-        🚀 Valider et continuer sur Pubwek
+         Valider et continuer sur Pubwek
       </button>
     </div>
   </div>
@@ -448,6 +474,97 @@ function submitTermsAcceptance() {
       });
     });
   });
+</script>
+
+<script>
+  // ===================================================================
+  // APPARITIONS AU DEFILEMENT
+  // Un observateur pour le defilement normal, plus un rattrapage pour
+  // les sauts instantanes (clic sur une ancre, restauration de position,
+  // recherche dans la page) ou l'observateur ne se declenche pas.
+  // Chaque element n'est traite qu'une fois, puis oublie.
+  // ===================================================================
+  (function () {
+    if (!document.documentElement.classList.contains('pw-anim-prete')) return;
+
+    // Les grilles marquees repartissent un retard croissant sur leurs
+    // enfants, pour que les cartes arrivent l'une apres l'autre.
+    document.querySelectorAll('[data-pw-cascade]').forEach(function (groupe) {
+      var depart = parseInt(groupe.getAttribute('data-pw-cascade'), 10) || 0;
+      Array.prototype.forEach.call(groupe.children, function (enfant, i) {
+        if (!enfant.hasAttribute('data-pw-anim')) {
+          enfant.setAttribute('data-pw-anim', 'monte');
+        }
+        // Plafonne a six crans : sur une liste de quinze cartes, un
+        // decalage cumule ferait attendre pres d'une seconde la derniere.
+        enfant.style.setProperty('--pw-retard', Math.min(depart + i, 6));
+      });
+    });
+
+    // Titres decoupes mot a mot. On ne touche qu'aux titres sans balise
+    // interne, pour ne casser aucune mise en forme existante.
+    document.querySelectorAll('[data-pw-mots]').forEach(function (titre) {
+      if (titre.children.length) return;
+      var mots = titre.textContent.trim().split(/\s+/);
+      titre.textContent = '';
+      mots.forEach(function (mot, i) {
+        var span = document.createElement('span');
+        span.className = 'pw-mot';
+        span.style.setProperty('--pw-retard', i);
+        span.textContent = mot;
+        titre.appendChild(span);
+        if (i < mots.length - 1) titre.appendChild(document.createTextNode(' '));
+      });
+      titre.setAttribute('data-pw-anim', 'aucun');
+    });
+
+    var enAttente = new Set(document.querySelectorAll('[data-pw-anim]'));
+    if (!enAttente.size) return;
+
+    function montrer(element) {
+      element.classList.add('is-visible');
+      enAttente.delete(element);
+      observateur.unobserve(element);
+    }
+
+    var observateur = new IntersectionObserver(function (entrees) {
+      entrees.forEach(function (entree) {
+        if (entree.isIntersecting) montrer(entree.target);
+      });
+    }, {
+      // Declenche un peu avant que l'element touche le bas de l'ecran :
+      // le mouvement se termine au moment ou le regard y arrive.
+      rootMargin: '0px 0px -10% 0px',
+      threshold: 0
+    });
+
+    // Rattrapage : tout ce qui est deja passe sous le seuil est montre,
+    // anime ou non selon qu'on vient de charger ou de sauter.
+    function balayer() {
+      if (!enAttente.size) {
+        window.removeEventListener('scroll', planifier);
+        window.removeEventListener('resize', planifier);
+        return;
+      }
+      var seuil = window.innerHeight * 0.92;
+      Array.from(enAttente).forEach(function (element) {
+        if (element.getBoundingClientRect().top < seuil) montrer(element);
+      });
+    }
+
+    var prevu = false;
+    function planifier() {
+      if (prevu) return;
+      prevu = true;
+      requestAnimationFrame(function () { prevu = false; balayer(); });
+    }
+
+    enAttente.forEach(function (element) { observateur.observe(element); });
+    window.addEventListener('scroll', planifier, { passive: true });
+    window.addEventListener('resize', planifier);
+    window.addEventListener('hashchange', planifier);
+    balayer();
+  })();
 </script>
 
 {% block scripts %}{% endblock %}

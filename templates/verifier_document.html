@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vérification de document — Pubwek</title>
+<title>Vérification de document - Pubwek</title>
 <style>
     body {
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -41,21 +41,21 @@
 </head>
 <body>
 <div class="card">
-    <h1><span class="brandmark">Pubwek</span> — Vérification de document</h1>
+    <h1><span class="brandmark">Pubwek</span> · Vérification de document</h1>
 
     {% if not trouve %}
-        <div class="status fail">❌ Document introuvable</div>
+        <div class="status fail"> Document introuvable</div>
         <p style="font-size:13px; color:#6E7A73;">
             Aucun document ne correspond à ce code. Ce PDF n'a peut-être pas été émis
             par Pubwek, ou le lien est incorrect.
         </p>
     {% elif not integre %}
-        <div class="status fail">⚠️ Intégrité non confirmée</div>
+        <div class="status fail"> Intégrité non confirmée</div>
         <p style="font-size:13px; color:#6E7A73;">
             Ce code existe mais son enregistrement semble corrompu. Contactez le support Pubwek.
         </p>
     {% else %}
-        <div class="status ok">✅ Document authentique</div>
+        <div class="status ok"> Document authentique</div>
         <div class="row"><span class="label">Type de document</span><span class="value">{{ type_libelle }}</span></div>
         <div class="row"><span class="label">Titulaire</span><span class="value">{{ nom_affiche }}</span></div>
         <div class="row"><span class="label">Montant de référence</span><span class="value">{{ "{:,.0f}".format(montant_reference) }} FCFA</span></div>

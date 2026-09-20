@@ -200,7 +200,7 @@
 
     <div class="header">
         <div class="brand">
-            <!-- 🆕 Libellé adapté au rôle réel de l'utilisateur -->
+            <!-- Libellé adapté au rôle réel de l'utilisateur -->
             <div class="eyebrow">{{ "Espace partageur" if user.role == "partageur" else "Espace annonceur" }}</div>
             <h1>Pubwek</h1>
             <div class="tagline">Fiche de retraits &amp; mouvements de portefeuille</div>
@@ -214,7 +214,7 @@
     <div class="info-block">
         <table>
             <tr>
-                <!-- 🆕 Libellé adapté au rôle réel de l'utilisateur -->
+                <!-- Libellé adapté au rôle réel de l'utilisateur -->
                 <td class="label">{{ "Partageur :" if user.role == "partageur" else "Annonceur :" }}</td>
                 <td class="value">{{ user.pseudo or user.company_name or "Sans pseudo" }}</td>
             </tr>
@@ -262,7 +262,7 @@
                 <td>
                     {% if d.status == "rejected" and d.admin_note %}{{ d.admin_note }}
                     {% elif d.status == "paid" and d.processed_at %}Payé le {{ d.processed_at | heure_locale("%d/%m/%Y") }}
-                    {% else %}—{% endif %}
+                    {% else %}-{% endif %}
                 </td>
             </tr>
             {% endfor %}
@@ -323,7 +323,7 @@
     {% endif %}
 
     <div class="footer">
-        Document généré automatiquement par la plateforme <span class="brandmark">Pubwek</span> — Ce document fait foi des mouvements enregistrés sur le portefeuille de l'utilisateur.
+        Document généré automatiquement par la plateforme <span class="brandmark">Pubwek</span>. Ce document fait foi des mouvements enregistrés sur le portefeuille de l'utilisateur.
     </div>
 
 </body>

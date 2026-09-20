@@ -17,7 +17,7 @@
   <div class="flex flex-wrap items-center justify-between gap-space-xs rounded-xl border border-outline-variant/40 bg-surface-container px-space-md py-space-xs">
     <span class="font-body-sm text-body-sm text-on-surface">
       Filtré sur la campagne :
-      <strong class="text-slate-midnight">#{{ camp_filtree.id }} — {{ camp_filtree.promotion_detail or camp_filtree.promotion_type }}</strong>
+      <strong class="text-slate-midnight">#{{ camp_filtree.id }} · {{ camp_filtree.promotion_detail or camp_filtree.promotion_type }}</strong>
     </span>
     <a href="{{ url_for('admin_preuves_partage') }}"
        class="font-body-sm text-body-sm font-semibold text-brand-primary hover:underline">Voir toutes les campagnes</a>
@@ -30,14 +30,14 @@
       <p class="mt-1 font-body-sm text-body-sm text-on-surface-variant">Aucune preuve en attente pour le moment.</p>
     </div>
   {% else %}
-  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-space-sm">
+  <div class="grid grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-space-sm">
     {% for p in preuves %}
     {% set camp = p.campaign_share.campaign %}
     {% set jour_actuel_camp = camp.jour_diffusion_campagne() %}
     {% set rythme_attendu = camp.views_per_day or 0 %}
     {% set clics_suspects = rythme_attendu > 0 and p.nb_clics_payables_jour > rythme_attendu * 1.2 %}
 
-    <div class="pw-tile flex flex-col {{ 'border-l-4 border-l-amber-rich' if clics_suspects }}">
+    <div class="pw-tile flex flex-col">
 
       <!-- Partageur et campagne -->
       <div>
@@ -45,10 +45,15 @@
           {{ p.campaign_share.sharer.pseudo or p.campaign_share.sharer.email }}
         </p>
         <p class="font-caption text-caption text-on-surface-variant truncate">
-          #{{ p.campaign_share.campaign_id }} — {{ camp.promotion_detail or camp.promotion_type }}
+          #{{ p.campaign_share.campaign_id }} · {{ camp.promotion_detail or camp.promotion_type }}
         </p>
         <div class="mt-1 flex flex-wrap gap-space-2xs">
           <span class="pw-chip pw-chip-neutral">Jour {{ p.day_number }}</span>
+          {% if clics_suspects %}
+            <span class="pw-chip pw-chip-warning">
+              <span class="material-symbols-outlined text-[14px]">warning</span> Rythme inhabituel
+            </span>
+          {% endif %}
           {% if p.day_number < jour_actuel_camp %}
             <span class="pw-chip pw-chip-warning">
               <span class="material-symbols-outlined text-[14px]">history</span> Rattrapage
@@ -98,7 +103,7 @@
               <span class="material-symbols-outlined text-[18px]">check_circle</span> Valider
             </button>
           </form>
-          <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral !text-error flex-1"
+          <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral !text-error flex-1 min-w-[11rem]"
                   onclick="document.getElementById('rejet-{{ p.id }}').classList.toggle('hidden')">
             <span class="material-symbols-outlined text-[18px]">cancel</span> Rejeter
           </button>

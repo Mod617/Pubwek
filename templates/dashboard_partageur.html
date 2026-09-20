@@ -2,7 +2,7 @@
 
 {% block content %}
 <section class="py-space-lg bg-background">
-<div class="max-w-6xl mx-auto px-margin space-y-space-md">
+<div class="max-w-5xl mx-auto px-margin space-y-space-md">
 
   <!-- ================= EN-TETE ================= -->
   <div class="flex flex-wrap items-center justify-between gap-space-sm">
@@ -29,7 +29,7 @@
         </button>
 
         <div id="notifPanel"
-             class="hidden absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl border border-outline-variant/30 bg-surface-container-lowest shadow-xl z-40 p-1.5">
+             class="hidden absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] max-h-96 overflow-y-auto rounded-2xl border border-outline-variant/30 bg-surface-container-lowest shadow-xl z-40 p-1.5">
           <div class="px-space-sm py-1.5 font-label-caps text-label-caps uppercase tracking-wider text-on-surface-variant font-bold">Notifications</div>
           {% for notif in notifications %}
             <a class="notif-item flex items-start gap-space-xs rounded-xl px-space-sm py-2 hover:bg-surface-container-low transition-colors {{ 'font-semibold text-on-surface' if not notif.is_read else 'text-on-surface-variant' }}"
@@ -63,10 +63,7 @@
     <div class="lg:col-span-2 rounded-2xl p-space-md bg-gradient-to-br from-brand-deep to-slate-night text-white shadow-lg relative overflow-hidden">
       <div class="absolute -right-8 -bottom-8 w-32 h-32 rounded-full bg-brand-bright/20 blur-2xl"></div>
       <div class="relative space-y-space-xs">
-        <div class="flex items-center gap-1.5 font-label-caps text-label-caps uppercase tracking-wider text-brand-bright font-bold">
-          <span class="material-symbols-outlined text-[16px]">account_balance_wallet</span>
-          Solde disponible
-        </div>
+        <div class="font-label-caps text-label-caps uppercase tracking-wider text-brand-bright font-bold">Solde disponible</div>
         <div class="font-label-numeric-lg text-3xl font-extrabold tracking-tight">{{ "{:,.0f}".format(solde_portefeuille) }} FCFA</div>
         <p class="font-caption text-caption text-white/70">Alimenté par vos clics générés et vos gains de parrainage.</p>
 
@@ -89,30 +86,21 @@
 
     <!-- Filleuls -->
     <div class="pw-tile">
-      <div class="flex items-center gap-1.5 mb-1">
-        <span class="material-symbols-outlined text-[18px] text-brand-primary">group</span>
-        <span class="pw-tile-label">Filleuls</span>
-      </div>
+      <span class="pw-tile-label">Filleuls</span>
       <div class="pw-tile-value">{{ total_filleuls }}</div>
       <p class="pw-tile-note">Annonceurs inscrits via votre lien</p>
     </div>
 
     <!-- Gains credites -->
-    <div class="pw-tile border-l-4 border-l-brand-primary">
-      <div class="flex items-center gap-1.5 mb-1">
-        <span class="material-symbols-outlined text-[18px] text-brand-primary">paid</span>
-        <span class="pw-tile-label">Gains crédités</span>
-      </div>
+    <div class="pw-tile">
+      <span class="pw-tile-label">Gains crédités</span>
       <div class="pw-tile-value text-brand-deep">{{ gains_valides | round(0) }} <span class="text-base">FCFA</span></div>
       <p class="pw-tile-note">Déjà ajoutés à votre portefeuille</p>
     </div>
 
     <!-- Gains en attente -->
-    <div class="pw-tile border-l-4 border-l-amber-rich">
-      <div class="flex items-center gap-1.5 mb-1">
-        <span class="material-symbols-outlined text-[18px] text-amber-rich">hourglass_top</span>
-        <span class="pw-tile-label">En attente</span>
-      </div>
+    <div class="pw-tile">
+      <span class="pw-tile-label">En attente</span>
       <div class="pw-tile-value text-amber-rich">{{ gains_en_attente | round(0) }} <span class="text-base">FCFA</span></div>
       <p class="pw-tile-note">Campagne du filleul pas encore payée</p>
     </div>
@@ -133,7 +121,7 @@
       <span class="pw-chip pw-chip-warning">Gagnez 3% par filleul</span>
     </div>
 
-    <div class="flex flex-col sm:flex-row gap-space-2xs">
+    <div class="flex flex-wrap gap-space-2xs">
       <input type="text" class="pw-input font-label-numeric-md text-label-numeric-md sm:rounded-r-none" id="referralLink" value="{{ affiliate_link }}" readonly>
       <button class="pw-btn pw-btn-sm pw-btn-primary shrink-0 sm:rounded-l-none" type="button" onclick="copyReferralLink()">
         <span class="material-symbols-outlined text-[18px]">content_copy</span>
@@ -156,10 +144,10 @@
     </div>
 
     {% if campagnes_disponibles %}
-      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-space-sm">
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-space-sm">
         {% for item in campagnes_disponibles %}
           {% set camp = item.campaign %}
-          <div class="pw-tile flex flex-col {{ 'border-l-4 border-l-amber-rich' if item.quota_atteint_aujourdhui else '' }}">
+          <div class="pw-tile flex flex-col">
 
             <div class="flex items-center justify-between gap-space-2xs mb-1.5">
               <span class="pw-chip pw-chip-neutral">
@@ -191,7 +179,7 @@
                     <div class="h-full rounded-full bg-brand-primary" style="width: {{ [quota_pct, 100] | min }}%;"></div>
                   </div>
                   <p class="font-caption text-caption text-on-surface-variant">
-                    Jour {{ item.jour_actuel }}/{{ item.duree_totale }} — {{ item.vues_aujourdhui }}/{{ item.quota_du_jour }} clics aujourd'hui
+                    Jour {{ item.jour_actuel }}/{{ item.duree_totale }} · {{ item.vues_aujourdhui }}/{{ item.quota_du_jour }} clics aujourd'hui
                   </p>
                 {% endif %}
 
@@ -227,12 +215,12 @@
   </div>
 
   <!-- ================= ACCES RAPIDES ================= -->
-  <div class="flex flex-col sm:flex-row gap-space-xs">
-    <a href="#produitsDisponibles" class="pw-btn pw-btn-sm pw-btn-neutral flex-1">
+  <div class="flex flex-wrap gap-space-xs">
+    <a href="#produitsDisponibles" class="pw-btn pw-btn-sm pw-btn-neutral">
       <span class="material-symbols-outlined text-[18px]">inventory_2</span>
       Voir les produits à partager
     </a>
-    <a href="{{ url_for('mes_retraits') }}" class="pw-btn pw-btn-sm pw-btn-neutral flex-1">
+    <a href="{{ url_for('mes_retraits') }}" class="pw-btn pw-btn-sm pw-btn-neutral">
       <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
       Mes gains &amp; retraits
     </a>
@@ -242,7 +230,7 @@
   <details class="group rounded-2xl border border-error/30 bg-error-container/40">
     <summary class="flex items-center gap-1.5 cursor-pointer select-none px-space-md py-space-sm font-headline-md text-[14px] font-semibold text-error list-none">
       <span class="material-symbols-outlined text-[18px]">warning</span>
-      Zone de danger — supprimer mon compte
+      Zone de danger : supprimer mon compte
       <span class="material-symbols-outlined text-[18px] ml-auto transition-transform group-open:rotate-180">expand_more</span>
     </summary>
 

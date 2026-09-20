@@ -6,7 +6,7 @@
   <td class="font-semibold text-slate-midnight">{{ user.email }}</td>
   <td><span class="pw-chip pw-chip-neutral capitalize">{{ user.role }}</span></td>
   <td>{{ user.province or user.department or "Non spécifié" }}</td>
-  <td>{{ user.company_name or "—" }}</td>
+  <td>{{ user.company_name or "-" }}</td>
   <td>
     {% if user.whatsapp_number %}
       <a href="https://wa.me/{{ user.whatsapp_number | replace(' ', '') }}" target="_blank" rel="noopener"
@@ -104,7 +104,7 @@
       <h1 class="mt-1 font-headline-md text-headline-md text-slate-night">Panneau d'administration</h1>
     </div>
 
-    <div class="flex flex-wrap items-center gap-space-2xs">
+    <div class="flex items-center gap-space-2xs shrink-0">
       <!-- Cloche de notifications -->
       <div class="relative" id="notifDropdownWrapper">
         <button type="button" id="notifToggle" aria-expanded="false"
@@ -114,7 +114,7 @@
             <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-white font-caption text-[11px] font-bold flex items-center justify-center" id="notifBadge">{{ notifications_non_lues }}</span>
           {% endif %}
         </button>
-        <div id="notifPanel" class="hidden absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl border border-outline-variant/30 bg-surface-container-lowest shadow-xl z-40 p-1.5">
+        <div id="notifPanel" class="hidden absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] max-h-96 overflow-y-auto rounded-2xl border border-outline-variant/30 bg-surface-container-lowest shadow-xl z-40 p-1.5">
           <div class="px-space-sm py-1.5 font-label-caps text-label-caps uppercase tracking-wider text-on-surface-variant font-bold">Notifications</div>
           {% for notif in notifications %}
             <a class="notif-item flex items-start gap-space-xs rounded-xl px-space-sm py-2 hover:bg-surface-container-low transition-colors {{ 'font-semibold text-on-surface' if not notif.is_read else 'text-on-surface-variant' }}" href="{{ notif.link or '#' }}">
@@ -134,56 +134,51 @@
         </div>
       </div>
 
-      {% if current_user.role == "admin" or current_user.has_permission("gerer_retraits") %}
-      <a href="{{ url_for('admin_retraits') }}" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px]">
-        <span class="material-symbols-outlined text-[16px]">payments</span> Retraits
-      </a>
-      {% endif %}
-      {% if current_user.role == "admin" or current_user.has_permission("valider_campagnes") %}
-      <a href="{{ url_for('admin_remboursements') }}" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px]">
-        <span class="material-symbols-outlined text-[16px]">savings</span> Remboursements
-      </a>
-      {% endif %}
-      {% if current_user.role == "admin" or current_user.has_permission("gerer_suppressions_compte") %}
-      <a href="{{ url_for('admin_suppressions_compte') }}" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px] !text-error">
-        <span class="material-symbols-outlined text-[16px]">person</span> Suppressions
-      </a>
-      {% endif %}
-      {% if current_user.role == "admin" or current_user.has_permission("voir_transactions") %}
-      <a href="{{ url_for('admin_transactions_globales') }}" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px]">
-        <span class="material-symbols-outlined text-[16px]">receipt_long</span> Transactions
-      </a>
-      {% endif %}
-      {% if current_user.role == "admin" or current_user.has_permission("configurer_tarifs") %}
-      <a href="{{ url_for('admin_settings') }}" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px]">
-        <span class="material-symbols-outlined text-[16px]">settings</span> Tarifs
-      </a>
-      {% endif %}
-      {% if current_user.role == "admin" or current_user.has_permission("valider_utilisateurs") %}
-      <a href="{{ url_for('admin_utilisateurs') }}" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px]">
-        <span class="material-symbols-outlined text-[16px]">group</span> Utilisateurs
-      </a>
-      {% endif %}
       {% if current_user.role == "admin" %}
+      <!-- Interrupteur d'etat : ce n'est pas une section, il reste dans l'en-tete -->
       <form action="{{ url_for('toggle_preuve_partage') }}" method="POST" class="inline"
             onsubmit="return confirm('{{ 'Désactiver' if config_systeme.exiger_preuve_partage else 'Réactiver' }} l\'exigence de preuve de partage ? {{ 'Tous les clics en attente seront crédités immédiatement.' if config_systeme.exiger_preuve_partage else '' }}');">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         {% if config_systeme.exiger_preuve_partage %}
-          <button type="submit" class="pw-btn pw-btn-sm pw-btn-primary !py-1.5 !text-[12px]">
+          <button type="submit" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px]" title="Les partageurs doivent envoyer une preuve. Cliquez pour désactiver.">
             <span class="material-symbols-outlined text-[16px]">shield</span> Preuve exigée
           </button>
         {% else %}
-          <button type="submit" class="pw-btn pw-btn-sm bg-error text-white hover:opacity-90 !py-1.5 !text-[12px]">
+          <button type="submit" class="pw-btn pw-btn-sm bg-error text-white hover:opacity-90 !py-1.5 !text-[12px]" title="Les clics sont crédités sans preuve. Cliquez pour réactiver.">
             <span class="material-symbols-outlined text-[16px]">warning</span> Preuve désactivée
           </button>
         {% endif %}
       </form>
-      <a href="{{ url_for('admin_gestion_sous_admins') }}" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px]">
-        <span class="material-symbols-outlined text-[16px]">admin_panel_settings</span> Sous-admins
-      </a>
       {% endif %}
     </div>
   </div>
+
+  <!-- ================= NAVIGATION DES SECTIONS ================= -->
+  <nav aria-label="Sections de l'administration"
+       class="rounded-2xl border border-outline-variant/30 bg-surface-container-lowest px-space-xs py-1.5 flex flex-wrap items-center gap-1">
+    <span class="pw-admin-lien is-active">Accueil</span>
+    {% if current_user.role == "admin" or current_user.has_permission("valider_utilisateurs") %}
+    <a class="pw-admin-lien" href="{{ url_for('admin_utilisateurs') }}">Utilisateurs</a>
+    {% endif %}
+    {% if current_user.role == "admin" or current_user.has_permission("gerer_retraits") %}
+    <a class="pw-admin-lien" href="{{ url_for('admin_retraits') }}">Retraits</a>
+    {% endif %}
+    {% if current_user.role == "admin" or current_user.has_permission("valider_campagnes") %}
+    <a class="pw-admin-lien" href="{{ url_for('admin_remboursements') }}">Remboursements</a>
+    {% endif %}
+    {% if current_user.role == "admin" or current_user.has_permission("voir_transactions") %}
+    <a class="pw-admin-lien" href="{{ url_for('admin_transactions_globales') }}">Transactions</a>
+    {% endif %}
+    {% if current_user.role == "admin" or current_user.has_permission("configurer_tarifs") %}
+    <a class="pw-admin-lien" href="{{ url_for('admin_settings') }}">Tarifs</a>
+    {% endif %}
+    {% if current_user.role == "admin" or current_user.has_permission("gerer_suppressions_compte") %}
+    <a class="pw-admin-lien !text-error" href="{{ url_for('admin_suppressions_compte') }}">Suppressions</a>
+    {% endif %}
+    {% if current_user.role == "admin" %}
+    <a class="pw-admin-lien" href="{{ url_for('admin_gestion_sous_admins') }}">Sous-admins</a>
+    {% endif %}
+  </nav>
 
   <!-- ================= UTILISATEURS EN ATTENTE ================= -->
   {% if peut_voir_utilisateurs %}
@@ -259,8 +254,8 @@
     <table class="pw-table">
       <thead>
         <tr>
-          <th>ID</th><th>Annonceur</th><th>Type</th><th>Détail &amp; texte</th>
-          <th>Zones</th><th>Médias</th><th>Objectif</th><th>Durée / progression</th>
+          <th>ID</th><th>Annonceur</th><th>Détail &amp; texte</th>
+          <th>Zones</th><th>Médias</th><th>Objectif &amp; durée</th>
           <th class="text-right">Coût</th><th>Statut</th><th>Actions</th>
         </tr>
       </thead>
@@ -293,22 +288,20 @@
             {% endif %}
           </td>
 
-          <!-- Type -->
-          <td>
-            <span class="capitalize block">{{ camp.promotion_type }}</span>
-            {% if camp.display_option == "A" %}
-              <span class="pw-chip pw-chip-neutral mt-0.5"><span class="material-symbols-outlined text-[14px]">smart_display</span> Vidéo</span>
-            {% elif camp.display_option == "B" %}
-              <span class="pw-chip pw-chip-neutral mt-0.5"><span class="material-symbols-outlined text-[14px]">layers</span> Multi-statuts</span>
-            {% elif camp.display_option == "C" %}
-              <span class="pw-chip pw-chip-neutral mt-0.5"><span class="material-symbols-outlined text-[14px]">description</span> Texte seul</span>
-            {% endif %}
-          </td>
-
-          <!-- Detail -->
-          <td class="max-w-[16rem]">
-            <div class="font-semibold text-slate-midnight">{{ camp.promotion_detail or "—" }}</div>
-            <div class="font-caption text-caption text-on-surface-variant">{{ camp.description or "—" }}</div>
+          <!-- Detail, avec le type et le format replies dedans -->
+          <td class="min-w-[12rem] max-w-[18rem]">
+            <div class="font-semibold text-slate-midnight">{{ camp.promotion_detail or "-" }}</div>
+            <div class="font-caption text-caption text-on-surface-variant">{{ camp.description or "-" }}</div>
+            <div class="mt-1 flex flex-wrap items-center gap-1">
+              <span class="pw-chip pw-chip-neutral capitalize">{{ camp.promotion_type }}</span>
+              {% if camp.display_option == "A" %}
+                <span class="pw-chip pw-chip-neutral"><span class="material-symbols-outlined text-[14px]">smart_display</span> Vidéo</span>
+              {% elif camp.display_option == "B" %}
+                <span class="pw-chip pw-chip-neutral"><span class="material-symbols-outlined text-[14px]">layers</span> Multi-statuts</span>
+              {% elif camp.display_option == "C" %}
+                <span class="pw-chip pw-chip-neutral"><span class="material-symbols-outlined text-[14px]">description</span> Texte seul</span>
+              {% endif %}
+            </div>
             {% if camp.is_resubmission %}
               <span class="pw-chip pw-chip-warning mt-0.5"
                     title="Resoumise le {{ camp.resubmitted_at | heure_locale if camp.resubmitted_at }}">
@@ -330,14 +323,14 @@
           <!-- Medias -->
           <td>
             {% if camp.display_option == "C" %}
-              <span class="font-caption text-caption text-on-surface-variant">Aucun média — annonce textuelle</span>
+              <span class="font-caption text-caption text-on-surface-variant">Aucun média, annonce textuelle</span>
             {% elif camp.media_files %}
               <div class="flex flex-wrap gap-1">
                 {% for file in camp.media_files.split(',') %}
                   {% set file_url = url_for('serve_upload', filename=file) %}
                   <div class="text-center">
                     {% if file.lower().endswith(('.mp4', '.mov', '.avi', '.webm')) %}
-                      <button type="button" class="relative block w-24 h-16 overflow-hidden rounded-lg bg-slate-night shadow-sm"
+                      <button type="button" class="relative block w-20 h-14 overflow-hidden rounded-lg bg-slate-night shadow-sm"
                               onclick="showMedia('{{ file_url }}', true)">
                         <video src="{{ file_url }}" class="w-full h-full object-cover opacity-60"></video>
                         <span class="absolute inset-0 flex items-center justify-center text-white">
@@ -345,7 +338,7 @@
                         </span>
                       </button>
                     {% else %}
-                      <button type="button" class="block w-24 h-16 overflow-hidden rounded-lg shadow-sm"
+                      <button type="button" class="block w-20 h-14 overflow-hidden rounded-lg shadow-sm"
                               onclick="showMedia('{{ file_url }}', false)">
                         <img src="{{ file_url }}" alt="" class="w-full h-full object-cover">
                       </button>
@@ -361,18 +354,11 @@
             {% endif %}
           </td>
 
-          <!-- Objectif -->
-          <td>
-            <span class="pw-chip pw-chip-neutral">
-              {{ camp.target_whatsapp_views if camp.target_whatsapp_views else camp.whatsapp_views }} clics
-            </span>
-          </td>
-
-          <!-- Duree / progression -->
+          <!-- Objectif et duree reunis -->
           <td class="min-w-[9rem]">
-            <div class="flex items-center gap-1 font-semibold text-slate-midnight">
-              <span class="material-symbols-outlined text-[16px]">calendar_month</span>
-              {{ camp.duration_days }} jour{{ 's' if camp.duration_days > 1 else '' }}
+            <div class="font-semibold text-slate-midnight">
+              {{ camp.target_whatsapp_views if camp.target_whatsapp_views else camp.whatsapp_views }} clics
+              en {{ camp.duration_days }} jour{{ 's' if camp.duration_days > 1 else '' }}
             </div>
             <div class="font-caption text-caption text-on-surface-variant">≈ {{ camp.views_per_day }} clics / jour</div>
 
@@ -417,7 +403,7 @@
           </td>
 
           <!-- Actions -->
-          <td class="min-w-[11rem]">
+          <td class="min-w-[10rem]">
             {% if not camp.validated and camp.admin_status != "rejected" and camp.status != "rejete" %}
               <div class="flex flex-col gap-1">
                 <form action="{{ url_for('validate_campaign', campaign_id=camp.id) }}" method="POST">
@@ -438,7 +424,7 @@
                 <p class="mt-0.5 font-caption text-caption text-on-surface-variant">Virement effectué manuellement.</p>
               {% elif camp.refund_status == "requested" %}
                 <span class="pw-chip pw-chip-neutral">Demande reçue</span>
-                <p class="mt-0.5 font-caption text-caption text-on-surface-variant">Coordonnées transmises — à traiter sous 48h.</p>
+                <p class="mt-0.5 font-caption text-caption text-on-surface-variant">Coordonnées transmises, à traiter sous 48h.</p>
                 <a href="{{ url_for('admin_remboursements') }}" class="pw-btn pw-btn-sm pw-btn-neutral w-full mt-1 !py-1.5 !text-[12px]">
                   Traiter la demande
                 </a>

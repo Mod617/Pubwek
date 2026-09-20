@@ -20,11 +20,11 @@
 
   <!-- Resume global -->
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm">
-    <div class="pw-tile border-l-4 border-l-brand-primary">
+    <div class="pw-tile">
       <span class="pw-tile-label">Total encaissé (annonceurs, approuvé)</span>
       <span class="pw-tile-value text-brand-deep">{{ "{:,.0f}".format(total_paiements_approuves) }} <span class="text-sm">FCFA</span></span>
     </div>
-    <div class="pw-tile border-l-4 border-l-amber-rich">
+    <div class="pw-tile">
       <span class="pw-tile-label">Total reversé (partageurs, payé)</span>
       <span class="pw-tile-value text-amber-rich">{{ "{:,.0f}".format(total_retraits_payes) }} <span class="text-sm">FCFA</span></span>
     </div>
@@ -32,7 +32,6 @@
 
   <!-- ================= PAIEMENTS DES ANNONCEURS ================= -->
   <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
-    <span class="material-symbols-outlined text-[20px] text-brand-primary">price_check</span>
     Paiements des annonceurs
   </h2>
 
@@ -89,7 +88,7 @@
               <span class="text-on-surface-variant">Utilisateur supprimé</span>
             {% endif %}
           </td>
-          <td class="font-label-numeric-md text-label-numeric-md text-on-surface-variant">{{ "#" ~ t.campaign_id if t.campaign_id else "—" }}</td>
+          <td class="font-label-numeric-md text-label-numeric-md text-on-surface-variant">{{ "#" ~ t.campaign_id if t.campaign_id else "-" }}</td>
           <td class="text-right font-label-numeric-md text-label-numeric-md font-bold text-slate-midnight whitespace-nowrap">
             {{ "{:,.0f}".format(t.amount) }} {{ t.currency }}
           </td>
@@ -104,9 +103,9 @@
               <span class="pw-chip pw-chip-neutral">{{ t.status }}</span>
             {% endif %}
           </td>
-          <td class="font-label-numeric-md text-label-numeric-md text-on-surface-variant">{{ t.fedapay_transaction_id or "—" }}</td>
+          <td class="font-label-numeric-md text-label-numeric-md text-on-surface-variant">{{ t.fedapay_transaction_id or "-" }}</td>
           <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">
-            {{ t.created_at | heure_locale if t.created_at else "—" }}
+            {{ t.created_at | heure_locale if t.created_at else "-" }}
           </td>
         </tr>
         {% else %}
@@ -120,7 +119,6 @@
 
   <!-- ================= RETRAITS DES PARTAGEURS ================= -->
   <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
-    <span class="material-symbols-outlined text-[20px] text-amber-rich">payments</span>
     Retraits des partageurs
   </h2>
 
@@ -193,7 +191,7 @@
               <span class="pw-chip pw-chip-danger"><span class="material-symbols-outlined text-[14px]">cancel</span> Refusé</span>
             {% endif %}
           </td>
-          <td class="capitalize font-caption text-caption">{{ d.payment_method or "—" }}</td>
+          <td class="capitalize font-caption text-caption">{{ d.payment_method or "-" }}</td>
           <td>
             {% if d.proof_file %}
               <a href="{{ url_for('serve_upload', filename=d.proof_file) }}" target="_blank" rel="noopener"
@@ -201,11 +199,11 @@
                 <span class="material-symbols-outlined text-[16px]">image</span> Voir
               </a>
             {% else %}
-              <span class="text-on-surface-variant">—</span>
+              <span class="text-on-surface-variant">-</span>
             {% endif %}
           </td>
           <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">
-            {{ d.requested_at | heure_locale if d.requested_at else "—" }}
+            {{ d.requested_at | heure_locale if d.requested_at else "-" }}
           </td>
         </tr>
         {% else %}

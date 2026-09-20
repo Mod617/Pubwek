@@ -68,7 +68,7 @@
           <td class="font-semibold text-slate-midnight">{{ user.email }}</td>
           <td><span class="pw-chip pw-chip-neutral capitalize">{{ user.role }}</span></td>
           <td>{{ user.province or "Non spécifié" }}</td>
-          <td>{{ user.company_name or "—" }}</td>
+          <td>{{ user.company_name or "-" }}</td>
           <td>
             {% if user.whatsapp_number %}
               <a href="https://wa.me/{{ user.whatsapp_number | replace(' ', '') }}" target="_blank" rel="noopener"
@@ -80,7 +80,7 @@
             {% endif %}
           </td>
           <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">
-            {{ user.created_at | heure_locale if user.created_at else "—" }}
+            {{ user.created_at | heure_locale if user.created_at else "-" }}
           </td>
         </tr>
       {% else %}

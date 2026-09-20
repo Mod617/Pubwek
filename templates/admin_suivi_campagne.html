@@ -10,7 +10,7 @@
       <span class="pw-badge bg-amber-soft text-amber-rich">Administration</span>
       <h1 class="mt-1 font-headline-md text-headline-md text-slate-night">Suivi de la campagne #{{ campaign.id }}</h1>
       <p class="font-body-sm text-body-sm text-on-surface-variant">
-        {{ campaign.promotion_type | capitalize }} — {{ campaign.promotion_detail }}
+        {{ campaign.promotion_type | capitalize }} · {{ campaign.promotion_detail }}
       </p>
     </div>
     <div class="flex flex-wrap items-center gap-space-xs">
@@ -80,11 +80,11 @@
       <span class="pw-tile-label">Nombre de partageurs</span>
       <span class="pw-tile-value">{{ partageurs | length }}</span>
     </div>
-    <div class="pw-tile border-l-4 border-l-brand-primary">
+    <div class="pw-tile">
       <span class="pw-tile-label">Clics valides (facturables)</span>
       <span class="pw-tile-value text-brand-deep">{{ "{:,}".format(total_clics_valides) }}</span>
     </div>
-    <div class="pw-tile border-l-4 border-l-error">
+    <div class="pw-tile">
       <span class="pw-tile-label">Clics frauduleux (bloqués)</span>
       <span class="pw-tile-value text-error">{{ "{:,}".format(total_clics_frauduleux) }}</span>
     </div>
@@ -122,19 +122,19 @@
           <td>
             {% if p.clics_whatsapp_valides %}
               <span class="pw-chip pw-chip-success">{{ "{:,}".format(p.clics_whatsapp_valides) }} clic{{ 's' if p.clics_whatsapp_valides != 1 else '' }}</span>
-            {% else %}<span class="text-on-surface-variant">—</span>{% endif %}
+            {% else %}<span class="text-on-surface-variant">-</span>{% endif %}
           </td>
           <td>
             {% if p.clics_site_valides %}
               <span class="pw-chip pw-chip-warning">{{ "{:,}".format(p.clics_site_valides) }} clic{{ 's' if p.clics_site_valides != 1 else '' }}</span>
-            {% else %}<span class="text-on-surface-variant">—</span>{% endif %}
+            {% else %}<span class="text-on-surface-variant">-</span>{% endif %}
           </td>
           <td>
             {% if p.clics_frauduleux %}
               <span class="pw-chip pw-chip-danger">{{ "{:,}".format(p.clics_frauduleux) }} bloqué{{ 's' if p.clics_frauduleux != 1 else '' }}</span>
-            {% else %}<span class="text-on-surface-variant">—</span>{% endif %}
+            {% else %}<span class="text-on-surface-variant">-</span>{% endif %}
           </td>
-          <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">{{ p.partage_le or "—" }}</td>
+          <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">{{ p.partage_le or "-" }}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -184,7 +184,7 @@
               <span class="pw-chip pw-chip-danger"><span class="material-symbols-outlined text-[14px]">cancel</span> Bloqué</span>
             {% endif %}
           </td>
-          <td class="font-caption text-caption text-on-surface-variant">{{ c.motif or "—" }}</td>
+          <td class="font-caption text-caption text-on-surface-variant">{{ c.motif or "-" }}</td>
         </tr>
         {% endfor %}
       </tbody>

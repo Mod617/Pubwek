@@ -17,15 +17,14 @@
 
   <!-- ================= EN ATTENTE ================= -->
   <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
-    <span class="material-symbols-outlined text-[20px] text-amber-rich">hourglass_top</span>
     En attente
     <span class="pw-chip {{ 'pw-chip-warning' if en_attente else 'pw-chip-neutral' }}">{{ en_attente|length }}</span>
   </h2>
 
   {% if en_attente %}
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-sm">
+  <div class="grid grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-space-sm">
     {% for demande in en_attente %}
-    <div class="pw-tile border-l-4 border-l-error flex flex-col">
+    <div class="pw-tile flex flex-col">
       <div class="flex items-start justify-between gap-space-xs">
         <h3 class="font-headline-md text-body-md font-bold text-slate-midnight min-w-0 truncate">
           {{ demande.demandeur.pseudo or demande.demandeur.company_name or demande.demandeur.email if demande.demandeur else "Utilisateur supprimé" }}
@@ -59,12 +58,12 @@
 
       <div class="mt-auto pt-space-xs">
         {% if demande.demandeur %}
-          <div class="flex flex-col sm:flex-row gap-space-2xs">
-            <button type="button" class="pw-btn pw-btn-sm bg-error text-white hover:opacity-90 flex-1"
+          <div class="flex flex-wrap gap-space-2xs">
+            <button type="button" class="pw-btn pw-btn-sm bg-error text-white hover:opacity-90 flex-1 min-w-[11rem]"
                     data-pw-modal="desactiverModal{{ demande.id }}">
               <span class="material-symbols-outlined text-[18px]">block</span> Désactiver le compte
             </button>
-            <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral flex-1"
+            <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral flex-1 min-w-[11rem]"
                     data-pw-modal="refuserSuppModal{{ demande.id }}">
               <span class="material-symbols-outlined text-[18px]">cancel</span> Refuser la demande
             </button>
@@ -160,7 +159,6 @@
 
   <!-- ================= HISTORIQUE ================= -->
   <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
-    <span class="material-symbols-outlined text-[20px] text-brand-primary">history</span>
     Historique
     <span class="pw-chip pw-chip-neutral">{{ traitees|length }}</span>
   </h2>
@@ -188,7 +186,7 @@
               <span class="font-normal text-on-surface-variant">Compte supprimé</span>
             {% endif %}
           </td>
-          <td class="capitalize">{{ demande.demandeur.role if demande.demandeur else "—" }}</td>
+          <td class="capitalize">{{ demande.demandeur.role if demande.demandeur else "-" }}</td>
           <td class="font-caption text-caption text-on-surface-variant">{{ demande.reason }}</td>
           <td>
             {% if demande.status == "approved" %}
@@ -197,9 +195,9 @@
               <span class="pw-chip pw-chip-neutral"><span class="material-symbols-outlined text-[14px]">cancel</span> Refusée</span>
             {% endif %}
           </td>
-          <td class="font-caption text-caption text-on-surface-variant">{{ demande.admin_notes or "—" }}</td>
+          <td class="font-caption text-caption text-on-surface-variant">{{ demande.admin_notes or "-" }}</td>
           <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">
-            {{ demande.processed_at | heure_locale if demande.processed_at else "—" }}
+            {{ demande.processed_at | heure_locale if demande.processed_at else "-" }}
           </td>
         </tr>
         {% else %}

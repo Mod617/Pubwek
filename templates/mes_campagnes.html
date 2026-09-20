@@ -2,7 +2,7 @@
 
 {% block content %}
 <section class="py-space-lg bg-background">
-<div class="max-w-6xl mx-auto px-margin space-y-space-md">
+<div class="max-w-5xl mx-auto px-margin space-y-space-md">
 
   <!-- ================= EN-TETE ================= -->
   <div class="flex flex-wrap items-end justify-between gap-space-sm">
@@ -29,15 +29,15 @@
       <span class="pw-chip pw-chip-danger">{{ refusees | length }}</span>
     </h2>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-sm">
+    <div class="grid grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-space-sm">
       {% for campaign in refusees %}
       {% set provinces_actuelles = campaign.provinces.split(',') if campaign.provinces and campaign.provinces != "Toutes" else [] %}
       {% set nombre_photos_actuelles = campaign.media_files.split(',') | length if campaign.media_files else 0 %}
 
-      <div id="campagne-{{ campaign.id }}" class="pw-tile border-l-4 border-l-error flex flex-col">
+      <div id="campagne-{{ campaign.id }}" class="pw-tile flex flex-col">
         <div class="flex items-start justify-between gap-space-xs mb-1">
           <h3 class="font-headline-md text-body-md font-bold text-slate-midnight leading-snug min-w-0">
-            {{ campaign.promotion_type | capitalize }} — {{ campaign.promotion_detail }}
+            {{ campaign.promotion_type | capitalize }} · {{ campaign.promotion_detail }}
           </h3>
           <span class="pw-chip pw-chip-danger shrink-0">#{{ campaign.id }} refusée</span>
         </div>
@@ -89,24 +89,24 @@
             </button>
 
           {% elif campaign.can_claim_refund %}
-            <div class="flex flex-col sm:flex-row gap-space-2xs">
-              <button type="button" class="pw-btn pw-btn-sm pw-btn-secondary flex-1"
+            <div class="flex flex-wrap gap-space-2xs">
+              <button type="button" class="pw-btn pw-btn-sm pw-btn-secondary flex-1 min-w-[11rem]"
                       data-pw-modal="editModal{{ campaign.id }}">
                 <span class="material-symbols-outlined text-[18px]">edit</span> Corriger &amp; resoumettre
               </button>
-              <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral !text-error flex-1"
+              <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral !text-error flex-1 min-w-[11rem]"
                       data-pw-modal="refundModal{{ campaign.id }}">
                 <span class="material-symbols-outlined text-[18px]">savings</span> Remboursement (48h)
               </button>
             </div>
 
           {% else %}
-            <div class="flex flex-col sm:flex-row gap-space-2xs">
-              <button type="button" class="pw-btn pw-btn-sm pw-btn-secondary flex-1"
+            <div class="flex flex-wrap gap-space-2xs">
+              <button type="button" class="pw-btn pw-btn-sm pw-btn-secondary flex-1 min-w-[11rem]"
                       data-pw-modal="editModal{{ campaign.id }}">
                 <span class="material-symbols-outlined text-[18px]">edit</span> Corriger &amp; resoumettre
               </button>
-              <button class="pw-btn pw-btn-sm pw-btn-neutral flex-1 !text-on-surface-variant" disabled
+              <button class="pw-btn pw-btn-sm pw-btn-neutral flex-1 min-w-[11rem] !text-on-surface-variant" disabled
                       title="{{ "Cette campagne n'a jamais été payée, aucun remboursement n'est applicable."
                                if not campaign.paid else
                                "Le remboursement n'a pas encore été autorisé par l'administration." }}">
@@ -173,7 +173,7 @@
                       <strong>{{ nombre_photos_actuelles }} photos au maximum</strong>.
                     </p>
                   {% else %}
-                    <p class="pw-help">Laissez vide pour garder les photos actuelles. Maximum 25 photos — le nombre influe sur le coût par clic.</p>
+                    <p class="pw-help">Laissez vide pour garder les photos actuelles. Maximum 25 photos, le nombre influe sur le coût par clic.</p>
                   {% endif %}
                   {% if campaign.media_files %}
                     <div class="flex flex-wrap gap-1.5 mt-1.5">
@@ -185,7 +185,7 @@
                 </div>
               {% else %}
                 <span class="pw-chip pw-chip-neutral">
-                  <span class="material-symbols-outlined text-[14px]">description</span> Option texte seul — aucun média requis
+                  <span class="material-symbols-outlined text-[14px]">description</span> Option texte seul, aucun média requis
                 </span>
               {% endif %}
 
@@ -318,12 +318,12 @@
       <span class="pw-chip pw-chip-warning">{{ non_payees | length }}</span>
     </h2>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-sm">
+    <div class="grid grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-space-sm">
       {% for campaign in non_payees %}
-      <div id="campagne-{{ campaign.id }}" class="pw-tile border-l-4 border-l-amber-rich flex flex-col">
+      <div id="campagne-{{ campaign.id }}" class="pw-tile flex flex-col">
         <div class="flex items-start justify-between gap-space-xs mb-1">
           <h3 class="font-headline-md text-body-md font-bold text-slate-midnight leading-snug min-w-0">
-            {{ campaign.promotion_type | capitalize }} — {{ campaign.promotion_detail }}
+            {{ campaign.promotion_type | capitalize }} · {{ campaign.promotion_detail }}
           </h3>
           <span class="pw-chip pw-chip-warning shrink-0">Paiement non reçu</span>
         </div>
@@ -359,12 +359,12 @@
     </h2>
 
     {% if en_attente %}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-sm">
+    <div class="grid grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-space-sm">
       {% for campaign in en_attente %}
-      <div id="campagne-{{ campaign.id }}" class="pw-tile border-l-4 border-l-amber-rich">
+      <div id="campagne-{{ campaign.id }}" class="pw-tile">
         <div class="flex items-start justify-between gap-space-xs mb-1">
           <h3 class="font-headline-md text-body-md font-bold text-slate-midnight leading-snug min-w-0">
-            {{ campaign.promotion_type | capitalize }} — {{ campaign.promotion_detail }}
+            {{ campaign.promotion_type | capitalize }} · {{ campaign.promotion_detail }}
           </h3>
           <span class="pw-chip pw-chip-warning shrink-0">En analyse</span>
         </div>
@@ -395,14 +395,14 @@
     </h2>
 
     {% if en_cours %}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-sm">
+    <div class="grid grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-space-sm">
       {% for campaign in en_cours %}
       {% set quota_jour = campaign.quota_effectif_du_jour() %}
       {% set jour_pct = (campaign.views_today / quota_jour * 100) if quota_jour else 0 %}
-      <div id="campagne-{{ campaign.id }}" class="pw-tile border-l-4 border-l-brand-primary flex flex-col">
+      <div id="campagne-{{ campaign.id }}" class="pw-tile flex flex-col">
         <div class="flex items-start justify-between gap-space-xs mb-1">
           <h3 class="font-headline-md text-body-md font-bold text-slate-midnight leading-snug min-w-0">
-            {{ campaign.promotion_type | capitalize }} — {{ campaign.promotion_detail }}
+            {{ campaign.promotion_type | capitalize }} · {{ campaign.promotion_detail }}
           </h3>
           {% if campaign.daily_quota_paused %}
             <span class="pw-chip pw-chip-warning shrink-0">Quota atteint</span>
@@ -453,12 +453,12 @@
     </h2>
 
     {% if terminees %}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-space-sm">
+    <div class="grid grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-space-sm">
       {% for campaign in terminees %}
       <div id="campagne-{{ campaign.id }}" class="pw-tile flex flex-col">
         <div class="flex items-start justify-between gap-space-xs mb-1">
           <h3 class="font-headline-md text-body-md font-bold text-slate-midnight leading-snug min-w-0">
-            {{ campaign.promotion_type | capitalize }} — {{ campaign.promotion_detail }}
+            {{ campaign.promotion_type | capitalize }} · {{ campaign.promotion_detail }}
           </h3>
           <span class="pw-chip pw-chip-success shrink-0">Terminée</span>
         </div>
@@ -490,7 +490,7 @@
 <script>
 // Estimation en temps reel du cout de resoumission, uniquement pour les
 // campagnes non payees (les formulaires de campagnes payees n'ont ni champ
-// .js-views-input actif, ni bloc .js-estimation-output — le script les ignore).
+// .js-views-input actif, ni bloc .js-estimation-output, le script les ignore).
 document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll(".js-resoumission-form").forEach(function (form) {
     const displayOption = form.dataset.displayOption;

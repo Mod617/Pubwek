@@ -20,7 +20,6 @@
 
   <!-- ================= EN ATTENTE ================= -->
   <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
-    <span class="material-symbols-outlined text-[20px] text-amber-rich">hourglass_top</span>
     En attente de traitement
     {% if en_attente %}<span class="pw-chip pw-chip-warning">{{ en_attente | length }}</span>{% endif %}
   </h2>
@@ -62,7 +61,7 @@
             </a>
           </td>
           <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">
-            {{ d.requested_at | heure_locale if d.requested_at else "—" }}
+            {{ d.requested_at | heure_locale if d.requested_at else "-" }}
           </td>
           <td>
             <div class="flex flex-col gap-1">
@@ -160,7 +159,6 @@
 
   <!-- ================= HISTORIQUE ================= -->
   <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
-    <span class="material-symbols-outlined text-[20px] text-brand-primary">history</span>
     Historique des demandes traitées
   </h2>
 
@@ -207,7 +205,7 @@
               <div class="mt-0.5 font-caption text-caption text-on-surface-variant">{{ d.admin_note }}</div>
             {% endif %}
           </td>
-          <td class="capitalize">{{ d.payment_method or "—" }}</td>
+          <td class="capitalize">{{ d.payment_method or "-" }}</td>
           <td>
             {% if d.proof_file %}
               <a href="{{ url_for('serve_upload', filename=d.proof_file) }}" target="_blank" rel="noopener"
@@ -215,11 +213,11 @@
                 <span class="material-symbols-outlined text-[16px]">image</span> Voir
               </a>
             {% else %}
-              <span class="text-on-surface-variant">—</span>
+              <span class="text-on-surface-variant">-</span>
             {% endif %}
           </td>
           <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">
-            {{ d.processed_at | heure_locale if d.processed_at else "—" }}
+            {{ d.processed_at | heure_locale if d.processed_at else "-" }}
           </td>
         </tr>
         {% endfor %}

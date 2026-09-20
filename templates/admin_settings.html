@@ -57,15 +57,15 @@
       <span class="pw-tile-value !text-xl">{{ config.cost_per_click_text }}</span>
       <span class="pw-tile-note">FCFA / clic</span>
     </div>
-    <div class="pw-tile !p-space-sm border-l-4 border-l-brand-primary">
+    <div class="pw-tile !p-space-sm">
       <span class="pw-tile-label">Commission</span>
       <span class="pw-tile-value !text-xl text-brand-deep">{{ config.commission_rate }} %</span>
     </div>
-    <div class="pw-tile !p-space-sm border-l-4 border-l-brand-primary">
+    <div class="pw-tile !p-space-sm">
       <span class="pw-tile-label">Parrainage</span>
       <span class="pw-tile-value !text-xl text-brand-deep">{{ config.referral_reward_rate }} %</span>
     </div>
-    <div class="pw-tile !p-space-sm border-l-4 border-l-amber-rich">
+    <div class="pw-tile !p-space-sm">
       <span class="pw-tile-label">Retrait min.</span>
       <span class="pw-tile-value !text-xl text-amber-rich">{{ config.minimum_withdrawal_amount | int }}</span>
       <span class="pw-tile-note">FCFA</span>
@@ -93,7 +93,7 @@
                  "Tarif appliqué lorsque l'annonceur téléverse directement sa propre vidéo.") }}
         {{ champ("cost_per_click_photo", "cost_per_click_photo", "Option B : images",
                  config.cost_per_click_photo, "image", "FCFA / clic / photo",
-                 "Tarif de base, facturé par photo. Une campagne à 5 photos coûte 5 × ce montant par clic — l'annonceur publie autant de statuts séparés qu'il a de photos.",
+                "Tarif de base, facturé par photo. Une campagne à 5 photos coûte 5 × ce montant par clic, car l'annonceur publie autant de statuts séparés qu'il a de photos.",
                  note="Montant par photo") }}
         {{ champ("cost_per_click_text", "cost_per_click_text", "Option C : texte simple",
                  config.cost_per_click_text, "description", "FCFA / clic",
@@ -110,7 +110,7 @@
                  "Montant crédité au partageur pour chaque clic généré sur une campagne vidéo.") }}
         {{ champ("reward_per_click_photo", "reward_per_click_photo", "Option B : images",
                  config.reward_per_click_photo, "image", "FCFA / clic / photo",
-                 "Tarif de base, versé par photo — même logique que le tarif facturé à l'annonceur. Un partageur qui diffuse une campagne à 5 photos touche 5 × ce montant par clic.",
+                "Tarif de base, versé par photo, même logique que le tarif facturé à l'annonceur. Un partageur qui diffuse une campagne à 5 photos touche 5 × ce montant par clic.",
                  note="Montant par photo") }}
         {{ champ("reward_per_click_text", "reward_per_click_text", "Option C : texte",
                  config.reward_per_click_text, "description", "FCFA / clic",

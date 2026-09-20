@@ -86,7 +86,7 @@
       </div>
 
       <p class="mt-1 font-caption text-caption text-on-surface-variant">
-        Créé le {{ s.created_at | heure_locale("%d/%m/%Y") if s.created_at else "—" }}
+        Créé le {{ s.created_at | heure_locale("%d/%m/%Y") if s.created_at else "-" }}
         {% if s.createur %} par {{ s.createur.email }}{% endif %}
       </p>
 

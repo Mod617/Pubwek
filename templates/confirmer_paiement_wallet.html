@@ -13,7 +13,7 @@
       <div class="absolute -right-8 -bottom-8 w-28 h-28 rounded-full bg-brand-bright/20 blur-2xl"></div>
       <div class="relative">
         <div class="font-label-caps text-label-caps uppercase tracking-wider text-brand-bright font-bold">Campagne #{{ campaign.id }}</div>
-        <p class="font-body-sm text-body-sm">{{ campaign.promotion_type | capitalize }} — {{ campaign.promotion_detail }}</p>
+        <p class="font-body-sm text-body-sm">{{ campaign.promotion_type | capitalize }} · {{ campaign.promotion_detail }}</p>
         <div class="mt-space-xs font-label-caps text-label-caps uppercase tracking-wider text-white/70 font-bold">Montant total dû</div>
         <div class="font-label-numeric-lg text-3xl font-extrabold tracking-tight">{{ "{:,.0f}".format(campaign.total_cost) }} XOF</div>
       </div>
@@ -33,8 +33,8 @@
           </span>
         </span>
         <span class="block mt-1 font-caption text-caption text-on-surface-variant">
-          Solde disponible : <strong class="text-slate-midnight">{{ "{:,.0f}".format(solde_wallet) }} XOF</strong>
-          — jusqu'à {{ "{:,.0f}".format(montant_utilisable) }} XOF seront appliqués à cette campagne.
+          Solde disponible : <strong class="text-slate-midnight">{{ "{:,.0f}".format(solde_wallet) }} XOF</strong>.
+          Jusqu'à {{ "{:,.0f}".format(montant_utilisable) }} XOF seront appliqués à cette campagne.
         </span>
       </label>
 
@@ -59,7 +59,7 @@
           {% if reste_a_payer <= 0 %}
             Payer {{ "{:,.0f}".format(montant_utilisable) }} XOF avec mon portefeuille
           {% else %}
-            Continuer — {{ "{:,.0f}".format(reste_a_payer) }} XOF via FedaPay
+            Continuer : {{ "{:,.0f}".format(reste_a_payer) }} XOF via FedaPay
           {% endif %}
         </button>
         <a href="{{ url_for('mes_campagnes') }}" class="pw-btn pw-btn-md pw-btn-neutral w-full">Annuler</a>
@@ -96,14 +96,14 @@ document.addEventListener("DOMContentLoaded", function () {
       valeurReste.textContent = formatXOF(resteAvecWallet) + " XOF";
       btnConfirmer.textContent = resteAvecWallet <= 0
         ? "Payer " + formatXOF(montantUtilisable) + " XOF avec mon portefeuille"
-        : "Continuer — " + formatXOF(resteAvecWallet) + " XOF via FedaPay";
+        : "Continuer : " + formatXOF(resteAvecWallet) + " XOF via FedaPay";
     } else {
       box.classList.add("border-outline-variant/40");
       box.classList.remove("border-brand-primary", "bg-brand-light");
       ligneWallet.style.display = "none";
       labelReste.textContent = "Reste à payer via FedaPay";
       valeurReste.textContent = formatXOF(totalCost) + " XOF";
-      btnConfirmer.textContent = "Continuer — " + formatXOF(totalCost) + " XOF via FedaPay";
+      btnConfirmer.textContent = "Continuer : " + formatXOF(totalCost) + " XOF via FedaPay";
     }
   }
 

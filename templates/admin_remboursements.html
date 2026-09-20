@@ -18,7 +18,6 @@
 
   <!-- ================= EN ATTENTE ================= -->
   <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
-    <span class="material-symbols-outlined text-[20px] text-amber-rich">hourglass_top</span>
     En attente de traitement
     {% if en_attente %}<span class="pw-chip pw-chip-warning">{{ en_attente | length }}</span>{% endif %}
   </h2>
@@ -41,19 +40,19 @@
         <tr>
           <td class="font-semibold text-slate-midnight">
             {% if d.campaign %}
-              #{{ d.campaign.id }} — {{ d.campaign.promotion_detail or d.campaign.promotion_type }}
+              #{{ d.campaign.id }} · {{ d.campaign.promotion_detail or d.campaign.promotion_type }}
             {% else %}
               <span class="font-normal text-on-surface-variant">Campagne supprimée</span>
             {% endif %}
           </td>
           <td>{{ d.demandeur.email if d.demandeur else "Utilisateur supprimé" }}</td>
           <td class="text-right font-label-numeric-md text-label-numeric-md font-bold text-brand-deep whitespace-nowrap">
-            {% if d.campaign %}{{ "{:,.0f}".format(d.campaign.total_cost) }} XOF{% else %}—{% endif %}
+            {% if d.campaign %}{{ "{:,.0f}".format(d.campaign.total_cost) }} XOF{% else %}-{% endif %}
           </td>
           <td>{{ d.payment_method_details or "Non précisé" }}</td>
-          <td class="font-caption text-caption text-on-surface-variant">{{ d.campaign.rejection_reason if d.campaign else "—" }}</td>
+          <td class="font-caption text-caption text-on-surface-variant">{{ d.campaign.rejection_reason if d.campaign else "-" }}</td>
           <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">
-            {{ d.created_at | heure_locale if d.created_at else "—" }}
+            {{ d.created_at | heure_locale if d.created_at else "-" }}
           </td>
           <td>
             <div class="flex flex-col gap-1">
@@ -142,7 +141,6 @@
 
   <!-- ================= HISTORIQUE ================= -->
   <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
-    <span class="material-symbols-outlined text-[20px] text-brand-primary">history</span>
     Historique
   </h2>
 
@@ -161,7 +159,7 @@
       {% for d in traitees %}
         <tr>
           <td class="font-label-numeric-md text-label-numeric-md font-bold text-on-surface-variant">
-            {% if d.campaign %}#{{ d.campaign.id }}{% else %}—{% endif %}
+            {% if d.campaign %}#{{ d.campaign.id }}{% else %}-{% endif %}
           </td>
           <td>{{ d.demandeur.email if d.demandeur else "Utilisateur supprimé" }}</td>
           <td>
@@ -173,9 +171,9 @@
               <span class="pw-chip pw-chip-neutral">{{ d.status }}</span>
             {% endif %}
           </td>
-          <td class="font-caption text-caption text-on-surface-variant">{{ d.admin_notes or "—" }}</td>
+          <td class="font-caption text-caption text-on-surface-variant">{{ d.admin_notes or "-" }}</td>
           <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">
-            {{ d.updated_at | heure_locale if d.updated_at else "—" }}
+            {{ d.updated_at | heure_locale if d.updated_at else "-" }}
           </td>
         </tr>
       {% else %}

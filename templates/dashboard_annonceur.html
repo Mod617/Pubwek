@@ -2,7 +2,7 @@
 
 {% block content %}
 <section class="py-space-lg bg-background">
-<div class="max-w-6xl mx-auto px-margin space-y-space-md">
+<div class="max-w-5xl mx-auto px-margin space-y-space-md">
 
   <!-- ================= PROFIL ENTREPRISE ================= -->
   <div class="rounded-2xl overflow-hidden bg-surface-container-lowest border border-outline-variant/20 shadow-md">
@@ -43,7 +43,7 @@
             <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-white font-caption text-[11px] font-bold flex items-center justify-center" id="notifBadge">{{ notifications_non_lues }}</span>
           {% endif %}
         </button>
-        <div id="notifPanel" class="hidden absolute left-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl border border-outline-variant/30 bg-surface-container-lowest shadow-xl z-40 p-1.5">
+        <div id="notifPanel" class="hidden absolute left-0 mt-2 w-80 max-w-[calc(100vw-2rem)] max-h-96 overflow-y-auto rounded-2xl border border-outline-variant/30 bg-surface-container-lowest shadow-xl z-40 p-1.5">
           <div class="px-space-sm py-1.5 font-label-caps text-label-caps uppercase tracking-wider text-on-surface-variant font-bold">Notifications</div>
           {% for notif in notifications %}
             <a class="notif-item flex items-start gap-space-xs rounded-xl px-space-sm py-2 hover:bg-surface-container-low transition-colors {{ 'font-semibold text-on-surface' if not notif.is_read else 'text-on-surface-variant' }}" href="{{ notif.link or '#' }}">
@@ -66,7 +66,7 @@
     <input type="file" id="ajaxCoverInput" accept="image/*" class="hidden" onchange="uploadCoverViaAjax()">
 
     <!-- Identite -->
-    <div class="px-space-md pb-space-md flex flex-col sm:flex-row sm:items-end gap-space-sm -mt-10 sm:-mt-12">
+    <div class="relative z-10 px-space-md pb-space-md flex flex-col sm:flex-row sm:items-end gap-space-sm -mt-10 sm:-mt-12">
 
       <div class="relative shrink-0 w-24 h-24 rounded-full bg-white shadow-md cursor-move" id="logoContainer"
            data-pos-x="{{ current_user.logo_position_x or 50 }}" data-pos-y="{{ current_user.logo_position_y or 50 }}">
@@ -125,7 +125,7 @@
   </div>
 
   <!-- ================= PORTEFEUILLE ================= -->
-  <div class="rounded-2xl p-space-md bg-gradient-to-br from-brand-deep to-slate-night text-white shadow-lg relative overflow-hidden">
+  <div class="rounded-2xl p-space-sm bg-slate-midnight text-white relative overflow-hidden">
     <div class="absolute -right-8 -bottom-8 w-32 h-32 rounded-full bg-brand-bright/20 blur-2xl"></div>
     <div class="relative flex flex-col md:flex-row md:items-center md:justify-between gap-space-sm">
       <div class="min-w-0">
@@ -133,10 +133,9 @@
           <span class="material-symbols-outlined text-[16px]">account_balance_wallet</span>
           Mon portefeuille
         </div>
-        <div class="font-label-numeric-lg text-3xl font-extrabold tracking-tight">{{ "{:,.0f}".format(current_user.wallet_balance or 0.0) }} XOF</div>
-        <p class="font-caption text-caption text-white/70 max-w-xl">
-          Provient des remboursements de campagnes crédités par l'administration. Retirable vers Mobile Money,
-          ou utilisable pour couvrir une future campagne.
+        <div class="font-label-numeric-lg text-2xl font-extrabold tracking-tight">{{ "{:,.0f}".format(current_user.wallet_balance or 0.0) }} XOF</div>
+        <p class="font-caption text-caption text-white/60">
+          Remboursements crédités par l'administration. Retirable ou utilisable pour une future campagne.
         </p>
       </div>
 
@@ -175,8 +174,8 @@
 
         <div class="p-space-md space-y-space-sm">
           <p class="font-caption text-caption text-on-surface-variant">
-            Solde disponible : <strong class="text-slate-midnight">{{ "{:,.0f}".format(current_user.wallet_balance or 0.0) }} XOF</strong>
-            — minimum de retrait : {{ "{:,.0f}".format(config.minimum_withdrawal_amount) }} XOF.
+            Solde disponible : <strong class="text-slate-midnight">{{ "{:,.0f}".format(current_user.wallet_balance or 0.0) }} XOF</strong>.
+            Minimum de retrait : {{ "{:,.0f}".format(config.minimum_withdrawal_amount) }} XOF.
           </p>
           <div>
             <label class="pw-label" for="wallet_amount">Montant à retirer (XOF)</label>
@@ -303,7 +302,7 @@
         <label for="video_file" class="pw-label">Téléversez votre vidéo publicitaire</label>
         <input type="file" name="video_file" id="video_file" class="pw-file" accept="video/mp4,video/quicktime,video/webm">
         <p class="pw-help">
-          MP4, MOV, WEBM — <strong>durée maximale : 30 secondes</strong> — taille maximale : 40 Mo.
+          MP4, MOV, WEBM. <strong>Durée maximale : 30 secondes</strong>, taille maximale : 40 Mo.
           Le fichier est vérifié automatiquement avant l'envoi.
         </p>
         <div id="videoFileInfo" class="mt-1 font-caption text-caption font-bold text-brand-primary"></div>
@@ -326,7 +325,7 @@
           Cochez au moins un département. Vous pouvez ensuite préciser les communes pour affiner le ciblage (optionnel).
         </p>
 
-        <div id="accordionZones" class="grid grid-cols-1 sm:grid-cols-2 gap-space-2xs">
+        <div id="accordionZones" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-space-2xs">
           {% for departement, communes in departements_communes.items() %}
           <div class="rounded-xl border border-outline-variant/30 overflow-hidden">
             <div class="flex items-center justify-between gap-space-xs px-space-sm py-1.5 bg-surface-container-low">
@@ -410,7 +409,7 @@
   <details class="group rounded-2xl border border-error/30 bg-error-container/40">
     <summary class="flex items-center gap-1.5 cursor-pointer select-none px-space-md py-space-sm font-headline-md text-[14px] font-semibold text-error list-none">
       <span class="material-symbols-outlined text-[18px]">warning</span>
-      Zone de danger — supprimer mon compte
+      Zone de danger : supprimer mon compte
       <span class="material-symbols-outlined text-[18px] ml-auto transition-transform group-open:rotate-180">expand_more</span>
     </summary>
     <div class="px-space-md pb-space-md">
@@ -612,7 +611,7 @@
 
       preview.onloadedmetadata = function() {
         if (preview.duration > 30.5) {
-          info.textContent = `Cette vidéo dure ${preview.duration.toFixed(1)}s — le maximum autorisé est 30 secondes. Veuillez la raccourcir.`;
+          info.textContent = `Cette vidéo dure ${preview.duration.toFixed(1)}s. Le maximum autorisé est 30 secondes. Veuillez la raccourcir.`;
           info.classList.remove('text-brand-primary');
           info.classList.add('text-error');
         } else {

@@ -1,0 +1,182 @@
+{% extends "base_v2.html" %}
+{% set title = "Pour les annonceurs" %}
+
+{% block content %}
+<!-- HEROS ANNONCEURS -->
+<section class="relative overflow-hidden bg-gradient-to-b from-canvas-cream via-surface-container-low to-background py-space-xl">
+<div class="absolute -top-32 -left-20 w-96 h-96 rounded-full bg-brand-primary/10 blur-3xl pointer-events-none"></div>
+<div class="max-w-5xl mx-auto px-margin relative">
+<div class="max-w-3xl space-y-space-md">
+<span class="inline-flex items-center gap-space-xs px-space-sm py-1.5 rounded-full bg-surface-container-lowest shadow-sm">
+<span class="w-2 h-2 rounded-full bg-brand-bright shrink-0"></span>
+<span class="font-label-caps text-label-caps uppercase text-slate-midnight font-bold tracking-wider">Pour les commerces et les marques</span>
+</span>
+<h1 class="font-display-hero text-display-hero-mobile md:text-display-hero text-slate-night tracking-tight leading-[1.08]">
+Payez la publicit&eacute; au
+<span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-brand-bright to-brand-deep">clic r&eacute;el</span>,
+pas &agrave; l'affichage.
+</h1>
+<p class="font-body-xl text-body-xl text-on-surface-variant">
+Votre annonce est publi&eacute;e sur les statuts WhatsApp de personnes que leur quartier conna&icirc;t d&eacute;j&agrave;.
+Vous choisissez les communes, vous fixez le nombre de clics vis&eacute;, et vous ne payez que ceux qui arrivent vraiment.
+</p>
+<div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-space-sm pt-space-xs">
+<a class="inline-flex items-center justify-center gap-space-xs px-space-md py-3.5 rounded-full bg-brand-primary text-on-primary font-headline-sm text-body-md font-bold shadow-xl shadow-brand-primary/25 hover:bg-brand-deep transition-all transform hover:-translate-y-0.5" href="{{ url_for('register', role='annonceur') }}">
+<span class="material-symbols-outlined text-[20px]">rocket_launch</span> Lancer une campagne
+</a>
+<a class="inline-flex items-center justify-center gap-space-xs px-space-md py-3.5 rounded-full border border-outline-variant/50 bg-surface-container-lowest text-slate-midnight font-headline-sm text-body-md font-bold hover:border-brand-primary transition-all" href="#simulateur">
+<span class="material-symbols-outlined text-[20px]">analytics</span> Estimer mon budget
+</a>
+</div>
+<div class="pt-space-xs flex flex-wrap items-center gap-y-2 gap-x-space-md text-on-surface-variant font-caption text-caption">
+<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-brand-primary">location_on</span> Ciblage par d&eacute;partement et commune</span>
+<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-brand-primary">shield</span> Clics frauduleux non factur&eacute;s</span>
+<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-brand-primary">lock_clock</span> Sans abonnement</span>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 3: COMPARATIF STRATÉGIQUE (PUBWEK VS FACEBOOK ADS VS FLYERS) -->
+<section class="py-space-xl md:py-space-2xl bg-background">
+<div class="max-w-6xl mx-auto px-margin">
+<!-- Section Header -->
+<div class="text-center max-w-3xl mx-auto space-y-space-xs mb-space-xl">
+<span class="px-space-sm py-1 rounded-full bg-brand-light text-brand-deep font-label-caps text-label-caps uppercase tracking-wider font-bold">COMPARATIF CANAUX PUBLICITAIRES</span>
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-slate-night">
+          Pourquoi les statuts WhatsApp convertissent 4x plus que Facebook Ads au Bénin
+        </h2>
+<p class="font-body-md text-body-md text-on-surface-variant">
+          Au Bénin, la recommandation d'un ami ou d'une connaissance sur WhatsApp dépasse n'importe quelle publicité sponsorisée anonyme.
+        </p>
+</div>
+<!-- Comparative Bento Grid -->
+<div data-pw-cascade="0" class="grid grid-cols-1 lg:grid-cols-3 gap-space-lg">
+<!-- CARD 1: Pubwek WhatsApp Status (The Winner) -->
+<div class="relative bg-surface-container-lowest rounded-3xl p-space-lg shadow-xl border-2 border-brand-primary/40 flex flex-col justify-between order-1 lg:order-2 transform lg:-translate-y-4">
+<div class="absolute -top-4 left-1/2 -translate-x-1/2 px-space-sm py-1 rounded-full bg-brand-primary text-on-primary font-label-caps text-label-caps uppercase font-bold tracking-widest shadow-md text-center leading-tight">
+            Recommandé pour le Bénin
+          </div>
+<div class="space-y-space-md">
+<div class="flex items-center justify-between">
+<div class="w-12 h-12 rounded-2xl bg-brand-light flex items-center justify-center text-brand-deep">
+<span class="material-symbols-outlined text-[26px]">chat</span>
+</div>
+<span class="px-space-sm py-1 rounded-full bg-brand-primary/10 text-brand-deep font-label-caps text-label-caps font-bold">COMPARATIF CANAUX PUBLICITAIRES</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-slate-midnight">Statuts WhatsApp via Pubwek</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              Recommandation humaine, sincère et directe par les contacts téléphoniques de personnes locales fiables.
+            </p>
+<ul class="space-y-3 pt-space-xs">
+<li class="flex items-start gap-2.5 font-body-sm text-body-sm text-slate-night">
+<span class="material-symbols-outlined text-brand-primary text-[20px] shrink-0">check_circle</span>
+<span class=""><strong>Taux d'ouverture &gt; 85% :</strong> Consulté par amis, familles, collègues directs.</span>
+</li>
+<li class="flex items-start gap-2.5 font-body-sm text-body-sm text-slate-night">
+<span class="material-symbols-outlined text-brand-primary text-[20px] shrink-0">check_circle</span>
+<span class=""><strong>Paiement au clic réel :</strong> Zéro facturation aux impressions fantômes.</span>
+</li>
+<li class="flex items-start gap-2.5 font-body-sm text-body-sm text-slate-night"><span class="material-symbols-outlined text-brand-primary text-[20px] shrink-0">check_circle</span><span class=""><strong>Ciblage par quartier et ville :</strong> Cotonou, Calavi, Parakou, Porto-Novo et leurs environs.</span></li>
+<li class="flex items-start gap-2.5 font-body-sm text-body-sm text-slate-night">
+<span class="material-symbols-outlined text-brand-primary text-[20px] shrink-0">check_circle</span>
+<span class=""><strong>Lien direct vers WhatsApp :</strong> Conversion et discussion instantanée.</span>
+</li>
+</ul>
+</div>
+<div class="mt-space-lg pt-space-md border-t border-outline-variant/30">
+<a class="w-full py-3 rounded-xl bg-brand-primary text-on-primary font-headline-sm text-body-sm font-bold flex items-center justify-center gap-2 hover:bg-brand-deep transition-all" href="{{ url_for('register', role='annonceur') }}">
+<span class="">Tester une campagne locale</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</a>
+</div>
+</div>
+<!-- CARD 2: Facebook / Instagram Ads Classique -->
+<div class="bg-surface-container-lowest rounded-3xl p-space-lg shadow-sm border border-outline-variant/40 flex flex-col justify-between order-2 lg:order-1">
+<div class="space-y-space-md">
+<div class="flex items-center justify-between">
+<div class="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center text-on-surface">
+<span class="material-symbols-outlined text-[26px]">public</span>
+</div>
+<span class="px-space-sm py-1 rounded-full bg-surface-container text-on-surface-variant font-label-caps text-label-caps font-bold">COMPARATIF CANAUX PUBLICITAIRES</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-slate-midnight">Facebook &amp; Instagram Ads</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              Annonces sponsorisées au milieu de flux sursaturés et impersonnels.
+            </p>
+<ul class="space-y-3 pt-space-xs text-on-surface-variant">
+<li class="flex items-start gap-2.5 font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-error text-[20px] shrink-0">cancel</span>
+<span class="">Facturation au coût par impression (CPM élevé) sans garantie de clics.</span>
+</li>
+<li class="flex items-start gap-2.5 font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-error text-[20px] shrink-0">cancel</span>
+<span class="">Cartes bancaires bloquées ou taxes de change FCFA / Dollar imprévues.</span>
+</li>
+<li class="flex items-start gap-2.5 font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-error text-[20px] shrink-0">cancel</span>
+<span class="">Froid et impersonnel : taux de méfiance élevé face aux arnaques en ligne.</span>
+</li>
+<li class="flex items-start gap-2.5 font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-error text-[20px] shrink-0">cancel</span>
+<span class="">Complexité technique du Business Manager.</span>
+</li>
+</ul>
+</div>
+<div class="mt-space-lg pt-space-md border-t border-outline-variant/30 text-center">
+<span class="font-caption text-caption text-on-surface-variant">Coût moyen par prospect réel : Élevé &amp; Incertain</span>
+</div>
+</div>
+<!-- CARD 3: Flyers & Affiches Papier de rue -->
+<div class="bg-surface-container-lowest rounded-3xl p-space-lg shadow-sm border border-outline-variant/40 flex flex-col justify-between order-3">
+<div class="space-y-space-md">
+<div class="flex items-center justify-between">
+<div class="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center text-on-surface">
+<span class="material-symbols-outlined text-[26px]">description</span>
+</div>
+<span class="px-space-sm py-1 rounded-full bg-surface-container text-on-surface-variant font-label-caps text-label-caps font-bold">COMPARATIF CANAUX PUBLICITAIRES</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-slate-midnight">Flyers &amp; Distribution Papier</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              Distribution physique aux carrefours (Étoile Rouge, Calavi Kpota, etc.).
+            </p>
+<ul class="space-y-3 pt-space-xs text-on-surface-variant">
+<li class="flex items-start gap-2.5 font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-error text-[20px] shrink-0">cancel</span>
+<span class="">Traçabilité nulle : impossible de mesurer le retour sur investissement.</span>
+</li>
+<li class="flex items-start gap-2.5 font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-error text-[20px] shrink-0">cancel</span>
+<span class="">Coûts d'impression élevés et gaspillage immédiat dans la rue.</span>
+</li>
+<li class="flex items-start gap-2.5 font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-error text-[20px] shrink-0">cancel</span>
+<span class="">Action lente : le passant doit retaper manuellement un numéro WhatsApp.</span>
+</li>
+<li class="flex items-start gap-2.5 font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-error text-[20px] shrink-0">cancel</span>
+<span class="">Rayon géographique extrêmement limité.</span>
+</li>
+</ul>
+</div>
+<div class="mt-space-lg pt-space-md border-t border-outline-variant/30 text-center">
+<span class="font-caption text-caption text-on-surface-variant">Retour sur investissement : Indéterminé</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+{% set etapes_public = 'annonceur' %}
+{% include "_blocs/etapes.html" %}
+
+{% set sim_mode = 'annonceur' %}
+{% include "_blocs/simulateur.html" %}
+
+{% set temoignages_public = 'annonceur' %}
+{% include "_blocs/temoignages.html" %}
+
+{% set faq_public = 'annonceur' %}
+{% include "_blocs/faq.html" %}
+
+{% set cta_public = 'annonceur' %}
+{% include "_blocs/cta.html" %}
+{% endblock %}

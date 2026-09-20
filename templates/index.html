@@ -1,7 +1,6 @@
 {% extends "base_v2.html" %}
 
 {% block content %}
-<div class="flex flex-col w-full">
 <!-- SECTION 1: HERO MAJESTUEUX (AdTech & FinTech West Africa) -->
 <section class="relative overflow-hidden bg-gradient-to-b from-canvas-cream via-surface-container-low to-background py-space-lg md:py-space-xl">
 <!-- Ambient glowing nodes -->
@@ -12,7 +11,18 @@
 <!-- Left Copy Column (7 Cols) -->
 <div class="lg:col-span-7 space-y-space-lg">
 <!-- Top Trust Badge -->
-<div class="inline-flex items-center gap-space-xs px-space-sm py-1.5 rounded-full bg-surface-container-lowest shadow-sm"><span class="w-2 h-2 rounded-full bg-brand-bright shrink-0"></span><span class="font-label-caps text-label-caps uppercase text-slate-midnight font-bold tracking-wider">Plateforme officielle AdTech Bénin</span><span class="w-1 h-1 rounded-full bg-outline-variant"></span><span class="font-caption text-caption text-brand-deep font-semibold">148 000 clics vérifiés</span></div>
+<div class="flex items-start gap-space-xs">
+<!-- Curseur qui clique : l'icone raconte le surtitre, on paie le clic -->
+<span class="shrink-0 w-[22px] h-[22px] rounded-lg bg-gradient-to-br from-brand-primary to-brand-bright shadow-sm shadow-brand-primary/30 flex items-center justify-center">
+<svg viewBox="0 0 24 24" class="w-[13px] h-[13px]" aria-hidden="true" focusable="false">
+<g fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" opacity=".85">
+<path d="M4 7A4 4 0 0 1 8 3"/><path d="M1.5 7A6.5 6.5 0 0 1 8 0.5"/>
+</g>
+<path fill="#fff" d="M8 6.4 L8 19.6 L11.4 16.2 L13.5 20.6 L15.7 19.6 L13.6 15.3 L18.2 14.6 Z"/>
+</svg>
+</span>
+<span class="font-label-caps text-label-caps uppercase text-brand-deep font-bold tracking-[0.16em] leading-[1.6]">Payé au clic réel, jamais à l’affichage</span>
+</div>
 <!-- Headline -->
 <h1 class="font-display-hero text-display-hero-mobile md:text-display-hero text-slate-night tracking-tight leading-[1.08]">
             Transformez chaque statut WhatsApp en
@@ -21,7 +31,7 @@
           </h1>
 <!-- Subtitle -->
 <p class="font-body-xl text-body-xl text-on-surface-variant max-w-2xl">
-            Pubwek relie directement les marques ambitieuses du Bénin à un réseau de <strong class="text-slate-midnight font-semibold">+2&nbsp;400 micro-influenceurs WhatsApp vérifiés</strong>. Zéro budget gaspillé : vous ne payez qu'au clic réel constaté.
+            Pubwek relie les commerces du Bénin à des <strong class="text-slate-midnight font-semibold">partageurs WhatsApp vérifiés, commune par commune</strong>. Votre annonce part sur leurs statuts, et vous ne payez que les clics réellement constatés.
           </p>
 <!-- Dual CTAs -->
 <div class="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-space-md pt-space-xs">
@@ -41,661 +51,278 @@
               Retraits instantanés MTN MoMo, Moov &amp; Celtiis
             </span>
 <span class="inline-flex items-center gap-1">
-<span class="material-symbols-outlined text-[16px] text-brand-primary">verified</span>
-              Conforme APDP &amp; Code du Numérique Béninois
+<span class="material-symbols-outlined text-[16px] text-brand-primary">location_on</span>
+              Ciblage par département et par commune
             </span>
 <span class="inline-flex items-center gap-1">
 <span class="material-symbols-outlined text-[16px] text-brand-primary">lock_clock</span>
               Zéro abonnement requis
             </span>
 </div>
-<!-- Social Validation Proof Strip -->
-<div class="p-space-md rounded-2xl bg-surface-container-lowest/80 backdrop-blur-md shadow-sm flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-sm"><div class="flex -space-x-2 overflow-hidden shrink-0"><div class="inline-block h-8 w-8 rounded-full ring-2 ring-surface-container-lowest bg-brand-light flex items-center justify-center font-bold text-brand-deep text-[11px]">RD</div><div class="inline-block h-8 w-8 rounded-full ring-2 ring-surface-container-lowest bg-amber-soft flex items-center justify-center font-bold text-secondary text-[11px]">IS</div><div class="inline-block h-8 w-8 rounded-full ring-2 ring-surface-container-lowest bg-surface-container-highest flex items-center justify-center font-bold text-slate-midnight text-[11px]">LM</div><div class="inline-block h-8 w-8 rounded-full ring-2 ring-surface-container-lowest bg-primary-fixed flex items-center justify-center font-bold text-on-primary-fixed text-[11px]">+600</div></div><div><p class="font-body-sm text-body-sm font-semibold text-slate-midnight">Approuvé par 610+ commerces, restaurants et créateurs locaux</p><p class="font-caption text-caption text-on-surface-variant">Actifs à Cotonou, Abomey-Calavi, Porto-Novo et Parakou</p></div></div><div class="hidden sm:block text-right shrink-0"><div class="font-label-numeric-md text-label-numeric-md text-brand-deep font-bold">Dès 500 FCFA</div><p class="font-caption text-caption text-on-surface-variant">Retrait Mobile Money</p></div></div>
+<!-- Bandeau de reassurance : ce que la plateforme garantit, sans chiffre invendable -->
+<div class="p-space-md rounded-2xl bg-surface-container-lowest/80 backdrop-blur-md shadow-sm flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-sm"><div class="flex -space-x-2 overflow-hidden shrink-0"><div class="inline-block h-8 w-8 rounded-full ring-2 ring-surface-container-lowest bg-brand-light flex items-center justify-center font-bold text-brand-deep text-[11px]">RD</div><div class="inline-block h-8 w-8 rounded-full ring-2 ring-surface-container-lowest bg-amber-soft flex items-center justify-center font-bold text-secondary text-[11px]">IS</div><div class="inline-block h-8 w-8 rounded-full ring-2 ring-surface-container-lowest bg-surface-container-highest flex items-center justify-center font-bold text-slate-midnight text-[11px]">LM</div></div><div><p class="font-body-sm text-body-sm font-semibold text-slate-midnight">Des commerces et des partageurs d’ici, pas des profils anonymes</p><p class="font-caption text-caption text-on-surface-variant">Chaque partageur est vérifié par son numéro WhatsApp avant sa première publication</p></div></div><div class="hidden sm:block text-right shrink-0"><div class="font-label-numeric-md text-label-numeric-md text-brand-deep font-bold">Dès {{ config.minimum_withdrawal_amount | int }} FCFA</div><p class="font-caption text-caption text-on-surface-variant">Retrait Mobile Money</p></div></div>
 </div>
-<!-- Right Column (5 Cols) - Hyper-Realistic WhatsApp Status Device Mockup -->
-<div class="lg:col-span-5 flex justify-center relative"><div class="relative w-full max-w-[290px] sm:max-w-[305px] mx-auto py-1" style="perspective: 1000px;"><div class="relative mx-auto w-[218px] sm:w-[231px] h-[462px] rounded-[38px] p-[9px] bg-gradient-to-b from-[#475569] via-[#1e293b] to-[#090d16] transition-transform duration-500 hover:scale-[1.01]" style="box-shadow: 0 35px 70px -15px rgba(15, 23, 42, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.18) inset, 0 1px 2px rgba(255, 255, 255, 0.3) inset; transform: rotateY(-4deg) rotateX(2deg);"><div class="absolute -left-[9px] top-20 w-[3px] h-6 bg-gradient-to-b from-slate-400 via-slate-600 to-slate-800 rounded-l shadow-[-2px_0_4px_rgba(0,0,0,0.5)] border-l border-white/20"></div><div class="absolute -left-[9px] top-28 w-[3px] h-10 bg-gradient-to-b from-slate-400 via-slate-600 to-slate-800 rounded-l shadow-[-2px_0_4px_rgba(0,0,0,0.5)] border-l border-white/20"></div><div class="absolute -left-[9px] top-40 w-[3px] h-10 bg-gradient-to-b from-slate-400 via-slate-600 to-slate-800 rounded-l shadow-[-2px_0_4px_rgba(0,0,0,0.5)] border-l border-white/20"></div><div class="absolute -right-[9px] top-24 w-[3px] h-12 bg-gradient-to-b from-slate-400 via-slate-600 to-slate-800 rounded-r shadow-[2px_0_4px_rgba(0,0,0,0.5)] border-r border-white/20"></div><div class="relative w-full h-full rounded-[30px] overflow-hidden bg-black flex flex-col justify-between text-white select-none shadow-[inset_0_0_8px_rgba(0,0,0,0.8)]"><div class="absolute top-2 left-1/2 -translate-x-1/2 z-40 h-[22px] w-[88px] bg-black rounded-full flex items-center justify-between px-2 shadow-md"><div class="w-2.5 h-2.5 rounded-full bg-[#111827] border border-slate-800 flex items-center justify-center"><div class="w-1 h-1 rounded-full bg-blue-900"></div></div><div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-brand-bright/80 animate-pulse"></div><div class="w-2 h-2 rounded-full bg-amber-vibrant/90"></div></div></div><div class="absolute top-8 left-2.5 right-2.5 z-30 rounded-xl bg-white/95 backdrop-blur-md p-2 text-slate-midnight shadow-lg border border-black/5 flex items-start gap-2"><div class="w-7 h-7 rounded-lg bg-momo-yellow flex items-center justify-center shrink-0 shadow-sm"><span class="font-black text-slate-900 text-[9px] tracking-tighter">MoMo</span></div><div class="flex-1 min-w-0"><div class="flex items-center justify-between"><span class="text-[10px] font-bold text-slate-midnight truncate">MTN Mobile Money</span><span class="text-[8px] text-on-surface-variant font-medium">Il y a 3m</span></div><p class="text-[10px] text-brand-deep font-semibold leading-tight mt-0.5">+14 500 FCFA reçu de Pubwek Bénin</p><p class="text-[8px] text-on-surface-variant truncate">Solde disponible: 72 300 FCFA</p></div></div><div class="relative w-full h-full"><div class="absolute inset-0 bg-cover bg-center flex flex-col justify-between p-3 pt-12 pb-2.5" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0) 25%, rgba(0,0,0,0.1) 60%, rgba(0,0,0,0.88) 100%), url('{{ url_for('static', filename='images/hero-statut-burger.jpg') }}');"><div class="relative z-20 space-y-2"><div class="flex items-center gap-1 w-full"><div class="h-[2.5px] rounded-full bg-white flex-1 shadow-sm"></div><div class="h-[2.5px] rounded-full bg-white/40 flex-1"></div><div class="h-[2.5px] rounded-full bg-white/30 flex-1"></div></div><div class="flex items-center justify-between pt-1"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[17px] text-white">arrow_back</span><div class="relative"><div class="w-7 h-7 rounded-full ring-2 ring-brand-bright overflow-hidden bg-slate-800 flex items-center justify-center font-bold text-[10px] text-white">MB</div><div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-brand-primary ring-1 ring-slate-950 flex items-center justify-center text-[9px] font-bold">+</div></div><div><div class="text-[11px] font-bold text-white flex items-center gap-1.5">Mon statut</div><div class="text-[9px] text-gray-300">Il y a 12 min</div></div></div><span class="material-symbols-outlined text-[18px] text-white/90">more_vert</span></div></div><div class="relative z-20 space-y-2.5 mb-1"><div class="flex justify-center"><div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white text-slate-900 shadow-xl border border-white/60 text-[10px] font-bold tracking-tight hover:scale-105 transition-transform cursor-pointer"><span class="material-symbols-outlined text-brand-primary text-[13px]">link</span><span class="">pubwek.com/r/delices-akp</span></div></div><div class="p-2 rounded-xl bg-black/65 backdrop-blur-md border border-white/10 text-white space-y-1 shadow-lg"><p class="text-[10px] font-semibold text-white leading-snug drop-shadow">🍔 <strong class="text-white">Saveurs &amp; Délices Akpakpa :</strong> Offre week-end Menu Burger Gourmet + Frites + Boisson à 4 500 FCFA ! Cliquez sur le lien pour commander sur WhatsApp 👇</p></div><div class="flex items-center justify-center gap-1.5 text-white/95 pt-0.5"><span class="material-symbols-outlined text-[16px]">visibility</span><span class="text-[10px] font-bold font-mono tracking-tight">1 420</span></div></div></div></div><div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-24 h-1 bg-white/70 rounded-full z-40"></div></div></div></div><!-- Floating Reassurance Badges around Phone Mockup --><div class="hidden md:flex absolute -top-2 -left-6 lg:-left-12 z-30 items-center gap-2 px-3 py-1.5 rounded-xl bg-white/95 backdrop-blur-md border border-outline-variant/30 shadow-lg shadow-slate-midnight/5 hover:scale-105 transition-all duration-300 pointer-events-auto"><div class="w-8 h-8 rounded-lg bg-brand-light text-brand-deep flex items-center justify-center shrink-0 shadow-sm"><span class="material-symbols-outlined text-[17px]">verified_user</span></div><div class="text-left"><div class="text-[11px] font-bold text-slate-midnight leading-tight flex items-center gap-1">0 Faux Clic · 0 Robot<span class="w-1.5 h-1.5 rounded-full bg-brand-bright animate-pulse"></span></div><p class="text-[9px] text-on-surface-variant font-medium leading-tight mt-0.5">Audit APDP &amp; IP Bénin</p></div></div><div class="hidden md:flex absolute top-16 -right-1 lg:-right-4 z-30 items-center gap-2 px-3 py-1.5 rounded-xl bg-white/95 backdrop-blur-md border border-outline-variant/30 shadow-lg shadow-slate-midnight/5 hover:scale-105 transition-all duration-300 pointer-events-auto"><div class="w-8 h-8 rounded-lg bg-moov-blue/15 text-moov-blue flex items-center justify-center shrink-0 shadow-sm"><span class="material-symbols-outlined text-[17px]">location_on</span></div><div class="text-left"><div class="text-[11px] font-bold text-slate-midnight leading-tight">Ciblage 77 Communes</div><p class="text-[9px] text-on-surface-variant font-medium leading-tight mt-0.5">Visibilité 100% locale</p></div></div><div class="hidden md:flex absolute bottom-20 -left-6 lg:-left-14 z-30 items-center gap-2 px-3 py-1.5 rounded-xl bg-white/95 backdrop-blur-md border border-outline-variant/30 shadow-lg shadow-slate-midnight/5 hover:scale-105 transition-all duration-300 pointer-events-auto"><div class="w-8 h-8 rounded-lg bg-amber-soft text-secondary flex items-center justify-center shrink-0 shadow-sm"><span class="material-symbols-outlined text-[17px]">bolt</span></div><div class="text-left"><div class="text-[11px] font-bold text-slate-midnight leading-tight">Retrait dès 500 FCFA</div><p class="text-[9px] text-on-surface-variant font-medium leading-tight mt-0.5">Directement sur MoMo / Moov</p></div></div><div class="hidden md:flex absolute bottom-8 -right-1 lg:-right-4 z-30 items-center gap-2 px-3 py-1.5 rounded-xl bg-white/95 backdrop-blur-md border border-outline-variant/30 shadow-lg shadow-slate-midnight/5 hover:scale-105 transition-all duration-300 pointer-events-auto"><div class="w-8 h-8 rounded-lg bg-brand-light text-brand-primary flex items-center justify-center shrink-0 shadow-sm"><span class="material-symbols-outlined text-[17px]">trending_up</span></div><div class="text-left"><div class="text-[11px] font-bold text-slate-midnight leading-tight">+85% Taux d'ouverture</div><p class="text-[9px] text-on-surface-variant font-medium leading-tight mt-0.5">Conversations directes WhatsApp</p></div></div></div>
+<!-- Colonne droite : maquette de telephone.
+     Tout est en CSS, aucune image de cadre : chassis metal (degrade a bandes
+     claires et sombres, comme une tranche polie renvoie la lumiere), lunette
+     noire, ecran aux coins concentriques, ilot dynamique, boutons qui
+     depassent et reflet de verre en diagonale. -->
+<div class="lg:col-span-5 flex justify-center relative">
+<div class="relative w-full max-w-[290px] sm:max-w-[305px] mx-auto py-space-sm">
+
+<div class="relative mx-auto w-[238px] h-[506px] transition-transform duration-700 hover:rotate-0"
+     style="transform:perspective(1600px) rotateY(-8deg) rotateX(2deg) rotateZ(.5deg);">
+
+<!-- ombre de contact au sol -->
+<div class="absolute -bottom-7 left-1/2 -translate-x-1/2 w-[78%] h-10 rounded-[50%] bg-slate-night/30 blur-2xl pointer-events-none"></div>
+
+<!-- boutons physiques, glisses sous le chassis -->
+<div class="absolute left-[-2px] w-[3px] rounded-l-[2px] z-0" style="top:92px;height:24px;background:linear-gradient(90deg,#cbd5e1 0%,#8d99a8 30%,#46505f 70%,#1f2733 100%);box-shadow:-1px 0 2px rgba(2,6,23,.55),inset 0 1px 0 rgba(255,255,255,.25)"></div>
+<div class="absolute left-[-2px] w-[3px] rounded-l-[2px] z-0" style="top:132px;height:36px;background:linear-gradient(90deg,#cbd5e1 0%,#8d99a8 30%,#46505f 70%,#1f2733 100%);box-shadow:-1px 0 2px rgba(2,6,23,.55),inset 0 1px 0 rgba(255,255,255,.25)"></div>
+<div class="absolute left-[-2px] w-[3px] rounded-l-[2px] z-0" style="top:176px;height:36px;background:linear-gradient(90deg,#cbd5e1 0%,#8d99a8 30%,#46505f 70%,#1f2733 100%);box-shadow:-1px 0 2px rgba(2,6,23,.55),inset 0 1px 0 rgba(255,255,255,.25)"></div>
+<div class="absolute right-[-2px] w-[3px] rounded-r-[2px] z-0" style="top:150px;height:58px;background:linear-gradient(270deg,#cbd5e1 0%,#8d99a8 30%,#46505f 70%,#1f2733 100%);box-shadow:1px 0 2px rgba(2,6,23,.55),inset 0 1px 0 rgba(255,255,255,.25)"></div>
+
+<!-- chassis metal -->
+<div class="relative w-full h-full rounded-[44px] p-[2.5px] z-10"
+     style="background:linear-gradient(148deg,#f8fafc 0%,#cbd5e1 4%,#5b6676 10%,#e2e8f0 19%,#94a3b8 26%,#3f4a5a 37%,#cbd5e1 49%,#8d99a8 57%,#2b3543 69%,#e2e8f0 81%,#76818f 89%,#f1f5f9 100%);
+            box-shadow:0 48px 70px -22px rgba(15,23,42,.55),0 22px 36px -26px rgba(15,23,42,.65),
+                       inset 0 0 0 .5px rgba(255,255,255,.42),inset 0 1px 1px rgba(255,255,255,.6),
+                       inset 3px 0 4px -3px rgba(255,255,255,.75),inset -3px 0 5px -3px rgba(2,6,23,.75);">
+
+<!-- traits d'antenne sur la tranche -->
+<div class="absolute left-[-1px] w-[4px] h-[2px] z-20 rounded-full bg-slate-200/55" style="top:86px"></div>
+<div class="absolute left-[-1px] w-[4px] h-[2px] z-20 rounded-full bg-slate-200/55" style="top:216px"></div>
+<div class="absolute right-[-1px] w-[4px] h-[2px] z-20 rounded-full bg-slate-200/55" style="top:118px"></div>
+<div class="absolute right-[-1px] w-[4px] h-[2px] z-20 rounded-full bg-slate-200/55" style="top:244px"></div>
+
+<!-- lunette noire -->
+<div class="relative w-full h-full rounded-[42px] p-[8px] bg-[#04060a]"
+     style="box-shadow:inset 0 0 0 .5px rgba(255,255,255,.08);">
+
+<!-- ecran -->
+<div class="relative w-full h-full rounded-[34px] overflow-hidden bg-black select-none"
+     style="box-shadow:inset 0 0 12px rgba(0,0,0,.95),inset 0 .5px 0 rgba(255,255,255,.22),inset 0 -.5px 0 rgba(255,255,255,.08);">
+
+<!-- contenu : un statut WhatsApp en cours de lecture -->
+<div class="absolute inset-0 bg-cover bg-center"
+     style="background-image:linear-gradient(to bottom,rgba(0,0,0,.72) 0%,rgba(0,0,0,.05) 26%,rgba(0,0,0,.12) 58%,rgba(0,0,0,.9) 100%),url('{{ url_for('static', filename='images/hero-statut-burger.jpg') }}');"></div>
+
+<!-- barre d'etat -->
+<div class="absolute top-0 left-0 right-0 h-[42px] z-30 flex items-end justify-between px-[18px] pb-[7px] text-white">
+<span class="font-headline-sm text-[12px] font-semibold tracking-tight">14:32</span>
+<span class="flex items-center gap-[4px]">
+<svg width="15" height="11" viewBox="0 0 15 11" fill="currentColor" aria-hidden="true"><rect x="0" y="7.5" width="2.6" height="3.5" rx="1"/><rect x="4.1" y="5.2" width="2.6" height="5.8" rx="1"/><rect x="8.2" y="2.7" width="2.6" height="8.3" rx="1"/><rect x="12.3" y="0" width="2.6" height="11" rx="1"/></svg>
+<svg width="14" height="11" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M1.2 4.1a10 10 0 0 1 13.6 0"/><path d="M3.8 7a6.3 6.3 0 0 1 8.4 0"/><path d="M6.5 9.8a2.4 2.4 0 0 1 3 0"/></svg>
+<svg width="22" height="11" viewBox="0 0 26 13" fill="none" aria-hidden="true"><rect x=".7" y=".7" width="21.6" height="11.6" rx="3.4" stroke="currentColor" stroke-opacity=".5" stroke-width="1.1"/><rect x="2.4" y="2.4" width="15" height="8.2" rx="2.1" fill="currentColor"/><path d="M24.2 4.6v3.8a2.6 2.6 0 0 0 0-3.8Z" fill="currentColor" fill-opacity=".55"/></svg>
+</span>
+</div>
+
+<!-- ilot dynamique : pastille noire posee par-dessus l'image -->
+<div class="absolute top-[9px] left-1/2 -translate-x-1/2 h-[25px] w-[86px] rounded-full bg-black z-40 flex items-center justify-end pr-[7px]"
+     style="box-shadow:0 1px 2px rgba(0,0,0,.9);">
+<span class="block w-[11px] h-[11px] rounded-full"
+      style="background:radial-gradient(circle at 34% 30%,#2b4f7a 0%,#12233a 45%,#02050a 100%);
+             box-shadow:inset 0 0 0 .5px rgba(148,163,184,.35);"></span>
+</div>
+
+<!-- barres de progression du statut -->
+<div class="absolute top-[46px] left-[10px] right-[10px] z-30 flex items-center gap-[3px]">
+<span class="h-[2.5px] flex-1 rounded-full bg-white shadow-sm"></span>
+<span class="h-[2.5px] flex-1 rounded-full bg-white/35"></span>
+<span class="h-[2.5px] flex-1 rounded-full bg-white/25"></span>
+</div>
+
+<!-- en-tete du statut -->
+<div class="absolute top-[56px] left-[10px] right-[10px] z-30 flex items-center justify-between text-white">
+<div class="flex items-center gap-[7px]">
+<span class="material-symbols-outlined text-[18px]">arrow_back</span>
+<span class="relative block">
+<span class="w-[28px] h-[28px] rounded-full ring-2 ring-brand-bright bg-slate-800 text-white text-[10px] font-bold flex items-center justify-center">MB</span>
+<span class="absolute -bottom-0.5 -right-0.5 w-[12px] h-[12px] rounded-full bg-brand-primary ring-[1.5px] ring-black text-[9px] font-bold flex items-center justify-center leading-none">+</span>
+</span>
+<span class="block leading-tight">
+<span class="block text-[11.5px] font-bold">Mon statut</span>
+<span class="block text-[9px] text-white/70">Il y a 12 min</span>
+</span>
+</div>
+<span class="material-symbols-outlined text-[18px] text-white/85">more_vert</span>
+</div>
+
+<!-- notification Mobile Money qui descend par-dessus -->
+<div class="absolute top-[98px] left-[9px] right-[9px] z-30 rounded-[16px] bg-white/90 backdrop-blur-xl p-[8px] flex items-start gap-[7px] text-slate-midnight"
+     style="box-shadow:0 10px 22px -8px rgba(2,6,23,.55),inset 0 0 0 .5px rgba(255,255,255,.9);">
+<span class="w-[26px] h-[26px] rounded-[8px] bg-momo-yellow flex items-center justify-center shrink-0 shadow-sm">
+<span class="font-black text-slate-900 text-[8px] tracking-tighter">MoMo</span></span>
+<span class="flex-1 min-w-0 block">
+<span class="flex items-center justify-between">
+<span class="text-[10px] font-bold truncate">MTN Mobile Money</span>
+<span class="text-[8px] text-on-surface-variant font-medium shrink-0 ml-1">3 min</span></span>
+<span class="block text-[10px] text-brand-deep font-semibold leading-tight mt-[1px]">+1 250 FCFA re&ccedil;u de Pubwek B&eacute;nin</span>
+<span class="block text-[8px] text-on-surface-variant truncate">Solde disponible : 3 400 FCFA</span>
+</span>
+</div>
+
+<!-- bas du statut : le lien tracable, le texte de l'annonce, les vues -->
+<div class="absolute bottom-[24px] left-[10px] right-[10px] z-30 space-y-[9px]">
+<div class="flex justify-center">
+<span class="inline-flex items-center gap-1 px-[9px] py-[4px] rounded-full bg-white text-slate-900 text-[9.5px] font-bold tracking-tight shadow-lg">
+<span class="material-symbols-outlined text-brand-primary text-[12px]">link</span>pubwek.com/r/delices-akp</span>
+</div>
+<div class="p-[8px] rounded-[14px] bg-black/60 backdrop-blur-md text-white"
+     style="box-shadow:inset 0 0 0 .5px rgba(255,255,255,.14);">
+<p class="text-[10px] font-semibold leading-snug"><strong>Saveurs &amp; D&eacute;lices Akpakpa :</strong> Offre week-end Menu Burger Gourmet + Frites + Boisson &agrave; 4 500 FCFA. Cliquez sur le lien pour commander sur WhatsApp</p>
+</div>
+<div class="flex items-center justify-center gap-[5px] text-white/95">
+<span class="material-symbols-outlined text-[15px]">visibility</span>
+<span class="font-label-numeric-md text-[10px] font-bold tracking-tight">1 420</span>
 </div>
 </div>
-</section>
-<!-- SECTION 2: LIVE STATS & SOCIAL PROOF BANNER -->
+
+<!-- barre d'accueil -->
+<div class="absolute bottom-[7px] left-1/2 -translate-x-1/2 w-[96px] h-[4px] rounded-full bg-white/85 z-40"></div>
+
+<!-- reflet du verre : c'est ce qui separe un rectangle d'une vitre.
+     Deux passes, une nappe large en diagonale et un eclat court et flou. -->
+<div class="absolute inset-0 z-50 pointer-events-none"
+     style="background:linear-gradient(114deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.07) 14%,rgba(255,255,255,0) 34%,rgba(255,255,255,0) 72%,rgba(255,255,255,.05) 100%);"></div>
+<div class="absolute -top-[30%] -left-[35%] w-[70%] h-[170%] z-50 pointer-events-none rotate-[18deg] blur-[6px]"
+     style="background:linear-gradient(90deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.14) 45%,rgba(255,255,255,0) 100%);"></div>
+
+</div>
+</div>
+</div>
+</div>
+
+</div>
+<!-- Floating Reassurance Badges around Phone Mockup --><div class="hidden md:flex absolute -top-1 -left-8 lg:-left-14 z-30 items-center gap-2 px-3 py-1.5 rounded-xl bg-white/95 backdrop-blur-md border border-outline-variant/30 shadow-lg shadow-slate-midnight/5 hover:scale-105 transition-all duration-300 pointer-events-auto"><div class="w-8 h-8 rounded-lg bg-brand-light text-brand-deep flex items-center justify-center shrink-0 shadow-sm"><span class="material-symbols-outlined text-[17px]">verified_user</span></div><div class="text-left"><div class="text-[11px] font-bold text-slate-midnight leading-tight flex items-center gap-1">0 Faux Clic · 0 Robot<span class="w-1.5 h-1.5 rounded-full bg-brand-bright animate-pulse"></span></div><p class="text-[9px] text-on-surface-variant font-medium leading-tight mt-0.5">Audit APDP &amp; IP Bénin</p></div></div><div class="hidden md:flex absolute top-28 -right-5 lg:-right-12 z-30 items-center gap-2 px-3 py-1.5 rounded-xl bg-white/95 backdrop-blur-md border border-outline-variant/30 shadow-lg shadow-slate-midnight/5 hover:scale-105 transition-all duration-300 pointer-events-auto"><div class="w-8 h-8 rounded-lg bg-moov-blue/15 text-moov-blue flex items-center justify-center shrink-0 shadow-sm"><span class="material-symbols-outlined text-[17px]">location_on</span></div><div class="text-left"><div class="text-[11px] font-bold text-slate-midnight leading-tight">Ciblage 77 Communes</div><p class="text-[9px] text-on-surface-variant font-medium leading-tight mt-0.5">Visibilité 100% locale</p></div></div><div class="hidden md:flex absolute bottom-24 -left-8 lg:-left-16 z-30 items-center gap-2 px-3 py-1.5 rounded-xl bg-white/95 backdrop-blur-md border border-outline-variant/30 shadow-lg shadow-slate-midnight/5 hover:scale-105 transition-all duration-300 pointer-events-auto"><div class="w-8 h-8 rounded-lg bg-amber-soft text-secondary flex items-center justify-center shrink-0 shadow-sm"><span class="material-symbols-outlined text-[17px]">bolt</span></div><div class="text-left"><div class="text-[11px] font-bold text-slate-midnight leading-tight">Retrait dès 500 FCFA</div><p class="text-[9px] text-on-surface-variant font-medium leading-tight mt-0.5">Directement sur MoMo / Moov</p></div></div><div class="hidden md:flex absolute bottom-4 -right-5 lg:-right-12 z-30 items-center gap-2 px-3 py-1.5 rounded-xl bg-white/95 backdrop-blur-md border border-outline-variant/30 shadow-lg shadow-slate-midnight/5 hover:scale-105 transition-all duration-300 pointer-events-auto"><div class="w-8 h-8 rounded-lg bg-brand-light text-brand-primary flex items-center justify-center shrink-0 shadow-sm"><span class="material-symbols-outlined text-[17px]">link</span></div><div class="text-left"><div class="text-[11px] font-bold text-slate-midnight leading-tight">Un lien par partageur</div><p class="text-[9px] text-on-surface-variant font-medium leading-tight mt-0.5">Chaque clic sait d’où il vient</p></div></div></div>
+</div>
+</div>
+</section><!-- SECTION 2 : LES CHIFFRES QUI ENGAGENT PUBWEK
+     Uniquement des regles de fonctionnement verifiables par le visiteur,
+     pas des volumes d'activite que personne ne peut controler. -->
 <section class="w-full bg-surface-container-lowest border-y border-outline-variant/20 py-space-xl">
 <div class="max-w-6xl mx-auto px-margin">
-<div class="grid grid-cols-2 md:grid-cols-5 gap-space-lg items-center divide-y md:divide-y-0 md:divide-x divide-outline-variant/20">
+<div data-pw-cascade="0" class="grid grid-cols-2 md:grid-cols-5 gap-space-lg items-center divide-y md:divide-y-0 md:divide-x divide-outline-variant/20">
 <div class="pt-2 md:pt-0 md:px-4 text-center sm:text-left">
-<div class="font-label-numeric-lg text-label-numeric-lg text-brand-deep font-bold">2 400+</div>
-<p class="font-body-sm text-body-sm font-semibold text-slate-midnight mt-0.5">Partageurs actifs</p>
-<p class="font-caption text-caption text-on-surface-variant">Vérifiés par pièce &amp; WhatsApp</p>
+<div class="font-label-numeric-lg text-label-numeric-lg text-brand-deep font-bold">{{ config.minimum_withdrawal_amount | int }} FCFA</div>
+<p class="font-body-sm text-body-sm font-semibold text-slate-midnight mt-0.5">Seuil de retrait</p>
+<p class="font-caption text-caption text-on-surface-variant">Vers MTN MoMo, Moov ou Celtiis</p>
 </div>
 <div class="pt-2 md:pt-0 md:px-4 text-center sm:text-left">
-<div class="font-label-numeric-lg text-label-numeric-lg text-brand-deep font-bold">610+</div>
-<p class="font-body-sm text-body-sm font-semibold text-slate-midnight mt-0.5">Entreprises clientes</p>
-<p class="font-caption text-caption text-on-surface-variant">Boutiques, restos, services</p>
+<div class="font-label-numeric-lg text-label-numeric-lg text-brand-deep font-bold">77</div>
+<p class="font-body-sm text-body-sm font-semibold text-slate-midnight mt-0.5">Communes ciblables</p>
+<p class="font-caption text-caption text-on-surface-variant">Les 12 départements du Bénin</p>
 </div>
 <div class="pt-2 md:pt-0 md:px-4 text-center sm:text-left">
-<div class="font-label-numeric-lg text-label-numeric-lg text-amber-rich font-bold">148 000+</div>
-<p class="font-body-sm text-body-sm font-semibold text-slate-midnight mt-0.5">Clics qualifiés ce mois</p>
-<p class="font-caption text-caption text-on-surface-variant">Audit unique par IP/Session</p>
+<div class="font-label-numeric-lg text-label-numeric-lg text-amber-rich font-bold">0 FCFA</div>
+<p class="font-body-sm text-body-sm font-semibold text-slate-midnight mt-0.5">Abonnement</p>
+<p class="font-caption text-caption text-on-surface-variant">Aucun frais fixe, aucun engagement</p>
 </div>
 <div class="pt-2 md:pt-0 md:px-4 text-center sm:text-left">
-<div class="font-label-numeric-lg text-label-numeric-lg text-brand-deep font-bold">100%</div>
-<p class="font-body-sm text-body-sm font-semibold text-slate-midnight mt-0.5">Territoire béninois</p>
-<p class="font-caption text-caption text-on-surface-variant">12 Départements · 77 Communes</p>
+<div class="font-label-numeric-lg text-label-numeric-lg text-brand-deep font-bold">100&nbsp;%</div>
+<p class="font-body-sm text-body-sm font-semibold text-slate-midnight mt-0.5">Clics vérifiés</p>
+<p class="font-caption text-caption text-on-surface-variant">Doublons par IP et session écartés avant facturation</p>
 </div>
 <div class="col-span-2 md:col-span-1 pt-2 md:pt-0 md:px-4 text-center sm:text-left">
-<div class="font-label-numeric-lg text-label-numeric-lg text-celtiis-green font-bold">99.4%</div>
-<p class="font-body-sm text-body-sm font-semibold text-slate-midnight mt-0.5">Taux anti-fraude</p>
-<p class="font-caption text-caption text-on-surface-variant">Zéro clics robots tolérés</p>
+<div class="font-label-numeric-lg text-label-numeric-lg text-celtiis-green font-bold">48 h</div>
+<p class="font-body-sm text-body-sm font-semibold text-slate-midnight mt-0.5">Remboursement</p>
+<p class="font-caption text-caption text-on-surface-variant">Délai maximum pour le budget non consommé</p>
 </div>
 </div>
+<p class="mt-space-md text-center font-caption text-caption text-on-surface-variant">
+Ces cinq points sont des engagements de la plateforme, pas des estimations : ils figurent dans les conditions générales et s’appliquent à toutes les campagnes.
+</p>
 </div>
-</section>
-<!-- SECTION 3: COMPARATIF STRATÉGIQUE (PUBWEK VS FACEBOOK ADS VS FLYERS) -->
-<section class="py-space-xl md:py-space-2xl bg-background">
-<div class="max-w-6xl mx-auto px-margin">
-<!-- Section Header -->
-<div class="text-center max-w-3xl mx-auto space-y-space-xs mb-space-xl">
-<span class="px-space-sm py-1 rounded-full bg-brand-light text-brand-deep font-label-caps text-label-caps uppercase tracking-wider font-bold">COMPARATIF CANAUX PUBLICITAIRES</span>
-<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-slate-night">
-          Pourquoi les statuts WhatsApp convertissent 4x plus que Facebook Ads au Bénin
-        </h2>
-<p class="font-body-md text-body-md text-on-surface-variant">
-          Au Bénin, la recommandation d'un ami ou d'une connaissance sur WhatsApp dépasse n'importe quelle publicité sponsorisée anonyme.
-        </p>
+</section><!-- SECTION 4: DOUBLE PARCOURS CLIENT (SEGMENTATION CLAIRE) -->
+<!-- LE CHOIX : DEUX PORTES D'ENTREE -->
+<section class="py-space-xl md:py-space-2xl bg-surface-container-low border-y border-outline-variant/30">
+<div class="max-w-5xl mx-auto px-margin">
+
+<div data-pw-anim="net" class="text-center max-w-2xl mx-auto mb-space-lg space-y-2">
+<span class="px-space-sm py-1 rounded-full bg-brand-light text-brand-deep font-label-caps text-label-caps uppercase tracking-wider font-bold">Deux entr&eacute;es</span>
+<h2 data-pw-mots class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-slate-night mt-2">Vous venez pour quoi&nbsp;?</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Les deux c&ocirc;t&eacute;s de la plateforme n'ont pas les m&ecirc;mes questions. Choisissez le v&ocirc;tre.</p>
 </div>
-<!-- Comparative Bento Grid -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-lg">
-<!-- CARD 1: Pubwek WhatsApp Status (The Winner) -->
-<div class="relative bg-surface-container-lowest rounded-3xl p-space-lg shadow-xl border-2 border-brand-primary/40 flex flex-col justify-between order-1 lg:order-2 transform lg:-translate-y-4">
-<div class="absolute -top-4 left-1/2 -translate-x-1/2 px-space-sm py-1 rounded-full bg-brand-primary text-on-primary font-label-caps text-label-caps uppercase font-bold tracking-widest shadow-md">
-            Recommandé pour le Bénin 🇧🇯
-          </div>
-<div class="space-y-space-md">
-<div class="flex items-center justify-between">
-<div class="w-12 h-12 rounded-2xl bg-brand-light flex items-center justify-center text-brand-deep">
-<span class="material-symbols-outlined text-[26px]">chat</span>
+
+<div data-pw-cascade="0" class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+
+<!-- Annonceurs -->
+<div id="pour-annonceurs" class="bg-surface-container-lowest rounded-3xl p-space-lg border border-outline-variant/30 shadow-sm flex flex-col scroll-mt-20">
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-12 h-12 rounded-2xl bg-brand-light text-brand-deep flex items-center justify-center">
+<span class="material-symbols-outlined text-[26px]">storefront</span>
 </div>
-<span class="px-space-sm py-1 rounded-full bg-brand-primary/10 text-brand-deep font-label-caps text-label-caps font-bold">COMPARATIF CANAUX PUBLICITAIRES</span>
+<span class="px-space-sm py-1 rounded-full bg-brand-light text-brand-deep font-label-caps text-label-caps uppercase font-bold">Pour les commerces</span>
 </div>
-<h3 class="font-headline-md text-headline-md text-slate-midnight">Statuts WhatsApp via Pubwek</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant">
-              Recommandation humaine, sincère et directe par les contacts téléphoniques de personnes locales fiables.
-            </p>
-<ul class="space-y-3 pt-space-xs">
-<li class="flex items-start gap-2.5 font-body-sm text-body-sm text-slate-night">
-<span class="material-symbols-outlined text-brand-primary text-[20px] shrink-0">check_circle</span>
-<span class=""><strong>Taux d'ouverture &gt; 85% :</strong> Consulté par amis, familles, collègues directs.</span>
+<h3 class="font-headline-md text-headline-md text-slate-midnight">J'ai quelque chose &agrave; vendre</h3>
+<p class="mt-1.5 font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+Votre annonce est publi&eacute;e sur les statuts de personnes que leur quartier conna&icirc;t.
+Vous ciblez vos communes et vous payez au clic r&eacute;el.
+</p>
+<ul class="mt-space-sm space-y-2">
+<li class="flex items-start gap-2 font-body-sm text-body-sm text-slate-night">
+<span class="material-symbols-outlined text-brand-primary text-[19px] shrink-0">check_circle</span>
+Ciblage par d&eacute;partement et par commune
 </li>
-<li class="flex items-start gap-2.5 font-body-sm text-body-sm text-slate-night">
-<span class="material-symbols-outlined text-brand-primary text-[20px] shrink-0">check_circle</span>
-<span class=""><strong>Paiement au clic réel :</strong> Zéro facturation aux impressions fantômes.</span>
+<li class="flex items-start gap-2 font-body-sm text-body-sm text-slate-night">
+<span class="material-symbols-outlined text-brand-primary text-[19px] shrink-0">check_circle</span>
+Facturation au clic constat&eacute;, jamais &agrave; l'affichage
 </li>
-<li class="flex items-start gap-2.5 font-body-sm text-body-sm text-slate-night"><span class="material-symbols-outlined text-brand-primary text-[20px] shrink-0">check_circle</span><span class=""><strong>Ciblage par quartier et ville :</strong> Cotonou, Calavi, Parakou, Porto-Novo et leurs environs.</span></li>
-<li class="flex items-start gap-2.5 font-body-sm text-body-sm text-slate-night">
-<span class="material-symbols-outlined text-brand-primary text-[20px] shrink-0">check_circle</span>
-<span class=""><strong>Lien direct vers WhatsApp :</strong> Conversion et discussion instantanée.</span>
+<li class="flex items-start gap-2 font-body-sm text-body-sm text-slate-night">
+<span class="material-symbols-outlined text-brand-primary text-[19px] shrink-0">check_circle</span>
+Re&ccedil;us PDF t&eacute;l&eacute;chargeables, paiement par FedaPay
 </li>
 </ul>
-</div>
-<div class="mt-space-lg pt-space-md border-t border-outline-variant/30">
-<a class="w-full py-3 rounded-xl bg-brand-primary text-on-primary font-headline-sm text-body-sm font-bold flex items-center justify-center gap-2 hover:bg-brand-deep transition-all" href="{{ url_for('register', role='annonceur') }}">
-<span class="">Tester une campagne locale</span>
+<a class="mt-space-md inline-flex items-center justify-center gap-2 w-full px-space-md py-3 rounded-full bg-brand-primary text-white font-headline-sm text-body-md font-bold hover:bg-brand-deep shadow-md shadow-brand-primary/20 transition-all" href="{{ url_for('page_annonceurs') }}">
+Voir comment &ccedil;a marche pour moi
 <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
 </a>
 </div>
-</div>
-<!-- CARD 2: Facebook / Instagram Ads Classique -->
-<div class="bg-surface-container-lowest rounded-3xl p-space-lg shadow-sm border border-outline-variant/40 flex flex-col justify-between order-2 lg:order-1">
-<div class="space-y-space-md">
-<div class="flex items-center justify-between">
-<div class="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center text-on-surface">
-<span class="material-symbols-outlined text-[26px]">public</span>
-</div>
-<span class="px-space-sm py-1 rounded-full bg-surface-container text-on-surface-variant font-label-caps text-label-caps font-bold">COMPARATIF CANAUX PUBLICITAIRES</span>
-</div>
-<h3 class="font-headline-md text-headline-md text-slate-midnight">Facebook &amp; Instagram Ads</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant">
-              Annonces sponsorisées au milieu de flux sursaturés et impersonnels.
-            </p>
-<ul class="space-y-3 pt-space-xs text-on-surface-variant">
-<li class="flex items-start gap-2.5 font-body-sm text-body-sm">
-<span class="material-symbols-outlined text-error text-[20px] shrink-0">cancel</span>
-<span class="">Facturation au coût par impression (CPM élevé) sans garantie de clics.</span>
-</li>
-<li class="flex items-start gap-2.5 font-body-sm text-body-sm">
-<span class="material-symbols-outlined text-error text-[20px] shrink-0">cancel</span>
-<span class="">Cartes bancaires bloquées ou taxes de change FCFA / Dollar imprévues.</span>
-</li>
-<li class="flex items-start gap-2.5 font-body-sm text-body-sm">
-<span class="material-symbols-outlined text-error text-[20px] shrink-0">cancel</span>
-<span class="">Froid et impersonnel : taux de méfiance élevé face aux arnaques en ligne.</span>
-</li>
-<li class="flex items-start gap-2.5 font-body-sm text-body-sm">
-<span class="material-symbols-outlined text-error text-[20px] shrink-0">cancel</span>
-<span class="">Complexité technique du Business Manager.</span>
-</li>
-</ul>
-</div>
-<div class="mt-space-lg pt-space-md border-t border-outline-variant/30 text-center">
-<span class="font-caption text-caption text-on-surface-variant">Coût moyen par prospect réel : Élevé &amp; Incertain</span>
-</div>
-</div>
-<!-- CARD 3: Flyers & Affiches Papier de rue -->
-<div class="bg-surface-container-lowest rounded-3xl p-space-lg shadow-sm border border-outline-variant/40 flex flex-col justify-between order-3">
-<div class="space-y-space-md">
-<div class="flex items-center justify-between">
-<div class="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center text-on-surface">
-<span class="material-symbols-outlined text-[26px]">description</span>
-</div>
-<span class="px-space-sm py-1 rounded-full bg-surface-container text-on-surface-variant font-label-caps text-label-caps font-bold">COMPARATIF CANAUX PUBLICITAIRES</span>
-</div>
-<h3 class="font-headline-md text-headline-md text-slate-midnight">Flyers &amp; Distribution Papier</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant">
-              Distribution physique aux carrefours (Étoile Rouge, Calavi Kpota, etc.).
-            </p>
-<ul class="space-y-3 pt-space-xs text-on-surface-variant">
-<li class="flex items-start gap-2.5 font-body-sm text-body-sm">
-<span class="material-symbols-outlined text-error text-[20px] shrink-0">cancel</span>
-<span class="">Traçabilité nulle : impossible de mesurer le retour sur investissement.</span>
-</li>
-<li class="flex items-start gap-2.5 font-body-sm text-body-sm">
-<span class="material-symbols-outlined text-error text-[20px] shrink-0">cancel</span>
-<span class="">Coûts d'impression élevés et gaspillage immédiat dans la rue.</span>
-</li>
-<li class="flex items-start gap-2.5 font-body-sm text-body-sm">
-<span class="material-symbols-outlined text-error text-[20px] shrink-0">cancel</span>
-<span class="">Action lente : le passant doit retaper manuellement un numéro WhatsApp.</span>
-</li>
-<li class="flex items-start gap-2.5 font-body-sm text-body-sm">
-<span class="material-symbols-outlined text-error text-[20px] shrink-0">cancel</span>
-<span class="">Rayon géographique extrêmement limité.</span>
-</li>
-</ul>
-</div>
-<div class="mt-space-lg pt-space-md border-t border-outline-variant/30 text-center">
-<span class="font-caption text-caption text-on-surface-variant">Retour sur investissement : Indéterminé</span>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- SECTION 4: DOUBLE PARCOURS CLIENT (SEGMENTATION CLAIRE) -->
-<section class="py-space-xl bg-surface-container-low">
-<div class="max-w-4xl mx-auto px-margin">
-<div class="text-center max-w-2xl mx-auto mb-space-xl"><span class="px-space-sm py-1 rounded-full bg-surface-container text-on-surface-variant font-label-caps text-label-caps uppercase tracking-wider font-bold">OFFRES DÉDIÉES</span><h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-slate-night mt-2">Deux profils, une seule plateforme sécurisée</h2></div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-space-lg">
-<!-- Persona 1: Annonceur -->
-<div class="bg-surface-container-lowest rounded-3xl p-space-lg shadow-md border-t-4 border-brand-primary flex flex-col justify-between hover:shadow-xl transition-all scroll-mt-20" id="pour-annonceurs">
-<div class="space-y-space-md">
-<div class="flex items-center justify-between">
-<div class="w-14 h-14 rounded-2xl bg-brand-light text-brand-deep flex items-center justify-center">
-<span class="material-symbols-outlined text-[32px]">storefront</span>
-</div>
-<span class="font-label-numeric-md text-label-numeric-md font-bold text-brand-deep">Pour Entreprises</span>
-</div>
-<h3 class="font-headline-md text-headline-md text-slate-midnight">
-              Vous êtes une Entreprise, Commerçant ou Marque
-            </h3>
-<p class="font-body-md text-body-md text-on-surface-variant">
-              Propulsez vos ventes à Cotonou, Calavi, Parakou et partout au Bénin. Vos offres sont partagées par les ambassadeurs les plus influents de votre quartier.
-            </p>
-<div class="p-space-md rounded-2xl bg-canvas-cream space-y-2.5">
-<div class="flex items-center gap-2 text-sm font-semibold text-slate-midnight">
-<span class="material-symbols-outlined text-brand-primary text-[18px]">verified</span>
-                Ciblage ultra-précis par Département &amp; Commune
-              </div>
-<div class="flex items-center gap-2 text-sm font-semibold text-slate-midnight">
-<span class="material-symbols-outlined text-brand-primary text-[18px]">verified</span>
-                Paiement au résultat : facturation stricte au clic réel
-              </div>
-<div class="flex items-center gap-2 text-sm font-semibold text-slate-midnight">
-<span class="material-symbols-outlined text-brand-primary text-[18px]">verified</span>
-                Rapports certifiés PDF téléchargeables en 1 clic
-              </div>
-<div class="flex items-center gap-2 text-sm font-semibold text-slate-midnight">
-<span class="material-symbols-outlined text-brand-primary text-[18px]">verified</span>
-                Paiement local sécurisé par FedaPay (MoMo, Moov, Celtiis)
-              </div>
-</div>
-<div class="flex items-center gap-space-xs text-xs text-on-surface-variant pt-2">
-<span class="font-bold text-slate-midnight">610+ entreprises</span> diffusent déjà leurs catalogues et promotions.
-            </div>
-</div>
-<div class="pt-space-md flex justify-center">
-<a class="w-auto py-3 px-space-xl rounded-full bg-brand-primary text-on-primary font-headline-sm text-body-md font-bold text-center inline-block shadow-lg shadow-brand-primary/20 hover:bg-brand-deep transition-all" href="{{ url_for('register', role='annonceur') }}">
-              Déployer ma publicité locale
-            </a>
-</div>
-</div>
-<!-- Persona 2: Partageur -->
-<div class="bg-surface-container-lowest rounded-3xl p-space-lg shadow-md border-t-4 border-amber-vibrant flex flex-col justify-between hover:shadow-xl transition-all scroll-mt-20" id="pour-partageurs">
-<div class="space-y-space-md">
-<div class="flex items-center justify-between">
-<div class="w-14 h-14 rounded-2xl bg-amber-soft text-amber-rich flex items-center justify-center">
-<span class="material-symbols-outlined text-[32px]">monetization_on</span>
-</div>
-<span class="font-label-numeric-md text-label-numeric-md font-bold text-amber-rich">Pour Partageurs</span>
-</div>
-<h3 class="font-headline-md text-headline-md text-slate-midnight">
-              Vous voulez monétiser vos vues et votre statut WhatsApp
-            </h3>
-<p class="font-body-md text-body-md text-on-surface-variant">
-              Étudiant, travailleur ou créateur de contenu ? Vos statuts quotidiens valent de l'or. Partagez simplement les visuels de nos marques partenaires et encaissez vos gains.
-            </p>
-<div class="p-space-md rounded-2xl bg-canvas-cream space-y-2.5">
-<div class="flex items-center gap-2 text-sm font-semibold text-slate-midnight">
-<span class="material-symbols-outlined text-amber-rich text-[18px]">check_circle</span>
-                3 statuts par jour suffisent pour générer un revenu régulier
-              </div>
-<div class="flex items-center gap-2 text-sm font-semibold text-slate-midnight">
-<span class="material-symbols-outlined text-amber-rich text-[18px]">check_circle</span>
-<span>Seuil de retrait ultra-accessible dès <strong>500 FCFA</strong></span>
-</div>
-<div class="flex items-center gap-2 text-sm font-semibold text-slate-midnight">
-<span class="material-symbols-outlined text-amber-rich text-[18px]">check_circle</span>
-                Virements automatiques en 2 minutes sur votre Mobile Money
-              </div>
-<div class="flex items-center gap-2 text-sm font-semibold text-slate-midnight">
-<span class="material-symbols-outlined text-amber-rich text-[18px]">check_circle</span>
-                Programme de parrainage lucratif sur vos filleuls
-              </div>
-</div>
-<div class="flex items-center gap-space-xs text-xs text-on-surface-variant pt-2">
-<span class="font-bold text-slate-midnight">+2 400 béninois</span> gagnent déjà leur argent de poche ou revenu d'appoint.
-            </div>
-</div>
-<div class="pt-space-md flex justify-center">
-<a class="w-auto py-3 px-space-xl rounded-full bg-amber-rich text-on-primary font-headline-sm text-body-md font-bold text-center inline-block shadow-lg shadow-amber-rich/20 hover:bg-secondary transition-all" href="{{ url_for('register', role='partageur') }}">
-              Rejoindre le club de partageurs
-            </a>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- SECTION 5: COMMENT ÇA MARCHE EN 3 ÉTAPES INTERACTIVES -->
-<section class="py-space-xl md:py-space-2xl bg-background scroll-mt-16" id="comment-ca-marche">
-<div class="max-w-6xl mx-auto px-margin">
-<div class="text-center max-w-3xl mx-auto mb-space-xl space-y-2"><span class="px-space-sm py-1 rounded-full bg-brand-light text-brand-deep font-label-caps text-label-caps uppercase tracking-wider font-bold">FONCTIONNEMENT SIMPLE</span><h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-slate-night mt-2">Comment ça fonctionne concrètement</h2><p class="font-body-md text-body-md text-on-surface-variant">De la mise en ligne de votre visuel jusqu'au paiement instantané sur Mobile Money.</p></div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg relative">
-<!-- STEP 01 -->
-<div class="bg-surface-container-lowest rounded-3xl p-space-lg border border-outline-variant/30 shadow-sm relative group hover:shadow-lg transition-all">
-<div class="flex items-center justify-between mb-space-md">
-<span class="font-label-numeric-lg text-4xl font-extrabold text-brand-primary/30 group-hover:text-brand-primary transition-colors">01</span>
-<div class="w-12 h-12 rounded-2xl bg-brand-light text-brand-deep flex items-center justify-center">
-<span class="material-symbols-outlined text-[24px]">campaign</span>
-</div>
-</div>
-<h3 class="font-headline-md text-headline-sm font-bold text-slate-midnight mb-2">L'annonceur calibre sa campagne</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
-            Téléversez votre affiche, texte promo ou courte vidéo. Définissez vos communes de diffusion (ex : Cotonou &amp; Calavi) et votre budget en clics souhaité. Tout se configure en moins de 3 minutes.
-          </p>
-<div class="mt-4 pt-3 border-t border-outline-variant/20 flex items-center text-xs font-semibold text-brand-deep gap-1">
-<span class="material-symbols-outlined text-[16px]">speed</span> Configuration instantanée
-          </div>
-</div>
-<!-- STEP 02 -->
-<div class="bg-surface-container-lowest rounded-3xl p-space-lg border border-outline-variant/30 shadow-sm relative group hover:shadow-lg transition-all">
-<div class="flex items-center justify-between mb-space-md">
-<span class="font-label-numeric-lg text-4xl font-extrabold text-brand-primary/30 group-hover:text-brand-primary transition-colors">02</span>
+
+<!-- Partageurs -->
+<div id="pour-partageurs" class="bg-surface-container-lowest rounded-3xl p-space-lg border border-outline-variant/30 shadow-sm flex flex-col scroll-mt-20">
+<div class="flex items-center justify-between mb-space-sm">
 <div class="w-12 h-12 rounded-2xl bg-amber-soft text-amber-rich flex items-center justify-center">
-<span class="material-symbols-outlined text-[24px]">share</span>
+<span class="material-symbols-outlined text-[26px]">share</span>
 </div>
+<span class="px-space-sm py-1 rounded-full bg-amber-soft text-amber-rich font-label-caps text-label-caps uppercase font-bold">Pour les partageurs</span>
 </div>
-<h3 class="font-headline-sm text-headline-sm font-bold text-slate-midnight mb-2">Les ambassadeurs diffusent</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
-            Nos partageurs locaux vérifiés reçoivent la campagne sur leur tableau de bord et la postent sur leur statut WhatsApp avec leur lien unique chiffré et sécurisé.
-          </p>
-<div class="mt-4 pt-3 border-t border-outline-variant/20 flex items-center text-xs font-semibold text-amber-rich gap-1">
-<span class="material-symbols-outlined text-[16px]">qr_code</span> Liens uniques infalsifiables
-          </div>
+<h3 class="font-headline-md text-headline-md text-slate-midnight">J'ai un statut WhatsApp actif</h3>
+<p class="mt-1.5 font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+Vous publiez des annonces d&eacute;j&agrave; valid&eacute;es avec un lien qui n'appartient qu'&agrave; vous,
+et chaque clic de vos contacts vous est pay&eacute;. Un compl&eacute;ment, pas un salaire.
+</p>
+<ul class="mt-space-sm space-y-2">
+<li class="flex items-start gap-2 font-body-sm text-body-sm text-slate-night">
+<span class="material-symbols-outlined text-amber-rich text-[19px] shrink-0">check_circle</span>
+Aucune avance, aucun abonnement
+</li>
+<li class="flex items-start gap-2 font-body-sm text-body-sm text-slate-night">
+<span class="material-symbols-outlined text-amber-rich text-[19px] shrink-0">check_circle</span>
+Retrait Mobile Money d&egrave;s 500 FCFA
+</li>
+<li class="flex items-start gap-2 font-body-sm text-body-sm text-slate-night">
+<span class="material-symbols-outlined text-amber-rich text-[19px] shrink-0">check_circle</span>
+Vos clics compt&eacute;s en direct, lien par lien
+</li>
+</ul>
+<a class="mt-space-md inline-flex items-center justify-center gap-2 w-full px-space-md py-3 rounded-full bg-amber-rich text-white font-headline-sm text-body-md font-bold hover:bg-secondary shadow-md shadow-amber-rich/20 transition-all" href="{{ url_for('page_partageurs') }}">
+Voir ce que &ccedil;a peut rapporter
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</a>
 </div>
-<!-- STEP 03 -->
-<div class="bg-surface-container-lowest rounded-3xl p-space-lg border border-outline-variant/30 shadow-sm relative group hover:shadow-lg transition-all">
-<div class="flex items-center justify-between mb-space-md">
-<span class="font-label-numeric-lg text-4xl font-extrabold text-brand-primary/30 group-hover:text-brand-primary transition-colors">03</span>
-<div class="w-12 h-12 rounded-2xl bg-primary-fixed text-brand-deep flex items-center justify-center">
-<span class="material-symbols-outlined text-[24px]">point_of_sale</span>
+
 </div>
-</div>
-<h3 class="font-headline-sm text-headline-sm font-bold text-slate-midnight mb-2">Les clics réels sont payés</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
-            Chaque clic vérifié d'un contact intéressé crédite directement le portefeuille du partageur. L'annonceur reçoit des prospects chauds sur sa ligne WhatsApp Business.
-          </p>
-<div class="mt-4 pt-3 border-t border-outline-variant/20 flex items-center text-xs font-semibold text-brand-primary gap-1">
-<span class="material-symbols-outlined text-[16px]">account_balance_wallet</span> Retrait MoMo dès 500 FCFA
-          </div>
-</div>
-</div>
+
+<p class="mt-space-md text-center font-caption text-caption text-on-surface-variant">
+Vous pouvez tenir les deux r&ocirc;les avec deux comptes distincts.
+</p>
+
 </div>
 </section>
-<!-- SECTION 6: SIMULATEUR DE GAINS & DE RENTABILITÉ PUBLICITAIRE -->
-<section class="py-space-xl bg-canvas-cream border-y border-outline-variant/30 scroll-mt-16" id="simulateur">
-<div class="max-w-5xl mx-auto px-margin">
-<div class="bg-surface-container-lowest rounded-3xl p-space-lg md:p-space-2xl shadow-xl border border-outline-variant/30">
-<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-space-md border-b border-outline-variant/30">
-<div>
-<span class="px-space-sm py-1 rounded-full bg-brand-light text-brand-deep font-label-caps text-label-caps uppercase font-bold">
-              Simulateur Officiel Pubwek
-            </span>
-<h3 class="font-headline-md text-headline-md text-slate-midnight mt-1">
-              Estimez vos gains ou votre audience
-            </h3>
-</div>
-<!-- Mode switcher -->
-<div class="inline-flex p-1 rounded-full bg-surface-container-low" id="simulator-switch">
-<button class="px-4 py-2 rounded-full font-body-sm text-body-sm font-semibold bg-white text-slate-midnight shadow-sm" id="btn-mode-partageur" type="button">
-              Je suis Partageur
-            </button>
-<button class="px-4 py-2 rounded-full font-body-sm text-body-sm font-semibold text-on-surface-variant hover:text-slate-midnight" id="btn-mode-annonceur" type="button">
-              Je suis Annonceur
-            </button>
-</div>
-</div>
-<!-- Dynamic Simulator Content -->
-<div class="grid grid-cols-1 md:grid-cols-12 gap-space-xl pt-space-lg items-center">
-<!-- Left: Controls -->
-<div class="md:col-span-7 space-y-space-md">
-<div class="space-y-2" id="sim-control-views">
-<div class="flex justify-between items-center">
-<label class="font-body-sm text-body-sm font-semibold text-slate-midnight" for="range-views">
-                  Moyenne de vues par statut WhatsApp :
-                </label>
-<span class="font-label-numeric-md text-label-numeric-md text-brand-deep font-bold" id="label-views">250 vues</span>
-</div>
-<input class="w-full h-2.5 bg-surface-container rounded-lg appearance-none cursor-pointer accent-brand-primary" id="range-views" max="2500" min="50" step="50" type="range" value="250">
-<div class="flex justify-between text-[11px] text-on-surface-variant">
-<span class="">50 vues</span>
-<span class="">500 vues</span>
-<span class="">1 500 vues</span>
-<span class="">2 500+ vues</span>
-</div>
-</div>
-<div class="space-y-2">
-<div class="flex justify-between items-center">
-<label class="font-body-sm text-body-sm font-semibold text-slate-midnight" for="range-days">
-                  Fréquence d'activité :
-                </label>
-<span class="font-label-numeric-md text-label-numeric-md text-amber-rich font-bold" id="label-days">7 jours / semaine</span>
-</div>
-<input class="w-full h-2.5 bg-surface-container rounded-lg appearance-none cursor-pointer accent-amber-rich" id="range-days" max="7" min="1" step="1" type="range" value="7">
-</div>
-<!-- Fast Payment Gateways Supported -->
-<div class="pt-2">
-<p class="font-caption text-caption text-on-surface-variant mb-2">Retraits d'argent direct sur MTN MoMo, Moov Money et Celtiis dès 500 FCFA :</p>
-<div class="flex flex-wrap items-center gap-2">
-<span class="pr-3 font-caption text-caption font-bold text-slate-midnight flex items-center gap-1.5">
-<span class="w-2 h-2 rounded-full bg-momo-yellow"></span> MTN MoMo
-                </span>
-<span class="pr-3 font-caption text-caption font-bold text-slate-midnight flex items-center gap-1.5">
-<span class="w-2 h-2 rounded-full bg-moov-blue"></span> Moov Money
-                </span>
-<span class="pr-3 font-caption text-caption font-bold text-slate-midnight flex items-center gap-1.5">
-<span class="w-2 h-2 rounded-full bg-celtiis-green"></span> Celtiis Cash
-                </span>
-<span class="px-3 py-1.5 rounded-xl bg-surface-container border border-outline-variant/40 font-caption text-caption font-bold text-slate-midnight">
-                  FedaPay Secured
-                </span>
-</div>
-</div>
-</div>
-<!-- Right: Live Result Card -->
-<div class="md:col-span-5 bg-gradient-to-br from-slate-midnight to-slate-900 text-white rounded-2xl p-space-lg shadow-xl relative overflow-hidden">
-<div class="absolute -right-10 -bottom-10 w-36 h-36 bg-brand-bright/20 rounded-full blur-2xl"></div>
-<div class="relative space-y-4">
-<span class="text-xs uppercase tracking-wider text-brand-bright font-mono font-bold" id="res-badge-title">Revenu mensuel estimé</span>
-<div class="space-y-1">
-<div class="font-label-numeric-lg text-4xl font-extrabold text-white tracking-tight" id="res-primary-val">49 000 FCFA</div>
-<p class="text-xs text-gray-300" id="res-secondary-sub">Soit environ ~12 250 FCFA versés chaque semaine</p>
-</div>
-<div class="pt-3 border-t border-white/10 space-y-2 text-xs text-gray-300">
-<div class="flex justify-between">
-<span class="">Clics estimés / mois :</span>
-<span class="font-mono font-bold text-white" id="res-clicks-count">980 clics générés</span>
-</div>
-<div class="flex justify-between">
-<span class="">Délai moyen de retrait :</span>
-<span class="font-mono font-bold text-brand-bright">2 à 5 minutes</span>
-</div>
-<div class="flex justify-between">
-<span class="">Frais de retrait :</span>
-<span class="font-mono font-bold text-white">0 FCFA (Inclus)</span>
-</div>
-</div>
-<a class="w-full py-3 px-space-xl rounded-full bg-amber-rich text-white font-headline-sm text-body-sm font-bold text-center block hover:bg-secondary transition-all" href="{{ url_for('register', role='partageur') }}" id="btn-sim-action">Commencer à encaisser</a>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- SECTION 7: TÉMOIGNAGES CLIENTS & HISTOIRES DE SUCCÈS VÉRIFIÉES -->
-<section class="py-space-xl md:py-space-2xl bg-background">
-<div class="max-w-6xl mx-auto px-margin">
-<div class="text-center max-w-3xl mx-auto mb-space-xl space-y-2"><span class="px-space-sm py-1 rounded-full bg-brand-light text-brand-deep font-label-caps text-label-caps uppercase tracking-wider font-bold">RETOURS DU TERRAIN</span><h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-slate-night mt-2">Témoignages vérifiés d'entrepreneurs et de partageurs</h2><p class="font-body-md text-body-md text-on-surface-variant">Des retours réels et chiffrés sur Cotonou, Calavi, Parakou et Porto-Novo.</p></div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg"><div class="bg-surface-container-lowest rounded-3xl p-space-lg border border-outline-variant/30 shadow-sm flex flex-col justify-between hover:shadow-md transition-all"><div class="space-y-3"><div class="inline-flex items-center gap-1.5 px-space-sm py-1 rounded-full bg-brand-light text-brand-deep text-xs font-bold"><span class="material-symbols-outlined text-[15px]">verified</span>+42 ventes directes en 48h</div><p class="font-body-md text-body-md text-slate-night leading-relaxed pt-2">«&nbsp;Pour le lancement de ma nouvelle collection, j'ai sélectionné 15 partageurs sur Cotonou et Calavi. J'ai eu 42 prises de contact directes sur WhatsApp et 28 commandes payées le week-end même. Le suivi des clics est net et sans surprise.&nbsp;»</p></div><div class="pt-space-md mt-space-md border-t border-outline-variant/20 flex items-center gap-3"><div class="w-11 h-11 rounded-full bg-brand-light text-brand-deep font-bold flex items-center justify-center text-sm shrink-0">RD</div><div><div class="font-headline-sm text-body-sm font-bold text-slate-midnight">Rosine D.</div><p class="font-caption text-caption text-on-surface-variant">Gérante boutique prêt-à-porter · Akpakpa, Cotonou</p></div></div></div><div class="bg-surface-container-lowest rounded-3xl p-space-lg border border-outline-variant/30 shadow-sm flex flex-col justify-between hover:shadow-md transition-all"><div class="space-y-3"><div class="inline-flex items-center gap-1.5 px-space-sm py-1 rounded-full bg-amber-soft text-secondary text-xs font-bold"><span class="material-symbols-outlined text-[15px]">payments</span>15 000 à 20 000 FCFA / sem.</div><p class="font-body-md text-body-md text-slate-night leading-relaxed pt-2">«&nbsp;Je poste chaque matin les affiches validées avant d'aller en cours. Mes contacts sont habitués et cliquent naturellement sur les liens. Dès que j'atteins 5 000 ou 10 000 FCFA, je retire vers MTN MoMo en moins de 3 minutes.&nbsp;»</p></div><div class="pt-space-md mt-space-md border-t border-outline-variant/20 flex items-center gap-3"><div class="w-11 h-11 rounded-full bg-amber-soft text-amber-rich font-bold flex items-center justify-center text-sm shrink-0">IS</div><div><div class="font-headline-sm text-body-sm font-bold text-slate-midnight">Ibrahim S.</div><p class="font-caption text-caption text-on-surface-variant">Étudiant &amp; Partageur régulier · Campus UAC, Calavi</p></div></div></div><div class="bg-surface-container-lowest rounded-3xl p-space-lg border border-outline-variant/30 shadow-sm flex flex-col justify-between hover:shadow-md transition-all"><div class="space-y-3"><div class="inline-flex items-center gap-1.5 px-space-sm py-1 rounded-full bg-brand-light text-brand-deep text-xs font-bold"><span class="material-symbols-outlined text-[15px]">trending_up</span>ROI supérieur à Facebook Ads</div><p class="font-body-md text-body-md text-slate-night leading-relaxed pt-2">«&nbsp;Sur Facebook, je dépensais en dollars avec des frais de carte et beaucoup de faux profils. Avec Pubwek, les gens voient le statut d'une copine du quartier et écrivent en confiance. Notre planning de rendez-vous est plein chaque semaine.&nbsp;»</p></div><div class="pt-space-md mt-space-md border-t border-outline-variant/20 flex items-center gap-3"><div class="w-11 h-11 rounded-full bg-surface-container text-slate-midnight font-bold flex items-center justify-center text-sm shrink-0">LM</div><div><div class="font-headline-sm text-body-sm font-bold text-slate-midnight">Léa M.</div><p class="font-caption text-caption text-on-surface-variant">Fondatrice de salon d'esthétique · Haie Vive, Cotonou</p></div></div></div></div>
-</div>
-</section>
-<!-- SECTION 8: FAQ ACCORDÉON OFFICIELLE & SÉCURISÉE -->
-<section class="py-space-xl md:py-space-2xl bg-surface-container-low border-t border-outline-variant/30 scroll-mt-16" id="tarifs-faq">
-<div class="max-w-4xl mx-auto px-margin">
-<div class="text-center space-y-2 mb-space-xl">
-<span class="px-space-sm py-1 rounded-full bg-surface-container text-on-surface-variant font-label-caps text-label-caps uppercase tracking-wider font-bold">
-          Transparence &amp; Règles
-        </span>
-<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-slate-night">
-          Questions fréquemment posées
-        </h2>
-<p class="font-body-md text-body-md text-on-surface-variant">
-          Tout ce qu'il faut savoir avant de démarrer sur Pubwek au Bénin.
-        </p>
-</div>
-<!-- FAQ Accordion List -->
-<div class="space-y-space-sm" id="faq-accordion-group">
-<!-- Item 1 (Active by default) -->
-<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-hidden">
-<button class="faq-toggle w-full p-space-lg text-left flex items-center justify-between gap-4 font-headline-sm text-body-md md:text-headline-sm text-slate-midnight" type="button">
-<span class="">Combien coûte l'inscription sur Pubwek ?</span>
-<span class="faq-icon material-symbols-outlined text-brand-primary transition-transform duration-300">expand_circle_up</span>
-</button>
-<div class="faq-content px-space-lg pb-space-lg text-on-surface-variant font-body-sm text-body-sm leading-relaxed border-t border-outline-variant/10 pt-2">
-            L'inscription est <strong>100% gratuite</strong>, que vous soyez annonceur ou partageur. Les annonceurs paient uniquement pour les clics réels générés par leur campagne. Les partageurs ne paient jamais rien pour diffuser des annonces et retirer leurs gains.
-          </div>
-</div>
-<!-- Item 2 -->
-<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-hidden">
-<button class="faq-toggle w-full p-space-lg text-left flex items-center justify-between gap-4 font-headline-sm text-body-md md:text-headline-sm text-slate-midnight" type="button">
-<span class="">Quel est le délai pour retirer mes gains vers Mobile Money ?</span>
-<span class="faq-icon material-symbols-outlined text-on-surface-variant transition-transform duration-300">add_circle</span>
-</button>
-<div class="faq-content hidden px-space-lg pb-space-lg text-on-surface-variant font-body-sm text-body-sm leading-relaxed border-t border-outline-variant/10 pt-2">
-            Les retraits vers MTN MoMo, Moov Money et Celtiis Cash sont traités rapidement, généralement en <strong>quelques minutes après la demande</strong>, dès que le seuil minimum de <strong>500 FCFA</strong> est atteint. Une preuve numérique de virement est enregistrée sur votre espace personnel.
-          </div>
-</div>
-<!-- Item 3 -->
-<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-hidden">
-<button class="faq-toggle w-full p-space-lg text-left flex items-center justify-between gap-4 font-headline-sm text-body-md md:text-headline-sm text-slate-midnight" type="button">
-<span class="">Quelles zones et villes sont couvertes par Pubwek au Bénin ?</span>
-<span class="faq-icon material-symbols-outlined text-on-surface-variant transition-transform duration-300">add_circle</span>
-</button>
-<div class="faq-content hidden px-space-lg pb-space-lg text-on-surface-variant font-body-sm text-body-sm leading-relaxed border-t border-outline-variant/10 pt-2">
-            Pubwek couvre l'ensemble du territoire béninois : les <strong>12 départements</strong> (Littoral, Atlantique, Ouémé, Borgou, Zou, Mono, Couffo, Atacora, Donga, Alibori, Collines, Plateau) et l'intégralité des <strong>77 communes</strong> du pays. Vous pouvez cibler précisément votre ville ou commune.
-          </div>
-</div>
-<!-- Item 4 -->
-<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-hidden">
-<button class="faq-toggle w-full p-space-lg text-left flex items-center justify-between gap-4 font-headline-sm text-body-md md:text-headline-sm text-slate-midnight" type="button">
-<span class="">Comment sont comptés et protégés les clics d'un partageur ?</span>
-<span class="faq-icon material-symbols-outlined text-on-surface-variant transition-transform duration-300">add_circle</span>
-</button>
-<div class="faq-content hidden px-space-lg pb-space-lg text-on-surface-variant font-body-sm text-body-sm leading-relaxed border-t border-outline-variant/10 pt-2">
-            Chaque partageur reçoit un lien de suivi personnel sécurisé à intégrer dans son statut. Seuls les <strong>clics réels et uniques</strong> (vérification de signature IP, session utilisateur, rejet des bots et multi-clics abusifs) sont comptabilisés et crédités sur le portefeuille.
-          </div>
-</div>
-<!-- Item 5 -->
-<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-hidden">
-<button class="faq-toggle w-full p-space-lg text-left flex items-center justify-between gap-4 font-headline-sm text-body-md md:text-headline-sm text-slate-midnight" type="button">
-<span class="">Ai-je besoin d'un très grand nombre de contacts WhatsApp pour débuter ?</span>
-<span class="faq-icon material-symbols-outlined text-on-surface-variant transition-transform duration-300">add_circle</span>
-</button>
-<div class="faq-content hidden px-space-lg pb-space-lg text-on-surface-variant font-body-sm text-body-sm leading-relaxed border-t border-outline-variant/10 pt-2">
-            Non, ce n'est absolument pas obligatoire. Même avec 80 ou 150 contacts, vos proches interagissent régulièrement avec vos contenus. Plus vous publiez avec régularité, plus vos gains s'accumulent.
-          </div>
-</div>
-<!-- Item 6 -->
-<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-hidden">
-<button class="faq-toggle w-full p-space-lg text-left flex items-center justify-between gap-4 font-headline-sm text-body-md md:text-headline-sm text-slate-midnight" type="button">
-<span class="">Puis-je annuler, modifier ou mettre en pause ma campagne en cours ?</span>
-<span class="faq-icon material-symbols-outlined text-on-surface-variant transition-transform duration-300">add_circle</span>
-</button>
-<div class="faq-content hidden px-space-lg pb-space-lg text-on-surface-variant font-body-sm text-body-sm leading-relaxed border-t border-outline-variant/10 pt-2">
-            Oui, une campagne peut être mise en pause, ajustée ou arrêtée à tout moment depuis votre tableau de bord annonceur, sans engagement de durée minimum. Vous conservez la maîtrise intégrale de votre budget.
-          </div>
-</div>
-</div>
-</div>
-</section>
-<!-- SECTION 9: BANNIÈRE FINALE HAUTE CONVERSION (CTA LUXE EMERALD) -->
-<section class="py-space-xl md:py-space-2xl bg-background">
-<div class="max-w-6xl mx-auto px-margin">
-<div class="relative rounded-[36px] overflow-hidden bg-gradient-to-br from-brand-deep via-brand-primary to-slate-night text-white p-space-xl md:p-space-3xl shadow-2xl">
-<!-- Ambient decorative shapes -->
-<div class="absolute top-0 right-0 w-96 h-96 bg-brand-bright/10 rounded-full blur-3xl pointer-events-none"></div>
-<div class="absolute bottom-0 left-0 w-96 h-96 bg-amber-vibrant/10 rounded-full blur-3xl pointer-events-none"></div>
-<div class="relative z-10 max-w-3xl mx-auto text-center space-y-space-md">
-<div class="inline-flex items-center gap-2 px-space-sm py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-brand-light font-label-caps text-label-caps uppercase tracking-wider">
-<span class="w-2 h-2 rounded-full bg-brand-bright animate-ping"></span>
-            Prêt à passer à la vitesse supérieure ?
-          </div>
-<h2 class="font-display-hero text-headline-lg-mobile md:text-headline-lg lg:text-display-hero font-extrabold text-white tracking-tight leading-tight">
-            Votre prochaine vente se joue sur un statut WhatsApp.
-          </h2>
-<p class="font-body-xl text-body-md md:text-body-xl text-brand-light/90 max-w-2xl mx-auto">
-            Que vous soyez une entreprise en quête de nouveaux clients ou un particulier souhaitant valoriser son audience, Pubwek s'active en quelques minutes.
-          </p>
-<div class="flex flex-col sm:flex-row items-center justify-center gap-space-md pt-space-sm">
-<a class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-space-xl py-4 rounded-full bg-white text-brand-deep font-headline-sm text-body-md font-bold shadow-xl hover:bg-brand-light transition-all transform hover:-translate-y-0.5" href="{{ url_for('register', role='annonceur') }}">
-<span class="material-symbols-outlined text-[20px]">rocket_launch</span>
-              Lancer une campagne
-            </a>
-<a class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-space-xl py-4 rounded-full bg-amber-rich text-white font-headline-sm text-body-md font-bold shadow-xl hover:bg-secondary transition-all transform hover:-translate-y-0.5" href="{{ url_for('register', role='partageur') }}">
-<span class="material-symbols-outlined text-[20px]">payments</span>
-              Devenir partageur
-            </a>
-</div>
-<!-- Fast Direct Support Indicator -->
-<div class="pt-space-md flex flex-wrap items-center justify-center gap-space-md text-xs text-brand-light/80">
-<a class="inline-flex items-center gap-1.5 hover:text-white transition-colors underline" href="https://wa.me/2290157577882" target="_blank" rel="noopener">
-<span class="material-symbols-outlined text-[16px] text-brand-bright">chat</span>
-              Besoin d'aide ? Discuter avec un conseiller béninois sur WhatsApp (+229 01 57 57 78 82)
-            </a>
-<span class="hidden sm:inline">•</span>
-<span class="">Réponse en &lt; 15 min</span>
-</div>
-</div>
-</div>
-</div>
-</section>
-</div>
-{% endblock %}
+{% set temoignages_public = 'tous' %}
+{% include "_blocs/temoignages.html" %}
 
-{% block scripts %}
-<script>
-  // 1. FAQ Accordion Toggle Behavior
-  document.querySelectorAll('.faq-toggle').forEach(button => {
-    button.addEventListener('click', () => {
-      const content = button.nextElementSibling;
-      const icon = button.querySelector('.faq-icon');
-      const isHidden = content.classList.contains('hidden');
-
-      // Close all others
-      document.querySelectorAll('.faq-content').forEach(c => c.classList.add('hidden'));
-      document.querySelectorAll('.faq-icon').forEach(i => {
-        i.textContent = 'add_circle';
-        i.classList.remove('text-brand-primary');
-        i.classList.add('text-on-surface-variant');
-      });
-
-      // Toggle current
-      if (isHidden) {
-        content.classList.remove('hidden');
-        icon.textContent = 'expand_circle_up';
-        icon.classList.remove('text-on-surface-variant');
-        icon.classList.add('text-brand-primary');
-      }
-    });
-  });
-
-  // 2. Earnings Simulator Calculation Logic
-  const URL_PARTAGEUR = "{{ url_for('register', role='partageur') }}";
-  const URL_ANNONCEUR = "{{ url_for('register', role='annonceur') }}";
-
-  const rangeViews = document.getElementById('range-views');
-  const rangeDays = document.getElementById('range-days');
-  const labelViews = document.getElementById('label-views');
-  const labelDays = document.getElementById('label-days');
-  const resVal = document.getElementById('res-primary-val');
-  const resSub = document.getElementById('res-secondary-sub');
-  const resClicks = document.getElementById('res-clicks-count');
-  const resBadge = document.getElementById('res-badge-title');
-  const btnAction = document.getElementById('btn-sim-action');
-
-  const btnPartageur = document.getElementById('btn-mode-partageur');
-  const btnAnnonceur = document.getElementById('btn-mode-annonceur');
-  let currentMode = 'partageur';
-
-  function updateSimulation() {
-    const views = parseInt(rangeViews.value, 10);
-    const days = parseInt(rangeDays.value, 10);
-    labelViews.textContent = views.toLocaleString('fr-FR') + ' vues';
-    labelDays.textContent = days + (days > 1 ? ' jours / semaine' : ' jour / semaine');
-
-    if (currentMode === 'partageur') {
-      // Estimated CTR ~ 14% on warm whatsapp contacts
-      const estimatedClicksPerDay = Math.round(views * 0.14);
-      const totalClicksMonth = estimatedClicksPerDay * (days * 4);
-      // Average payout per valid click in FCFA ~ 50 FCFA
-      const monthlyEarnings = totalClicksMonth * 50;
-      const weeklyEarnings = Math.round(monthlyEarnings / 4);
-
-      resVal.textContent = monthlyEarnings.toLocaleString('fr-FR') + ' FCFA';
-      resSub.textContent = 'Soit environ ~' + weeklyEarnings.toLocaleString('fr-FR') + ' FCFA versés chaque semaine';
-      resClicks.textContent = totalClicksMonth.toLocaleString('fr-FR') + ' clics générés';
-      resBadge.textContent = 'Revenu mensuel estimé';
-      btnAction.textContent = 'Commencer à encaisser';
-      btnAction.setAttribute('href', URL_PARTAGEUR);
-    } else {
-      // Advertiser mode: Estimate ROI & local leads
-      const estimatedReach = views * days * 4;
-      const estimatedClicks = Math.round(estimatedReach * 0.12);
-      const estimatedQualifiedCustomers = Math.round(estimatedClicks * 0.25);
-
-      resVal.textContent = estimatedQualifiedCustomers.toLocaleString('fr-FR') + ' clients potentiels';
-      resSub.textContent = 'Pour une visibilité estimée de ' + estimatedReach.toLocaleString('fr-FR') + ' statuts';
-      resClicks.textContent = estimatedClicks.toLocaleString('fr-FR') + ' clics qualifiés';
-      resBadge.textContent = 'Impact commercial mensuel';
-      btnAction.textContent = 'Lancer ma campagne ciblée';
-      btnAction.setAttribute('href', URL_ANNONCEUR);
-    }
-  }
-
-  rangeViews.addEventListener('input', updateSimulation);
-  rangeDays.addEventListener('input', updateSimulation);
-
-  btnPartageur.addEventListener('click', () => {
-    currentMode = 'partageur';
-    btnPartageur.className = 'px-4 py-2 rounded-full font-body-sm text-body-sm font-semibold bg-white text-slate-midnight shadow-sm';
-    btnAnnonceur.className = 'px-4 py-2 rounded-full font-body-sm text-body-sm font-semibold text-on-surface-variant hover:text-slate-midnight';
-    updateSimulation();
-  });
-
-  btnAnnonceur.addEventListener('click', () => {
-    currentMode = 'annonceur';
-    btnAnnonceur.className = 'px-4 py-2 rounded-full font-body-sm text-body-sm font-semibold bg-white text-slate-midnight shadow-sm';
-    btnPartageur.className = 'px-4 py-2 rounded-full font-body-sm text-body-sm font-semibold text-on-surface-variant hover:text-slate-midnight';
-    updateSimulation();
-  });
-
-  // Initial Run
-  updateSimulation();
-</script>
+{% set cta_public = 'tous' %}
+{% include "_blocs/cta.html" %}
 {% endblock %}

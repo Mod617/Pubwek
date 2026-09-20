@@ -1,0 +1,121 @@
+{# ===========================================================================
+   FAQ en accordeon, partagee par les deux pages de profil.
+
+   Variable attendue : faq_public = "annonceur" | "partageur" | "tous"
+
+   Toutes les reponses decrivent ce que la plateforme fait reellement.
+   Rien n'y promet de remboursement des clics non atteints ni de mise en
+   pause d'une campagne en cours : ces deux mecanismes n'existent pas.
+   =========================================================================== #}
+{% set public = faq_public | default('tous') %}
+
+{% set toutes_les_questions = [
+  {'public': 'commun',
+   'q': "Combien coûte l'inscription sur Pubwek ?",
+   'r': "L'inscription est <strong>entièrement gratuite</strong>, que vous soyez annonceur ou partageur. Les annonceurs paient uniquement pour les clics réels générés par leur campagne. Les partageurs ne paient jamais rien pour diffuser des annonces ni pour retirer leurs gains."},
+
+  {'public': 'commun',
+   'q': "Quelles zones du Bénin sont couvertes ?",
+   'r': "Les douze départements : Alibori, Atacora, Atlantique, Borgou, Collines, Couffo, Donga, Littoral, Mono, Ouémé, Plateau et Zou. Un annonceur choisit les départements qu'il veut toucher, et peut descendre au niveau de la commune pour affiner."},
+
+  {'public': 'annonceur',
+   'q': "Est-ce que je paie même si personne ne clique ?",
+   'r': "Non. Votre budget correspond à un nombre de clics, pas à un nombre d'affichages. Un statut vu mille fois sans un seul clic ne vous coûte rien de plus que le prix des clics réellement obtenus. C'est la différence de fond avec les réseaux qui facturent à l'impression : là-bas vous payez pour avoir été affiché, ici vous payez pour avoir été choisi."},
+
+  {'public': 'annonceur',
+   'q': "Comment être sûr que les clics que je paie sont de vraies personnes ?",
+   'r': "Chaque partageur diffuse un lien qui lui est propre. Notre contrôle écarte automatiquement les clics d'un partageur sur son propre lien, les clics répétés depuis la même connexion et ceux qui dépassent le plafond autorisé par partage. <strong>Ces clics écartés ne vous sont jamais facturés</strong> et ne sont pas non plus payés au partageur. Vous suivez le compteur jour par jour depuis votre espace, avec le détail par partageur."},
+
+  {'public': 'annonceur',
+   'q': "Que se passe-t-il si une journée est plus faible que prévu ?",
+   'r': "Votre objectif de clics est réparti sur la durée que vous avez choisie. Si une journée n'atteint pas son quota, le reste est automatiquement reporté sur les jours suivants : rien n'est perdu en cours de route. À l'inverse, dès que le quota du jour est atteint, la diffusion se met en pause jusqu'au lendemain, pour que votre budget ne parte pas en une seule journée."},
+
+  {'public': 'annonceur',
+   'q': "Combien coûte une campagne, concrètement ?",
+   'r': "Le prix dépend du format et du nombre de clics visés. Une vidéo se facture au tarif le plus élevé, une annonce en texte seul au plus bas, et une campagne en photos se facture par photo puisqu'elle donne autant de statuts séparés. Une commission de service s'ajoute au total. Le simulateur plus haut applique les tarifs réellement en vigueur : le montant qu'il affiche est celui que vous paierez."},
+
+  {'public': 'annonceur',
+   'q': "Puis-je modifier ou arrêter ma campagne une fois lancée ?",
+   'r': "Une campagne déjà validée et diffusée suit son cours jusqu'à son objectif de clics ou jusqu'à la fin de la durée choisie : elle ne peut plus être modifiée en route, pour ne pas changer les règles sous les pieds des partageurs qui l'ont déjà publiée. En revanche, tant qu'elle n'a pas été diffusée, vous gardez la main : une campagne refusée par la modération peut être corrigée et renvoyée, ou faire l'objet d'une demande de remboursement."},
+
+  {'public': 'annonceur',
+   'q': "Qui vérifie ce qui est publié en mon nom ?",
+   'r': "Chaque campagne passe par une validation humaine avant d'atteindre un seul statut. Un visuel illisible sur téléphone, un texte ambigu ou un contenu hors règles est refusé avec le motif, et vous pouvez corriger puis renvoyer. C'est aussi ce qui fait que les partageurs acceptent de publier : ils savent que ce qui arrive sur leur statut a été regardé."},
+
+  {'public': 'partageur',
+   'q': "Combien je peux gagner, réellement ?",
+   'r': "Cela dépend du nombre de personnes qui voient vos statuts et du format des campagnes que vous diffusez. Soyons clairs : il s'agit d'un complément, pas d'un salaire. Le simulateur plus haut applique les tarifs réellement versés, sans les gonfler. Ce qui fait la différence dans la durée, c'est la régularité plutôt qu'un gros coup ponctuel."},
+
+  {'public': 'partageur',
+   'q': "Faut-il beaucoup de contacts pour commencer ?",
+   'r': "Non. Ce qui compte n'est pas le nombre de contacts mais le fait qu'ils vous connaissent : une recommandation vue par 150 personnes qui vous font confiance fait plus de clics qu'une publicité vue par 5 000 inconnus. Des partageurs avec moins de 200 contacts génèrent des clics chaque semaine."},
+
+  {'public': 'partageur',
+   'q': "Quand et comment je récupère mon argent ?",
+   'r': "Les gains s'accumulent dans votre portefeuille sur la plateforme. Dès que vous atteignez le seuil minimum, vous demandez un retrait vers MTN MoMo, Moov Money, Celtiis Cash ou Wave. Le seuil est volontairement bas pour que vous n'attendiez pas des mois avant de toucher quelque chose."},
+
+  {'public': 'partageur',
+   'q': "Pourquoi dois-je envoyer une preuve de partage ?",
+   'r': "La preuve est la capture de votre statut en fin de journée. Elle protège les deux côtés : elle montre à l'annonceur que sa campagne a bien été publiée, et elle vous protège d'une contestation sur vos gains. Une fois la preuve validée, les clics valides de la journée sont crédités. Prenez la capture en entier plutôt que recadrée, c'est le motif de refus le plus fréquent."},
+
+  {'public': 'partageur',
+   'q': "Comment sont comptés mes clics ?",
+   'r': "Chaque campagne que vous partagez vous donne un lien unique, qui n'appartient qu'à vous. Tout ce qui passe par ce lien est compté et visible dans votre espace. Les clics que vous feriez sur votre propre lien, les clics répétés depuis une même connexion et ceux au-delà du plafond ne sont pas rémunérés : c'est cette rigueur qui fait que les annonceurs continuent de payer."},
+
+  {'public': 'partageur',
+   'q': "Est-ce que je dois publier toute la journée ?",
+   'r': "Non. Chaque campagne a un quota journalier. Une fois ce quota atteint, la diffusion se met en pause jusqu'au lendemain et vous pouvez retirer le statut si vous le souhaitez, rien ne vous est demandé au-delà. La plupart des partageurs publient le matin et regardent leurs clics le soir."}
+] %}
+
+{% set questions = toutes_les_questions if public == 'tous'
+   else toutes_les_questions | rejectattr('public', 'equalto',
+        ('partageur' if public == 'annonceur' else 'annonceur')) | list %}
+
+<section class="py-space-xl md:py-space-2xl bg-surface-container-low border-t border-outline-variant/30 scroll-mt-16" id="faq">
+<div class="max-w-2xl mx-auto px-margin">
+
+<div data-pw-anim="net" class="text-center space-y-2 mb-space-xl">
+<span class="px-space-sm py-1 rounded-full bg-surface-container text-on-surface-variant font-label-caps text-label-caps uppercase tracking-wider font-bold">Transparence et règles</span>
+<h2 data-pw-mots class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-slate-night">Questions fréquemment posées</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Tout ce qu'il faut savoir avant de démarrer.</p>
+</div>
+
+<div data-pw-cascade="0" class="space-y-space-sm" id="faq-accordion-group">
+{% for item in questions %}
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-hidden">
+<button class="faq-toggle w-full p-space-lg text-left flex items-center justify-between gap-4 font-headline-sm text-body-md md:text-headline-sm text-slate-midnight" type="button">
+<span class="">{{ item.q }}</span>
+<span class="faq-icon material-symbols-outlined {{ 'text-brand-primary' if loop.first else 'text-on-surface-variant' }} transition-transform duration-300">{{ 'expand_circle_up' if loop.first else 'add_circle' }}</span>
+</button>
+<div class="faq-content {{ '' if loop.first else 'hidden' }} px-space-lg pb-space-lg text-on-surface-variant font-body-sm text-body-sm leading-relaxed border-t border-outline-variant/10 pt-2">
+  {{ item.r | safe }}
+</div>
+</div>
+{% endfor %}
+</div>
+
+</div>
+</section>
+
+<script>
+  // Depliage de la FAQ : une seule reponse ouverte a la fois.
+  document.querySelectorAll('.faq-toggle').forEach(function (bouton) {
+    bouton.addEventListener('click', function () {
+      var contenu = bouton.nextElementSibling;
+      var icone = bouton.querySelector('.faq-icon');
+      var etaitFerme = contenu.classList.contains('hidden');
+      document.querySelectorAll('.faq-content').forEach(function (c) { c.classList.add('hidden'); });
+      document.querySelectorAll('.faq-icon').forEach(function (i) {
+        i.textContent = 'add_circle';
+        i.classList.remove('text-brand-primary');
+        i.classList.add('text-on-surface-variant');
+      });
+      if (etaitFerme) {
+        contenu.classList.remove('hidden');
+        icone.textContent = 'expand_circle_up';
+        icone.classList.remove('text-on-surface-variant');
+        icone.classList.add('text-brand-primary');
+      }
+    });
+  });
+</script>

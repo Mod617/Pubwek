@@ -1,0 +1,54 @@
+{# ===========================================================================
+   Banniere d'appel a l'action de fin de page.
+   Variable attendue : cta_public = "annonceur" | "partageur" | "tous"
+   =========================================================================== #}
+{% set public = cta_public | default('tous') %}
+
+<section class="py-space-xl md:py-space-2xl bg-background">
+<div class="max-w-5xl mx-auto px-margin">
+<div data-pw-anim="zoom" class="relative rounded-[32px] overflow-hidden bg-gradient-to-br from-brand-deep via-brand-primary to-slate-night text-white p-space-lg md:p-space-2xl shadow-2xl">
+<div class="absolute top-0 right-0 w-96 h-96 bg-brand-bright/10 rounded-full blur-3xl pointer-events-none"></div>
+<div class="absolute bottom-0 left-0 w-96 h-96 bg-amber-vibrant/10 rounded-full blur-3xl pointer-events-none"></div>
+
+<div class="relative z-10 max-w-2xl mx-auto text-center space-y-space-sm">
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg font-extrabold tracking-tight leading-tight">
+  {% if public == 'annonceur' %}Votre prochaine vente se joue sur un statut WhatsApp.
+  {% elif public == 'partageur' %}Votre statut du matin peut vous rapporter.
+  {% else %}Deux façons d'y être, une seule plateforme.{% endif %}
+</h2>
+<p class="font-body-md text-body-md text-brand-light/90">
+  {% if public == 'annonceur' %}
+    Commencez petit, regardez les chiffres, décidez ensuite. Vous ne payez que les clics réels.
+  {% elif public == 'partageur' %}
+    L'inscription est gratuite et ne vous engage à rien. Vous publiez quand vous voulez, vous retirez dès le seuil atteint.
+  {% else %}
+    Que vous cherchiez de nouveaux clients ou un complément avec votre téléphone, l'inscription prend quelques minutes.
+  {% endif %}
+</p>
+
+<div class="flex flex-col sm:flex-row items-center justify-center gap-space-sm pt-space-xs">
+{% if public != 'partageur' %}
+<a class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-space-xl py-3.5 rounded-full bg-white text-brand-deep font-headline-sm text-body-md font-bold shadow-xl hover:bg-brand-light transition-all transform hover:-translate-y-0.5" href="{{ url_for('register', role='annonceur') }}">
+<span class="material-symbols-outlined text-[20px]">rocket_launch</span> Lancer une campagne
+</a>
+{% endif %}
+{% if public != 'annonceur' %}
+<a class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-space-xl py-3.5 rounded-full bg-amber-rich text-white font-headline-sm text-body-md font-bold shadow-xl hover:bg-secondary transition-all transform hover:-translate-y-0.5" href="{{ url_for('register', role='partageur') }}">
+<span class="material-symbols-outlined text-[20px]">payments</span> Devenir partageur
+</a>
+{% endif %}
+</div>
+
+<div class="pt-space-sm flex flex-wrap items-center justify-center gap-space-sm font-caption text-caption text-brand-light/80">
+<a class="inline-flex items-center gap-1.5 hover:text-white transition-colors" href="https://wa.me/2290157577882" target="_blank" rel="noopener">
+<span class="material-symbols-outlined text-[16px] text-brand-bright no-underline">chat</span>
+<span class="underline underline-offset-2">Une question ? Écrivez-nous sur WhatsApp</span>
+</a>
+<span class="hidden sm:inline">&middot;</span>
+<span>Inscription gratuite, sans abonnement</span>
+</div>
+</div>
+
+</div>
+</div>
+</section>

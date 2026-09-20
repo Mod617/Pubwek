@@ -1,0 +1,165 @@
+{# ===========================================================================
+   Carrousel de temoignages, partage par la page d'accueil et les deux
+   pages de profil.
+
+   Variable attendue : temoignages_public = "tous" | "annonceur" | "partageur"
+   =========================================================================== #}
+{% set public = temoignages_public | default('tous') %}
+
+{% set tous_les_temoignages = [
+  {'prenom': 'Fatima', 'role': 'Partageuse, Parakou', 'public': 'partageur',
+   'texte': "La première fois j'ai retiré 500 juste pour voir si l'argent arrive vraiment. C'est tombé sur mon MoMo le même jour. Après ça j'ai arrêté de me poser la question."},
+
+  {'prenom': 'Prisca', 'role': 'Étudiante, Abomey-Calavi', 'public': 'partageur',
+   'texte': "Il faut être claire, ça ne va pas te rendre riche. Moi ça me fait mon crédit et mon transport de la semaine. Mais c'est de l'argent que je n'avais pas avant, et je ne fais rien de plus que ce que je faisais déjà avec mon téléphone."},
+
+  {'prenom': 'Rosine', 'role': 'Boutique de prêt-à-porter, Akpakpa', 'public': 'annonceur',
+   'texte': "J'ai commencé petit pour tester, je n'allais pas mettre gros dans un truc que je ne connais pas. En deux jours j'ai eu douze personnes qui m'ont écrit pour mes chaussures. Depuis je relance chaque mois."},
+
+  {'prenom': 'Ibrahim', 'role': 'Étudiant, Calavi', 'public': 'partageur',
+   'texte': "Je poste le matin avant les cours, ça me prend deux minutes. Le soir je regarde combien de gens ont cliqué. C'est tout. Si on m'avait dit qu'il fallait y passer une heure par jour, j'aurais laissé tomber."},
+
+  {'prenom': 'Codjo', 'role': 'Quincaillerie, Porto-Novo', 'public': 'annonceur',
+   'texte': "Ailleurs je payais et je voyais un chiffre d'affichage qui ne voulait rien dire. Ici c'est le clic qui compte. Si personne ne clique, ça ne bouge pas. Au moins je sais ce que j'achète."},
+
+  {'prenom': 'Nadège', 'role': 'Partageuse, Bohicon', 'public': 'partageur',
+   'texte': "Je n'ai même pas 200 contacts. Je pensais que ça ne servirait à rien. Mais ce sont des gens qui me connaissent, donc quand ils voient quelque chose chez moi ils cliquent. Le mois passé j'ai fait un peu plus de 900."},
+
+  {'prenom': 'Léa', 'role': "Salon d'esthétique, Haie Vive", 'public': 'annonceur',
+   'texte': "Les gens voient le statut d'une copine du quartier, pas une publicité qui tombe de nulle part. Elles écrivent plus facilement. C'est ça la différence."},
+
+  {'prenom': 'Marcel', 'role': 'Partageur, Porto-Novo', 'public': 'partageur',
+   'texte': "Au début je me disais, pourquoi quelqu'un va me payer pour poster une image. Puis j'ai compris que c'est juste de la pub, sauf qu'elle passe par mon statut au lieu d'une affiche dans la rue. Ça m'a rassuré."},
+
+  {'prenom': 'Armand', 'role': 'Agence immobilière, Fidjrossè', 'public': 'annonceur',
+   'texte': "J'ai 58 ans, je ne suis pas dans les choses d'internet. Mon neveu m'a aidé pour la première campagne. La deuxième je l'ai faite tout seul, c'est trois écrans à remplir."},
+
+  {'prenom': 'Sylvie', 'role': 'Partageuse, Cotonou', 'public': 'partageur',
+   'texte': "Ma preuve ne passait pas, je commençais à m'énerver. J'ai écrit sur WhatsApp, on m'a dit de reprendre la capture en entier au lieu de couper. Le lendemain c'était validé. Il faut juste suivre ce qu'ils demandent."},
+
+  {'prenom': 'Alice', 'role': 'Vend du jus naturel, Bohicon', 'public': 'annonceur',
+   'texte': "Je livre seulement dans ma ville. Avant, je payais pour être vue par des gens de Cotonou que je ne peux même pas servir. Là je coche mon département et c'est réglé."},
+
+  {'prenom': 'Rachid', 'role': 'Partageur, Dantokpa', 'public': 'partageur',
+   'texte': "Ce que j'aime, c'est que je vois combien de personnes ont cliqué sur mon lien à moi. Je ne dépends pas de ce qu'on veut bien me dire. Le chiffre est là, je le regarde quand je veux."},
+
+  {'prenom': 'Séraphin', 'role': 'Restaurant, Cadjehoun', 'public': 'annonceur',
+   'texte': "Ma première affiche a été refusée, le texte était trop petit sur téléphone. Ça m'a agacé sur le moment. Après j'ai compris que c'est aussi ce qui fait que les partageurs acceptent de publier, ils ne veulent pas n'importe quoi sur leur statut."},
+
+  {'prenom': 'Odile', 'role': 'Partageuse, Natitingou', 'public': 'partageur',
+   'texte': "Je suis loin de Cotonou, je croyais que ça ne concernait pas ma zone. En fait les annonceurs choisissent les départements, et il y en a qui ciblent chez nous. Pas tous les jours, mais il y en a."},
+
+  {'prenom': 'Gildas', 'role': 'Partageur, Godomey', 'public': 'partageur',
+   'texte': "Le seuil de retrait est à 500, donc tu n'attends pas des mois avant de toucher quelque chose. C'est ça qui fait que j'ai continué. Si c'était 10 000 j'aurais laissé."}
+] %}
+
+{% set temoignages = tous_les_temoignages if public == 'tous'
+   else tous_les_temoignages | selectattr('public', 'equalto', public) | list %}
+{% set palettes = [('bg-brand-light', 'text-brand-deep'),
+                   ('bg-amber-soft', 'text-amber-rich'),
+                   ('bg-surface-container', 'text-slate-midnight')] %}
+
+<section class="py-space-xl md:py-space-2xl bg-background">
+<div class="max-w-6xl mx-auto px-margin">
+
+<div data-pw-anim="monte" class="flex flex-col md:flex-row md:items-end md:justify-between gap-space-md mb-space-lg">
+<div class="max-w-2xl space-y-2">
+<span class="px-space-sm py-1 rounded-full bg-brand-light text-brand-deep font-label-caps text-label-caps uppercase tracking-wider font-bold">Retours du terrain</span>
+<h2 data-pw-mots class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-slate-night mt-2">
+  {% if public == 'annonceur' %}Ce que disent les commerces qui l'utilisent
+  {% elif public == 'partageur' %}Ce que disent les partageurs
+  {% else %}Ce que disent les gens qui l'utilisent{% endif %}
+</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Des retours à Cotonou, Calavi, Parakou, Porto-Novo et ailleurs.</p>
+</div>
+<div class="hidden md:flex items-center gap-2 shrink-0">
+<button type="button" id="temoignagePrecedent" aria-label="Témoignage précédent"
+        class="w-11 h-11 rounded-full border border-outline-variant/40 bg-surface-container-lowest text-on-surface-variant flex items-center justify-center hover:text-brand-primary hover:border-brand-primary transition-colors disabled:opacity-35 disabled:hover:text-on-surface-variant disabled:hover:border-outline-variant/40">
+<span class="material-symbols-outlined text-[20px]">arrow_back</span></button>
+<button type="button" id="temoignageSuivant" aria-label="Témoignage suivant"
+        class="w-11 h-11 rounded-full border border-outline-variant/40 bg-surface-container-lowest text-on-surface-variant flex items-center justify-center hover:text-brand-primary hover:border-brand-primary transition-colors disabled:opacity-35 disabled:hover:text-on-surface-variant disabled:hover:border-outline-variant/40">
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span></button>
+</div>
+</div>
+
+<div id="temoignagesPiste" role="group" aria-label="Témoignages"
+     class="pw-piste-carrousel flex gap-space-lg overflow-x-auto snap-x snap-mandatory scroll-smooth pb-space-xs -mx-margin px-margin">
+{% for t in temoignages %}
+  {% set couleurs = palettes[loop.index0 % 3] %}
+  <article class="pw-temoignage-carte snap-center shrink-0 w-[86%] sm:w-[48%] lg:w-[31.5%] bg-surface-container-lowest rounded-3xl p-space-lg border border-outline-variant/30 shadow-sm flex flex-col justify-between">
+    <p class="font-body-md text-body-md text-slate-night leading-relaxed">&laquo;&nbsp;{{ t.texte }}&nbsp;&raquo;</p>
+    <div class="pt-space-md mt-space-md border-t border-outline-variant/20 flex items-center gap-3">
+      <div class="w-11 h-11 rounded-full {{ couleurs[0] }} {{ couleurs[1] }} font-bold flex items-center justify-center text-sm shrink-0">{{ t.prenom[0] }}</div>
+      <div class="min-w-0">
+        <div class="font-headline-sm text-body-sm font-bold text-slate-midnight">{{ t.prenom }}</div>
+        <p class="font-caption text-caption text-on-surface-variant">{{ t.role }}</p>
+      </div>
+    </div>
+  </article>
+{% endfor %}
+</div>
+
+<div id="temoignagesPoints" class="flex items-center justify-center gap-2 mt-space-md">
+{% for t in temoignages %}
+  <button type="button" class="pw-temoignage-point w-2 h-2 rounded-full bg-outline-variant transition-all"
+          data-index="{{ loop.index0 }}" aria-label="Aller au témoignage {{ loop.index }}"></button>
+{% endfor %}
+</div>
+
+</div>
+</section>
+
+<script>
+  // Carrousel des temoignages. L'index est garde en memoire : deux clics
+  // rapides sur la fleche avancent bien de deux cartes, meme si le
+  // defilement doux n'est pas encore termine.
+  (function () {
+    var piste = document.getElementById('temoignagesPiste');
+    if (!piste) return;
+    var cartes = Array.prototype.slice.call(piste.querySelectorAll('.pw-temoignage-carte'));
+    var points = Array.prototype.slice.call(document.querySelectorAll('.pw-temoignage-point'));
+    var btnPrecedent = document.getElementById('temoignagePrecedent');
+    var btnSuivant = document.getElementById('temoignageSuivant');
+    if (!cartes.length) return;
+    var indexActif = 0;
+
+    function carteVisible() {
+      var gauche = piste.scrollLeft, meilleur = 0, ecartMin = Infinity;
+      cartes.forEach(function (carte, i) {
+        var ecart = Math.abs(carte.offsetLeft - piste.offsetLeft - gauche);
+        if (ecart < ecartMin) { ecartMin = ecart; meilleur = i; }
+      });
+      return meilleur;
+    }
+    function allerA(index) {
+      indexActif = Math.max(0, Math.min(index, cartes.length - 1));
+      var cible = cartes[indexActif];
+      piste.scrollTo({ left: cible.offsetLeft - piste.offsetLeft, behavior: 'smooth' });
+      rafraichir();
+    }
+    function rafraichir() {
+      points.forEach(function (point, i) {
+        var estActif = i === indexActif;
+        point.classList.toggle('bg-brand-primary', estActif);
+        point.classList.toggle('w-5', estActif);
+        point.classList.toggle('bg-outline-variant', !estActif);
+        point.classList.toggle('w-2', !estActif);
+      });
+      var finDePiste = piste.scrollLeft + piste.clientWidth >= piste.scrollWidth - 4;
+      if (btnPrecedent) btnPrecedent.disabled = indexActif === 0;
+      if (btnSuivant) btnSuivant.disabled = finDePiste && indexActif > 0;
+    }
+    if (btnPrecedent) btnPrecedent.addEventListener('click', function () { allerA(indexActif - 1); });
+    if (btnSuivant) btnSuivant.addEventListener('click', function () { allerA(indexActif + 1); });
+    points.forEach(function (point) {
+      point.addEventListener('click', function () { allerA(parseInt(point.dataset.index, 10)); });
+    });
+    var minuterie = null;
+    piste.addEventListener('scroll', function () {
+      clearTimeout(minuterie);
+      minuterie = setTimeout(function () { indexActif = carteVisible(); rafraichir(); }, 120);
+    });
+    window.addEventListener('resize', rafraichir);
+    rafraichir();
+  })();
+</script>

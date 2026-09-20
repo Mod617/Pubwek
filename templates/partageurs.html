@@ -1,0 +1,122 @@
+{% extends "base_v2.html" %}
+{% set title = "Pour les partageurs" %}
+
+{% block content %}
+<!-- HEROS PARTAGEURS -->
+<section class="relative overflow-hidden bg-gradient-to-b from-canvas-cream via-surface-container-low to-background py-space-xl">
+<div class="absolute -top-32 -right-20 w-96 h-96 rounded-full bg-amber-vibrant/10 blur-3xl pointer-events-none"></div>
+<div class="max-w-5xl mx-auto px-margin relative">
+<div class="max-w-3xl space-y-space-md">
+<span class="inline-flex items-center gap-space-xs px-space-sm py-1.5 rounded-full bg-surface-container-lowest shadow-sm">
+<span class="w-2 h-2 rounded-full bg-amber-vibrant shrink-0"></span>
+<span class="font-label-caps text-label-caps uppercase text-slate-midnight font-bold tracking-wider">Pour celles et ceux qui ont un statut WhatsApp</span>
+</span>
+<h1 class="font-display-hero text-display-hero-mobile md:text-display-hero text-slate-night tracking-tight leading-[1.08]">
+Votre statut du matin peut vous
+<span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-rich via-amber-vibrant to-secondary">rapporter</span>.
+</h1>
+<p class="font-body-xl text-body-xl text-on-surface-variant">
+Vous publiez des annonces d&eacute;j&agrave; valid&eacute;es sur votre statut, avec un lien qui n'appartient qu'&agrave; vous.
+Chaque clic de vos contacts vous est pay&eacute;. C'est un compl&eacute;ment, pas un salaire, et c'est dit franchement
+dans le simulateur plus bas.
+</p>
+<div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-space-sm pt-space-xs">
+<a class="inline-flex items-center justify-center gap-space-xs px-space-md py-3.5 rounded-full bg-amber-rich text-on-primary font-headline-sm text-body-md font-bold shadow-xl shadow-amber-rich/20 hover:bg-secondary transition-all transform hover:-translate-y-0.5" href="{{ url_for('register', role='partageur') }}">
+<span class="material-symbols-outlined text-[20px]">payments</span> Devenir partageur
+</a>
+<a class="inline-flex items-center justify-center gap-space-xs px-space-md py-3.5 rounded-full border border-outline-variant/50 bg-surface-container-lowest text-slate-midnight font-headline-sm text-body-md font-bold hover:border-amber-rich transition-all" href="#simulateur">
+<span class="material-symbols-outlined text-[20px]">analytics</span> Estimer mes gains
+</a>
+</div>
+<div class="pt-space-xs flex flex-wrap items-center gap-y-2 gap-x-space-md text-on-surface-variant font-caption text-caption">
+<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-amber-rich">bolt</span> Retrait d&egrave;s 500 FCFA</span>
+<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-amber-rich">lock_clock</span> Aucun investissement de d&eacute;part</span>
+<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-amber-rich">check_circle</span> Vous publiez quand vous voulez</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- CE QU'IL FAUT SAVOIR AVANT DE COMMENCER -->
+<section class="py-space-xl bg-surface-container-low border-y border-outline-variant/30">
+<div class="max-w-5xl mx-auto px-margin">
+<div data-pw-anim="net" class="max-w-2xl mb-space-lg space-y-2">
+<span class="px-space-sm py-1 rounded-full bg-amber-soft text-amber-rich font-label-caps text-label-caps uppercase tracking-wider font-bold">Sans d&eacute;tour</span>
+<h2 data-pw-mots class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-slate-night mt-2">Ce qu'il faut savoir avant de commencer</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Mieux vaut le lire maintenant que d&eacute;chanter dans deux semaines.</p>
+</div>
+
+<div data-pw-cascade="0" class="grid grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-space-md">
+
+<div class="bg-surface-container-lowest rounded-3xl p-space-md border border-outline-variant/30">
+<h3 class="font-headline-md text-headline-sm font-bold text-slate-midnight mb-1.5">C'est un compl&eacute;ment</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+Personne ne vit de Pubwek et nous ne le pr&eacute;tendons pas. Ce que &ccedil;a couvre, en g&eacute;n&eacute;ral :
+du cr&eacute;dit, du transport, une partie des petites d&eacute;penses de la semaine. Le simulateur
+applique les tarifs r&eacute;els, pas des chiffres gonfl&eacute;s.
+</p>
+</div>
+
+<div class="bg-surface-container-lowest rounded-3xl p-space-md border border-outline-variant/30">
+<h3 class="font-headline-md text-headline-sm font-bold text-slate-midnight mb-1.5">La r&eacute;gularit&eacute; compte plus que l'audience</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+Un statut vu par 150 personnes qui vous connaissent fait plus de clics qu'une publicit&eacute;
+vue par 5 000 inconnus. Ce qui fait la diff&eacute;rence dans la dur&eacute;e, c'est de publier
+souvent, pas d'avoir beaucoup de contacts.
+</p>
+</div>
+
+<div class="bg-surface-container-lowest rounded-3xl p-space-md border border-outline-variant/30">
+<h3 class="font-headline-md text-headline-sm font-bold text-slate-midnight mb-1.5">Tous les clics ne comptent pas</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+Cliquer sur votre propre lien, ou faire cliquer dix fois la m&ecirc;me personne, ne rapporte
+rien : ces clics sont &eacute;cart&eacute;s automatiquement. C'est aussi ce qui fait que les
+annonceurs continuent de payer, donc que vous continuez d'&ecirc;tre pay&eacute;.
+</p>
+</div>
+
+<div class="bg-surface-container-lowest rounded-3xl p-space-md border border-outline-variant/30">
+<h3 class="font-headline-md text-headline-sm font-bold text-slate-midnight mb-1.5">Il faut envoyer sa preuve</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+Une capture de votre statut en fin de journ&eacute;e, prise en entier. Sans elle, les clics du
+jour ne sont pas cr&eacute;dit&eacute;s. C'est la contrainte principale, autant la conna&icirc;tre
+d&egrave;s le d&eacute;part.
+</p>
+</div>
+
+<div class="bg-surface-container-lowest rounded-3xl p-space-md border border-outline-variant/30">
+<h3 class="font-headline-md text-headline-sm font-bold text-slate-midnight mb-1.5">Vous ne d&eacute;pensez jamais rien</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+Pas d'inscription payante, pas d'abonnement, pas d'avance &agrave; faire. Si &ccedil;a ne vous
+convient pas, vous arr&ecirc;tez de publier et vous n'avez rien perdu.
+</p>
+</div>
+
+<div class="bg-surface-container-lowest rounded-3xl p-space-md border border-outline-variant/30">
+<h3 class="font-headline-md text-headline-sm font-bold text-slate-midnight mb-1.5">&Ccedil;a d&eacute;pend des campagnes disponibles</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+Les annonceurs choisissent leurs d&eacute;partements. Selon o&ugrave; vous &ecirc;tes, il y a des
+p&eacute;riodes avec plusieurs campagnes et d'autres plus calmes. Les zones hors des grandes
+villes sont servies, mais moins souvent.
+</p>
+</div>
+
+</div>
+</div>
+</section>
+
+{% set etapes_public = 'partageur' %}
+{% include "_blocs/etapes.html" %}
+
+{% set sim_mode = 'partageur' %}
+{% include "_blocs/simulateur.html" %}
+
+{% set temoignages_public = 'partageur' %}
+{% include "_blocs/temoignages.html" %}
+
+{% set faq_public = 'partageur' %}
+{% include "_blocs/faq.html" %}
+
+{% set cta_public = 'partageur' %}
+{% include "_blocs/cta.html" %}
+{% endblock %}

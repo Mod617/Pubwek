@@ -1,0 +1,85 @@
+{# ===========================================================================
+   Les trois etapes, racontees du point de vue du public de la page.
+   Variable attendue : etapes_public = "annonceur" | "partageur" | "tous"
+   =========================================================================== #}
+{% set public = etapes_public | default('tous') %}
+
+{% if public == 'annonceur' %}
+  {% set intro = "De la mise en ligne de votre visuel jusqu'aux premiers messages sur votre WhatsApp." %}
+  {% set etapes = [
+    {'icone': 'campaign', 'fond': 'bg-brand-light', 'texte_icone': 'text-brand-deep',
+     'titre': 'Vous préparez votre annonce',
+     'corps': "Votre affiche, votre texte ou une courte vidéo. Vous cochez les départements et les communes à toucher, vous fixez le nombre de clics visé et la durée. Trois écrans à remplir.",
+     'note': 'Aucun engagement de durée', 'note_icone': 'speed', 'note_couleur': 'text-brand-deep'},
+    {'icone': 'shield', 'fond': 'bg-amber-soft', 'texte_icone': 'text-amber-rich',
+     'titre': 'Nous vérifions avant diffusion',
+     'corps': "Une personne regarde votre campagne avant qu'elle n'atteigne un seul statut. Si un visuel est illisible sur téléphone ou qu'un texte pose problème, vous recevez le motif et vous corrigez.",
+     'note': 'Validation humaine, pas automatique', 'note_icone': 'verified', 'note_couleur': 'text-amber-rich'},
+    {'icone': 'trending_up', 'fond': 'bg-primary-fixed', 'texte_icone': 'text-brand-deep',
+     'titre': 'Vous suivez les clics réels',
+     'corps': "Des partageurs de vos zones publient votre annonce avec un lien qui leur est propre. Vous voyez le compteur monter jour par jour, partageur par partageur, et les clients vous écrivent directement.",
+     'note': 'Facturation au clic constaté', 'note_icone': 'link', 'note_couleur': 'text-brand-primary'}
+  ] %}
+{% elif public == 'partageur' %}
+  {% set intro = "De la campagne que vous choisissez jusqu'au retrait sur votre Mobile Money." %}
+  {% set etapes = [
+    {'icone': 'storefront', 'fond': 'bg-brand-light', 'texte_icone': 'text-brand-deep',
+     'titre': 'Vous choisissez une campagne',
+     'corps': "Votre tableau de bord affiche les campagnes disponibles dans votre zone. Vous prenez celle qui vous parle, rien ne vous est imposé, et vous récupérez le texte et le visuel tout prêts.",
+     'note': 'Vous publiez ce que vous voulez', 'note_icone': 'check_circle', 'note_couleur': 'text-brand-deep'},
+    {'icone': 'share', 'fond': 'bg-amber-soft', 'texte_icone': 'text-amber-rich',
+     'titre': 'Vous postez sur votre statut',
+     'corps': "Vous collez le texte avec votre lien personnel et vous publiez. En fin de journée, vous envoyez une capture de votre statut comme preuve. Deux minutes le matin, une le soir.",
+     'note': 'Un lien unique, rien que le vôtre', 'note_icone': 'link', 'note_couleur': 'text-amber-rich'},
+    {'icone': 'account_balance_wallet', 'fond': 'bg-primary-fixed', 'texte_icone': 'text-brand-deep',
+     'titre': 'Vous êtes payé au clic',
+     'corps': "Chaque clic valide sur votre lien crédite votre portefeuille. Dès que le seuil est atteint, vous demandez un retrait vers MTN MoMo, Moov Money, Celtiis Cash ou Wave.",
+     'note': 'Retrait dès 500 FCFA', 'note_icone': 'payments', 'note_couleur': 'text-brand-primary'}
+  ] %}
+{% else %}
+  {% set intro = "Des commerces qui veulent des clients, des personnes qui ont une audience, et des règles claires entre les deux." %}
+  {% set etapes = [
+    {'icone': 'campaign', 'fond': 'bg-brand-light', 'texte_icone': 'text-brand-deep',
+     'titre': "Un commerce prépare son annonce",
+     'corps': "Il téléverse son affiche, son texte ou sa vidéo, choisit les communes à toucher et le nombre de clics visé. Sa campagne passe ensuite par une validation humaine.",
+     'note': 'Validation avant diffusion', 'note_icone': 'verified', 'note_couleur': 'text-brand-deep'},
+    {'icone': 'share', 'fond': 'bg-amber-soft', 'texte_icone': 'text-amber-rich',
+     'titre': 'Des partageurs la publient',
+     'corps': "Les partageurs de la zone ciblée voient la campagne et la publient sur leur statut WhatsApp, chacun avec un lien qui lui est propre. Ils envoient ensuite leur preuve de publication.",
+     'note': 'Un lien unique par partageur', 'note_icone': 'link', 'note_couleur': 'text-amber-rich'},
+    {'icone': 'point_of_sale', 'fond': 'bg-primary-fixed', 'texte_icone': 'text-brand-deep',
+     'titre': 'Seuls les clics réels comptent',
+     'corps': "Chaque clic vérifié crédite le partageur et est facturé à l'annonceur. Les clics écartés par le contrôle anti-fraude ne sont ni payés ni facturés. Les deux côtés voient les mêmes chiffres.",
+     'note': 'Retrait Mobile Money dès 500 FCFA', 'note_icone': 'account_balance_wallet', 'note_couleur': 'text-brand-primary'}
+  ] %}
+{% endif %}
+
+<section class="py-space-xl md:py-space-2xl bg-background scroll-mt-16" id="comment-ca-marche">
+<div class="max-w-5xl mx-auto px-margin">
+
+<div data-pw-anim="net" class="text-center max-w-3xl mx-auto mb-space-lg space-y-2">
+<span class="px-space-sm py-1 rounded-full bg-brand-light text-brand-deep font-label-caps text-label-caps uppercase tracking-wider font-bold">Fonctionnement</span>
+<h2 data-pw-mots class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-slate-night mt-2">Comment ça fonctionne concrètement</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">{{ intro }}</p>
+</div>
+
+<div data-pw-cascade="0" class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+{% for etape in etapes %}
+<div class="bg-surface-container-lowest rounded-3xl p-space-md border border-outline-variant/30 shadow-sm group hover:shadow-lg transition-all">
+  <div class="flex items-center justify-between mb-space-sm">
+    <span class="font-label-numeric-lg text-3xl font-extrabold text-brand-primary/25 group-hover:text-brand-primary transition-colors">0{{ loop.index }}</span>
+    <div class="w-11 h-11 rounded-2xl {{ etape.fond }} {{ etape.texte_icone }} flex items-center justify-center">
+      <span class="material-symbols-outlined text-[22px]">{{ etape.icone }}</span>
+    </div>
+  </div>
+  <h3 class="font-headline-md text-headline-sm font-bold text-slate-midnight mb-1.5">{{ etape.titre }}</h3>
+  <p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">{{ etape.corps }}</p>
+  <div class="mt-space-sm pt-space-xs border-t border-outline-variant/20 flex items-center gap-1 font-caption text-caption font-semibold {{ etape.note_couleur }}">
+    <span class="material-symbols-outlined text-[16px]">{{ etape.note_icone }}</span> {{ etape.note }}
+  </div>
+</div>
+{% endfor %}
+</div>
+
+</div>
+</section>

@@ -1,0 +1,244 @@
+{# ===========================================================================
+   Simulateur de gains et de budget.
+
+   Variable attendue : sim_mode = "partageur" | "annonceur" | "les-deux"
+   En mode verrouille, le selecteur de profil disparait : la page de profil
+   n'a pas a proposer le calcul de l'autre camp.
+
+   Les tarifs viennent de SystemConfig, jamais du gabarit : le montant
+   affiche est celui qui sera reellement applique.
+   =========================================================================== #}
+{% set mode = sim_mode | default('les-deux') %}
+
+<section class="py-space-xl bg-canvas-cream border-y border-outline-variant/30 scroll-mt-16" id="simulateur">
+<div class="max-w-5xl mx-auto px-margin">
+<div data-pw-anim="zoom" class="bg-surface-container-lowest rounded-3xl p-space-lg shadow-xl border border-outline-variant/30">
+
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm pb-space-sm border-b border-outline-variant/30">
+<div>
+<span class="px-space-sm py-1 rounded-full bg-brand-light text-brand-deep font-label-caps text-label-caps uppercase font-bold">Simulateur</span>
+<h3 class="font-headline-md text-headline-md text-slate-midnight mt-1">
+  {% if mode == 'partageur' %}Estimez vos gains
+  {% elif mode == 'annonceur' %}Estimez votre budget
+  {% else %}Estimez vos gains ou votre budget{% endif %}
+</h3>
+</div>
+{% if mode == 'les-deux' %}
+<div class="inline-flex p-1 rounded-full bg-surface-container-low shrink-0" id="simulator-switch">
+<button class="px-4 py-2 rounded-full font-body-sm text-body-sm font-semibold bg-white text-slate-midnight shadow-sm" id="btn-mode-partageur" type="button">Je suis Partageur</button>
+<button class="px-4 py-2 rounded-full font-body-sm text-body-sm font-semibold text-on-surface-variant hover:text-slate-midnight" id="btn-mode-annonceur" type="button">Je suis Annonceur</button>
+</div>
+{% endif %}
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-12 gap-space-lg pt-space-md items-start">
+
+<!-- Reglages -->
+<div class="md:col-span-7 space-y-space-sm">
+
+<div class="space-y-1.5">
+<span class="font-body-sm text-body-sm font-semibold text-slate-midnight">Format de la campagne</span>
+<div class="inline-flex p-1 rounded-xl bg-surface-container-low w-full" id="sim-formats">
+<button class="sim-format flex-1 px-3 py-1.5 rounded-lg font-body-sm text-body-sm font-semibold bg-white text-slate-midnight shadow-sm" data-format="video" type="button">Vidéo</button>
+<button class="sim-format flex-1 px-3 py-1.5 rounded-lg font-body-sm text-body-sm font-semibold text-on-surface-variant hover:text-slate-midnight" data-format="photo" type="button">Photos</button>
+<button class="sim-format flex-1 px-3 py-1.5 rounded-lg font-body-sm text-body-sm font-semibold text-on-surface-variant hover:text-slate-midnight" data-format="texte" type="button">Texte</button>
+</div>
+<p class="font-caption text-caption text-on-surface-variant" id="sim-format-note">Une vidéo de 30 secondes maximum, publiée en statut.</p>
+</div>
+
+<div class="space-y-1.5">
+<div class="flex justify-between items-center gap-space-xs">
+<label class="font-body-sm text-body-sm font-semibold text-slate-midnight" for="range-views" id="label-views-title">Moyenne de vues par statut</label>
+<span class="font-label-numeric-md text-label-numeric-md text-brand-deep font-bold shrink-0" id="label-views">250 vues</span>
+</div>
+<input class="w-full h-2.5 bg-surface-container rounded-lg appearance-none cursor-pointer accent-brand-primary" id="range-views" max="2500" min="50" step="50" type="range" value="250">
+</div>
+
+<div class="space-y-1.5">
+<div class="flex justify-between items-center gap-space-xs">
+<label class="font-body-sm text-body-sm font-semibold text-slate-midnight" for="range-days" id="label-days-title">Fréquence de publication</label>
+<span class="font-label-numeric-md text-label-numeric-md text-amber-rich font-bold shrink-0" id="label-days">7 jours / semaine</span>
+</div>
+<input class="w-full h-2.5 bg-surface-container rounded-lg appearance-none cursor-pointer accent-amber-rich" id="range-days" max="7" min="1" step="1" type="range" value="7">
+</div>
+
+<div class="rounded-xl bg-surface-container-low px-space-sm py-2">
+<p class="font-caption text-caption text-on-surface-variant" id="sim-hypothese">Hypothèse de calcul : environ 1 personne sur 10 qui voit le statut clique sur le lien. Seuls les clics réels sont payés.</p>
+</div>
+
+<div class="flex flex-wrap items-center gap-x-3 gap-y-1 pt-0.5">
+<span class="font-caption text-caption font-bold text-slate-midnight flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-momo-yellow"></span> MTN MoMo</span>
+<span class="font-caption text-caption font-bold text-slate-midnight flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-moov-blue"></span> Moov Money</span>
+<span class="font-caption text-caption font-bold text-slate-midnight flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-celtiis-green"></span> Celtiis Cash</span>
+<span class="px-2.5 py-1 rounded-lg bg-surface-container border border-outline-variant/40 font-caption text-caption font-bold text-slate-midnight">FedaPay</span>
+</div>
+
+</div>
+
+<!-- Resultat -->
+<div class="md:col-span-5 bg-slate-midnight text-white rounded-2xl p-space-md">
+<div class="space-y-3">
+<span class="font-label-caps text-label-caps uppercase tracking-wider text-brand-bright font-bold" id="res-badge-title">Revenu mensuel estimé</span>
+<div class="space-y-0.5">
+<div class="font-label-numeric-lg text-3xl font-extrabold tracking-tight" id="res-primary-val">0 FCFA</div>
+<p class="font-caption text-caption text-white/70" id="res-secondary-sub"></p>
+</div>
+<dl class="pt-2.5 border-t border-white/10 space-y-1.5 font-caption text-caption text-white/70">
+<div class="flex justify-between gap-2"><dt id="res-row1-label">Clics estimés par mois</dt><dd class="font-label-numeric-md font-bold text-white text-right" id="res-row1-val"></dd></div>
+<div class="flex justify-between gap-2"><dt id="res-row2-label">Tarif appliqué</dt><dd class="font-label-numeric-md font-bold text-white text-right" id="res-row2-val"></dd></div>
+<div class="flex justify-between gap-2"><dt id="res-row3-label">Retrait minimum</dt><dd class="font-label-numeric-md font-bold text-brand-bright text-right" id="res-row3-val"></dd></div>
+</dl>
+<a class="w-full py-2.5 px-space-md rounded-full bg-amber-rich text-white font-headline-sm text-body-sm font-bold text-center block hover:bg-secondary transition-all" href="{{ url_for('register', role='partageur') }}" id="btn-sim-action">Commencer à encaisser</a>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+</section>
+
+<script>
+  // Simulateur de gains et de budget.
+  // Les tarifs viennent de l'administration : aucun montant n'est invente ici.
+  (function () {
+    var URL_PARTAGEUR = "{{ url_for('register', role='partageur') }}";
+    var URL_ANNONCEUR = "{{ url_for('register', role='annonceur') }}";
+
+    var TARIFS = {
+      video: { verse: {{ config.reward_per_click_video }}, facture: {{ config.cost_per_click_video }},
+               note: "Une vidéo de 30 secondes maximum, publiée en statut." },
+      photo: { verse: {{ config.reward_per_click_photo }}, facture: {{ config.cost_per_click_photo }},
+               note: "Tarif par photo : une campagne à 5 photos vaut 5 fois ce montant, et fait 5 statuts." },
+      texte: { verse: {{ config.reward_per_click_text }}, facture: {{ config.cost_per_click_text }},
+               note: "Une annonce en texte seul, sans image ni vidéo." }
+    };
+    var COMMISSION = {{ config.commission_rate }} / 100;
+    var RETRAIT_MINIMUM = {{ config.minimum_withdrawal_amount | int }};
+    var TAUX_DE_CLIC = 0.10;   // 1 personne sur 10 qui voit le statut clique
+
+    var rangeViews = document.getElementById('range-views');
+    if (!rangeViews) return;
+    var rangeDays = document.getElementById('range-days');
+    var labelViews = document.getElementById('label-views');
+    var labelDays = document.getElementById('label-days');
+    var labelViewsTitre = document.getElementById('label-views-title');
+    var labelDaysTitre = document.getElementById('label-days-title');
+    var hypothese = document.getElementById('sim-hypothese');
+    var formatNote = document.getElementById('sim-format-note');
+    var resVal = document.getElementById('res-primary-val');
+    var resSub = document.getElementById('res-secondary-sub');
+    var resBadge = document.getElementById('res-badge-title');
+    var btnAction = document.getElementById('btn-sim-action');
+    var lignes = [1, 2, 3].map(function (n) {
+      return { label: document.getElementById('res-row' + n + '-label'),
+               valeur: document.getElementById('res-row' + n + '-val') };
+    });
+    var btnPartageur = document.getElementById('btn-mode-partageur');
+    var btnAnnonceur = document.getElementById('btn-mode-annonceur');
+
+    var mode = "{{ 'annonceur' if mode == 'annonceur' else 'partageur' }}";
+    var format = 'video';
+
+    function fr(n) { return Math.round(n).toLocaleString('fr-FR'); }
+    // Les tarifs peuvent etre inferieurs a 1 FCFA : on garde une decimale utile.
+    function tarif(n) {
+      return n < 10 ? n.toFixed(2).replace(/\.?0+$/, '').replace('.', ',') : fr(n);
+    }
+
+    function reglerCurseurs() {
+      if (mode === 'partageur') {
+        rangeViews.min = 50; rangeViews.max = 2500; rangeViews.step = 50;
+        if (rangeViews.value > 2500) rangeViews.value = 250;
+        rangeDays.min = 1; rangeDays.max = 7; rangeDays.step = 1;
+        if (rangeDays.value > 7) rangeDays.value = 7;
+        labelViewsTitre.textContent = 'Moyenne de vues par statut';
+        labelDaysTitre.textContent = 'Fréquence de publication';
+      } else {
+        rangeViews.min = 100; rangeViews.max = 10000; rangeViews.step = 100;
+        if (rangeViews.value < 100) rangeViews.value = 1000;
+        rangeDays.min = 1; rangeDays.max = 30; rangeDays.step = 1;
+        labelViewsTitre.textContent = 'Objectif de clics à atteindre';
+        labelDaysTitre.textContent = 'Durée de la campagne';
+      }
+    }
+
+    function calculer() {
+      var t = TARIFS[format];
+      formatNote.textContent = t.note;
+
+      if (mode === 'partageur') {
+        var vues = parseInt(rangeViews.value, 10);
+        var jours = parseInt(rangeDays.value, 10);
+        labelViews.textContent = fr(vues) + ' vues';
+        labelDays.textContent = jours + (jours > 1 ? ' jours / semaine' : ' jour / semaine');
+
+        var clicsParMois = vues * TAUX_DE_CLIC * jours * 4;
+        var gainsParMois = clicsParMois * t.verse;
+
+        resBadge.textContent = 'Revenu mensuel estimé';
+        resVal.textContent = fr(gainsParMois) + ' FCFA';
+        resSub.textContent = 'Soit environ ' + fr(gainsParMois / 4) + ' FCFA par semaine';
+        lignes[0].label.textContent = 'Clics estimés par mois';
+        lignes[0].valeur.textContent = fr(clicsParMois);
+        lignes[1].label.textContent = 'Versé par clic';
+        lignes[1].valeur.textContent = tarif(t.verse) + ' FCFA' + (format === 'photo' ? ' / photo' : '');
+        lignes[2].label.textContent = 'Retrait possible dès';
+        lignes[2].valeur.textContent = fr(RETRAIT_MINIMUM) + ' FCFA';
+        hypothese.textContent = 'Hypothèse de calcul : environ 1 personne sur 10 qui voit le statut clique sur le lien. Seuls les clics réels sont payés.';
+        btnAction.textContent = 'Devenir partageur';
+        btnAction.setAttribute('href', URL_PARTAGEUR);
+      } else {
+        var clics = parseInt(rangeViews.value, 10);
+        var duree = parseInt(rangeDays.value, 10);
+        labelViews.textContent = fr(clics) + ' clics';
+        labelDays.textContent = duree + (duree > 1 ? ' jours' : ' jour');
+
+        var coutBase = clics * t.facture;
+        var commission = coutBase * COMMISSION;
+
+        resBadge.textContent = 'Budget de la campagne';
+        resVal.textContent = fr(coutBase + commission) + ' FCFA';
+        resSub.textContent = 'Pour ' + fr(clics) + ' clics réels, étalés sur ' + duree + (duree > 1 ? ' jours' : ' jour');
+        lignes[0].label.textContent = 'Facturé par clic';
+        lignes[0].valeur.textContent = tarif(t.facture) + ' FCFA' + (format === 'photo' ? ' / photo' : '');
+        lignes[1].label.textContent = 'Frais de service';
+        lignes[1].valeur.textContent = fr(commission) + ' FCFA';
+        lignes[2].label.textContent = 'Rythme visé';
+        lignes[2].valeur.textContent = fr(clics / duree) + ' clics / jour';
+        hypothese.textContent = 'Vous êtes facturé au clic réel constaté, jamais à l\'affichage. Un clic écarté par le contrôle anti-fraude ne vous est pas facturé.';
+        btnAction.textContent = 'Lancer une campagne';
+        btnAction.setAttribute('href', URL_ANNONCEUR);
+      }
+    }
+
+    function actualiser() { reglerCurseurs(); calculer(); }
+
+    rangeViews.addEventListener('input', calculer);
+    rangeDays.addEventListener('input', calculer);
+
+    if (btnPartageur && btnAnnonceur) {
+      var actif = 'px-4 py-2 rounded-full font-body-sm text-body-sm font-semibold bg-white text-slate-midnight shadow-sm';
+      var inactif = 'px-4 py-2 rounded-full font-body-sm text-body-sm font-semibold text-on-surface-variant hover:text-slate-midnight';
+      btnPartageur.addEventListener('click', function () {
+        mode = 'partageur'; btnPartageur.className = actif; btnAnnonceur.className = inactif; actualiser();
+      });
+      btnAnnonceur.addEventListener('click', function () {
+        mode = 'annonceur'; btnAnnonceur.className = actif; btnPartageur.className = inactif; actualiser();
+      });
+    }
+
+    var formatActif = 'sim-format flex-1 px-3 py-1.5 rounded-lg font-body-sm text-body-sm font-semibold bg-white text-slate-midnight shadow-sm';
+    var formatInactif = 'sim-format flex-1 px-3 py-1.5 rounded-lg font-body-sm text-body-sm font-semibold text-on-surface-variant hover:text-slate-midnight';
+    document.querySelectorAll('.sim-format').forEach(function (bouton) {
+      bouton.addEventListener('click', function () {
+        format = bouton.dataset.format;
+        document.querySelectorAll('.sim-format').forEach(function (b) {
+          b.className = (b === bouton) ? formatActif : formatInactif;
+        });
+        calculer();
+      });
+    });
+
+    actualiser();
+  })();
+</script>

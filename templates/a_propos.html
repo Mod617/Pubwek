@@ -1,0 +1,122 @@
+{% extends "base_v2.html" %}
+{% set title = "À propos" %}
+
+{% block content %}
+<section class="py-space-2xl bg-background">
+<div class="max-w-3xl mx-auto px-margin">
+
+  <!-- En-tete -->
+  <div class="mb-space-xl space-y-space-xs">
+    <span class="pw-badge bg-brand-light text-brand-deep">Notre histoire</span>
+    <h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-slate-night">À propos de Pubwek</h1>
+    <p class="font-body-md text-body-md text-on-surface-variant">
+      Une plateforme béninoise qui relie les commerces locaux aux personnes que leur quartier écoute déjà.
+    </p>
+  </div>
+
+  <!-- Le point de depart -->
+  <div class="pw-card mb-space-lg">
+    <h2 class="font-headline-md text-headline-md text-slate-midnight mb-space-xs">Le point de départ</h2>
+    <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+      Au Bénin, une bonne partie du commerce se fait sur WhatsApp. Un statut vu par les contacts d'une personne
+      de confiance vend mieux qu'une bannière payée sur un réseau étranger. Le problème, c'est que ce canal
+      n'était encadré par rien : pas de tarif clair, pas de preuve de diffusion, pas de suivi des résultats.
+      D'un côté des commerçants prêts à payer, de l'autre des jeunes qui partageaient gratuitement, et au milieu
+      aucun mécanisme pour que les deux se rencontrent sérieusement.
+    </p>
+    <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed mt-space-sm">
+      Pubwek a été construit pour combler ce vide, avec des règles écrites et des chiffres vérifiables des deux côtés.
+    </p>
+  </div>
+
+  <!-- Ce que nous faisons -->
+  <div class="pw-card mb-space-lg">
+    <h2 class="font-headline-md text-headline-md text-slate-midnight mb-space-sm">Ce que nous faisons</h2>
+    <div class="space-y-space-sm">
+      <div class="flex items-start gap-space-sm">
+        <span class="material-symbols-outlined text-brand-primary text-[22px] shrink-0 mt-0.5">storefront</span>
+        <div>
+          <h3 class="font-headline-sm text-body-md font-bold text-slate-midnight">Pour les annonceurs</h3>
+          <p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+            Vous créez une campagne, vous choisissez les départements et communes à toucher, vous fixez votre
+            budget. Vous êtes facturé au clic réel, jamais à l'affichage supposé. Chaque partage est accompagné
+            d'une preuve que nous vérifions avant de créditer quoi que ce soit.
+          </p>
+        </div>
+      </div>
+      <div class="flex items-start gap-space-sm">
+        <span class="material-symbols-outlined text-brand-primary text-[22px] shrink-0 mt-0.5">share</span>
+        <div>
+          <h3 class="font-headline-sm text-body-md font-bold text-slate-midnight">Pour les partageurs</h3>
+          <p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+            Vous publiez sur votre statut WhatsApp des campagnes déjà validées, vous envoyez votre preuve, vous
+            êtes payé selon les clics générés par votre lien personnel. Le retrait se fait vers Mobile Money
+            dès que le seuil est atteint.
+          </p>
+        </div>
+      </div>
+      <div class="flex items-start gap-space-sm">
+        <span class="material-symbols-outlined text-brand-primary text-[22px] shrink-0 mt-0.5">shield</span>
+        <div>
+          <h3 class="font-headline-sm text-body-md font-bold text-slate-midnight">Au milieu</h3>
+          <p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+            Nous validons chaque campagne avant diffusion, nous contrôlons les preuves de partage, et nous
+            écartons les clics frauduleux. C'est ce travail invisible qui permet aux deux côtés de se faire
+            confiance sans se connaître.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nos engagements -->
+  <div class="pw-card mb-space-lg">
+    <h2 class="font-headline-md text-headline-md text-slate-midnight mb-space-sm">Nos engagements</h2>
+    <ul class="space-y-space-xs">
+      <li class="flex items-start gap-2.5 font-body-sm text-body-sm text-on-surface-variant">
+        <span class="material-symbols-outlined text-brand-primary text-[19px] shrink-0">check_circle</span>
+        <span>Les tarifs sont publics et affichés avant que vous ne payiez quoi que ce soit.</span>
+      </li>
+      <li class="flex items-start gap-2.5 font-body-sm text-body-sm text-on-surface-variant">
+        <span class="material-symbols-outlined text-brand-primary text-[19px] shrink-0">check_circle</span>
+        <span>Chaque campagne passe par une validation humaine avant d'atteindre un seul statut.</span>
+      </li>
+      <li class="flex items-start gap-2.5 font-body-sm text-body-sm text-on-surface-variant">
+        <span class="material-symbols-outlined text-brand-primary text-[19px] shrink-0">check_circle</span>
+        <span>Les gains d'un partageur sont traçables ligne par ligne dans son tableau de bord.</span>
+      </li>
+      <li class="flex items-start gap-2.5 font-body-sm text-body-sm text-on-surface-variant">
+        <span class="material-symbols-outlined text-brand-primary text-[19px] shrink-0">check_circle</span>
+        <span>Les données personnelles sont traitées selon la réglementation béninoise sur la protection des données.</span>
+      </li>
+      <li class="flex items-start gap-2.5 font-body-sm text-body-sm text-on-surface-variant">
+        <span class="material-symbols-outlined text-brand-primary text-[19px] shrink-0">check_circle</span>
+        <span>Le support répond en français, sur WhatsApp, tous les jours.</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Contact -->
+  <div class="pw-card">
+    <h2 class="font-headline-md text-headline-md text-slate-midnight mb-space-xs">Nous joindre</h2>
+    <p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed mb-space-md">
+      Une question sur le fonctionnement, un partenariat, un problème sur votre compte : écrivez-nous,
+      nous répondons vite.
+    </p>
+    <div class="flex flex-wrap gap-space-xs">
+      <a href="{{ url_for('contact') }}"
+         class="inline-flex items-center gap-1.5 px-space-md py-2.5 rounded-full bg-brand-primary text-white font-headline-md text-[14px] font-semibold hover:bg-brand-deep shadow-md shadow-brand-primary/20 transition-all">
+        <span class="material-symbols-outlined text-[18px]">mail</span>
+        <span>Formulaire de contact</span>
+      </a>
+      <a href="https://wa.me/2290157577882" target="_blank" rel="noopener"
+         class="inline-flex items-center gap-1.5 px-space-md py-2.5 rounded-full border border-outline-variant/40 bg-surface-container-lowest text-slate-midnight font-headline-md text-[14px] font-semibold hover:border-brand-primary transition-all">
+        <span class="material-symbols-outlined text-[18px]">chat</span>
+        <span>Support WhatsApp</span>
+      </a>
+    </div>
+  </div>
+
+</div>
+</section>
+{% endblock %}

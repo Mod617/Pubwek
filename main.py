@@ -3350,15 +3350,27 @@ def dashboard_partageur():
             clics_par_share.get(mon_share.id, (0, 0)) if mon_share else (0, 0)
         )
 
+        # =====================================================================
+        # 🆕 [JAUGE EXACTE] Les compteurs journaliers (views_today,
+        # daily_quota_paused) ne sont remis à zéro que lorsqu'un clic arrive
+        # (voir enregistrer_clic). Tant qu'aucun clic n'a eu lieu depuis
+        # minuit, ils contiennent donc encore les valeurs de la veille : on
+        # les ignore ici (lecture seule, aucune écriture pendant un GET).
+        # =====================================================================
+        jour_reel = camp.jour_diffusion_campagne()
+        compteurs_a_jour = (camp.current_day_number == jour_reel)
+        vues_aujourdhui = (camp.views_today or 0) if compteurs_a_jour else 0
+        quota_atteint = bool(deja_partagee and compteurs_a_jour and camp.daily_quota_paused)
+
         campagnes_disponibles.append({
             "campaign": camp,
             "deja_partagee": deja_partagee,
             # Statut du quota journalier, utile seulement si deja partagee
-            "quota_atteint_aujourdhui": bool(deja_partagee and camp.daily_quota_paused),
-            "jour_actuel": camp.current_day_number or 0,
+            "quota_atteint_aujourdhui": quota_atteint,
+            "jour_actuel": jour_reel,
             "duree_totale": camp.duration_days,
-            "vues_aujourdhui": camp.views_today or 0,
-            "quota_du_jour": camp.views_per_day or 0,
+            "vues_aujourdhui": vues_aujourdhui,
+            "quota_du_jour": camp.quota_effectif_du_jour(),  # 🆕 vrai quota (plus views_per_day)
             "recompense_par_clic": recompense_pour(camp, config),  # 🆕 gain affiché au partageur
             # 🆕 [CLICS PERSO] Contribution personnelle du partageur (≠ jauge globale)
             "mes_clics_valides": mes_valides,

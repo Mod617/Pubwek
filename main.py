@@ -5126,8 +5126,12 @@ def evaluer_clic(share, camp, ip, user_agent, config, maintenant=None):
     if sharer and sharer.last_seen_ip and sharer.last_seen_ip == ip:
         return False, MOTIF_AUTO_CLIC
 
-    # 5. Quota journalier de la campagne déjà atteint
-    if camp.quota_du_jour_atteint():
+    # 5. Quota journalier de la campagne. Une fois atteint, un clic reste
+    #    payable pendant le court délai de grâce qui suit (voir
+    #    Campaign.grace_quota_disponible) : les partageurs sont prévenus avec
+    #    un peu de retard et leur statut WhatsApp reste en ligne entre-temps.
+    #    La grâce ne raccourcit jamais la durée choisie par l'annonceur.
+    if camp.quota_du_jour_atteint() and not camp.grace_quota_disponible(maintenant):
         return False, MOTIF_QUOTA_JOUR
 
     debut_journee = maintenant.replace(hour=0, minute=0, second=0, microsecond=0)

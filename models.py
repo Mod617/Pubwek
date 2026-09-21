@@ -724,17 +724,30 @@ class Campaign(db.Model):
         db.session.commit()
 
     def quota_effectif_du_jour(self):
-        """Quota de clics réellement exigé aujourd'hui : l'objectif restant
-        de la campagne, réparti sur les jours de diffusion restants (jour
-        courant inclus). Recalculé dynamiquement — pas de valeur figée à la
+        """Quota de clics exigé aujourd'hui : l'objectif restant EN DÉBUT DE
+        JOURNÉE, réparti sur les jours de diffusion restants (jour courant
+        inclus). Recalculé dynamiquement — pas de valeur figée à la
         création, donc aucune perte par troncature/arrondi au fil des jours,
         et rattrapage automatique d'un jour sous-performant sur les jours
-        suivants."""
+        suivants.
+
+        Le point de départ est figé pour la journée : on réintègre les clics
+        déjà obtenus aujourd'hui, sinon le quota rétrécirait à chaque clic
+        (l'objectif restant baisse à chaque clic payé)."""
         jour_actuel = self.jour_diffusion_campagne()
         jours_restants = max(1, (self.duration_days or 1) - jour_actuel + 1)
-        restant_objectif = max(0, (self.target_whatsapp_views or 0) - (self.whatsapp_views or 0))
+
+        # views_today n'est fiable que s'il a été resynchronisé sur le jour
+        # réel (voir verifier_et_reset_quota_journalier) ; sinon aucun clic
+        # n'a encore été reçu aujourd'hui et il faut le considérer comme 0.
+        deja_fait_aujourdhui = (self.views_today or 0) if self.current_day_number == jour_actuel else 0
+
+        restant_debut_journee = max(
+            0,
+            (self.target_whatsapp_views or 0) - ((self.whatsapp_views or 0) - deja_fait_aujourdhui)
+        )
         # Arrondi au-dessus : mieux vaut viser large que perdre des clics à la fin.
-        return -(-restant_objectif // jours_restants)  # équivalent d'un ceil() en entier
+        return -(-restant_debut_journee // jours_restants)  # équivalent d'un ceil() en entier
 
     def verifier_et_reset_quota_journalier(self):
         """

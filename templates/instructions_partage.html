@@ -143,7 +143,8 @@
       </p>
     </div>
 
-    <!-- ETAPE FINALE : preuves -->
+    {% if exiger_preuve_partage %}
+    <!-- ETAPE FINALE : preuves (uniquement si l'exigence de preuve est activée) -->
     <div class="pt-space-sm border-t border-outline-variant/30 space-y-space-xs">
       {{ etape("4" if media_urls else "3", "Envoyez la preuve de fin de journée") }}
 
@@ -220,6 +221,20 @@
         </div>
       {% endif %}
     </div>
+    {% else %}
+    <!-- 🆕 Preuve non exigée (désactivée par l'administration) : plus d'étape
+         d'envoi de capture, on garde seulement le rappel sur les clics réels. -->
+    <div class="pt-space-sm border-t border-outline-variant/30">
+      <div class="flex items-start gap-space-xs rounded-xl border border-amber-rich/30 bg-amber-soft px-space-sm py-space-xs">
+        <span class="material-symbols-outlined text-[18px] text-amber-rich shrink-0">shield</span>
+        <p class="font-caption text-caption text-secondary">
+          Seuls les clics réels comptent : notre système écarte automatiquement les clics suspects
+          (robots, doublons, votre propre lien…), qui sont définitivement perdus. Vos clics valides
+          sont crédités automatiquement sur votre portefeuille, sans aucune preuve à envoyer.
+        </p>
+      </div>
+    </div>
+    {% endif %}
 
     <p class="text-center">
       <a href="{{ url_for('dashboard_partageur') }}" class="font-body-sm text-body-sm font-semibold text-brand-primary hover:text-brand-deep hover:underline">

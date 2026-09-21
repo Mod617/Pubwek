@@ -666,6 +666,19 @@ with app.app_context():
         db.session.rollback()
         logger.error("Erreur migration colonne campaigns.quota_atteint_le : %s", e)
 
+with app.app_context():
+    from sqlalchemy import text
+    try:
+        db.session.execute(text(
+            "ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS quota_prealerte_envoyee BOOLEAN NOT NULL DEFAULT FALSE"
+        ))
+        db.session.commit()
+        logger.info("Migration campaigns.quota_prealerte_envoyee verifiee.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Erreur migration colonne campaigns.quota_prealerte_envoyee : %s", e)
+
+
 
 with app.app_context():
     # FIX: Les deux variables sont obligatoires — aucune valeur par défaut codée en dur

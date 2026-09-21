@@ -21,6 +21,7 @@ import shutil
 from datetime import datetime, UTC, timedelta
 from xhtml2pdf import pisa
 from io import BytesIO
+from concurrent.futures import ThreadPoolExecutor
 
 from flask import (
     Flask, current_app, flash, jsonify, redirect, render_template, 

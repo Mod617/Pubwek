@@ -632,6 +632,7 @@ class Campaign(db.Model):
     daily_quota_paused = db.Column(db.Boolean, default=False)  # True quand le quota du jour est atteint
     daily_quota_alert_sent = db.Column(db.Boolean, default=False)  # Empêche de spammer les partageurs plusieurs fois le même jour
     quota_atteint_le = db.Column(db.DateTime, nullable=True)  # Instant où le quota du jour a été atteint (départ du délai de grâce) — remis à None à chaque nouveau jour
+    quota_prealerte_envoyee = db.Column(db.Boolean, nullable=False, default=False)  # 🆕 [PRÉ-ALERTE] Pré-alerte à ~80 % déjà envoyée aujourd'hui — remis à False chaque nouveau jour
 
     total_cost = db.Column(db.Float, nullable=False)
     whatsapp_number = db.Column(db.String(20), nullable=True)
@@ -729,6 +730,14 @@ class Campaign(db.Model):
     GRACE_QUOTA_MINUTES = 30
     GRACE_QUOTA_POURCENT = 20
 
+    # =========================================================================
+    # 🆕 [PRÉ-ALERTE] Prévient les partageurs AVANT que le quota soit atteint.
+    # Inactive pour les très petits quotas, où elle tomberait quasiment en
+    # même temps que l'alerte "quota atteint".
+    # =========================================================================
+    PREALERTE_QUOTA_POURCENT = 80
+    PREALERTE_QUOTA_MIN = 5
+
     def check_progress(self):
         """Désactive la campagne si l'objectif est atteint ou la date dépassée."""
         now = datetime.utcnow()
@@ -769,7 +778,8 @@ class Campaign(db.Model):
         Resynchronise l'état de la campagne sur jour_diffusion_campagne(), l'unique
         source de vérité pour le jour de diffusion. Si le jour calculé a changé
         depuis le dernier passage : reset le compteur du jour, réactive la campagne
-        et efface l'instant d'atteinte du quota (fin du délai de grâce de la veille).
+        et efface l'instant d'atteinte du quota (fin du délai de grâce de la veille)
+        ainsi que le drapeau de pré-alerte.
         last_quota_date est conservée à titre informatif (traçabilité/support), elle
         ne pilote plus la logique.
         Retourne True si un changement de jour a eu lieu.
@@ -784,6 +794,7 @@ class Campaign(db.Model):
             self.daily_quota_paused = False
             self.daily_quota_alert_sent = False
             self.quota_atteint_le = None
+            self.quota_prealerte_envoyee = False  # 🆕 [PRÉ-ALERTE]
             return True
 
         # Changement de jour détecté (comparaison sur le jour calculé, plus sur la date brute)
@@ -794,6 +805,7 @@ class Campaign(db.Model):
             self.daily_quota_paused = False
             self.daily_quota_alert_sent = False
             self.quota_atteint_le = None
+            self.quota_prealerte_envoyee = False  # 🆕 [PRÉ-ALERTE]
             return True
 
         return False
@@ -804,6 +816,19 @@ class Campaign(db.Model):
         if quota <= 0:
             return False
         return self.views_today >= quota
+
+    def prealerte_quota_due(self):
+        """🆕 [PRÉ-ALERTE] Faut-il envoyer maintenant la pré-alerte de quota ?
+        Vrai une seule fois par jour, quand le seuil (PREALERTE_QUOTA_POURCENT %
+        du quota) est franchi sans que le quota lui-même soit atteint."""
+        if self.quota_prealerte_envoyee:
+            return False
+        quota = self.quota_effectif_du_jour()
+        if quota < self.PREALERTE_QUOTA_MIN:
+            return False
+        seuil = (quota * self.PREALERTE_QUOTA_POURCENT) // 100
+        vues = self.views_today or 0
+        return seuil <= vues < quota
 
     def marquer_quota_atteint(self, moment=None):
         """Enregistre l'instant où le quota du jour est atteint (une seule fois

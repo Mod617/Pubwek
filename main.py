@@ -5373,6 +5373,10 @@ def enregistrer_clic(share, camp, link_type):
                 # la période de grâce repassent ici et ne doivent pas la relancer.
                 if not camp.daily_quota_alert_sent:
                     _notifier_partageurs_quota_atteint(camp)
+            elif camp.prealerte_quota_due():
+                # 🆕 [PRÉ-ALERTE] Seuil de ~80 % franchi, quota pas encore atteint.
+                # Envoyée une seule fois par jour (drapeau quota_prealerte_envoyee).
+                _notifier_partageurs_prealerte_quota(camp)
 
             # Objectif global de la campagne atteint → diffusion terminée
             if camp.target_whatsapp_views and camp.whatsapp_views >= camp.target_whatsapp_views:

@@ -5244,36 +5244,39 @@ def montant_en_attente_validation(user):
     de journée du jour concerné n'a pas encore été validée par un admin.
 
     Additionne, pour tous les partages de l'utilisateur, les clics payables
-    non encore rémunérés (rewarded_at IS NULL), valorisés au tarif du type
-    de contenu de la campagne correspondante (vidéo / photo / texte).
+    non encore rémunérés (rewarded_at IS NULL), valorisés avec
+    recompense_pour() : exactement le même calcul que celui utilisé au
+    moment du crédit réel (vidéo / photo × nombre de photos / texte). Le
+    montant affiché correspond donc à ce que le partageur recevra vraiment.
     """
     config = SystemConfig.get_config()
 
+    # 1. Nombre de clics en attente, par campagne
     lignes = (
         db.session.query(
-            Campaign.media_type,
+            CampaignShare.campaign_id,
             func.count(CampaignClick.id)
         )
         .join(CampaignShare, CampaignShare.id == CampaignClick.campaign_share_id)
-        .join(Campaign, Campaign.id == CampaignShare.campaign_id)
         .filter(
             CampaignShare.sharer_id == user.id,
             CampaignClick.is_paid.is_(True),
             CampaignClick.rewarded_at.is_(None),
         )
-        .group_by(Campaign.media_type)
+        .group_by(CampaignShare.campaign_id)
         .all()
     )
+    if not lignes:
+        return 0.0
+
+    # 2. Chargement des campagnes concernées (une seule requête) pour que
+    # recompense_pour() connaisse le type de média et le nombre de photos.
+    clics_par_campagne = {campaign_id: nb for campaign_id, nb in lignes}
+    campagnes = Campaign.query.filter(Campaign.id.in_(list(clics_par_campagne))).all()
 
     total = 0.0
-    for media_type, nb in lignes:
-        if media_type == "video":
-            tarif = config.reward_per_click_video or 0.0
-        elif media_type == "photo":
-            tarif = config.reward_per_click_photo or 0.0
-        else:
-            tarif = config.reward_per_click_text or 0.0
-        total += tarif * nb
+    for camp in campagnes:
+        total += recompense_pour(camp, config) * clics_par_campagne.get(camp.id, 0)
 
     return total
 

@@ -3308,6 +3308,33 @@ def dashboard_partageur():
         for s in CampaignShare.query.filter_by(sharer_id=current_user.id).all()
     }
 
+    # =========================================================================
+    # 🆕 [CLICS PERSO] Clics valides PERSONNELS du partageur, par partage
+    # (une seule requête pour toutes les campagnes).
+    #   - nb_valides  : clics payables (is_paid=True) de CE partageur
+    #   - nb_credites : parmi eux, ceux déjà crédités au portefeuille
+    #                   (rewarded_at renseigné = preuve du jour validée).
+    # func.count(colonne) ne compte que les valeurs non NULL.
+    # =========================================================================
+    ids_shares = [s.id for s in mes_shares.values()]
+    clics_par_share = {}
+    if ids_shares:
+        lignes_clics = (
+            db.session.query(
+                CampaignClick.campaign_share_id,
+                func.count(CampaignClick.id),
+                func.count(CampaignClick.rewarded_at),
+            )
+            .filter(
+                CampaignClick.campaign_share_id.in_(ids_shares),
+                CampaignClick.is_paid.is_(True),
+            )
+            .group_by(CampaignClick.campaign_share_id)
+            .all()
+        )
+        for share_id, nb_valides, nb_credites in lignes_clics:
+            clics_par_share[share_id] = (nb_valides, nb_credites)
+
     campagnes_disponibles = []
     for camp in campagnes_query.order_by(Campaign.shared_at.desc()).all():
         # Ciblage geographique : meme regle qu'a la confirmation de partage et
@@ -3316,6 +3343,12 @@ def dashboard_partageur():
             continue
 
         deja_partagee = camp.id in mes_shares
+
+        # 🆕 [CLICS PERSO] Compteurs personnels de ce partageur sur cette campagne
+        mon_share = mes_shares.get(camp.id)
+        mes_valides, mes_credites = (
+            clics_par_share.get(mon_share.id, (0, 0)) if mon_share else (0, 0)
+        )
 
         campagnes_disponibles.append({
             "campaign": camp,
@@ -3327,6 +3360,10 @@ def dashboard_partageur():
             "vues_aujourdhui": camp.views_today or 0,
             "quota_du_jour": camp.views_per_day or 0,
             "recompense_par_clic": recompense_pour(camp, config),  # 🆕 gain affiché au partageur
+            # 🆕 [CLICS PERSO] Contribution personnelle du partageur (≠ jauge globale)
+            "mes_clics_valides": mes_valides,
+            "mes_clics_credites": mes_credites,
+            "mes_clics_en_attente": mes_valides - mes_credites,
         })
 
     return render_template(

@@ -5912,6 +5912,43 @@ def _notifier_partageurs_quota_atteint(camp):
         logger.error("Erreur notification quota atteint (campagne %d) : %s", camp.id, e)
 
 
+def _notifier_partageurs_prealerte_quota(camp):
+    """Prévient les partageurs que le quota du jour est presque atteint, pour
+    qu'ils se préparent à retirer leur statut WhatsApp. Une seule fois par jour
+    (drapeau Campaign.quota_prealerte_envoyee). Push en arrière-plan."""
+    try:
+        # Drapeau posé d'abord : même si l'envoi échoue en cours de route, on ne
+        # relance pas la pré-alerte à chaque clic suivant.
+        camp.quota_prealerte_envoyee = True
+
+        quota = camp.quota_effectif_du_jour()
+        restants = max(0, quota - (camp.views_today or 0))
+        nom = camp.promotion_detail or camp.promotion_type
+        lien = url_for("instructions_partage", campaign_id=camp.id)
+        shares = CampaignShare.query.filter_by(campaign_id=camp.id).all()
+
+        for s in shares:
+            partageur = db.session.get(User, s.sharer_id)
+            if partageur:
+                envoyer_notification(
+                    partageur,
+                    "Quota du jour bientôt atteint",
+                    (
+                        f"Les clics prévus aujourd'hui pour la campagne « {nom} » sont presque "
+                        f"atteints (il en reste environ {restants}). Préparez-vous à retirer votre "
+                        f"statut WhatsApp : vous serez prévenu dès que le quota sera atteint."
+                    ),
+                    category="warning",
+                    link=lien,
+                    push_async=True,
+                )
+        logger.info(
+            "[QUOTA] Pré-alerte mise en file d'envoi pour %d partageur(s) — campagne #%d (%d/%d)",
+            len(shares), camp.id, camp.views_today or 0, quota
+        )
+    except Exception as e:
+        logger.error("Erreur pré-alerte quota (campagne %d) : %s", camp.id, e)
+
 
 
 @app.route("/t/<token>/site")

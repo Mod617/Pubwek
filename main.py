@@ -647,6 +647,25 @@ with app.app_context():
         logger.error("Erreur migration colonnes campaigns : %s", e)
 
 
+
+# Migration legere : colonne du delai de grace sur le quota journalier.
+# quota_atteint_le memorise l'instant ou le quota du jour d'une campagne a ete
+# atteint : il sert a calculer la fenetre pendant laquelle les clics restent
+# payes (voir Campaign.grace_quota_disponible). NULL = quota pas atteint
+# aujourd'hui, donc aucun effet sur les campagnes existantes.
+with app.app_context():
+    from sqlalchemy import text
+    try:
+        db.session.execute(text(
+            "ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS quota_atteint_le TIMESTAMP"
+        ))
+        db.session.commit()
+        logger.info("Migration campaigns.quota_atteint_le verifiee.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Erreur migration colonne campaigns.quota_atteint_le : %s", e)
+
+
 with app.app_context():
     # FIX: Les deux variables sont obligatoires — aucune valeur par défaut codée en dur
     admin_email = os.environ.get("ADMIN_EMAIL")

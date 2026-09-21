@@ -192,6 +192,13 @@
 
             <div class="mt-auto pt-space-xs space-y-1.5">
               {% if item.deja_partagee %}
+
+                <!-- 🆕 Jauge COMMUNE à tous les partageurs : libellé explicite -->
+                <p class="flex items-center gap-1 font-caption text-caption font-semibold text-slate-midnight">
+                  <span class="material-symbols-outlined text-[14px]">groups</span>
+                  Objectif du jour de la campagne (tous les partageurs)
+                </p>
+
                 {% if item.quota_atteint_aujourdhui %}
                   <div class="h-1.5 rounded-full bg-surface-container overflow-hidden">
                     <div class="h-full rounded-full bg-amber-rich" style="width: 100%;"></div>
@@ -206,9 +213,29 @@
                     <div class="h-full rounded-full bg-brand-primary" style="width: {{ [quota_pct, 100] | min }}%;"></div>
                   </div>
                   <p class="font-caption text-caption text-on-surface-variant">
-                    Jour {{ item.jour_actuel }}/{{ item.duree_totale }} · {{ item.vues_aujourdhui }}/{{ item.quota_du_jour }} clics aujourd'hui
+                    Jour {{ item.jour_actuel }}/{{ item.duree_totale }} · {{ item.vues_aujourdhui }}/{{ item.quota_du_jour }} clics aujourd'hui (tous partageurs confondus)
                   </p>
                 {% endif %}
+
+                <!-- 🆕 [CLICS PERSO] Contribution personnelle du partageur -->
+                <div class="flex items-center gap-space-xs rounded-xl border border-brand-primary/30 bg-brand-light px-space-sm py-2">
+                  <span class="material-symbols-outlined text-[20px] text-brand-deep shrink-0">person</span>
+                  <span class="min-w-0">
+                    <span class="block font-label-numeric-md text-label-numeric-md font-bold text-slate-midnight">
+                      Vos clics valides : {{ item.mes_clics_valides }}
+                    </span>
+                    <span class="block font-caption text-caption text-on-surface-variant">
+                      {% if item.mes_clics_valides == 0 %}
+                        Aucun clic valide de votre part pour l'instant.
+                      {% else %}
+                        {{ item.mes_clics_credites }} déjà crédité{{ 's' if item.mes_clics_credites > 1 else '' }}
+                        {% if item.mes_clics_en_attente > 0 %}
+                          · {{ item.mes_clics_en_attente }} en attente de validation de votre preuve
+                        {% endif %}
+                      {% endif %}
+                    </span>
+                  </span>
+                </div>
 
                 <a href="{{ url_for('instructions_partage', campaign_id=camp.id) }}"
                    class="pw-btn pw-btn-sm pw-btn-neutral w-full !text-brand-deep">

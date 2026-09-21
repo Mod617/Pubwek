@@ -5296,6 +5296,11 @@ def enregistrer_clic(share, camp, link_type):
         # Le quota du jour doit être recalculé avant toute décision
         if camp.is_active and camp.paid and camp.validated:
             camp.verifier_et_reset_quota_journalier()
+
+        # 🆕 [GRÂCE] Le quota était-il déjà atteint AVANT ce clic ? Si oui et
+        # que le clic est tout de même payable, c'est un clic du délai de grâce.
+        quota_deja_atteint = camp.quota_du_jour_atteint()
+
         ip = ip_client()
         user_agent = (request.headers.get("User-Agent") or "")[:255]
         payable, motif = evaluer_clic(share, camp, ip, user_agent, config)
@@ -5314,6 +5319,14 @@ def enregistrer_clic(share, camp, link_type):
         if payable:
             camp.whatsapp_views = (camp.whatsapp_views or 0) + 1
             camp.views_today = (camp.views_today or 0) + 1
+
+            # 🆕 [GRÂCE] Trace des clics payés après l'atteinte du quota (audit/litiges)
+            if quota_deja_atteint:
+                logger.info(
+                    "[GRACE QUOTA] Clic payé après quota — campagne=%d partage=%d (%d/%d aujourd'hui)",
+                    camp.id, share.id, camp.views_today, camp.quota_effectif_du_jour()
+                )
+
             # 🆕 Crédit immédiat si l'exigence de preuve est désactivée
             # globalement, OU si la preuve du jour est déjà validée (clic
             # tardif après validation admin).
@@ -5334,10 +5347,17 @@ def enregistrer_clic(share, camp, link_type):
                         ),
                     ))
                     click.rewarded_at = datetime.utcnow()
+
             # Le quota du jour vient peut-être d'être atteint avec ce clic
             if camp.quota_du_jour_atteint():
                 camp.daily_quota_paused = True
-                _notifier_partageurs_quota_atteint(camp)
+                # 🆕 [GRÂCE] Départ du délai de grâce (sans effet s'il est déjà lancé)
+                camp.marquer_quota_atteint()
+                # 🆕 [GRÂCE] Alerte envoyée UNE SEULE FOIS par jour : les clics de
+                # la période de grâce repassent ici et ne doivent pas la relancer.
+                if not camp.daily_quota_alert_sent:
+                    _notifier_partageurs_quota_atteint(camp)
+
             # Objectif global de la campagne atteint → diffusion terminée
             if camp.target_whatsapp_views and camp.whatsapp_views >= camp.target_whatsapp_views:
                 camp.is_active = False

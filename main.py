@@ -5859,12 +5859,15 @@ def _notifier_partageurs_quota_atteint(camp):
     partagée entre tous les partageurs de la campagne.
     Le rappel d'envoi de la preuve de fin de journée n'est ajouté que si l'exigence
     de preuve est actuellement activée (SystemConfig.exiger_preuve_partage).
+    Les push partent en arrière-plan : le visiteur n'attend pas, et les
+    partageurs sont prévenus en parallèle plutôt qu'à la queue leu leu.
     """
     try:
         config = SystemConfig.get_config()
         marge = camp.depassement_max_grace()
         minutes = Campaign.GRACE_QUOTA_MINUTES
         shares = CampaignShare.query.filter_by(campaign_id=camp.id).all()
+        lien = url_for("instructions_partage", campaign_id=camp.id)
         for s in shares:
             partageur = db.session.get(User, s.sharer_id)
             if partageur:
@@ -5886,10 +5889,11 @@ def _notifier_partageurs_quota_atteint(camp):
                         f"La diffusion reprendra demain."
                     ),
                     category="warning",
-                    link=url_for("instructions_partage", campaign_id=camp.id),
+                    link=lien,
+                    push_async=True,
                 )
         camp.daily_quota_alert_sent = True
-        logger.info("[QUOTA] Alerte quota envoyée à %d partageur(s) pour campagne #%d", len(shares), camp.id)
+        logger.info("[QUOTA] Alerte quota mise en file d'envoi pour %d partageur(s) — campagne #%d", len(shares), camp.id)
     except Exception as e:
         logger.error("Erreur notification quota atteint (campagne %d) : %s", camp.id, e)
 

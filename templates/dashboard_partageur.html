@@ -203,9 +203,12 @@
                   <div class="h-1.5 rounded-full bg-surface-container overflow-hidden">
                     <div class="h-full rounded-full bg-amber-rich" style="width: 100%;"></div>
                   </div>
+                  <!-- 🆕 [GRÂCE] Message aligné sur le délai de grâce : l'ancien texte
+                       promettait qu'aucun clic ne serait payé au-delà du quota, ce qui
+                       est faux pendant la période de grâce. -->
                   <p class="flex items-start gap-1 font-caption text-caption text-secondary">
                     <span class="material-symbols-outlined text-[14px] shrink-0">warning</span>
-                    <span><strong>Quota du jour atteint.</strong> Vous pouvez retirer votre statut, aucune facturation au-delà. Reprise demain.</span>
+                    <span><strong>Quota du jour atteint.</strong> Retirez votre statut WhatsApp dès que possible. Pendant un court délai, les clics déjà en route restent rémunérés, dans la limite d'une marge partagée entre tous les partageurs ; au-delà, ils ne le sont plus. Reprise demain.</span>
                   </p>
                 {% elif item.jour_actuel > 0 %}
                   {% set quota_pct = (item.vues_aujourdhui / item.quota_du_jour * 100) if item.quota_du_jour else 0 %}

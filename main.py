@@ -6915,7 +6915,33 @@ def envoyer_push(user, title, message, link=None):
         db.session.rollback()
 
 
-def envoyer_notification(user, title, message, category="info", link=None):
+# =========================================================================
+# 🆕 ENVOI PUSH EN ARRIÈRE-PLAN
+#
+# Un envoi push est un appel réseau (plusieurs centaines de ms). Fait dans la
+# requête d'un clic, il retarde le visiteur ET les alertes suivantes. Ce petit
+# groupe de threads (8 au maximum en parallèle) les envoie hors de la requête.
+# =========================================================================
+push_executor = ThreadPoolExecutor(max_workers=8, thread_name_prefix="push")
+
+
+def envoyer_push_async(user_id, title, message, link=None):
+    """Envoie un push hors de la requête en cours. On ne transmet que l'id de
+    l'utilisateur : un objet SQLAlchemy ne doit jamais passer d'un thread à un
+    autre, le thread recharge donc l'utilisateur dans sa propre session."""
+    def _travail():
+        try:
+            with app.app_context():
+                user = db.session.get(User, user_id)
+                if user:
+                    envoyer_push(user, title, message, link=link)
+        except Exception as e:
+            logger.warning("[PUSH] Échec d'envoi en arrière-plan (user_id=%s) : %s", user_id, e)
+
+    push_executor.submit(_travail)
+
+
+def envoyer_notification(user, title, message, category="info", link=None, push_async=False):
     """
     Point d'entrée unique pour notifier un utilisateur : crée la Notification
     en base (visible dans l'app, comportement inchangé) ET envoie le push
@@ -6923,6 +6949,10 @@ def envoyer_notification(user, title, message, category="info", link=None):
     `db.session.add(Notification(...))` direct.
     Ne fait volontairement AUCUN commit : l'appelant garde le contrôle de
     sa transaction, exactement comme avant avec db.session.add().
+
+    push_async=True : le push part en arrière-plan au lieu de bloquer la
+    requête (à utiliser pour les envois en série à de nombreux utilisateurs).
+    Par défaut False : comportement d'origine strictement inchangé.
     """
     notif = Notification(
         user_id=user.id,
@@ -6933,7 +6963,10 @@ def envoyer_notification(user, title, message, category="info", link=None):
         is_read=False
     )
     db.session.add(notif)
-    envoyer_push(user, title, message, link=link)
+    if push_async:
+        envoyer_push_async(user.id, title, message, link=link)
+    else:
+        envoyer_push(user, title, message, link=link)
     return notif
 
 

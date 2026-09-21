@@ -2081,6 +2081,7 @@ def resoumettre_campagne(campaign_id):
     camp.daily_quota_paused = False
     camp.daily_quota_alert_sent = False
     camp.quota_atteint_le = None  # 🆕 [GRÂCE] efface aussi le délai de grâce
+    camp.quota_prealerte_envoyee = False
 
     # 7️⃣ Réharmonisation des statuts
     camp.rejection_reason = None

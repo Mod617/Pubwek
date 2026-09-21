@@ -631,6 +631,7 @@ class Campaign(db.Model):
     last_quota_date = db.Column(db.Date, nullable=True)  # Informatif uniquement : date du dernier reset détecté (traçabilité/support)
     daily_quota_paused = db.Column(db.Boolean, default=False)  # True quand le quota du jour est atteint
     daily_quota_alert_sent = db.Column(db.Boolean, default=False)  # Empêche de spammer les partageurs plusieurs fois le même jour
+    quota_atteint_le = db.Column(db.DateTime, nullable=True)  # Instant où le quota du jour a été atteint (départ du délai de grâce) — remis à None à chaque nouveau jour
 
     total_cost = db.Column(db.Float, nullable=False)
     whatsapp_number = db.Column(db.String(20), nullable=True)
@@ -714,6 +715,20 @@ class Campaign(db.Model):
     # =========================================================================
     FENETRE_RATTRAPAGE_HEURES = 48
 
+    # =========================================================================
+    # 🆕 DÉLAI DE GRÂCE SUR LE QUOTA JOURNALIER
+    #
+    # Quand le quota du jour est atteint, les partageurs sont prévenus, mais
+    # leurs statuts WhatsApp restent en ligne et continuent de recevoir des
+    # clics de vrais visiteurs. Pendant ce court délai, ces clics restent
+    # payés, dans la limite d'un pourcentage du quota. Ce n'est pas un clic
+    # gratuit pour le partageur : il est emprunté aux jours suivants (le
+    # quota de demain se recalcule à la baisse), la durée choisie par
+    # l'annonceur n'est donc jamais raccourcie.
+    # =========================================================================
+    GRACE_QUOTA_MINUTES = 30
+    GRACE_QUOTA_POURCENT = 20
+
     def check_progress(self):
         """Désactive la campagne si l'objectif est atteint ou la date dépassée."""
         now = datetime.utcnow()
@@ -753,7 +768,8 @@ class Campaign(db.Model):
         """
         Resynchronise l'état de la campagne sur jour_diffusion_campagne(), l'unique
         source de vérité pour le jour de diffusion. Si le jour calculé a changé
-        depuis le dernier passage : reset le compteur du jour et réactive la campagne.
+        depuis le dernier passage : reset le compteur du jour, réactive la campagne
+        et efface l'instant d'atteinte du quota (fin du délai de grâce de la veille).
         last_quota_date est conservée à titre informatif (traçabilité/support), elle
         ne pilote plus la logique.
         Retourne True si un changement de jour a eu lieu.
@@ -767,6 +783,7 @@ class Campaign(db.Model):
             self.views_today = 0
             self.daily_quota_paused = False
             self.daily_quota_alert_sent = False
+            self.quota_atteint_le = None
             return True
 
         # Changement de jour détecté (comparaison sur le jour calculé, plus sur la date brute)
@@ -776,6 +793,7 @@ class Campaign(db.Model):
             self.views_today = 0
             self.daily_quota_paused = False
             self.daily_quota_alert_sent = False
+            self.quota_atteint_le = None
             return True
 
         return False
@@ -786,6 +804,58 @@ class Campaign(db.Model):
         if quota <= 0:
             return False
         return self.views_today >= quota
+
+    def marquer_quota_atteint(self, moment=None):
+        """Enregistre l'instant où le quota du jour est atteint (une seule fois
+        par jour : un second appel ne repousse pas le délai de grâce)."""
+        if self.quota_atteint_le is None:
+            self.quota_atteint_le = moment or datetime.utcnow()
+
+    def depassement_max_grace(self):
+        """Nombre maximum de clics payables AU-DELÀ du quota du jour pendant le
+        délai de grâce : GRACE_QUOTA_POURCENT % du quota, arrondi au-dessus
+        (un petit quota garde donc au moins 1 clic de marge)."""
+        quota = self.quota_effectif_du_jour()
+        if quota <= 0:
+            return 0
+        return -((-quota * self.GRACE_QUOTA_POURCENT) // 100)  # équivalent d'un ceil() en entier
+
+    def grace_quota_disponible(self, moment=None):
+        """Un clic reçu APRÈS l'atteinte du quota peut-il encore être payé ?
+
+        Trois conditions, toutes obligatoires :
+          1. On est encore dans la fenêtre de GRACE_QUOTA_MINUTES qui suit
+             l'atteinte du quota.
+          2. Le dépassement du quota du jour n'a pas déjà atteint son plafond
+             (GRACE_QUOTA_POURCENT %).
+          3. GARDE-FOU DE DURÉE : après ce clic, il doit rester dans l'objectif
+             au moins autant de clics que de jours de diffusion restants après
+             aujourd'hui. Ainsi chaque jour à venir garde toujours de quoi
+             être diffusé, et la campagne ne peut jamais se terminer avant le
+             dernier jour choisi par l'annonceur. Le dernier jour, cette règle
+             ne pèse plus (aucun jour ne suit), et seul l'objectif total limite.
+        """
+        moment = moment or datetime.utcnow()
+
+        # 1. Fenêtre de temps
+        if self.quota_atteint_le is None:
+            return False
+        if moment > self.quota_atteint_le + timedelta(minutes=self.GRACE_QUOTA_MINUTES):
+            return False
+
+        # 2. Plafond de dépassement du quota du jour
+        quota = self.quota_effectif_du_jour()
+        if (self.views_today or 0) >= quota + self.depassement_max_grace():
+            return False
+
+        # 3. Garde-fou de durée
+        jour_actuel = self.jour_diffusion_campagne()
+        jours_apres_aujourdhui = max(0, (self.duration_days or 1) - jour_actuel)
+        restant_apres_ce_clic = (self.target_whatsapp_views or 0) - ((self.whatsapp_views or 0) + 1)
+        if restant_apres_ce_clic < jours_apres_aujourdhui:
+            return False
+
+        return True
 
     def jour_diffusion_campagne(self, moment=None):
         """Numéro du jour de diffusion (1, 2, 3...) à un instant donné.

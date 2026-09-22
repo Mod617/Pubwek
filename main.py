@@ -1873,6 +1873,39 @@ def payer_campagne(campaign_id):
         flash("Cette campagne est déjà payée et traitée.", "info")
         return redirect(url_for("mes_campagnes"))
 
+    # =====================================================================
+    # 🆕 RECALCUL DU PRIX AVEC LES TARIFS ACTUELS (option A validée avec
+    # l'utilisateur) : tant que la campagne n'est pas payée ET qu'aucun
+    # paiement PARTIEL via le portefeuille n'a encore été effectué dessus
+    # (camp.wallet_partiel_utilise), total_cost doit refléter les tarifs
+    # ACTUELS de SystemConfig, pas ceux du jour de création — une campagne
+    # non payée doit suivre les changements de tarifs de l'admin jusqu'au
+    # moment précis de son paiement.
+    #
+    # Dès qu'un bout du portefeuille a déjà été déduit sur cette campagne
+    # (wallet_partiel_utilise=True), on NE recalcule PLUS JAMAIS : le
+    # montant déjà débité ne doit jamais se désynchroniser d'un nouveau
+    # total recalculé avec des tarifs différents (voir confirmer_paiement_wallet).
+    #
+    # Même formule exacte que nouvelle_campagne() / resoumettre_campagne().
+    # =====================================================================
+    if not camp.paid and not camp.wallet_partiel_utilise:
+        config_actuelle = SystemConfig.get_config()
+
+        if camp.display_option == "A":
+            cout_par_clic_base = config_actuelle.cost_per_click_video
+        elif camp.display_option == "B":
+            nombre_fichiers = len(camp.media_files.split(",")) if camp.media_files else 1
+            cout_par_clic_base = config_actuelle.cost_per_click_photo * nombre_fichiers
+        else:  # Option C : texte seul
+            cout_par_clic_base = config_actuelle.cost_per_click_text
+
+        base_clicks_cost = (camp.target_whatsapp_views or 0) * cout_par_clic_base
+        commission_percentage = config_actuelle.commission_rate / 100.0
+        total_commission = base_clicks_cost * commission_percentage
+        camp.total_cost = round(base_clicks_cost + total_commission, 2)
+        db.session.commit()
+
     # Vérification du montant avant d'initier la transaction FedaPay
     if not camp.total_cost or camp.total_cost <= 0:
         flash("Montant de la campagne invalide.", "danger")

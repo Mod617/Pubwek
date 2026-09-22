@@ -1933,6 +1933,7 @@ def confirmer_paiement_wallet(campaign_id):
         # =================================================================
         camp.paid = True
         camp.payment_status = "paid"
+        verrouiller_recompense_partageur(camp, SystemConfig.get_config())  # 🆕
         if camp.admin_status == "approved" or camp.validated:
             camp.is_active = True
             camp.status = "active"

@@ -3,7 +3,7 @@
 {# ============ Ligne de tableau : un utilisateur en attente ============ #}
 {% macro user_row(user) %}
 <tr class="border-b border-outline-variant/20">
-  <td class="align-top font-semibold text-slate-midnight">{{ user.email }}</td>
+  <td class="align-top font-semibold text-slate-midnight break-words">{{ user.email }}</td>
   <td class="align-top"><span class="pw-chip pw-chip-neutral capitalize">{{ user.role }}</span></td>
   <td class="align-top break-words">{{ user.province or user.department or "Non spécifié" }}</td>
   <td class="align-top break-words">{{ user.company_name or "-" }}</td>
@@ -267,8 +267,19 @@
   </form>
 
   <!-- Tableau des campagnes -->
-  <div class="pw-table-wrap">
-    <table class="pw-table">
+  <div class="pw-table-wrap overflow-x-auto">
+    <table class="pw-table" style="table-layout: fixed; width: 100%; min-width: 960px;">
+      <colgroup>
+        <col style="width:4%">
+        <col style="width:12%">
+        <col style="width:18%">
+        <col style="width:12%">
+        <col style="width:14%">
+        <col style="width:12%">
+        <col style="width:8%">
+        <col style="width:10%">
+        <col style="width:10%">
+      </colgroup>
       <thead>
         <tr>
           <th>ID</th><th>Annonceur</th><th>Détail &amp; texte</th>
@@ -279,10 +290,10 @@
       <tbody>
       {% for camp in campaigns_page.items %}
         <tr class="border-b border-outline-variant/20">
-          <td class="align-top font-label-numeric-md text-label-numeric-md font-bold text-on-surface-variant">#{{ camp.id }}</td>
+          <td class="align-top break-words font-label-numeric-md text-label-numeric-md font-bold text-on-surface-variant">#{{ camp.id }}</td>
 
           <!-- Annonceur -->
-          <td class="align-top min-w-[10rem]">
+          <td class="align-top break-words">
             {% if camp.annonceur %}
               <div class="font-semibold text-slate-midnight break-words">{{ camp.annonceur.email }}</div>
               <button type="button" class="btn-voir-profil pw-btn pw-btn-sm pw-btn-neutral !py-1 !text-[11px] mt-1"
@@ -306,7 +317,7 @@
           </td>
 
           <!-- Detail, avec le type et le format replies dedans -->
-          <td class="align-top min-w-[12rem] max-w-[18rem] break-words">
+          <td class="align-top break-words">
             <div class="font-semibold text-slate-midnight break-words">{{ camp.promotion_detail or "-" }}</div>
             <div class="font-caption text-caption text-on-surface-variant break-words">{{ camp.description or "-" }}</div>
             <div class="mt-1 flex flex-wrap items-center gap-1">
@@ -328,7 +339,7 @@
           </td>
 
           <!-- Zones -->
-          <td class="align-top max-w-[12rem] break-words">
+          <td class="align-top break-words">
             <div class="font-caption text-caption break-words">{{ camp.provinces or camp.departments or "Toutes zones" }}</div>
             {% if camp.communes %}
               <div class="font-caption text-caption text-on-surface-variant break-words">
@@ -338,11 +349,11 @@
           </td>
 
           <!-- Medias -->
-          <td class="align-top max-w-[11rem]">
+          <td class="align-top">
             {% if camp.display_option == "C" %}
               <span class="font-caption text-caption text-on-surface-variant">Aucun média, annonce textuelle</span>
             {% elif camp.media_files %}
-              <div class="grid grid-cols-2 gap-1.5 max-w-[10.5rem]">
+              <div class="grid grid-cols-2 gap-1.5">
                 {% for file in camp.media_files.split(',') %}
                   {% set file_url = url_for('serve_upload', filename=file) %}
                   <div class="text-center">
@@ -372,7 +383,7 @@
           </td>
 
           <!-- Objectif et duree reunis -->
-          <td class="align-top min-w-[9rem]">
+          <td class="align-top break-words">
             <div class="font-semibold text-slate-midnight">
               {{ camp.target_whatsapp_views if camp.target_whatsapp_views else camp.whatsapp_views }} clics
               en {{ camp.duration_days }} jour{{ 's' if camp.duration_days > 1 else '' }}
@@ -397,12 +408,12 @@
           </td>
 
           <!-- Cout -->
-          <td class="align-top text-right font-label-numeric-md text-label-numeric-md font-bold text-brand-deep whitespace-nowrap">
+          <td class="align-top text-right font-label-numeric-md text-label-numeric-md font-bold text-brand-deep break-words">
             {{ "{:,.0f}".format(camp.total_cost) }} XOF
           </td>
 
           <!-- Statut -->
-          <td class="align-top">
+          <td class="align-top break-words">
             {% if camp.validated or camp.admin_status == "approved" %}
               <span class="pw-chip pw-chip-success"><span class="material-symbols-outlined text-[14px]">check_circle</span> Validée</span>
             {% elif camp.admin_status == "rejected" or camp.status == "rejete" %}
@@ -420,7 +431,7 @@
           </td>
 
           <!-- Actions -->
-          <td class="align-top min-w-[10rem]">
+          <td class="align-top break-words">
             {% if not camp.validated and camp.admin_status != "rejected" and camp.status != "rejete" %}
               <div class="flex flex-col gap-1">
                 <form action="{{ url_for('validate_campaign', campaign_id=camp.id) }}" method="POST">

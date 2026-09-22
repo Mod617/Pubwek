@@ -5286,15 +5286,28 @@ def evaluer_clic(share, camp, ip, user_agent, config, maintenant=None):
 def recompense_pour(camp, config):
     """Montant reversé au partageur pour un clic, selon le type de contenu.
 
+    🆕 Si la campagne a déjà une récompense VERROUILLÉE (camp.reward_per_click_locked,
+    remplie au moment du paiement — voir appliquer_paiement_confirme et
+    confirmer_paiement_wallet), on l'utilise TOUJOURS en priorité : une
+    campagne déjà payée ne doit plus jamais être affectée par un changement
+    de tarifs admin après coup.
+
+    Si la campagne n'est pas encore payée (valeur encore None), on retombe
+    sur le calcul en direct à partir de SystemConfig — comportement normal
+    pour une campagne qui n'a pas encore démarré.
+
     Option B (multi-statuts) : le partageur doit publier TOUTES les photos
     de la campagne comme des statuts séparés pour respecter son engagement —
     il est donc rémunéré proportionnellement au nombre de photos qu'il doit
     publier, jamais d'un montant fixe déconnecté du nombre réel de statuts.
-    reward_per_click_photo représente désormais un montant PAR PHOTO (base),
+    reward_per_click_photo représente un montant PAR PHOTO (base),
     automatiquement multiplié par le nombre de photos de cette campagne
     précise — exactement le même principe que cost_per_click_photo côté
     annonceur (voir nouvelle_campagne / resoumettre_campagne).
     """
+    if camp.reward_per_click_locked is not None:
+        return camp.reward_per_click_locked
+
     if camp.media_type == "video":
         return config.reward_per_click_video or 0.0
     if camp.media_type == "photo":

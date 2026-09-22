@@ -635,6 +635,26 @@ class Campaign(db.Model):
     quota_prealerte_envoyee = db.Column(db.Boolean, nullable=False, default=False)  # 🆕 [PRÉ-ALERTE] Pré-alerte à ~80 % déjà envoyée aujourd'hui — remis à False chaque nouveau jour
 
     total_cost = db.Column(db.Float, nullable=False)
+
+    # =========================================================================
+    # 🆕 RÉCOMPENSE PAR CLIC DU PARTAGEUR — VERROUILLÉE AU MOMENT DU PAIEMENT
+    #
+    # Tant que la campagne n'est pas payée, ce champ reste None : la
+    # récompense affichée/versée au partageur suit alors les tarifs actuels
+    # de SystemConfig (comportement normal pour une campagne pas encore
+    # lancée). Dès que le paiement est confirmé (camp.paid passe à True),
+    # ce champ est rempli UNE SEULE FOIS avec la récompense par clic calculée
+    # à cet instant précis (SystemConfig.reward_per_click_video/photo/text,
+    # multiplié par le nombre de photos pour l'option B) — voir
+    # appliquer_paiement_confirme() et confirmer_paiement_wallet() dans
+    # app.py. Une fois rempli, recompense_pour() utilise TOUJOURS cette
+    # valeur figée, plus jamais SystemConfig en direct : un changement de
+    # tarif par l'admin n'affecte donc plus une campagne déjà payée et en
+    # cours de diffusion, seulement les futures campagnes (ou celles pas
+    # encore payées).
+    # =========================================================================
+    reward_per_click_locked = db.Column(db.Float, nullable=True)
+
     whatsapp_number = db.Column(db.String(20), nullable=True)
 
     # =========================================================================

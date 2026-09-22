@@ -742,6 +742,28 @@ with app.app_context():
         logger.error("Erreur figement rétroactif reward_per_click_locked : %s", e)
 
 
+# =========================================================================
+# 🆕 MIGRATION : colonne wallet_partiel_utilise sur `campaigns`
+#
+# Sert de verrou : dès qu'un paiement PARTIEL via le portefeuille a eu lieu
+# sur une campagne, total_cost ne doit plus jamais être recalculé pour elle
+# (voir payer_campagne dans app.py). DEFAULT FALSE reproduit exactement le
+# comportement actuel pour toutes les campagnes existantes (aucune n'a ce
+# verrou activé au départ) — aucun figement rétroactif nécessaire ici.
+# =========================================================================
+with app.app_context():
+    from sqlalchemy import text
+    try:
+        db.session.execute(text(
+            "ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS wallet_partiel_utilise BOOLEAN NOT NULL DEFAULT FALSE"
+        ))
+        db.session.commit()
+        logger.info("Migration campaigns.wallet_partiel_utilise verifiee.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Erreur migration colonne campaigns.wallet_partiel_utilise : %s", e)
+
+
 
 
 with app.app_context():

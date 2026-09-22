@@ -2559,6 +2559,7 @@ def appliquer_paiement_confirme(transaction, details=None):
         if camp:
             camp.paid = True
             camp.payment_status = "paid"
+            verrouiller_recompense_partageur(camp, SystemConfig.get_config())  # 🆕
 
             # Si l'admin avait déjà validé la campagne avant paiement
             if camp.admin_status == "approved" or camp.validated:

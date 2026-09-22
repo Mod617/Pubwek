@@ -1995,7 +1995,16 @@ def confirmer_paiement_wallet(campaign_id):
         )
         return redirect(url_for("mes_campagnes"))
 
-    # 🆕 Le portefeuille couvre une partie seulement : le reste passe par FedaPay
+    # =========================================================================
+    # 🆕 Le portefeuille couvre une partie seulement : le reste passe par
+    # FedaPay. On verrouille le prix : total_cost ne doit plus jamais être
+    # recalculé pour cette campagne (voir payer_campagne), pour ne jamais
+    # désynchroniser le montant déjà déduit du portefeuille avec un nouveau
+    # total qui serait recalculé plus tard avec des tarifs différents.
+    # =========================================================================
+    camp.wallet_partiel_utilise = True
+    db.session.commit()
+
     flash(
         f"{montant_wallet:,.0f} XOF déduits de votre portefeuille. "
         f"Complétez le paiement des {reste_a_payer:,.0f} XOF restants.",

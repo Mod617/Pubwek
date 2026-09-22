@@ -59,6 +59,7 @@
             <span class="material-symbols-outlined text-[20px]">visibility</span>
           </button>
         </div>
+        <p class="pw-help">Au moins 10 caractères.</p>
         {% for error in form.password.errors %}
           <p class="pw-error">{{ error }}</p>
         {% endfor %}
@@ -240,11 +241,58 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 });
 
+// Validation cote client du mot de passe, avant meme l'envoi au serveur.
+// Objectif : eviter que l'utilisateur decouvre l'exigence de longueur
+// seulement apres avoir rempli tout le formulaire.
+function afficherErreurMotDePasse(champId, message) {
+  const champ = document.getElementById(champId);
+  const conteneur = champ.closest("div").parentElement;
+
+  // Retire une eventuelle erreur JS deja affichee pour ce champ
+  const erreurExistante = conteneur.querySelector(".pw-error-js");
+  if (erreurExistante) erreurExistante.remove();
+
+  if (message) {
+    const p = document.createElement("p");
+    p.className = "pw-error pw-error-js";
+    p.textContent = message;
+    conteneur.appendChild(p);
+  }
+}
+
 document.getElementById("registerForm").addEventListener("submit", function(event) {
     const btnText = document.getElementById("btnText");
     const btnSpinner = document.getElementById("btnSpinner");
     const submitBtn = document.getElementById("submitBtn");
     const confirmationDiv = document.getElementById("confirmationMessage");
+    const password = document.getElementById("password");
+    const confirmPassword = document.getElementById("confirm_password");
+
+    // Reinitialise les erreurs JS precedentes
+    afficherErreurMotDePasse("password", "");
+    afficherErreurMotDePasse("confirm_password", "");
+
+    let formulaireValide = true;
+
+    if (password.value.length < 10) {
+      afficherErreurMotDePasse("password", "Le mot de passe doit contenir au moins 10 caractères.");
+      formulaireValide = false;
+    }
+
+    if (confirmPassword.value !== password.value) {
+      afficherErreurMotDePasse("confirm_password", "Les mots de passe ne correspondent pas.");
+      formulaireValide = false;
+    }
+
+    if (!formulaireValide) {
+      event.preventDefault();
+      // Fait defiler jusqu'au premier champ en erreur pour que l'utilisateur le voie
+      const premierChampErreur = document.querySelector(".pw-error-js");
+      if (premierChampErreur) {
+        premierChampErreur.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      return;
+    }
 
     // Le champ whatsapp_number ne contient plus que les 8 chiffres saisis :
     // le prefixe +22901 est reconstruit cote serveur (main.py) avant sauvegarde.

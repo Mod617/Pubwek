@@ -2519,6 +2519,27 @@ def _statut_fedapay(details):
     return getattr(details, "status", None)
 
 
+def verrouiller_recompense_partageur(camp, config):
+    """Calcule et verrouille sur la campagne (reward_per_click_locked) la
+    récompense par clic du partageur, avec les tarifs de SystemConfig
+    ACTUELS. À appeler UNE SEULE FOIS, exactement au moment où le paiement
+    de la campagne est confirmé (camp.paid passe à True) — voir
+    appliquer_paiement_confirme() et confirmer_paiement_wallet().
+
+    Protection contre un double appel : ne fait rien si déjà verrouillée.
+    """
+    if camp.reward_per_click_locked is not None:
+        return
+    if camp.media_type == "video":
+        valeur = config.reward_per_click_video or 0.0
+    elif camp.media_type == "photo":
+        nombre_photos = len(camp.media_files.split(",")) if camp.media_files else 1
+        valeur = (config.reward_per_click_photo or 0.0) * nombre_photos
+    else:
+        valeur = config.reward_per_click_text or 0.0
+    camp.reward_per_click_locked = valeur
+
+
 def appliquer_paiement_confirme(transaction, details=None):
     """Applique les effets métier d'un paiement approuvé. Idempotent.
 

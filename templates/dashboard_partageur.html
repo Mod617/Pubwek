@@ -28,9 +28,24 @@
           {% endif %}
         </button>
 
+        <!-- Fond assombri : uniquement sur petit ecran, pour detacher le panneau
+             de tout conteneur parent (overflow/z-index) qui pourrait le rogner
+             ou le masquer. Sur sm+ on revient au menu deroulant classique. -->
+        <div id="notifBackdrop"
+             class="hidden sm:!hidden fixed inset-0 bg-slate-night/50 z-[55]"
+             onclick="fermerNotifPanel()"></div>
+
         <div id="notifPanel"
-             class="hidden absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] max-h-96 overflow-y-auto rounded-2xl border border-outline-variant/30 bg-surface-container-lowest shadow-xl z-40 p-1.5">
-          <div class="px-space-sm py-1.5 font-label-caps text-label-caps uppercase tracking-wider text-on-surface-variant font-bold">Notifications</div>
+             class="hidden fixed left-4 right-4 top-20 max-h-[70vh]
+                    sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-80 sm:max-w-[calc(100vw-2rem)] sm:max-h-96
+                    overflow-y-auto rounded-2xl border border-outline-variant/30 bg-surface-container-lowest shadow-2xl z-[60] p-1.5">
+          <div class="flex items-center justify-between gap-space-xs px-space-sm py-1.5">
+            <span class="font-label-caps text-label-caps uppercase tracking-wider text-on-surface-variant font-bold">Notifications</span>
+            <button type="button" onclick="fermerNotifPanel()" aria-label="Fermer"
+                    class="sm:hidden w-7 h-7 rounded-full text-on-surface-variant hover:bg-surface-container-low flex items-center justify-center transition-colors">
+              <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+          </div>
           {% for notif in notifications %}
             <a class="notif-item flex items-start gap-space-xs rounded-xl px-space-sm py-2 hover:bg-surface-container-low transition-colors {{ 'font-semibold text-on-surface' if not notif.is_read else 'text-on-surface-variant' }}"
                href="{{ notif.link or '#' }}">
@@ -332,12 +347,22 @@ function copyReferralLink() {
 }
 
 // Cloche de notifications : ouverture/fermeture + marquage comme lues
+function fermerNotifPanel() {
+  const panel = document.getElementById('notifPanel');
+  const backdrop = document.getElementById('notifBackdrop');
+  const toggle = document.getElementById('notifToggle');
+  if (panel) panel.classList.add('hidden');
+  if (backdrop) backdrop.classList.add('hidden');
+  if (toggle) toggle.setAttribute('aria-expanded', 'false');
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   const wrapper = document.getElementById('notifDropdownWrapper');
   if (!wrapper) return;
 
   const toggle = document.getElementById('notifToggle');
   const panel  = document.getElementById('notifPanel');
+  const backdrop = document.getElementById('notifBackdrop');
   let dejaMarquees = false;
 
   function marquerCommeLues() {
@@ -363,22 +388,25 @@ document.addEventListener('DOMContentLoaded', function () {
   toggle.addEventListener('click', function (e) {
     e.stopPropagation();
     const ouvert = !panel.classList.contains('hidden');
-    panel.classList.toggle('hidden', ouvert);
-    toggle.setAttribute('aria-expanded', String(!ouvert));
-    if (!ouvert) marquerCommeLues();
+    if (ouvert) {
+      fermerNotifPanel();
+    } else {
+      panel.classList.remove('hidden');
+      if (backdrop) backdrop.classList.remove('hidden');
+      toggle.setAttribute('aria-expanded', 'true');
+      marquerCommeLues();
+    }
   });
 
   document.addEventListener('click', function (e) {
     if (!wrapper.contains(e.target)) {
-      panel.classList.add('hidden');
-      toggle.setAttribute('aria-expanded', 'false');
+      fermerNotifPanel();
     }
   });
 
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
-      panel.classList.add('hidden');
-      toggle.setAttribute('aria-expanded', 'false');
+      fermerNotifPanel();
     }
   });
 });

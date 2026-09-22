@@ -655,6 +655,15 @@ class Campaign(db.Model):
     # =========================================================================
     reward_per_click_locked = db.Column(db.Float, nullable=True)
 
+    # =========================================================================
+    # 🆕 VERROU DE PRIX : un paiement PARTIEL via le portefeuille a-t-il déjà
+    # eu lieu sur cette campagne ? Si oui, total_cost ne doit plus jamais être
+    # recalculé pour elle (voir payer_campagne dans app.py), pour ne jamais
+    # désynchroniser le montant déjà déduit du portefeuille de l'annonceur
+    # avec un nouveau total recalculé.
+    # =========================================================================
+    wallet_partiel_utilise = db.Column(db.Boolean, nullable=False, default=False)
+
     whatsapp_number = db.Column(db.String(20), nullable=True)
 
     # =========================================================================

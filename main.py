@@ -679,6 +679,70 @@ with app.app_context():
         logger.error("Erreur migration colonne campaigns.quota_prealerte_envoyee : %s", e)
 
 
+# =========================================================================
+# 🆕 MIGRATION : récompense par clic du partageur VERROUILLÉE au paiement
+#
+# 1. Ajoute la colonne reward_per_click_locked (absente tant qu'une
+#    campagne n'est pas payée — voir models.py).
+# 2. FIGEMENT RÉTROACTIF : les campagnes déjà payées ET actives à l'instant
+#    de ce déploiement n'ont jamais eu ce champ rempli (il vient d'être
+#    créé). Sans ce rattrapage, elles resteraient indéfiniment sensibles
+#    aux futurs changements de tarifs admin, jusqu'à leur fin naturelle —
+#    exactement le bug qu'on corrige. On leur fige donc IMMÉDIATEMENT la
+#    récompense par clic, calculée avec les tarifs de SystemConfig tels
+#    qu'ils sont EN CE MOMENT PRÉCIS (dernière valeur connue avant que
+#    l'admin ne puisse la changer à nouveau).
+#    Ne s'exécute qu'UNE SEULE FOIS par campagne : dès que
+#    reward_per_click_locked est rempli, cette migration l'ignore aux
+#    prochains redémarrages du serveur.
+# =========================================================================
+with app.app_context():
+    from sqlalchemy import text
+    try:
+        db.session.execute(text(
+            "ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS reward_per_click_locked FLOAT"
+        ))
+        db.session.commit()
+        logger.info("Migration campaigns.reward_per_click_locked verifiee.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Erreur migration colonne campaigns.reward_per_click_locked : %s", e)
+
+with app.app_context():
+    try:
+        config_actuelle = SystemConfig.get_config()
+        campagnes_a_figer = Campaign.query.filter(
+            Campaign.paid.is_(True),
+            Campaign.reward_per_click_locked.is_(None),
+        ).all()
+
+        nb_figees = 0
+        for camp in campagnes_a_figer:
+            if camp.media_type == "video":
+                valeur = config_actuelle.reward_per_click_video or 0.0
+            elif camp.media_type == "photo":
+                nombre_photos = len(camp.media_files.split(",")) if camp.media_files else 1
+                valeur = (config_actuelle.reward_per_click_photo or 0.0) * nombre_photos
+            else:
+                valeur = config_actuelle.reward_per_click_text or 0.0
+
+            camp.reward_per_click_locked = valeur
+            nb_figees += 1
+
+        if nb_figees:
+            db.session.commit()
+            logger.warning(
+                "[MIGRATION] Récompense par clic figée rétroactivement pour %d campagne(s) déjà payée(s).",
+                nb_figees
+            )
+        else:
+            logger.info("Migration reward_per_click_locked : aucune campagne à figer.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Erreur figement rétroactif reward_per_click_locked : %s", e)
+
+
+
 
 with app.app_context():
     # FIX: Les deux variables sont obligatoires — aucune valeur par défaut codée en dur

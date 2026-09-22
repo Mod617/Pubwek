@@ -708,6 +708,36 @@ with app.app_context():
         db.session.rollback()
         logger.error("Erreur migration colonne campaigns.reward_per_click_locked : %s", e)
 
+
+# =========================================================================
+# 🆕 MIGRATION : colonne wallet_partiel_utilise sur `campaigns`
+#
+# Sert de verrou : dès qu'un paiement PARTIEL via le portefeuille a eu lieu
+# sur une campagne, total_cost ne doit plus jamais être recalculé pour elle
+# (voir payer_campagne dans app.py). DEFAULT FALSE reproduit exactement le
+# comportement actuel pour toutes les campagnes existantes (aucune n'a ce
+# verrou activé au départ) — aucun figement rétroactif nécessaire ici.
+#
+# 🐞 FIX ORDRE : ce bloc DOIT s'exécuter AVANT le figement rétroactif
+# ci-dessous, car ce dernier charge des objets Campaign via SQLAlchemy, qui
+# lit TOUTES les colonnes connues du modèle (donc y compris
+# wallet_partiel_utilise, déjà présente dans models.py) — si la colonne
+# n'existe pas encore en base à ce moment-là, la requête échoue avec
+# UndefinedColumn.
+# =========================================================================
+with app.app_context():
+    from sqlalchemy import text
+    try:
+        db.session.execute(text(
+            "ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS wallet_partiel_utilise BOOLEAN NOT NULL DEFAULT FALSE"
+        ))
+        db.session.commit()
+        logger.info("Migration campaigns.wallet_partiel_utilise verifiee.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Erreur migration colonne campaigns.wallet_partiel_utilise : %s", e)
+
+
 with app.app_context():
     try:
         config_actuelle = SystemConfig.get_config()
@@ -740,28 +770,6 @@ with app.app_context():
     except Exception as e:
         db.session.rollback()
         logger.error("Erreur figement rétroactif reward_per_click_locked : %s", e)
-
-
-# =========================================================================
-# 🆕 MIGRATION : colonne wallet_partiel_utilise sur `campaigns`
-#
-# Sert de verrou : dès qu'un paiement PARTIEL via le portefeuille a eu lieu
-# sur une campagne, total_cost ne doit plus jamais être recalculé pour elle
-# (voir payer_campagne dans app.py). DEFAULT FALSE reproduit exactement le
-# comportement actuel pour toutes les campagnes existantes (aucune n'a ce
-# verrou activé au départ) — aucun figement rétroactif nécessaire ici.
-# =========================================================================
-with app.app_context():
-    from sqlalchemy import text
-    try:
-        db.session.execute(text(
-            "ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS wallet_partiel_utilise BOOLEAN NOT NULL DEFAULT FALSE"
-        ))
-        db.session.commit()
-        logger.info("Migration campaigns.wallet_partiel_utilise verifiee.")
-    except Exception as e:
-        db.session.rollback()
-        logger.error("Erreur migration colonne campaigns.wallet_partiel_utilise : %s", e)
 
 
 

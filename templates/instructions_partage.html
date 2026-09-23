@@ -8,6 +8,9 @@
 {% endmacro %}
 
 {% block content %}
+{% set est_video = (camp.display_option == "A") %}
+{% set objet_pluriel = "la vidéo" if est_video else "les " ~ (media_urls|length) ~ " photos" %}
+
 <section class="py-space-lg bg-background">
 <div class="max-w-2xl mx-auto px-margin">
 
@@ -24,8 +27,7 @@
         et commencer à générer des clics.
       </p>
 
-      <!-- Ce que rapporte cette campagne au clic : le partageur ne devrait pas
-           avoir a retourner sur son tableau de bord pour s'en souvenir. -->
+      <!-- Ce que rapporte cette campagne au clic -->
       <div class="mt-space-xs flex items-center gap-space-xs rounded-xl border border-brand-primary/30 bg-brand-light px-space-sm py-2">
         <span class="material-symbols-outlined text-[20px] text-brand-deep shrink-0">paid</span>
         <span class="min-w-0">
@@ -35,9 +37,18 @@
       </div>
     </div>
 
-    <!-- ETAPE 1 : copier le texte -->
+    <!-- ETAPE 1 : copier la legende / le texte -->
     <div class="space-y-space-xs">
-      {{ etape(1, "Copiez le texte de l'annonce") }}
+      {{ etape(1, "Copiez votre légende" if media_urls else "Copiez votre texte") }}
+      <p class="font-caption text-caption text-on-surface-variant">
+        {% if media_urls %}
+          Ce texte contient <strong class="text-slate-midnight">vos liens personnels</strong>. C'est lui qui vous fait
+          gagner de l'argent : chaque clic dessus est compté à votre nom.
+        {% else %}
+          Ce texte contient déjà <strong class="text-slate-midnight">vos liens personnels</strong>. Copiez-le en entier,
+          sans rien enlever et sans modifier les liens.
+        {% endif %}
+      </p>
       <div class="pw-card-flat">
         <p id="texteAnnonce" class="font-body-sm text-body-sm text-on-surface" style="white-space: pre-line;">{{ camp.description or camp.promotion_detail or "" }}{% if lien_whatsapp_tracking %}
 📲 Commander sur WhatsApp : {{ lien_whatsapp_tracking }}{% endif %}{% if lien_site_tracking %}
@@ -45,7 +56,8 @@
       </div>
       <div class="flex items-center gap-space-xs">
         <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral" onclick="copierTexte()">
-          <span class="material-symbols-outlined text-[18px]">content_copy</span> Copier le texte complet
+          <span class="material-symbols-outlined text-[18px]">content_copy</span>
+          {{ "Copier ma légende" if media_urls else "Copier le texte complet" }}
         </button>
         <span id="copieFeedback" class="hidden font-caption text-caption font-semibold text-brand-primary">Copié</span>
       </div>
@@ -90,50 +102,139 @@
     </div>
     {% endif %}
 
-    <!-- ETAPE 2 : medias -->
     {% if media_urls %}
+    <!-- ==================== CAS PHOTOS / VIDEO ==================== -->
+
+    <!-- ETAPE 2 : envoyer les medias vers WhatsApp -->
     <div class="space-y-space-xs">
-      {{ etape(2, "Téléchargez " ~ ("la vidéo" if camp.display_option == "A" else "les photos")) }}
+      {{ etape(2, "Envoyez " ~ objet_pluriel ~ " vers WhatsApp") }}
       <div class="flex flex-wrap gap-space-xs">
         {% for url in media_urls %}
-          {% if camp.display_option == "A" %}
+          {% if est_video %}
             <video src="{{ url }}" controls class="rounded-xl shadow-sm max-w-[220px] max-h-[200px]"></video>
           {% else %}
             <img src="{{ url }}" alt="" class="w-28 h-28 rounded-xl object-cover shadow-sm">
           {% endif %}
         {% endfor %}
       </div>
-      <button type="button" id="btnEnregistrerTout" class="pw-btn pw-btn-md pw-btn-primary w-full"
-              onclick="enregistrerToutesLesPhotos()">
-        <span class="material-symbols-outlined text-[18px]">download</span>
-        {{ "Enregistrer la vidéo" if camp.display_option == "A" else "Enregistrer les " ~ media_urls|length ~ " photos" }}
-      </button>
-      <p id="enregistrerToutFeedback" class="text-center font-caption text-caption text-on-surface-variant"></p>
 
-      <!-- Repli, replie : sur un navigateur qui ne sait ni partager ni
-           telecharger en serie, chaque fichier reste accessible seul. -->
-      <div id="telechargementsIndividuels" class="hidden flex flex-wrap gap-space-2xs">
-        {% for url in media_urls %}
-          <a href="{{ url }}" download class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5">
-            <span class="material-symbols-outlined text-[16px]">download</span> Télécharger {{ loop.index }}
-          </a>
-        {% endfor %}
+      <p class="font-caption text-caption font-semibold text-slate-midnight">
+        {% if est_video %}
+          1 seul clic : la vidéo part directement vers votre statut WhatsApp.
+        {% else %}
+          1 seul clic pour les {{ media_urls|length }} photos : plus besoin de les télécharger une par une.
+        {% endif %}
+      </p>
+
+      <button type="button" id="btnEnvoyerWhatsapp" class="pw-btn pw-btn-md pw-btn-primary w-full"
+              onclick="envoyerVersWhatsapp()">
+        <span class="material-symbols-outlined text-[18px]">send</span>
+        {{ "Envoyer la vidéo vers mon statut WhatsApp" if est_video else "Envoyer les " ~ media_urls|length ~ " photos vers mon statut WhatsApp" }}
+      </button>
+      <p id="envoiFeedback" class="text-center font-caption text-caption text-on-surface-variant"></p>
+
+      <ol class="list-decimal pl-5 font-caption text-caption text-on-surface-variant space-y-0.5">
+        <li>Appuyez sur le bouton ci-dessus.</li>
+        <li>Choisissez <strong class="text-slate-midnight">WhatsApp</strong> (faites glisser le menu si besoin), puis <strong class="text-slate-midnight">Mon statut</strong>.</li>
+        <li>Ne publiez pas tout de suite : passez d'abord à l'étape 3.</li>
+      </ol>
+
+      <!-- Repli : si le bouton ne marche pas sur ce telephone, chaque fichier reste accessible seul. -->
+      <div id="telechargementsIndividuels" class="hidden space-y-space-xs rounded-xl border border-outline-variant/30 p-space-sm">
+        <p class="font-caption text-caption text-on-surface-variant">
+          Le bouton ne fonctionne pas ? Téléchargez {{ "la vidéo" if est_video else "les photos" }}, puis dans WhatsApp allez dans
+          <strong class="text-slate-midnight">Statuts</strong> → <strong class="text-slate-midnight">Ajouter un statut</strong>
+          et choisissez {{ "la vidéo" if est_video else "les photos" }} dans votre galerie.
+        </p>
+        <div class="flex flex-wrap gap-space-2xs">
+          {% for url in media_urls %}
+            <a href="{{ url }}" download class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5">
+              <span class="material-symbols-outlined text-[16px]">download</span> Télécharger {{ loop.index }}
+            </a>
+          {% endfor %}
+        </div>
+        <a href="whatsapp://" class="pw-btn pw-btn-sm pw-btn-primary">
+          <span class="material-symbols-outlined text-[18px]">chat</span> Ouvrir WhatsApp
+        </a>
       </div>
       <button type="button" class="font-caption text-caption text-on-surface-variant underline"
               onclick="document.getElementById('telechargementsIndividuels').classList.toggle('hidden')">
-        Ou téléchargez-{{ "le" if camp.display_option == "A" else "les une par une" }}
+        Le bouton ne marche pas ? Téléchargez-{{ "la" if est_video else "les une par une" }}
       </button>
     </div>
-    {% endif %}
 
-    <!-- ETAPE : publier -->
+    <!-- ETAPE 3 : coller la legende sur chaque visuel, puis publier -->
     <div class="space-y-space-xs">
-      {{ etape("3" if media_urls else "2", "Ouvrez WhatsApp et publiez votre statut") }}
-      <p class="font-caption text-caption text-on-surface-variant">
-        Dans WhatsApp, allez dans l'onglet <strong class="text-slate-midnight">Statuts</strong> →
-        <strong class="text-slate-midnight">Ajouter un statut</strong>,
-        {% if media_urls %}ajoutez {{ "la vidéo" if camp.display_option == "A" else "les photos" }} téléchargée(s){% else %}collez le texte copié{% endif %}, puis publiez.
-      </p>
+      {{ etape(3, "Collez votre légende sous la vidéo, puis publiez" if est_video else "Collez votre légende sur chaque photo, puis publiez") }}
+
+      <div class="flex items-start gap-space-xs rounded-xl border border-amber-rich/30 bg-amber-soft px-space-sm py-space-xs">
+        <span class="material-symbols-outlined text-[18px] text-amber-rich shrink-0">priority_high</span>
+        <p class="font-caption text-caption text-secondary">
+          <strong>Cette étape est celle qui vous rapporte de l'argent.</strong>
+          Quand quelqu'un voit votre statut et s'intéresse à l'annonce, il clique sur le lien qu'il trouve dans la légende.
+          {% if est_video %}
+            Une vidéo sans votre lien est un clic perdu : il ne sera pas compté à votre nom et ne sera pas payé.
+          {% else %}
+            Une photo sans votre lien est un clic perdu : il ne sera pas compté à votre nom et ne sera pas payé.
+          {% endif %}
+          Chaque clic valide vous rapporte <strong>{{ "%.0f"|format(recompense_par_clic) }} FCFA</strong>.
+        </p>
+      </div>
+
+      <ul class="font-caption text-caption text-on-surface-variant space-y-1">
+        {% if est_video %}
+        <li class="flex items-start gap-1.5">
+          <span class="material-symbols-outlined text-[16px] text-brand-primary shrink-0">check_circle</span>
+          <span>Dans WhatsApp, appuyez sur le champ <strong class="text-slate-midnight">« Ajouter une légende »</strong> sous la vidéo et <strong class="text-slate-midnight">collez votre légende</strong>.</span>
+        </li>
+        {% else %}
+        <li class="flex items-start gap-1.5">
+          <span class="material-symbols-outlined text-[16px] text-brand-primary shrink-0">check_circle</span>
+          <span>Dans WhatsApp, appuyez sur le champ <strong class="text-slate-midnight">« Ajouter une légende »</strong> et <strong class="text-slate-midnight">collez votre légende sur chaque photo</strong>, une par une.</span>
+        </li>
+        <li class="flex items-start gap-1.5">
+          <span class="material-symbols-outlined text-[16px] text-brand-primary shrink-0">check_circle</span>
+          <span>Pour passer d'une photo à l'autre, appuyez sur les petites images en bas de l'écran.</span>
+        </li>
+        <li class="flex items-start gap-1.5">
+          <span class="material-symbols-outlined text-[16px] text-brand-primary shrink-0">check_circle</span>
+          <span>Plus il y a de photos avec votre lien, plus vous avez de chances d'être cliqué.</span>
+        </li>
+        {% endif %}
+        <li class="flex items-start gap-1.5">
+          <span class="material-symbols-outlined text-[16px] text-brand-primary shrink-0">lightbulb</span>
+          <span><strong class="text-slate-midnight">Astuce :</strong> votre légende est copiée une seule fois et reste en mémoire. Il suffit de coller, sans rien recopier.</span>
+        </li>
+        <li class="flex items-start gap-1.5">
+          <span class="material-symbols-outlined text-[16px] text-brand-primary shrink-0">check_circle</span>
+          <span>Quand {{ "la vidéo" if est_video else "toutes les photos" }} {{ "a" if est_video else "ont" }} sa légende, appuyez sur la <strong class="text-slate-midnight">flèche verte</strong> pour publier.</span>
+        </li>
+      </ul>
+    </div>
+
+    {% else %}
+    <!-- ==================== CAS TEXTE SEUL ==================== -->
+
+    <!-- ETAPE 2 : publier en statut texte -->
+    <div class="space-y-space-xs">
+      {{ etape(2, "Publiez votre texte en statut") }}
+
+      <div class="flex items-start gap-space-xs rounded-xl border border-amber-rich/30 bg-amber-soft px-space-sm py-space-xs">
+        <span class="material-symbols-outlined text-[18px] text-amber-rich shrink-0">priority_high</span>
+        <p class="font-caption text-caption text-secondary">
+          <strong>Ne modifiez pas les liens.</strong> S'ils sont changés ou supprimés, vos clics ne seront pas comptés
+          à votre nom et vous ne serez pas payé. Chaque clic valide vous rapporte
+          <strong>{{ "%.0f"|format(recompense_par_clic) }} FCFA</strong>.
+        </p>
+      </div>
+
+      <ol class="list-decimal pl-5 font-caption text-caption text-on-surface-variant space-y-0.5">
+        <li>Ouvrez WhatsApp et allez dans l'onglet <strong class="text-slate-midnight">Statuts</strong>.</li>
+        <li>Appuyez sur l'icône <strong class="text-slate-midnight">crayon ✏️</strong> (statut texte).</li>
+        <li><strong class="text-slate-midnight">Collez</strong> le texte que vous avez copié à l'étape 1.</li>
+        <li>Appuyez sur la <strong class="text-slate-midnight">flèche verte</strong> pour publier.</li>
+      </ol>
+
       <a href="whatsapp://" class="pw-btn pw-btn-md pw-btn-primary w-full">
         <span class="material-symbols-outlined text-[20px]">chat</span> Ouvrir WhatsApp
       </a>
@@ -142,6 +243,7 @@
         Sinon, ouvrez WhatsApp directement sur votre téléphone.
       </p>
     </div>
+    {% endif %}
 
     {% if exiger_preuve_partage %}
     <!-- ETAPE FINALE : preuves (uniquement si l'exigence de preuve est activée) -->
@@ -222,8 +324,7 @@
       {% endif %}
     </div>
     {% else %}
-    <!-- 🆕 Preuve non exigée (désactivée par l'administration) : plus d'étape
-         d'envoi de capture, on garde seulement le rappel sur les clics réels. -->
+    <!-- Preuve non exigée (désactivée par l'administration) : on garde seulement le rappel sur les clics réels. -->
     <div class="pt-space-sm border-t border-outline-variant/30">
       <div class="flex items-start gap-space-xs rounded-xl border border-amber-rich/30 bg-amber-soft px-space-sm py-space-xs">
         <span class="material-symbols-outlined text-[18px] text-amber-rich shrink-0">shield</span>
@@ -269,53 +370,111 @@ function copierLien(inputId, feedbackId) {
     });
 }
 
-// 🆕 Enregistrement en un clic (Web Share API), avec repli en téléchargement auto
+// ---------- Envoi des medias vers WhatsApp (Web Share API) ----------
 const mediaUrls = {{ media_urls | tojson }};
+const estVideo = {{ est_video | tojson }};
+const prefixeFichier = estVideo ? 'video' : 'photo';
+const typeParDefaut = estVideo ? 'video/mp4' : 'image/jpeg';
 
-async function enregistrerToutesLesPhotos() {
-    const btn = document.getElementById('btnEnregistrerTout');
-    const feedback = document.getElementById('enregistrerToutFeedback');
+let fichiersPrets = null;
+let preparation = null;
+
+// Telecharge les fichiers en arriere-plan des l'ouverture de la page :
+// au clic, le menu de partage s'ouvre immediatement (le navigateur exige
+// que le partage suive de tres pres le clic de l'utilisateur).
+function preparerFichiers() {
+    if (!preparation) {
+        preparation = Promise.all(mediaUrls.map(async function(url, i) {
+            const reponse = await fetch(url);
+            const blob = await reponse.blob();
+            const type = blob.type || typeParDefaut;
+            const extension = (type.split('/')[1] || 'jpg')
+                .replace('jpeg', 'jpg')
+                .replace('quicktime', 'mov');
+            return new File([blob], prefixeFichier + '-' + (i + 1) + '.' + extension, { type: type });
+        })).then(function(fichiers) {
+            fichiersPrets = fichiers;
+            return fichiers;
+        }).catch(function(err) {
+            preparation = null;   // permet de reessayer au prochain clic
+            throw err;
+        });
+    }
+    return preparation;
+}
+
+if (mediaUrls.length > 0) {
+    preparerFichiers().catch(function() { /* on retentera au clic */ });
+}
+
+// Copie la legende automatiquement au moment de l'envoi : le partageur
+// l'a ainsi deja en memoire en arrivant dans WhatsApp.
+async function copierLegendeAuto() {
+    try {
+        const texte = document.getElementById("texteAnnonce").innerText;
+        await navigator.clipboard.writeText(texte);
+        return true;
+    } catch (err) {
+        return false;
+    }
+}
+
+function afficherTelechargementsIndividuels() {
+    const bloc = document.getElementById('telechargementsIndividuels');
+    if (bloc) bloc.classList.remove('hidden');
+}
+
+async function envoyerVersWhatsapp() {
+    const btn = document.getElementById('btnEnvoyerWhatsapp');
+    const feedback = document.getElementById('envoiFeedback');
+    const objet = estVideo ? 'la vidéo' : 'chaque photo';
 
     btn.disabled = true;
     feedback.textContent = 'Préparation en cours...';
 
-    try {
-        // Étape 1 : tenter le partage natif (fonctionne bien sur Android et iPhone récents)
-        const fichiers = await Promise.all(mediaUrls.map(async (url, i) => {
-            const reponse = await fetch(url);
-            const blob = await reponse.blob();
-            const extension = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
-            return new File([blob], `photo-${i + 1}.${extension}`, { type: blob.type });
-        }));
+    const legendeCopiee = await copierLegendeAuto();
 
+    try {
+        const fichiers = fichiersPrets || await preparerFichiers();
+
+        // Etape 1 : partage natif (Android et iPhone recents)
         if (navigator.canShare && navigator.canShare({ files: fichiers })) {
             await navigator.share({ files: fichiers });
-            feedback.textContent = 'Terminé ! Choisissez "Enregistrer" dans le menu qui s\'est ouvert.';
+            feedback.textContent = legendeCopiee
+                ? 'Terminé ! Votre légende est copiée : collez-la sur ' + objet + ' avant de publier.'
+                : 'Terminé ! N\'oubliez pas de coller votre légende sur ' + objet + ' avant de publier.';
             btn.disabled = false;
             return;
         }
 
-        // Étape 2 : repli — téléchargement automatique un par un
+        // Etape 2 : repli, telechargement automatique un par un
         feedback.textContent = 'Téléchargement automatique en cours...';
         for (let i = 0; i < mediaUrls.length; i++) {
             const lien = document.createElement('a');
             lien.href = mediaUrls[i];
-            lien.download = `photo-${i + 1}`;
+            lien.download = prefixeFichier + '-' + (i + 1);
             document.body.appendChild(lien);
             lien.click();
             document.body.removeChild(lien);
-            await new Promise(resolve => setTimeout(resolve, 400));
+            await new Promise(function(resolve) { setTimeout(resolve, 400); });
         }
-        feedback.textContent = 'Terminé ! Retrouvez les photos dans vos téléchargements.';
+        afficherTelechargementsIndividuels();
+        feedback.textContent = 'Terminé ! Retrouvez ' + (estVideo ? 'la vidéo' : 'les photos')
+            + ' dans vos téléchargements, puis ajoutez-' + (estVideo ? 'la' : 'les')
+            + ' à votre statut WhatsApp (voir ci-dessous).';
         btn.disabled = false;
 
     } catch (err) {
-        // L'utilisateur a annulé le partage, ou une erreur est survenue
         if (err.name === 'AbortError') {
+            // L'utilisateur a ferme le menu de partage
             feedback.textContent = '';
+        } else if (err.name === 'NotAllowedError') {
+            // Les fichiers etaient encore en preparation : le clic n'etait plus "frais"
+            feedback.textContent = 'C\'est prêt ! Appuyez de nouveau sur le bouton.';
         } else {
-            console.error('Erreur enregistrement photos :', err);
-            feedback.textContent = 'Un souci est survenu. Essayez "une par une" ci-dessous.';
+            console.error('Erreur envoi vers WhatsApp :', err);
+            afficherTelechargementsIndividuels();
+            feedback.textContent = 'Un souci est survenu. Utilisez les boutons de téléchargement ci-dessous.';
         }
         btn.disabled = false;
     }

@@ -8,6 +8,7 @@ import hashlib
 import uuid
 import uuid as uuidlib
 import random
+import html
 import logging
 import urllib.parse
 import threading
@@ -5943,12 +5944,23 @@ def tracking_redirect_whatsapp(token):
     camp = share.campaign
     if not camp or not camp.whatsapp_number:
         abort(404)
-    # La destination est calculée d'abord : le visiteur ne doit jamais attendre
+
     numero = numero_pour_wa_me(camp.whatsapp_number, garder_01=camp.whatsapp_garder_01)
-    message = urllib.parse.quote(
-        f"Bonjour, je suis intéressé(e) par : {camp.promotion_detail or camp.promotion_type}"
+
+    # bleach a transformé & en &amp; à la création : on remet le vrai texte
+    nom_offre = html.unescape(camp.promotion_detail or camp.promotion_type or "votre offre")
+    pseudo_partageur = (share.sharer.pseudo if share.sharer else None) or "inconnu"
+
+    message = (
+        "Bonjour,\n"
+        "Je vous contacte suite à votre publicité vue sur Pubwek.\n\n"
+        f"Campagne : n°{camp.id}\n"
+        f"Produit / service : {nom_offre}\n"
+        f"Partageur : {pseudo_partageur}\n\n"
+        "Je suis intéressé(e), pouvez-vous me donner plus d'informations ?"
     )
-    lien_final = f"https://wa.me/{numero}?text={message}"
+    lien_final = f"https://wa.me/{numero}?text={urllib.parse.quote(message)}"
+
     enregistrer_clic(share, camp, "whatsapp")
     return redirect(lien_final)
 

@@ -11,6 +11,10 @@
 # --- Cœur Flask --------------------------------------------------------------
 Flask==3.1.3
 Flask-SQLAlchemy==3.1.1
+# SQLAlchemy 2.1 utilise psycopg (v3) par défaut au lieu de psycopg2 : sans
+# cette limite, un rebuild Railway installe la 2.1 et le serveur ne démarre plus
+# (ModuleNotFoundError: No module named 'psycopg'). Ne pas remonter sans tester.
+SQLAlchemy>=2.0.16,<2.1
 Flask-Login==0.6.3
 Flask-WTF==1.2.1
 Flask-Bcrypt==1.0.1

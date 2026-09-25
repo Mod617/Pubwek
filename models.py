@@ -977,6 +977,10 @@ class CampaignShare(db.Model):
     # =========================================================================
     dernier_jour_republication = db.Column(db.Integer, nullable=True)
     derniere_republication_le = db.Column(db.DateTime, nullable=True)
+    # 🆕 Date (jour calendaire) du dernier rappel proactif de republication
+    # envoyé à ce partageur pour ce partage. Évite de le notifier plusieurs
+    # fois le même jour à chaque passage du job périodique.
+    dernier_rappel_republication_le = db.Column(db.Date, nullable=True)
 
     campaign = db.relationship(
         "Campaign",

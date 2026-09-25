@@ -965,6 +965,18 @@ class CampaignShare(db.Model):
     # la tâche périodique qui scanne les preuves en attente.
     # =========================================================================
     jours_rappel_urgent_envoyes = db.Column(db.Text, nullable=True)
+    # =========================================================================
+    # 🆕 SUIVI DE LA RÉPUBLICATION QUOTIDIENNE DU STATUT
+    #
+    # Un statut WhatsApp expire au bout de 24h. Beaucoup de partageurs
+    # pensaient qu'un seul partage suffisait pour toute la durée de la
+    # campagne. Ces deux champs permettent au partageur de confirmer
+    # explicitement, chaque jour, qu'il vient de republier son statut —
+    # au lieu de le déduire indirectement des clics reçus (un jour sans
+    # clic ne veut pas dire un jour sans republication).
+    # =========================================================================
+    dernier_jour_republication = db.Column(db.Integer, nullable=True)
+    derniere_republication_le = db.Column(db.DateTime, nullable=True)
 
     campaign = db.relationship(
         "Campaign",

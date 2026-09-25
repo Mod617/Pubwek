@@ -1027,6 +1027,25 @@ def generer_description_auto():
 # 🔒 Propriété des fichiers téléversés et route de distribution
 # =========================================================================
 
+def campagne_en_prolongation(camp):
+    """La campagne dure-t-elle plus longtemps que prévu, faute d'avoir
+    atteint son objectif de clics avant sa date de fin ?
+
+    Ne s'applique qu'aux campagnes en diffusion réelle (payées, validées,
+    actives) : une campagne non payée ou déjà terminée n'est jamais
+    "en prolongation".
+    """
+    if not (camp.paid and camp.validated and camp.is_active):
+        return False
+    if not camp.end_date:
+        return False
+    if datetime.utcnow() <= camp.end_date:
+        return False
+    if camp.target_whatsapp_views and camp.whatsapp_views >= camp.target_whatsapp_views:
+        return False  # objectif déjà atteint : la campagne serait déjà terminée
+    return True
+
+
 
 def campagne_cible_utilisateur(camp, user):
     """La campagne cible-t-elle la zone géographique de ce partageur ?

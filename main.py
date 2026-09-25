@@ -6221,7 +6221,7 @@ def _notifier_partageurs_quota_atteint(camp):
                         f"dans la limite de {marge} clic(s) au total pour l'ensemble des partageurs "
                         f"de cette campagne ; au-delà, ils ne le sont plus. "
                         f"{rappel_preuve}"
-                        f"La diffusion reprendra demain."
+                        f"Demain, pensez à republier votre statut WhatsApp pour continuer à générer des clics sur cette campagne."
                     ),
                     category="warning",
                     link=lien,

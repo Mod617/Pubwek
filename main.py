@@ -787,6 +787,32 @@ with app.app_context():
 
 
 
+# =========================================================================
+# 🆕 MIGRATION : suivi de la republication quotidienne du statut WhatsApp
+#
+# dernier_jour_republication / derniere_republication_le sont absentes tant
+# qu'un partageur n'a jamais confirmé une republication — voir models.py.
+# NULL par défaut = comportement inchangé pour tous les CampaignShare
+# existants (aucun figement rétroactif nécessaire, ce n'est qu'un compteur
+# qui démarre à partir de maintenant).
+# =========================================================================
+with app.app_context():
+    from sqlalchemy import text
+    try:
+        db.session.execute(text(
+            "ALTER TABLE campaign_shares ADD COLUMN IF NOT EXISTS dernier_jour_republication INTEGER"
+        ))
+        db.session.execute(text(
+            "ALTER TABLE campaign_shares ADD COLUMN IF NOT EXISTS derniere_republication_le TIMESTAMP"
+        ))
+        db.session.commit()
+        logger.info("Migration campaign_shares.dernier_jour_republication / derniere_republication_le vérifiée.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Erreur migration colonnes campaign_shares (republication) : %s", e)
+
+
+
 
 
 with app.app_context():

@@ -4325,6 +4325,9 @@ def instructions_partage(campaign_id):
     jour_actuel = camp.jour_diffusion_campagne()
     jours_preuves = etats_preuves_partage(share, camp) if config.exiger_preuve_partage else []
 
+    # 🆕 Le partageur a-t-il déjà confirmé sa republication pour aujourd'hui ?
+    deja_republie_aujourdhui = (share.dernier_jour_republication == jour_actuel)
+
     return render_template(
         "instructions_partage.html",
         camp=camp,
@@ -4336,6 +4339,7 @@ def instructions_partage(campaign_id):
         jours_preuves=jours_preuves,
         exiger_preuve_partage=config.exiger_preuve_partage,  # 🆕
         recompense_par_clic=recompense_pour(camp, config),  # 🆕 gain rappelé au partageur
+        deja_republie_aujourdhui=deja_republie_aujourdhui,  # 🆕
     )
 
 # ==========================================

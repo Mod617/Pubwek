@@ -812,6 +812,22 @@ with app.app_context():
         logger.error("Erreur migration colonnes campaign_shares (republication) : %s", e)
 
 
+# =========================================================================
+# 🆕 MIGRATION : date du dernier rappel proactif de republication envoyé
+# =========================================================================
+with app.app_context():
+    from sqlalchemy import text
+    try:
+        db.session.execute(text(
+            "ALTER TABLE campaign_shares ADD COLUMN IF NOT EXISTS dernier_rappel_republication_le DATE"
+        ))
+        db.session.commit()
+        logger.info("Migration campaign_shares.dernier_rappel_republication_le vérifiée.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Erreur migration colonne campaign_shares (rappel republication) : %s", e)
+
+
 
 
 

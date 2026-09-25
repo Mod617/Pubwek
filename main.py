@@ -3619,6 +3619,9 @@ def dashboard_partageur():
         vues_aujourdhui = (camp.views_today or 0) if compteurs_a_jour else 0
         quota_atteint = bool(deja_partagee and compteurs_a_jour and camp.daily_quota_paused)
 
+        # 🆕 Le partageur a-t-il confirmé sa republication du jour, pour cette campagne ?
+        a_republie_aujourdhui = bool(mon_share and mon_share.dernier_jour_republication == jour_reel)
+
         campagnes_disponibles.append({
             "campaign": camp,
             "deja_partagee": deja_partagee,
@@ -3633,6 +3636,7 @@ def dashboard_partageur():
             "mes_clics_valides": mes_valides,
             "mes_clics_credites": mes_credites,
             "mes_clics_en_attente": mes_valides - mes_credites,
+            "a_republie_aujourdhui": a_republie_aujourdhui,  # 🆕
         })
 
     return render_template(

@@ -1670,9 +1670,6 @@ def mes_campagnes():
 # ==========================================
 # ROUTE : PARTAGEURS D'UNE CAMPAGNE (ESPACE ANNONCEUR)
 # ==========================================
-# ==========================================
-# ROUTE : PARTAGEURS D'UNE CAMPAGNE (ESPACE ANNONCEUR)
-# ==========================================
 @app.route("/mes-campagnes/<int:campaign_id>/partageurs")
 @login_required
 def campagne_partageurs(campaign_id):
@@ -1690,6 +1687,10 @@ def campagne_partageurs(campaign_id):
     if not camp.paid or not camp.validated:
         flash("Les statistiques de partage ne sont disponibles qu'une fois la campagne validée.", "warning")
         return redirect(url_for("mes_campagnes"))
+
+    # 🆕 La campagne dure-t-elle plus longtemps que prévu, faute d'avoir
+    # atteint son objectif de clics ? Affiché en bandeau d'information.
+    en_prolongation = campagne_en_prolongation(camp)
 
     # 1️⃣ Liste des partageurs de cette campagne (pseudo + date + id du CampaignShare)
     shares = (
@@ -1712,7 +1713,8 @@ def campagne_partageurs(campaign_id):
             total_clics=0,
             total_clics_whatsapp=0,
             total_clics_site=0,
-            total_clics_frauduleux=0
+            total_clics_frauduleux=0,
+            en_prolongation=en_prolongation
         )
 
     share_ids = [s.id for s in shares]
@@ -1776,7 +1778,8 @@ def campagne_partageurs(campaign_id):
         total_clics=total_clics_whatsapp + total_clics_site,
         total_clics_whatsapp=total_clics_whatsapp,
         total_clics_site=total_clics_site,
-        total_clics_frauduleux=total_clics_frauduleux
+        total_clics_frauduleux=total_clics_frauduleux,
+        en_prolongation=en_prolongation
     )
 
 

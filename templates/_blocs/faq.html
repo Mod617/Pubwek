@@ -85,7 +85,7 @@
 <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-hidden">
 <button class="faq-toggle w-full p-space-lg text-left flex items-center justify-between gap-4 font-headline-sm text-body-md md:text-headline-sm text-slate-midnight" type="button">
 <span class="">{{ item.q }}</span>
-<span class="faq-icon material-symbols-outlined {{ 'text-brand-primary' if loop.first else 'text-on-surface-variant' }} transition-transform duration-300">{{ 'expand_circle_up' if loop.first else 'add_circle' }}</span>
+<span class="faq-icon shrink-0 material-symbols-outlined {{ 'text-brand-primary' if loop.first else 'text-on-surface-variant' }} transition-transform duration-300">{{ 'expand_circle_up' if loop.first else 'add_circle' }}</span>
 </button>
 <div class="faq-content {{ '' if loop.first else 'hidden' }} px-space-lg pb-space-lg text-on-surface-variant font-body-sm text-body-sm leading-relaxed border-t border-outline-variant/10 pt-2">
   {{ item.r | safe }}

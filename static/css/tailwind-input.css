@@ -233,7 +233,7 @@
       z-index: 60;
       transform-origin: 0 50%;
       transform: scaleX(0);
-      background: linear-gradient(90deg, #066FA7, #1EADEC 55%, #F59E0B);
+      background: #066FA7;
       animation: pw-progression linear both;
       animation-timeline: scroll(root block);
     }

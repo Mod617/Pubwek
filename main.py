@@ -4206,6 +4206,41 @@ def partager_campagne_partageur(campaign_id):
 
 
 # ==========================================
+# 🆕 ROUTE : LE PARTAGEUR CONFIRME AVOIR REPUBLIÉ SON STATUT AUJOURD'HUI
+# ==========================================
+@app.route("/partageur/confirmer_republication/<int:share_id>", methods=["POST"])
+@login_required
+@limiter.limit("60 per hour")
+def confirmer_republication(share_id):
+    if current_user.role != "partageur":
+        flash("Accès réservé aux partageurs.", "danger")
+        return redirect(url_for("index"))
+
+    share = CampaignShare.query.filter_by(id=share_id, sharer_id=current_user.id).first()
+    if not share:
+        abort(404)
+
+    camp = share.campaign
+    if not (camp.is_active and camp.paid and camp.validated):
+        flash("Cette campagne n'est plus active.", "warning")
+        return redirect(url_for("dashboard_partageur"))
+
+    jour_actuel = camp.jour_diffusion_campagne()
+
+    share.dernier_jour_republication = jour_actuel
+    share.derniere_republication_le = datetime.utcnow()
+    db.session.commit()
+
+    logger.info(
+        "[REPUBLICATION] Partageur id=%d confirme la republication du jour %d — campagne #%d",
+        current_user.id, jour_actuel, camp.id
+    )
+
+    flash(f"Merci ! Votre republication du jour {jour_actuel} a été enregistrée.", "success")
+    return redirect(url_for("instructions_partage", campaign_id=camp.id))
+
+
+# ==========================================
 # 🆕 ROUTE : PAGE D'INSTRUCTIONS POUR PUBLIER LE STATUT
 # ==========================================
 def etats_preuves_partage(share, camp):

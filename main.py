@@ -6180,6 +6180,80 @@ def relancer_rappels_preuves():
             logger.error("Erreur envoi rappels preuves : %s", e)
 
 
+
+def relancer_rappels_republication():
+    """Parcourt toutes les campagnes actives et rappelle aux partageurs qui
+    n'ont pas encore confirmé leur republication du jour de le faire — un
+    statut WhatsApp expire au bout de 24h, une seule publication ne suffit
+    pas pour toute la durée de la campagne.
+
+    Un seul rappel par partage et par jour calendaire (voir
+    CampaignShare.dernier_rappel_republication_le), pour ne pas spammer à
+    chaque passage du job périodique.
+
+    Doit être appelée dans un contexte d'application.
+    """
+    aujourdhui = datetime.utcnow().date()
+    campagnes_actives = Campaign.query.filter_by(is_active=True, paid=True, validated=True).all()
+    total_rappels = 0
+
+    for camp in campagnes_actives:
+        jour_actuel = camp.jour_diffusion_campagne()
+        shares = CampaignShare.query.filter_by(campaign_id=camp.id).all()
+
+        for share in shares:
+            deja_republie_aujourdhui = (share.dernier_jour_republication == jour_actuel)
+            deja_rappele_aujourdhui = (share.dernier_rappel_republication_le == aujourdhui)
+
+            if deja_republie_aujourdhui or deja_rappele_aujourdhui:
+                continue
+
+            partageur = db.session.get(User, share.sharer_id)
+            if not partageur:
+                continue
+
+            nom_campagne = camp.promotion_detail or camp.promotion_type or f"#{camp.id}"
+            envoyer_notification(
+                partageur,
+                "📲 Republiez votre statut aujourd'hui",
+                (
+                    f"Votre statut WhatsApp d'hier pour la campagne « {nom_campagne} » a expiré "
+                    f"(24h). Republiez-le aujourd'hui (jour {jour_actuel}/{camp.duration_days}) "
+                    f"pour continuer à générer des clics et à être payé dessus."
+                ),
+                category="info",
+                link=url_for("instructions_partage", campaign_id=camp.id),
+                push_async=True,
+            )
+            share.dernier_rappel_republication_le = aujourdhui
+            total_rappels += 1
+
+    if total_rappels:
+        try:
+            db.session.commit()
+            logger.info("[RAPPEL REPUBLICATION] %d rappel(s) envoyé(s).", total_rappels)
+        except Exception as e:
+            db.session.rollback()
+            logger.error("Erreur envoi rappels republication : %s", e)
+
+
+def lancer_rappels_republication_periodique(application, intervalle_secondes=3600):
+    """Lance un thread qui vérifie, toutes les intervalle_secondes, si des
+    partageurs doivent recevoir un rappel de republication quotidienne.
+    """
+    def _boucle():
+        while True:
+            time.sleep(intervalle_secondes)
+            try:
+                with application.app_context():
+                    relancer_rappels_republication()
+            except Exception as e:
+                logger.error("Erreur boucle rappels republication : %s", e)
+    t = threading.Thread(target=_boucle, daemon=True)
+    t.start()
+
+
+
 def lancer_rappels_preuves_periodique(application, intervalle_secondes=3600):
     """Lance un thread qui vérifie, toutes les intervalle_secondes, si des
     partageurs doivent recevoir un rappel urgent pour l'envoi de leur preuve

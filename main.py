@@ -7680,6 +7680,10 @@ with app.app_context():
 with app.app_context():
     lancer_rappels_preuves_periodique(app)
 
+# 🆕 Lancement du rappel automatique de republication quotidienne du statut
+with app.app_context():
+    lancer_rappels_republication_periodique(app)
+
 
 # =========================================================================
 # 🚀 Point d'entrée

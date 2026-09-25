@@ -773,6 +773,20 @@ with app.app_context():
         logger.error("Erreur figement rétroactif reward_per_click_locked : %s", e)
 
 
+with app.app_context():
+    from sqlalchemy import text
+    try:
+        db.session.execute(text(
+            "ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS prolongation_notifiee BOOLEAN NOT NULL DEFAULT FALSE"
+        ))
+        db.session.commit()
+        logger.info("Migration campaigns.prolongation_notifiee verifiee.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Erreur migration colonne campaigns.prolongation_notifiee : %s", e)
+
+
+
 
 
 with app.app_context():

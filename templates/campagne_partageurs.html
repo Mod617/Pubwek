@@ -88,6 +88,26 @@
     </div>
   </div>
 
+  <!-- 🆕 Diffusion prolongée automatiquement : durée prévue dépassée, objectif pas encore atteint -->
+  {% if en_prolongation %}
+  <div class="flex items-start gap-space-xs rounded-xl border border-brand-primary/30 bg-brand-light px-space-md py-space-sm">
+    <span class="material-symbols-outlined text-[20px] text-brand-deep shrink-0">schedule</span>
+    <div>
+      <p class="font-headline-md text-[14px] font-semibold text-brand-deep">
+        Diffusion prolongée automatiquement
+      </p>
+      <p class="font-caption text-caption text-brand-deep/90">
+        La durée de {{ campaign.duration_days }} jour{{ 's' if campaign.duration_days != 1 else '' }} prévue
+        pour cette campagne est dépassée, mais l'objectif de
+        {{ "{:,}".format(target).replace(",", " ") }} clics n'est pas encore atteint
+        ({{ "{:,}".format(total_clics).replace(",", " ") }} pour l'instant). Pour vous garantir le nombre
+        de clics que vous avez payé, la diffusion continue automatiquement auprès des partageurs jusqu'à
+        ce que l'objectif soit atteint, sans frais supplémentaire de notre part.
+      </p>
+    </div>
+  </div>
+  {% endif %}
+
   <!-- Liste des partageurs -->
   {% if partageurs %}
     <!-- Tableau (a partir de sm) -->

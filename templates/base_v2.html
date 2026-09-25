@@ -60,6 +60,7 @@ html{scrollbar-width:thin;scrollbar-color:#bdc9c1 #f2f3ff;}
 <a class="text-on-surface-variant hover:text-brand-primary transition-colors duration-200 py-1 border-b-2 {{ 'border-brand-primary text-brand-primary' if request.endpoint == 'page_annonceurs' else 'border-transparent hover:border-brand-primary' }}" href="{{ url_for('page_annonceurs') }}">Pour les annonceurs</a>
 <a class="text-on-surface-variant hover:text-brand-primary transition-colors duration-200 py-1 border-b-2 {{ 'border-brand-primary text-brand-primary' if request.endpoint == 'page_partageurs' else 'border-transparent hover:border-brand-primary' }}" href="{{ url_for('page_partageurs') }}">Pour les partageurs</a>
 <a class="text-on-surface-variant hover:text-brand-primary transition-colors duration-200 py-1 border-b-2 {{ 'border-brand-primary text-brand-primary' if request.endpoint == 'a_propos' else 'border-transparent hover:border-brand-primary' }}" href="{{ url_for('a_propos') }}">À propos</a>
+<a class="text-on-surface-variant hover:text-brand-primary transition-colors duration-200 py-1 border-b-2 {{ 'border-brand-primary text-brand-primary' if request.endpoint == 'contact' else 'border-transparent hover:border-brand-primary' }}" href="{{ url_for('contact') }}">Contact</a>
 </nav>
 {% endif %}
 
@@ -79,10 +80,9 @@ html{scrollbar-width:thin;scrollbar-color:#bdc9c1 #f2f3ff;}
   {% endif %}
   <a class="inline-flex items-center gap-1.5 px-space-md py-2.5 rounded-full border border-outline-variant/40 bg-white hover:bg-surface-container-low text-error font-headline-md text-[14px] font-semibold shadow-sm transition-all" href="{{ url_for('logout') }}"><span class="material-symbols-outlined text-[18px]">logout</span><span class="hidden sm:inline">Déconnexion</span></a>
 {% else %}
-  <a class="inline-flex items-center gap-1 px-2.5 py-2 font-headline-md text-[14px] font-medium transition-colors {{ 'text-brand-primary font-semibold' if request.endpoint == 'contact' else 'text-on-surface-variant hover:text-slate-midnight' }}" href="{{ url_for('contact') }}"><span class="material-symbols-outlined text-[18px]">mail</span><span class="hidden min-[440px]:inline">Contact</span></a>
   <a class="inline-flex items-center gap-1 px-2.5 py-2 font-headline-md text-[14px] font-medium text-on-surface-variant hover:text-slate-midnight transition-colors" href="{{ url_for('login') }}"><span class="material-symbols-outlined text-[18px]">login</span><span class="hidden min-[440px]:inline">Connexion</span></a>
   <a class="hidden xl:inline-flex items-center px-space-md py-2.5 rounded-full border border-outline-variant/40 bg-white hover:bg-surface-container-low text-slate-midnight font-headline-md text-[14px] font-semibold shadow-sm transition-all hover:border-brand-primary/40" href="{{ url_for('register', role='partageur') }}">Devenir Partageur</a>
-  <a class="inline-flex items-center gap-1.5 px-space-md py-2.5 rounded-full bg-brand-primary text-white font-headline-md text-[14px] font-semibold hover:bg-brand-deep shadow-md shadow-brand-primary/20 hover:shadow-lg transition-all transform hover:-translate-y-0.5" href="{{ url_for('register', role='annonceur') }}"><span class="material-symbols-outlined text-[20px]">rocket_launch</span><span class="">Lancer une campagne</span></a>
+  <a class="hidden sm:inline-flex items-center gap-1.5 px-space-md py-2.5 rounded-full bg-brand-primary text-white font-headline-md text-[14px] font-semibold hover:bg-brand-deep shadow-md shadow-brand-primary/20 hover:shadow-lg transition-all transform hover:-translate-y-0.5" href="{{ url_for('register', role='annonceur') }}"><span class="material-symbols-outlined text-[20px]">rocket_launch</span><span class="">Lancer une campagne</span></a>
 {% endif %}
 </div></div></header>
 

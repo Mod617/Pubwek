@@ -633,7 +633,10 @@ class Campaign(db.Model):
     daily_quota_alert_sent = db.Column(db.Boolean, default=False)  # Empêche de spammer les partageurs plusieurs fois le même jour
     quota_atteint_le = db.Column(db.DateTime, nullable=True)  # Instant où le quota du jour a été atteint (départ du délai de grâce) — remis à None à chaque nouveau jour
     quota_prealerte_envoyee = db.Column(db.Boolean, nullable=False, default=False)  # 🆕 [PRÉ-ALERTE] Pré-alerte à ~80 % déjà envoyée aujourd'hui — remis à False chaque nouveau jour
-
+    # 🆕 [PROLONGATION] Notification "durée dépassée, objectif pas atteint"
+    # déjà envoyée à l'annonceur — une seule fois, jamais réinitialisée
+    # (contrairement aux drapeaux journaliers ci-dessus).
+    prolongation_notifiee = db.Column(db.Boolean, nullable=False, default=False)
     total_cost = db.Column(db.Float, nullable=False)
 
     # =========================================================================

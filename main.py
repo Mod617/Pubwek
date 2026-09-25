@@ -5605,6 +5605,31 @@ def enregistrer_clic(share, camp, link_type):
                 "[ANTI-FRAUDE] Clic non rémunéré (%s) — partage=%d campagne=%d ip=%s",
                 motif, share.id, camp.id, ip or "inconnue"
             )
+
+        # 🆕 [PROLONGATION] Si la campagne vient d'entrer en dépassement de
+        # durée sans avoir atteint son objectif, on informe l'annonceur —
+        # une seule fois par campagne (jamais réinitialisé, contrairement
+        # aux drapeaux journaliers du quota).
+        if not camp.prolongation_notifiee and campagne_en_prolongation(camp):
+            camp.prolongation_notifiee = True
+            annonceur = db.session.get(User, camp.user_id)
+            if annonceur:
+                nom_campagne = camp.promotion_detail or camp.promotion_type or f"#{camp.id}"
+                envoyer_notification(
+                    annonceur,
+                    "Diffusion prolongée automatiquement",
+                    (
+                        f"La durée prévue de {camp.duration_days} jour(s) pour votre campagne "
+                        f"« {nom_campagne} » est dépassée, mais l'objectif de "
+                        f"{camp.target_whatsapp_views:,.0f} clics n'est pas encore atteint "
+                        f"({camp.whatsapp_views} pour l'instant). Pour vous garantir le nombre de "
+                        f"clics que vous avez payé, la diffusion continue automatiquement, sans "
+                        f"frais supplémentaire de notre part."
+                    ).replace(",", " "),
+                    category="info",
+                    link=url_for("campagne_partageurs", campaign_id=camp.id),
+                )
+
         db.session.commit()
     except Exception as e:
         logger.error(

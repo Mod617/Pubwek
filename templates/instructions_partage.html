@@ -245,6 +245,40 @@
     </div>
     {% endif %}
 
+    <!-- 🆕 CONFIRMATION DE REPUBLICATION QUOTIDIENNE -->
+    <div class="space-y-space-xs">
+      {% if deja_republie_aujourdhui %}
+        <div class="flex items-center gap-space-xs rounded-xl border border-brand-primary/30 bg-brand-light px-space-sm py-2">
+          <span class="material-symbols-outlined text-[20px] text-brand-deep shrink-0">check_circle</span>
+          <span class="min-w-0">
+            <span class="block font-label-numeric-md text-label-numeric-md font-bold text-slate-midnight">
+              Republication du jour {{ jour_actuel }} confirmée
+            </span>
+            <span class="block font-caption text-caption text-on-surface-variant">
+              Merci ! Votre statut d'aujourd'hui expirera dans 24h : revenez demain pour le republier.
+            </span>
+          </span>
+        </div>
+      {% else %}
+        <div class="flex items-start gap-space-xs rounded-xl border border-amber-rich/30 bg-amber-soft px-space-sm py-space-xs">
+          <span class="material-symbols-outlined text-[18px] text-amber-rich shrink-0">schedule</span>
+          <p class="font-caption text-caption text-secondary">
+            <strong>Important :</strong> un statut WhatsApp disparaît automatiquement au bout de 24 heures.
+            Une seule publication ne suffit pas : pour continuer à générer des clics sur cette campagne,
+            vous devez republier votre statut chaque jour, jusqu'à la fin de la campagne
+            (jour {{ jour_actuel }} / {{ camp.duration_days }} aujourd'hui).
+          </p>
+        </div>
+        <form method="POST" action="{{ url_for('confirmer_republication', share_id=share.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="pw-btn pw-btn-md pw-btn-primary w-full">
+            <span class="material-symbols-outlined text-[18px]">task_alt</span>
+            J'ai republié mon statut aujourd'hui
+          </button>
+        </form>
+      {% endif %}
+    </div>
+
     {% if exiger_preuve_partage %}
     <!-- ETAPE FINALE : preuves (uniquement si l'exigence de preuve est activée) -->
     <div class="pt-space-sm border-t border-outline-variant/30 space-y-space-xs">

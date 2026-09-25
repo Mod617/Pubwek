@@ -255,11 +255,25 @@
                   </span>
                 </div>
 
-                <a href="{{ url_for('instructions_partage', campaign_id=camp.id) }}"
-                   class="pw-btn pw-btn-sm pw-btn-neutral w-full !text-brand-deep">
-                  <span class="material-symbols-outlined text-[18px]">check_circle</span>
-                  Voir les instructions
-                </a>
+                <!-- 🆕 REPUBLICATION QUOTIDIENNE : le bouton reflète l'état réel du jour -->
+                {% if item.a_republie_aujourdhui %}
+                  <a href="{{ url_for('instructions_partage', campaign_id=camp.id) }}"
+                     class="pw-btn pw-btn-sm pw-btn-neutral w-full !text-brand-deep">
+                    <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                    Statut republié aujourd'hui
+                  </a>
+                {% else %}
+                  <div class="flex items-start gap-1 font-caption text-caption font-semibold text-amber-rich">
+                    <span class="material-symbols-outlined text-[14px] shrink-0">schedule</span>
+                    <span>Votre statut d'hier a expiré (24h). Republiez-le aujourd'hui.</span>
+                  </div>
+                  <a href="{{ url_for('instructions_partage', campaign_id=camp.id) }}"
+                     class="pw-btn pw-btn-sm pw-btn-primary w-full">
+                    <span class="material-symbols-outlined text-[18px]">refresh</span>
+                    Republier mon statut aujourd'hui
+                  </a>
+                {% endif %}
+
               {% else %}
                 <form action="{{ url_for('partager_campagne_partageur', campaign_id=camp.id) }}" method="POST">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

@@ -981,6 +981,9 @@ class CampaignShare(db.Model):
     # envoyé à ce partageur pour ce partage. Évite de le notifier plusieurs
     # fois le même jour à chaque passage du job périodique.
     dernier_rappel_republication_le = db.Column(db.Date, nullable=True)
+    # Instant du dernier rappel « votre statut a expiré ». Remplace la colonne
+    # ci-dessus, qui ne gardait que le jour : un seul rappel par expiration.
+    dernier_rappel_expiration_le = db.Column(db.DateTime, nullable=True)
 
     campaign = db.relationship(
         "Campaign",
@@ -1009,6 +1012,25 @@ class CampaignShare(db.Model):
         jours.discard("")
         jours.add(str(jour))
         self.jours_rappel_urgent_envoyes = ",".join(sorted(jours, key=int))
+
+    # Un statut WhatsApp disparaît 24 heures après sa publication.
+    DUREE_STATUT_HEURES = 24
+
+    def derniere_publication(self):
+        """Instant de la dernière publication connue du statut : le partage
+        initial, ou la dernière republication confirmée par le partageur."""
+        instants = [d for d in (self.created_at, self.derniere_republication_le) if d]
+        return max(instants) if instants else None
+
+    def statut_expire_le(self):
+        """Instant où le dernier statut publié disparaît de WhatsApp."""
+        publie = self.derniere_publication()
+        return publie + timedelta(hours=self.DUREE_STATUT_HEURES) if publie else None
+
+    def statut_en_ligne(self, moment=None):
+        """Le dernier statut publié est-il encore visible ?"""
+        expire = self.statut_expire_le()
+        return bool(expire and (moment or datetime.utcnow()) < expire)
 
     def __repr__(self):
         return f"<CampaignShare campaign_id={self.campaign_id} sharer_id={self.sharer_id}>"

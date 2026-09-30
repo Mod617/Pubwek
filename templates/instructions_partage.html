@@ -51,8 +51,8 @@
       </p>
       <div class="pw-card-flat">
         <p id="texteAnnonce" class="font-body-sm text-body-sm text-on-surface" style="white-space: pre-line;">{{ camp.description or camp.promotion_detail or "" }}{% if lien_whatsapp_tracking %}
-📲 Commander sur WhatsApp : {{ lien_whatsapp_tracking }}{% endif %}{% if lien_site_tracking %}
-🌐 Voir le site : {{ lien_site_tracking }}{% endif %}</p>
+Commander sur WhatsApp : {{ lien_whatsapp_tracking }}{% endif %}{% if lien_site_tracking %}
+Voir le site : {{ lien_site_tracking }}{% endif %}</p>
       </div>
       <div class="flex items-center gap-space-xs">
         <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral" onclick="copierTexte()">
@@ -230,7 +230,7 @@
 
       <ol class="list-decimal pl-5 font-caption text-caption text-on-surface-variant space-y-0.5">
         <li>Ouvrez WhatsApp et allez dans l'onglet <strong class="text-slate-midnight">Statuts</strong>.</li>
-        <li>Appuyez sur l'icône <strong class="text-slate-midnight">crayon ✏️</strong> (statut texte).</li>
+        <li>Appuyez sur l'icône <strong class="text-slate-midnight">crayon</strong> (statut texte).</li>
         <li><strong class="text-slate-midnight">Collez</strong> le texte que vous avez copié à l'étape 1.</li>
         <li>Appuyez sur la <strong class="text-slate-midnight">flèche verte</strong> pour publier.</li>
       </ol>
@@ -245,35 +245,41 @@
     </div>
     {% endif %}
 
-    <!-- 🆕 CONFIRMATION DE REPUBLICATION QUOTIDIENNE -->
+    <!-- Republication : un statut WhatsApp disparait 24 heures apres sa publication -->
     <div class="space-y-space-xs">
-      {% if deja_republie_aujourdhui %}
-        <div class="flex items-center gap-space-xs rounded-xl border border-brand-primary/30 bg-brand-light px-space-sm py-2">
+      {% if statut_en_ligne %}
+        <div class="flex items-start gap-space-xs rounded-xl border border-brand-primary/30 bg-brand-light px-space-sm py-2">
           <span class="material-symbols-outlined text-[20px] text-brand-deep shrink-0">check_circle</span>
           <span class="min-w-0">
             <span class="block font-label-numeric-md text-label-numeric-md font-bold text-slate-midnight">
-              Republication du jour {{ jour_actuel }} confirmée
+              Statut visible jusqu'à {{ statut_expire_le | jour_et_heure }}
             </span>
             <span class="block font-caption text-caption text-on-surface-variant">
-              Merci ! Votre statut d'aujourd'hui expirera dans 24h : revenez demain pour le republier.
+              Publié {{ derniere_publication | jour_et_heure }}. Un statut WhatsApp dure 24 heures :
+              nous vous enverrons une notification quand il expirera, pour que vous le republiiez.
             </span>
           </span>
         </div>
+        <form method="POST" action="{{ url_for('confirmer_republication', share_id=share.id) }}" class="text-center">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="font-caption text-caption font-semibold text-brand-deep underline underline-offset-2">
+            Je viens de le republier : repartir de maintenant
+          </button>
+        </form>
       {% else %}
         <div class="flex items-start gap-space-xs rounded-xl border border-amber-rich/30 bg-amber-soft px-space-sm py-space-xs">
           <span class="material-symbols-outlined text-[18px] text-amber-rich shrink-0">schedule</span>
           <p class="font-caption text-caption text-secondary">
-            <strong>Important :</strong> un statut WhatsApp disparaît automatiquement au bout de 24 heures.
-            Une seule publication ne suffit pas : pour continuer à générer des clics sur cette campagne,
-            vous devez republier votre statut chaque jour, jusqu'à la fin de la campagne
-            (jour {{ jour_actuel }} / {{ camp.duration_days }} aujourd'hui).
+            <strong>Votre statut a expiré {{ statut_expire_le | jour_et_heure }}.</strong>
+            Un statut WhatsApp disparaît au bout de 24 heures : republiez-le pour continuer à recevoir
+            des clics sur cette campagne, puis confirmez ci-dessous. Nous vous préviendrons à la prochaine expiration.
           </p>
         </div>
         <form method="POST" action="{{ url_for('confirmer_republication', share_id=share.id) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="pw-btn pw-btn-md pw-btn-primary w-full">
             <span class="material-symbols-outlined text-[18px]">task_alt</span>
-            J'ai republié mon statut aujourd'hui
+            J'ai republié mon statut
           </button>
         </form>
       {% endif %}

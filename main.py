@@ -828,6 +828,19 @@ with app.app_context():
         logger.error("Erreur migration colonne campaign_shares (rappel republication) : %s", e)
 
 
+with app.app_context():
+    from sqlalchemy import text
+    try:
+        db.session.execute(text(
+            "ALTER TABLE campaign_shares ADD COLUMN IF NOT EXISTS dernier_rappel_expiration_le TIMESTAMP"
+        ))
+        db.session.commit()
+        logger.info("Migration campaign_shares.dernier_rappel_expiration_le vérifiée.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Erreur migration colonne campaign_shares (rappel expiration) : %s", e)
+
+
 
 
 
@@ -1552,6 +1565,75 @@ def heure_locale(dt, fmt="%d/%m/%Y %H:%M"):
 
 
 app.jinja_env.filters["heure_locale"] = heure_locale
+
+
+JOURS_FR = ("lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche")
+MOIS_FR = ("janvier", "février", "mars", "avril", "mai", "juin", "juillet",
+           "août", "septembre", "octobre", "novembre", "décembre")
+
+
+def _en_heure_benin(dt):
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=ZoneInfo("UTC"))
+    return dt.astimezone(FUSEAU_BENIN)
+
+
+def _hm(local):
+    return f"{local.hour}h{local.minute:02d}"
+
+
+def heure_courte(dt):
+    """20h12 ou 7h05, à l'heure du Bénin."""
+    if dt is None:
+        return ""
+    return _hm(_en_heure_benin(dt))
+
+
+def il_y_a(dt, maintenant=None):
+    """Date relative à la manière d'une messagerie : « à l'instant »,
+    « il y a 5 minutes », « il y a 3 heures », « hier à 20h12 »,
+    « lundi à 9h05 », « 12 septembre à 20h12 ». Heure du Bénin."""
+    if dt is None:
+        return ""
+    maintenant = maintenant or datetime.utcnow()
+    secondes = (maintenant - dt).total_seconds()
+    if secondes < 60:
+        return "à l'instant"
+    if secondes < 3600:
+        minutes = int(secondes // 60)
+        return f"il y a {minutes} minute{'s' if minutes > 1 else ''}"
+
+    local = _en_heure_benin(dt)
+    jours_ecart = (_en_heure_benin(maintenant).date() - local.date()).days
+    heure = _hm(local)
+    if jours_ecart == 0:
+        heures = int(secondes // 3600)
+        return f"il y a {heures} heure{'s' if heures > 1 else ''}"
+    if jours_ecart == 1:
+        return f"hier à {heure}"
+    if jours_ecart < 7:
+        return f"{JOURS_FR[local.weekday()]} à {heure}"
+    date = f"{local.day} {MOIS_FR[local.month - 1]}"
+    if local.year != _en_heure_benin(maintenant).year:
+        date += f" {local.year}"
+    return f"{date} à {heure}"
+
+
+def jour_et_heure(dt, maintenant=None):
+    """« aujourd'hui à 20h12 », « demain à 20h12 », « hier à 20h12 » ou
+    « le 12/09 à 20h12 ». Sert pour les échéances (passées ou futures)."""
+    if dt is None:
+        return ""
+    local = _en_heure_benin(dt)
+    ecart = (local.date() - _en_heure_benin(maintenant or datetime.utcnow()).date()).days
+    heure = _hm(local)
+    libelle = {0: "aujourd'hui", 1: "demain", -1: "hier"}.get(ecart, local.strftime("le %d/%m"))
+    return f"{libelle} à {heure}"
+
+
+app.jinja_env.filters["il_y_a"] = il_y_a
+app.jinja_env.filters["heure_courte"] = heure_courte
+app.jinja_env.filters["jour_et_heure"] = jour_et_heure
 
 
 
@@ -3635,8 +3717,9 @@ def dashboard_partageur():
         vues_aujourdhui = (camp.views_today or 0) if compteurs_a_jour else 0
         quota_atteint = bool(deja_partagee and compteurs_a_jour and camp.daily_quota_paused)
 
-        # 🆕 Le partageur a-t-il confirmé sa republication du jour, pour cette campagne ?
-        a_republie_aujourdhui = bool(mon_share and mon_share.dernier_jour_republication == jour_reel)
+        # Le dernier statut publié est-il encore visible ? Un statut WhatsApp
+        # disparaît 24 heures après sa publication (voir CampaignShare).
+        statut_en_ligne = bool(mon_share and mon_share.statut_en_ligne())
 
         campagnes_disponibles.append({
             "campaign": camp,
@@ -3652,7 +3735,8 @@ def dashboard_partageur():
             "mes_clics_valides": mes_valides,
             "mes_clics_credites": mes_credites,
             "mes_clics_en_attente": mes_valides - mes_credites,
-            "a_republie_aujourdhui": a_republie_aujourdhui,  # 🆕
+            "statut_en_ligne": statut_en_ligne,
+            "statut_expire_le": mon_share.statut_expire_le() if mon_share else None,
         })
 
     return render_template(
@@ -4256,7 +4340,11 @@ def confirmer_republication(share_id):
         current_user.id, jour_actuel, camp.id
     )
 
-    flash(f"Merci ! Votre republication du jour {jour_actuel} a été enregistrée.", "success")
+    flash(
+        f"Merci, c'est noté. Votre statut restera visible jusqu'à "
+        f"{jour_et_heure(share.statut_expire_le())} : nous vous préviendrons à ce moment-là.",
+        "success",
+    )
     return redirect(url_for("instructions_partage", campaign_id=camp.id))
 
 
@@ -4345,8 +4433,8 @@ def instructions_partage(campaign_id):
     jour_actuel = camp.jour_diffusion_campagne()
     jours_preuves = etats_preuves_partage(share, camp) if config.exiger_preuve_partage else []
 
-    # 🆕 Le partageur a-t-il déjà confirmé sa republication pour aujourd'hui ?
-    deja_republie_aujourdhui = (share.dernier_jour_republication == jour_actuel)
+    # Le dernier statut publié est-il encore visible (moins de 24 heures) ?
+    statut_en_ligne = share.statut_en_ligne()
 
     return render_template(
         "instructions_partage.html",
@@ -4359,7 +4447,9 @@ def instructions_partage(campaign_id):
         jours_preuves=jours_preuves,
         exiger_preuve_partage=config.exiger_preuve_partage,  # 🆕
         recompense_par_clic=recompense_pour(camp, config),  # 🆕 gain rappelé au partageur
-        deja_republie_aujourdhui=deja_republie_aujourdhui,  # 🆕
+        statut_en_ligne=statut_en_ligne,
+        statut_expire_le=share.statut_expire_le(),
+        derniere_publication=share.derniere_publication(),
     )
 
 # ==========================================
@@ -5699,18 +5789,19 @@ def enregistrer_clic(share, camp, link_type):
             camp.prolongation_notifiee = True
             annonceur = db.session.get(User, camp.user_id)
             if annonceur:
-                nom_campagne = camp.promotion_detail or camp.promotion_type or f"#{camp.id}"
+                nom_campagne = html.unescape(camp.promotion_detail or camp.promotion_type or f"#{camp.id}")
+                objectif = f"{camp.target_whatsapp_views:,.0f}".replace(",", " ")
                 envoyer_notification(
                     annonceur,
                     "Diffusion prolongée automatiquement",
                     (
                         f"La durée prévue de {camp.duration_days} jour(s) pour votre campagne "
                         f"« {nom_campagne} » est dépassée, mais l'objectif de "
-                        f"{camp.target_whatsapp_views:,.0f} clics n'est pas encore atteint "
+                        f"{objectif} clics n'est pas encore atteint "
                         f"({camp.whatsapp_views} pour l'instant). Pour vous garantir le nombre de "
                         f"clics que vous avez payé, la diffusion continue automatiquement, sans "
                         f"frais supplémentaire de notre part."
-                    ).replace(",", " "),
+                    ),
                     category="info",
                     link=url_for("campagne_partageurs", campaign_id=camp.id),
                 )
@@ -6181,51 +6272,67 @@ def relancer_rappels_preuves():
 
 
 
-def relancer_rappels_republication():
-    """Parcourt toutes les campagnes actives et rappelle aux partageurs qui
-    n'ont pas encore confirmé leur republication du jour de le faire — un
-    statut WhatsApp expire au bout de 24h, une seule publication ne suffit
-    pas pour toute la durée de la campagne.
+# Heures (heure du Bénin) pendant lesquelles aucun rappel de republication
+# n'est envoyé : un statut qui expire à 2h du matin est signalé à 7h.
+HEURE_DEBUT_RAPPELS = 7
+HEURE_FIN_RAPPELS = 22
 
-    Un seul rappel par partage et par jour calendaire (voir
-    CampaignShare.dernier_rappel_republication_le), pour ne pas spammer à
-    chaque passage du job périodique.
+
+def relancer_rappels_republication(maintenant=None):
+    """Prévient chaque partageur au moment où son statut WhatsApp expire,
+    24 heures après sa dernière publication connue (partage initial ou
+    dernière republication confirmée), pour qu'il le republie.
+
+    Un seul rappel par expiration (dernier_rappel_expiration_le), jamais la
+    nuit, et jamais le jour où le quota de la campagne est atteint : ce
+    jour-là, on vient justement de demander au partageur de retirer son statut.
 
     Doit être appelée dans un contexte d'application.
     """
-    aujourdhui = datetime.utcnow().date()
-    campagnes_actives = Campaign.query.filter_by(is_active=True, paid=True, validated=True).all()
+    maintenant = maintenant or datetime.utcnow()
+    heure_benin = _en_heure_benin(maintenant).hour
+    if not (HEURE_DEBUT_RAPPELS <= heure_benin < HEURE_FIN_RAPPELS):
+        return 0
+
+    campagnes_actives = Campaign.query.filter_by(
+        is_active=True, paid=True, validated=True, shared_to_partageurs=True
+    ).all()
     total_rappels = 0
 
     for camp in campagnes_actives:
-        jour_actuel = camp.jour_diffusion_campagne()
-        shares = CampaignShare.query.filter_by(campaign_id=camp.id).all()
+        if camp.target_whatsapp_views and (camp.whatsapp_views or 0) >= camp.target_whatsapp_views:
+            continue
+        jour_reel = camp.jour_diffusion_campagne(maintenant)
+        if camp.current_day_number == jour_reel and camp.daily_quota_paused:
+            continue
 
-        for share in shares:
-            deja_republie_aujourdhui = (share.dernier_jour_republication == jour_actuel)
-            deja_rappele_aujourdhui = (share.dernier_rappel_republication_le == aujourdhui)
-
-            if deja_republie_aujourdhui or deja_rappele_aujourdhui:
+        nom_campagne = html.unescape(camp.promotion_detail or camp.promotion_type or f"#{camp.id}")
+        for share in CampaignShare.query.filter_by(campaign_id=camp.id).all():
+            expire_le = share.statut_expire_le()
+            if not expire_le or maintenant < expire_le:
+                continue
+            if share.dernier_rappel_expiration_le and share.dernier_rappel_expiration_le >= expire_le:
                 continue
 
             partageur = db.session.get(User, share.sharer_id)
-            if not partageur:
+            if not partageur or partageur.is_disabled:
                 continue
 
-            nom_campagne = camp.promotion_detail or camp.promotion_type or f"#{camp.id}"
             envoyer_notification(
                 partageur,
-                "📲 Republiez votre statut aujourd'hui",
+                "Votre statut WhatsApp a expiré",
                 (
-                    f"Votre statut WhatsApp d'hier pour la campagne « {nom_campagne} » a expiré "
-                    f"(24h). Republiez-le aujourd'hui (jour {jour_actuel}/{camp.duration_days}) "
-                    f"pour continuer à générer des clics et à être payé dessus."
+                    f"Votre statut pour la campagne « {nom_campagne} », publié "
+                    f"{jour_et_heure(share.derniere_publication(), maintenant)}, n'est plus visible "
+                    f"(un statut dure 24 heures). Republiez-le pour continuer à recevoir des clics, "
+                    f"puis confirmez-le sur la page de la campagne."
                 ),
-                category="info",
-                link=url_for("instructions_partage", campaign_id=camp.id),
+                category="warning",
+                # Chemin écrit en dur : url_for() échoue hors requête HTTP.
+                link=f"/partageur/instructions_partage/{camp.id}",
                 push_async=True,
             )
-            share.dernier_rappel_republication_le = aujourdhui
+            share.dernier_rappel_expiration_le = maintenant
             total_rappels += 1
 
     if total_rappels:
@@ -6235,9 +6342,10 @@ def relancer_rappels_republication():
         except Exception as e:
             db.session.rollback()
             logger.error("Erreur envoi rappels republication : %s", e)
+    return total_rappels
 
 
-def lancer_rappels_republication_periodique(application, intervalle_secondes=3600):
+def lancer_rappels_republication_periodique(application, intervalle_secondes=600):
     """Lance un thread qui vérifie, toutes les intervalle_secondes, si des
     partageurs doivent recevoir un rappel de republication quotidienne.
     """

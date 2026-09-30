@@ -255,22 +255,22 @@
                   </span>
                 </div>
 
-                <!-- 🆕 REPUBLICATION QUOTIDIENNE : le bouton reflète l'état réel du jour -->
-                {% if item.a_republie_aujourdhui %}
+                <!-- Republication : le bouton suit l'etat reel du dernier statut publie -->
+                {% if item.statut_en_ligne %}
                   <a href="{{ url_for('instructions_partage', campaign_id=camp.id) }}"
                      class="pw-btn pw-btn-sm pw-btn-neutral w-full !text-brand-deep">
                     <span class="material-symbols-outlined text-[18px]">check_circle</span>
-                    Statut republié aujourd'hui
+                    Statut visible jusqu'à {{ item.statut_expire_le | jour_et_heure }}
                   </a>
                 {% else %}
                   <div class="flex items-start gap-1 font-caption text-caption font-semibold text-amber-rich">
                     <span class="material-symbols-outlined text-[14px] shrink-0">schedule</span>
-                    <span>Votre statut d'hier a expiré (24h). Republiez-le aujourd'hui.</span>
+                    <span>Votre statut a expiré {{ item.statut_expire_le | jour_et_heure }}. Republiez-le.</span>
                   </div>
                   <a href="{{ url_for('instructions_partage', campaign_id=camp.id) }}"
                      class="pw-btn pw-btn-sm pw-btn-primary w-full">
                     <span class="material-symbols-outlined text-[18px]">refresh</span>
-                    Republier mon statut aujourd'hui
+                    Republier mon statut
                   </a>
                 {% endif %}
 

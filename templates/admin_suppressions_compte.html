@@ -1,5 +1,15 @@
 {% extends "base_v2.html" %}
 
+{% macro bouton_supprimer(u) %}
+<form method="POST" action="{{ url_for('supprimer_compte_desactive', user_id=u.id) }}" class="inline"
+      onsubmit="return confirm('Supprimer le compte {{ u.email }} ? Sans activité, il est effacé. Sinon son email et son numéro sont libérés et il devient anonyme, ses paiements restent en base. Irréversible.');">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit" class="inline-flex items-center gap-1 font-caption text-caption font-semibold text-error hover:underline">
+    <span class="material-symbols-outlined text-[16px]">delete_forever</span> Supprimer le compte
+  </button>
+</form>
+{% endmacro %}
+
 {% block content %}
 <section class="py-space-lg bg-background">
 <div class="max-w-6xl mx-auto px-margin space-y-space-sm">
@@ -189,8 +199,13 @@
           <td class="capitalize">{{ demande.demandeur.role if demande.demandeur else "-" }}</td>
           <td class="font-caption text-caption text-on-surface-variant">{{ demande.reason }}</td>
           <td>
-            {% if demande.status == "approved" %}
+            {% if demande.status == "approved" and compte_supprime(demande.demandeur) %}
+              <span class="pw-chip pw-chip-neutral"><span class="material-symbols-outlined text-[14px]">delete_forever</span> Compte supprimé</span>
+            {% elif demande.status == "approved" %}
               <span class="pw-chip pw-chip-danger"><span class="material-symbols-outlined text-[14px]">block</span> Compte désactivé</span>
+              {% if demande.demandeur and demande.demandeur.is_disabled %}
+                <div class="mt-1">{{ bouton_supprimer(demande.demandeur) }}</div>
+              {% endif %}
             {% else %}
               <span class="pw-chip pw-chip-neutral"><span class="material-symbols-outlined text-[14px]">cancel</span> Refusée</span>
             {% endif %}

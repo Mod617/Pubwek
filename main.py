@@ -9,6 +9,7 @@ import uuid
 import uuid as uuidlib
 import random
 import html
+import secrets
 import logging
 import urllib.parse
 import threading
@@ -7875,6 +7876,115 @@ def rejeter_signalement(signalement_id):
     db.session.commit()
     flash("Signalement rejeté, l'annonceur est prévenu.", "success")
     return redirect(url_for("admin_signalements"))
+
+
+# ==========================================
+# SUPPRESSION D'UN COMPTE DÉSACTIVÉ
+#
+# Un compte désactivé bloque son email et son numéro WhatsApp : la personne
+# ne peut ni se reconnecter ni se réinscrire. L'admin le supprime :
+#   - compte sans aucune activité : suppression réelle ;
+#   - sinon : l'email et le numéro sont libérés et le compte devient anonyme,
+#     mais campagnes, paiements et mouvements de portefeuille restent en base
+#     (comptabilité, litiges, FedaPay).
+# ==========================================
+DOMAINE_COMPTES_SUPPRIMES = "compte-supprime.pubwek.invalid"
+
+
+def compte_supprime(user):
+    return bool(user and user.email and user.email.endswith("@" + DOMAINE_COMPTES_SUPPRIMES))
+
+
+app.jinja_env.globals["compte_supprime"] = compte_supprime
+
+
+def activite_du_compte(user):
+    """Ce qui empêche de supprimer réellement ce compte (liste vide : aucun)."""
+    traces = []
+    if Campaign.query.filter_by(user_id=user.id).first():
+        traces.append("campagnes")
+    if CampaignShare.query.filter_by(sharer_id=user.id).first():
+        traces.append("partages")
+    if (Transaction.query.filter_by(user_id=user.id).first()
+            or WalletTransaction.query.filter_by(user_id=user.id).first()
+            or WithdrawalRequest.query.filter_by(user_id=user.id).first()
+            or RefundRequest.query.filter_by(user_id=user.id).first()):
+        traces.append("mouvements d'argent")
+    if abs(user.wallet_balance or 0.0) >= 0.01:
+        traces.append("solde non nul")
+    if DocumentCertification.query.filter_by(user_id=user.id).first():
+        traces.append("documents certifiés")
+    if User.query.filter_by(referrer_id=user.id).first():
+        traces.append("filleuls")
+    return traces
+
+
+def anonymiser_compte(user):
+    """Libère l'email et le numéro WhatsApp, empêche toute connexion.
+    Les données liées restent en place. Ne fait pas de commit."""
+    user.email = f"{user.id}-{secrets.token_hex(4)}@{DOMAINE_COMPTES_SUPPRIMES}"
+    user.whatsapp_number = None
+    user.password_hash = bcrypt.generate_password_hash(secrets.token_urlsafe(32)).decode("utf-8")
+    user.is_disabled = True
+    user.disabled_at = user.disabled_at or datetime.utcnow()
+    PushSubscription.query.filter_by(user_id=user.id).delete()
+
+
+def supprimer_compte_vide(user):
+    """Suppression réelle d'un compte sans activité. Ne fait pas de commit."""
+    ContactMessage.query.filter_by(user_id=user.id).update({"user_id": None})
+    UploadedFile.query.filter_by(owner_id=user.id).delete()
+    PushSubscription.query.filter_by(user_id=user.id).delete()
+    UserSubscription.query.filter_by(user_id=user.id).delete()
+    db.session.delete(user)
+
+
+@app.route("/admin/comptes/<int:user_id>/supprimer", methods=["POST"])
+@login_required
+@limiter.limit("30 per hour")
+def supprimer_compte_desactive(user_id):
+    verifier_droits_admin("gerer_suppressions_compte")
+    retour = redirect(request.referrer or url_for("admin_suppressions_compte"))
+
+    utilisateur = db.session.get(User, user_id)
+    if not utilisateur or compte_supprime(utilisateur):
+        flash("Ce compte n'existe plus.", "warning")
+        return retour
+    if utilisateur.role not in ("annonceur", "partageur"):
+        flash("Impossible de supprimer un compte administrateur.", "danger")
+        return retour
+    if not utilisateur.is_disabled:
+        flash("Désactivez d'abord ce compte : seul un compte désactivé peut être supprimé.", "warning")
+        return retour
+
+    email = utilisateur.email
+    traces = activite_du_compte(utilisateur)
+    if not traces:
+        try:
+            with db.session.begin_nested():
+                supprimer_compte_vide(utilisateur)
+            db.session.commit()
+            logger.warning("[ACTION ADMIN] Compte %s supprimé définitivement par admin id=%d", email, current_user.id)
+            flash(f"Le compte {email} est supprimé. L'adresse et le numéro peuvent servir à une nouvelle inscription.", "success")
+            return retour
+        except Exception as e:
+            db.session.rollback()
+            logger.error("Suppression réelle du compte id=%d impossible, anonymisation : %s", user_id, e)
+            utilisateur = db.session.get(User, user_id)
+            traces = ["données liées"]
+
+    anonymiser_compte(utilisateur)
+    db.session.commit()
+    logger.warning(
+        "[ACTION ADMIN] Compte %s (id=%d) anonymisé par admin id=%d, conservé pour : %s",
+        email, user_id, current_user.id, ", ".join(traces)
+    )
+    flash(
+        f"L'email {email} et son numéro WhatsApp sont libérés : la personne peut se réinscrire. "
+        f"Le compte est conservé sans identité ({', '.join(traces)}).",
+        "success",
+    )
+    return retour
 
 
 # ==========================================

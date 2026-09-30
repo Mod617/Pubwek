@@ -68,6 +68,7 @@ from models import (
     User,
     UserSubscription,
     WalletTransaction,
+    SignalementPartageur,
     WithdrawalRequest,
     ZonePartageur,
     db,
@@ -842,6 +843,29 @@ with app.app_context():
         logger.error("Erreur migration colonne campaign_shares (rappel expiration) : %s", e)
 
 
+# =========================================================================
+# MIGRATION : qualité des clics (plafond par partageur, notes, exclusions)
+# =========================================================================
+with app.app_context():
+    from sqlalchemy import text
+    try:
+        for instruction in (
+            "ALTER TABLE system_config ADD COLUMN IF NOT EXISTS part_max_objectif_par_partageur INTEGER NOT NULL DEFAULT 25",
+            "ALTER TABLE system_config ADD COLUMN IF NOT EXISTS plancher_clics_par_partageur INTEGER NOT NULL DEFAULT 30",
+            "ALTER TABLE system_config ADD COLUMN IF NOT EXISTS delai_campagnes_partageur_en_retrait INTEGER NOT NULL DEFAULT 24",
+            "ALTER TABLE campaign_shares ADD COLUMN IF NOT EXISTS exclu BOOLEAN NOT NULL DEFAULT FALSE",
+            "ALTER TABLE campaign_shares ADD COLUMN IF NOT EXISTS exclu_le TIMESTAMP",
+            "ALTER TABLE campaign_shares ADD COLUMN IF NOT EXISTS note_annonceur VARCHAR(20)",
+            "ALTER TABLE campaign_shares ADD COLUMN IF NOT EXISTS note_annonceur_le TIMESTAMP",
+        ):
+            db.session.execute(text(instruction))
+        db.session.commit()
+        logger.info("Migration qualité des clics vérifiée.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Erreur migration qualité des clics : %s", e)
+
+
 
 
 
@@ -1125,6 +1149,87 @@ def campagne_cible_utilisateur(camp, user):
     if provinces_ciblees:
         return any(province in provinces_ciblees for province, _ in zones)
     return True
+
+
+# Fenêtre pendant laquelle des clics annulés après signalement pèsent sur la
+# réputation d'un partageur.
+JOURS_MEMOIRE_SIGNALEMENT = 60
+
+
+def partageur_en_retrait(user_id):
+    """Le partageur est-il mal noté par les annonceurs ? Si oui, il ne voit
+    les nouvelles campagnes qu'après un délai (SystemConfig).
+
+    Deux cas : au moins deux annonceurs différents l'ont noté « aucun
+    contact » et ses notes négatives l'emportent sur les positives ; ou des
+    clics lui ont été annulés après un signalement récent.
+    """
+    notes = (
+        db.session.query(CampaignShare.note_annonceur, Campaign.user_id)
+        .join(Campaign, Campaign.id == CampaignShare.campaign_id)
+        .filter(CampaignShare.sharer_id == user_id, CampaignShare.note_annonceur.isnot(None))
+        .all()
+    )
+    negatives = [annonceur for note, annonceur in notes if note == "aucun_contact"]
+    positives = sum(1 for note, _ in notes if note == "bons_contacts")
+    if len(set(negatives)) >= 2 and len(negatives) > positives:
+        return True
+
+    limite = datetime.utcnow() - timedelta(days=JOURS_MEMOIRE_SIGNALEMENT)
+    return db.session.query(SignalementPartageur.id).join(
+        CampaignShare, CampaignShare.id == SignalementPartageur.campaign_share_id
+    ).filter(
+        CampaignShare.sharer_id == user_id,
+        SignalementPartageur.statut == "clics_annules",
+        SignalementPartageur.traite_le >= limite,
+    ).first() is not None
+
+
+def annonceurs_qui_excluent(user_id):
+    """Annonceurs dont ce partageur ne voit plus les nouvelles campagnes :
+    ils l'ont noté « aucun contact », ou l'admin l'a exclu de l'une de leurs
+    campagnes après un signalement."""
+    lignes = (
+        db.session.query(Campaign.user_id)
+        .join(CampaignShare, CampaignShare.campaign_id == Campaign.id)
+        .filter(
+            CampaignShare.sharer_id == user_id,
+            db.or_(CampaignShare.note_annonceur == "aucun_contact", CampaignShare.exclu.is_(True)),
+        )
+        .distinct()
+        .all()
+    )
+    return {annonceur_id for (annonceur_id,) in lignes}
+
+
+def contexte_visibilite(user):
+    """Ce qu'il faut savoir une fois par requête pour filtrer les campagnes
+    proposées à un partageur (voir campagne_indisponible_pour)."""
+    config = SystemConfig.get_config()
+    retrait = partageur_en_retrait(user.id)
+    return {
+        "annonceurs_exclus": annonceurs_qui_excluent(user.id),
+        "visible_apres": (
+            datetime.utcnow() - timedelta(hours=config.delai_campagnes_partageur_en_retrait or 0)
+            if retrait else None
+        ),
+    }
+
+
+def campagne_indisponible_pour(camp, user, contexte):
+    """Raison pour laquelle ce partageur ne peut pas prendre cette nouvelle
+    campagne, ou None. Ne concerne que les campagnes pas encore partagées."""
+    if not campagne_cible_utilisateur(camp, user):
+        return "Cette campagne ne cible pas vos zones."
+    if camp.user_id == user.id:
+        return "Vous ne pouvez pas partager votre propre campagne."
+    if camp.user_id in contexte["annonceurs_exclus"]:
+        return "Cet annonceur ne travaille plus avec vous."
+    visible_apres = contexte["visible_apres"]
+    # shared_at est vide pendant la notification de mise à disposition.
+    if visible_apres and (camp.shared_at or datetime.utcnow()) > visible_apres:
+        return "Cette campagne n'est pas encore ouverte à votre compte."
+    return None
 
 
 def zones_du_partageur(user):
@@ -1863,6 +1968,8 @@ def campagne_partageurs(campaign_id):
             CampaignShare.id,
             CampaignShare.sharer_id,
             CampaignShare.created_at,
+            CampaignShare.note_annonceur,
+            CampaignShare.exclu,
             User.pseudo
         )
         .join(User, User.id == CampaignShare.sharer_id)
@@ -1907,16 +2014,30 @@ def campagne_partageurs(campaign_id):
         clics_par_share.setdefault(share_id, {"whatsapp": 0, "website": 0})
         clics_par_share[share_id][link_type] = nb
 
+    # Signalements encore en attente de l'admin, par partage
+    signales = {
+        share_id for (share_id,) in db.session.query(SignalementPartageur.campaign_share_id).filter(
+            SignalementPartageur.campaign_share_id.in_(share_ids),
+            SignalementPartageur.statut == "en_attente",
+        ).all()
+    }
+
     # 3️⃣ Construction de la liste exploitable par le gabarit
     partageurs = []
     for s in shares:
         clics = clics_par_share.get(s.id, {"whatsapp": 0, "website": 0})
+        total = clics["whatsapp"] + clics["website"]
         partageurs.append({
+            "share_id": s.id,
             "pseudo": s.pseudo or "Partageur anonyme",
             "clics_whatsapp": clics["whatsapp"],
             "clics_site": clics["website"],
-            "total_clics": clics["whatsapp"] + clics["website"],
+            "total_clics": total,
+            "part_objectif": round(total * 100 / camp.target_whatsapp_views) if camp.target_whatsapp_views else 0,
             "partage_le": heure_locale(s.created_at) if s.created_at else None,
+            "note": s.note_annonceur,
+            "exclu": s.exclu,
+            "signale": s.id in signales,
         })
 
     # Les partageurs les plus efficaces d'abord
@@ -1944,8 +2065,77 @@ def campagne_partageurs(campaign_id):
         total_clics_whatsapp=total_clics_whatsapp,
         total_clics_site=total_clics_site,
         total_clics_frauduleux=total_clics_frauduleux,
-        en_prolongation=en_prolongation
+        en_prolongation=en_prolongation,
+        notes_annonceur=CampaignShare.NOTES_ANNONCEUR,
     )
+
+
+def _partage_de_mon_annonce(share_id):
+    """Partage d'une campagne de l'annonceur connecté, sinon 404."""
+    if current_user.role != "annonceur":
+        abort(403)
+    share = db.session.get(CampaignShare, share_id)
+    if not share or share.campaign.user_id != current_user.id or not share.campaign.validated:
+        abort(404)
+    return share
+
+
+# ==========================================
+# ROUTE : L'ANNONCEUR NOTE LES CONTACTS REÇUS VIA UN PARTAGEUR
+# « Aucun contact » : ce partageur ne verra plus ses prochaines campagnes.
+# ==========================================
+@app.route("/mes-campagnes/partage/<int:share_id>/noter", methods=["POST"])
+@login_required
+@limiter.limit("60 per hour")
+def noter_partageur(share_id):
+    share = _partage_de_mon_annonce(share_id)
+    note = request.form.get("note")
+    if note not in CampaignShare.NOTES_ANNONCEUR:
+        flash("Note inconnue.", "warning")
+    else:
+        share.note_annonceur = note
+        share.note_annonceur_le = datetime.utcnow()
+        db.session.commit()
+        pseudo = share.sharer.pseudo if share.sharer else "ce partageur"
+        if note == "aucun_contact":
+            flash(f"Noté. {pseudo} ne verra plus vos prochaines campagnes.", "success")
+        else:
+            flash(f"Merci, votre avis sur {pseudo} est enregistré.", "success")
+    return redirect(url_for("campagne_partageurs", campaign_id=share.campaign_id))
+
+
+# ==========================================
+# ROUTE : L'ANNONCEUR SIGNALE UN PARTAGEUR À L'ADMINISTRATION
+# ==========================================
+@app.route("/mes-campagnes/partage/<int:share_id>/signaler", methods=["POST"])
+@login_required
+@limiter.limit("20 per hour")
+def signaler_partageur(share_id):
+    share = _partage_de_mon_annonce(share_id)
+    motif = bleach.clean((request.form.get("motif") or "").strip())[:2000]
+    retour = redirect(url_for("campagne_partageurs", campaign_id=share.campaign_id))
+
+    if len(motif) < 10:
+        flash("Expliquez en quelques mots ce que vous avez constaté.", "warning")
+        return retour
+    if SignalementPartageur.query.filter_by(campaign_share_id=share.id, statut="en_attente").first():
+        flash("Ce partageur est déjà signalé, l'administration examine la situation.", "info")
+        return retour
+
+    db.session.add(SignalementPartageur(campaign_share_id=share.id, annonceur_id=current_user.id, motif=motif))
+    db.session.commit()
+
+    pseudo = share.sharer.pseudo if share.sharer else f"#{share.sharer_id}"
+    notifier_admins_avec_permission(
+        "gerer_signalements",
+        "Partageur signalé",
+        f"{current_user.company_name or current_user.email} signale {pseudo} sur la campagne #{share.campaign_id}.",
+        category="warning",
+        link=url_for("admin_signalements"),
+    )
+    db.session.commit()
+    flash("Signalement envoyé. Si les clics de ce partageur sont annulés, ils seront rendus à votre objectif.", "success")
+    return retour
 
 
 
@@ -3736,14 +3926,16 @@ def dashboard_partageur():
         for share_id, nb_valides, nb_credites in lignes_clics:
             clics_par_share[share_id] = (nb_valides, nb_credites)
 
+    # Notes des annonceurs : exclusions et délai d'accès aux nouvelles campagnes
+    visibilite = contexte_visibilite(current_user)
+
     campagnes_disponibles = []
     for camp in campagnes_query.order_by(Campaign.shared_at.desc()).all():
         # Ciblage geographique : meme regle qu'a la confirmation de partage et
         # qu'au controle d'acces aux medias (campagne_cible_utilisateur).
-        if not campagne_cible_utilisateur(camp, current_user):
-            continue
-
         deja_partagee = camp.id in mes_shares
+        if not deja_partagee and campagne_indisponible_pour(camp, current_user, visibilite):
+            continue
 
         # 🆕 [CLICS PERSO] Compteurs personnels de ce partageur sur cette campagne
         mon_share = mes_shares.get(camp.id)
@@ -3782,6 +3974,7 @@ def dashboard_partageur():
             "mes_clics_credites": mes_credites,
             "mes_clics_en_attente": mes_valides - mes_credites,
             "statut_en_ligne": statut_en_ligne,
+            "exclu": bool(mon_share and mon_share.exclu),
             "statut_expire_le": mon_share.statut_expire_le() if mon_share else None,
         })
 
@@ -4074,15 +4267,19 @@ def admin_settings():
             ref_rate = float(request.form.get("referral_reward_rate", 3.0))
             ref_partageur_fixe = float(request.form.get("referral_reward_partageur_fixe", 200.0))  # 🆕
             min_withdrawal = float(request.form.get("minimum_withdrawal_amount", 500.0))
+            part_max = int(float(request.form.get("part_max_objectif_par_partageur", 25)))
+            plancher = int(float(request.form.get("plancher_clics_par_partageur", 30)))
+            delai_retrait = int(float(request.form.get("delai_campagnes_partageur_en_retrait", 24)))
 
             # Validations de sécurité de base
-            valeurs_a_verifier = [cost_video, cost_photo, cost_text, reward_video, reward_photo, reward_text, comm_rate, ref_rate, ref_partageur_fixe, min_withdrawal]
+            valeurs_a_verifier = [cost_video, cost_photo, cost_text, reward_video, reward_photo, reward_text, comm_rate, ref_rate, ref_partageur_fixe, min_withdrawal,
+                                  part_max, plancher, delai_retrait]
             if any(v < 0 for v in valeurs_a_verifier):
                 flash("Les valeurs ne peuvent pas être négatives", "danger")
                 return redirect(url_for("admin_settings"))
 
-            if comm_rate > 100 or ref_rate > 100:
-                flash("Les taux de commission ou de parrainage ne peuvent pas dépasser 100%", "danger")
+            if comm_rate > 100 or ref_rate > 100 or part_max > 100:
+                flash("Les pourcentages ne peuvent pas dépasser 100 %.", "danger")
                 return redirect(url_for("admin_settings"))
 
             # 🆕 Sécurité métier : la récompense du partageur ne doit jamais dépasser
@@ -4102,6 +4299,9 @@ def admin_settings():
             config.referral_reward_rate = ref_rate
             config.referral_reward_partageur_fixe = ref_partageur_fixe  # 🆕
             config.minimum_withdrawal_amount = min_withdrawal
+            config.part_max_objectif_par_partageur = part_max
+            config.plancher_clics_par_partageur = plancher
+            config.delai_campagnes_partageur_en_retrait = delai_retrait
 
             db.session.commit()
             flash("Configurations mises à jour avec succès !", "success")
@@ -4368,16 +4568,17 @@ def partager_campagne_partageur(campaign_id):
         flash("Cette campagne n'est plus disponible au partage.", "warning")
         return redirect(url_for("dashboard_partageur"))
 
-    # Vérification de zone (sécurité : empêche de forcer l'URL d'une campagne
-    # qui ne cible pas la zone du partageur)
-    if not campagne_cible_utilisateur(camp, current_user):
-        flash("Cette campagne ne cible pas votre zone.", "danger")
-        return redirect(url_for("dashboard_partageur"))
-
     # Vérifie si déjà partagée par ce partageur (une seule fois autorisée)
     existing_share = CampaignShare.query.filter_by(campaign_id=camp.id, sharer_id=current_user.id).first()
     if existing_share:
         return redirect(url_for("instructions_partage", campaign_id=camp.id))
+
+    # Zones, exclusions, délai des partageurs mal notés : empêche de forcer
+    # l'URL d'une campagne qui n'est pas proposée à ce partageur.
+    raison = campagne_indisponible_pour(camp, current_user, contexte_visibilite(current_user))
+    if raison:
+        flash(raison, "danger")
+        return redirect(url_for("dashboard_partageur"))
 
     new_share = CampaignShare(campaign_id=camp.id, sharer_id=current_user.id)
     try:
@@ -4767,7 +4968,12 @@ def partager_campagne_admin(campaign_id):
     # Sinon : provinces == "Toutes" et aucune commune précisée -> tous les partageurs confirmés
     query = filtrer_partageurs_par_zone(query, provinces_ciblees, communes_ciblees)
 
-    partageurs_cibles = query.all()
+    # Les partageurs à qui la campagne n'est pas (encore) ouverte ne sont pas
+    # prévenus : exclus par cet annonceur, ou mal notés (ils la verront plus tard).
+    partageurs_cibles = [
+        p for p in query.all()
+        if not campagne_indisponible_pour(camp, p, contexte_visibilite(p))
+    ]
 
     if not partageurs_cibles:
         flash(f"Aucun partageur trouvé dans les zones ciblées pour la campagne #{camp.id}.", "warning")
@@ -5517,6 +5723,9 @@ MOTIF_DOUBLON_IP       = "doublon_ip"
 MOTIF_RAFALE           = "rafale"
 MOTIF_PLAFOND_PARTAGE  = "plafond_partage"
 MOTIF_PLAFOND_IP       = "plafond_ip"
+MOTIF_EXCLU            = "partageur_exclu"
+MOTIF_PLAFOND_OBJECTIF = "plafond_objectif"
+MOTIF_ANNULE           = "annule_signalement"
 
 # =========================================================================
 # 🆕 LIBELLÉS LISIBLES DES MOTIFS DE REJET ANTI-FRAUDE
@@ -5569,6 +5778,21 @@ def est_robot(user_agent):
     return any(signature in ua for signature in SIGNATURES_ROBOTS)
 
 
+def plafond_clics_partageur(camp, config):
+    """Nombre maximal de clics payés qu'un seul partageur peut obtenir sur
+    cette campagne, ou None s'il n'y a pas de limite."""
+    pourcentage = config.part_max_objectif_par_partageur or 0
+    objectif = camp.target_whatsapp_views or 0
+    if pourcentage <= 0 or not objectif:
+        return None
+    part = math.ceil(objectif * pourcentage / 100)
+    # Avec peu de partageurs, la limite s'élargit pour que l'objectif reste
+    # atteignable : chacun peut toujours prendre sa part égale de l'objectif.
+    nb_partageurs = CampaignShare.query.filter_by(campaign_id=camp.id, exclu=False).count()
+    part_egale = math.ceil(objectif / nb_partageurs) if nb_partageurs else objectif
+    return max(part, part_egale, config.plancher_clics_par_partageur or 0)
+
+
 def evaluer_clic(share, camp, ip, user_agent, config, maintenant=None):
     """Ce clic doit-il être rémunéré ? Retourne (payable, motif_de_refus).
 
@@ -5580,6 +5804,10 @@ def evaluer_clic(share, camp, ip, user_agent, config, maintenant=None):
     # 1. La campagne doit être en cours de diffusion
     if not (camp.is_active and camp.paid and camp.validated):
         return False, MOTIF_CAMPAGNE_INACTIVE
+
+    # 1 bis. Partageur écarté de cette campagne après un signalement
+    if share.exclu:
+        return False, MOTIF_EXCLU
 
     # 2. Écarter les automates (aperçus de lien, robots d'indexation, scripts)
     if est_robot(user_agent):
@@ -5651,6 +5879,21 @@ def evaluer_clic(share, camp, ip, user_agent, config, maintenant=None):
         )
         if payes_partage >= plafond_partage:
             return False, MOTIF_PLAFOND_PARTAGE
+
+    # 8 bis. Part maximale de l'objectif pour un seul partageur : au-delà,
+    #    les clics reviennent aux autres partageurs de la campagne.
+    plafond_objectif = plafond_clics_partageur(camp, config)
+    if plafond_objectif:
+        payes_total = (
+            CampaignClick.query
+            .filter(
+                CampaignClick.campaign_share_id == share.id,
+                CampaignClick.is_paid.is_(True),
+            )
+            .count()
+        )
+        if payes_total >= plafond_objectif:
+            return False, MOTIF_PLAFOND_OBJECTIF
 
     # 9. Plafond par adresse IP, toutes campagnes confondues : borne une
     #    machine qui ferait le tour de toutes les campagnes disponibles.
@@ -5854,7 +6097,8 @@ def enregistrer_clic(share, camp, link_type):
             camp.daily_quota_paused = True
             if not camp.daily_quota_alert_sent:
                 _notifier_partageurs_quota_atteint(camp)
-        elif motif in (MOTIF_AUTO_CLIC, MOTIF_PLAFOND_PARTAGE, MOTIF_PLAFOND_IP):
+        elif motif in (MOTIF_AUTO_CLIC, MOTIF_PLAFOND_PARTAGE, MOTIF_PLAFOND_IP,
+                       MOTIF_PLAFOND_OBJECTIF, MOTIF_EXCLU):
             # Motifs qui traduisent un comportement anormal, pas un simple
             # doublon : on les journalise pour pouvoir enquêter.
             logger.warning(
@@ -6388,7 +6632,7 @@ def relancer_rappels_republication(maintenant=None):
             continue
 
         nom_campagne = html.unescape(camp.promotion_detail or camp.promotion_type or f"#{camp.id}")
-        for share in CampaignShare.query.filter_by(campaign_id=camp.id).all():
+        for share in CampaignShare.query.filter_by(campaign_id=camp.id, exclu=False).all():
             expire_le = share.statut_expire_le()
             if not expire_le or maintenant < expire_le:
                 continue
@@ -6929,6 +7173,7 @@ PERMISSIONS_DISPONIBLES = {
     "configurer_tarifs": "Configurer les tarifs et commissions",
     "gerer_suppressions_compte": "Traiter les demandes de suppression de compte",
     "gerer_contacts": "Consulter et traiter les messages de contact",  # 🆕
+    "gerer_signalements": "Traiter les signalements de partageurs par les annonceurs",
 }
 
 
@@ -7423,6 +7668,213 @@ def supprimer_notifications_lues():
     Notification.query.filter_by(user_id=current_user.id, is_read=True).delete()
     db.session.commit()
     return jsonify({"success": True, "non_lues": _non_lues()})
+
+
+# ==========================================
+# SIGNALEMENTS DE PARTAGEURS PAR LES ANNONCEURS
+# ==========================================
+def annuler_clics_partage(share, reprendre_gains):
+    """Annule tous les clics payés d'un partage : ils ne sont plus payés et
+    sont rendus à l'objectif de la campagne, qui reprend si elle s'était
+    terminée grâce à eux. Si reprendre_gains, les gains déjà versés au
+    portefeuille du partageur sont repris (le solde peut devenir négatif ;
+    il se comble avec ses gains suivants et bloque les retraits d'ici là).
+
+    Ne fait pas de commit. Retourne (clics_annules, montant_repris).
+    """
+    camp = share.campaign
+    clics = CampaignClick.query.filter_by(campaign_share_id=share.id, is_paid=True).all()
+    if not clics:
+        return 0, 0.0
+
+    jour_compteur = camp.current_day_number
+    credites = [c for c in clics if c.rewarded_at]
+    for c in clics:
+        c.is_paid = False
+        c.rejection_reason = MOTIF_ANNULE
+
+    camp.whatsapp_views = max(0, (camp.whatsapp_views or 0) - len(clics))
+    du_jour = sum(1 for c in clics if c.day_number == jour_compteur)
+    camp.views_today = max(0, (camp.views_today or 0) - du_jour)
+    if camp.daily_quota_paused and not camp.quota_du_jour_atteint():
+        camp.daily_quota_paused = False
+
+    # Terminée grâce à ces clics : la diffusion reprend pour les clics rendus
+    if (camp.status == "terminee" and camp.paid and camp.validated
+            and camp.target_whatsapp_views and camp.whatsapp_views < camp.target_whatsapp_views):
+        camp.is_active = True
+        camp.status = "active"
+
+    montant = 0.0
+    if reprendre_gains and credites:
+        montant = round(recompense_pour(camp, SystemConfig.get_config()) * len(credites), 2)
+        partageur = db.session.get(User, share.sharer_id)
+        if partageur and montant > 0:
+            partageur.wallet_balance = round((partageur.wallet_balance or 0.0) - montant, 2)
+            db.session.add(WalletTransaction(
+                user_id=partageur.id,
+                amount=-montant,
+                balance_after=partageur.wallet_balance,
+                transaction_type="click_reward_cancelled",
+                description=f"{len(credites)} clic(s) annulé(s) sur la campagne #{camp.id} après signalement",
+            ))
+    return len(clics), montant
+
+
+def _signalement_en_attente(signalement_id):
+    signalement = (
+        db.session.query(SignalementPartageur)
+        .filter_by(id=signalement_id)
+        .with_for_update()
+        .first()
+    )
+    if not signalement:
+        flash("Signalement introuvable.", "danger")
+        return None
+    if signalement.statut != "en_attente":
+        flash("Ce signalement a déjà été traité.", "warning")
+        return None
+    return signalement
+
+
+@app.route("/admin/signalements")
+@login_required
+def admin_signalements():
+    verifier_droits_admin("gerer_signalements")
+    config = SystemConfig.get_config()
+
+    signalements = SignalementPartageur.query.order_by(SignalementPartageur.created_at.desc()).limit(200).all()
+    en_attente = [s for s in signalements if s.statut == "en_attente"]
+    traites = [s for s in signalements if s.statut != "en_attente"]
+
+    # Chiffres utiles à la décision, pour chaque signalement en attente
+    details = {}
+    for sig in en_attente:
+        share = sig.share
+        payes = CampaignClick.query.filter_by(campaign_share_id=share.id, is_paid=True)
+        nb_payes = payes.count()
+        notes = (
+            db.session.query(CampaignShare.note_annonceur, func.count(CampaignShare.id))
+            .filter(CampaignShare.sharer_id == share.sharer_id, CampaignShare.note_annonceur.isnot(None))
+            .group_by(CampaignShare.note_annonceur)
+            .all()
+        )
+        details[sig.id] = {
+            "clics_payes": nb_payes,
+            "clics_credites": payes.filter(CampaignClick.rewarded_at.isnot(None)).count(),
+            "part_objectif": round(nb_payes * 100 / share.campaign.target_whatsapp_views)
+                             if share.campaign.target_whatsapp_views else 0,
+            "gain_par_clic": recompense_pour(share.campaign, config),
+            "notes": {CampaignShare.NOTES_ANNONCEUR.get(n, n): nb for n, nb in notes},
+            "autres_signalements": SignalementPartageur.query.join(
+                CampaignShare, CampaignShare.id == SignalementPartageur.campaign_share_id
+            ).filter(
+                CampaignShare.sharer_id == share.sharer_id, SignalementPartageur.id != sig.id
+            ).count(),
+            "en_retrait": partageur_en_retrait(share.sharer_id),
+        }
+
+    return render_template(
+        "admin_signalements.html",
+        en_attente=en_attente,
+        traites=traites,
+        details=details,
+    )
+
+
+@app.route("/admin/signalements/<int:signalement_id>/annuler", methods=["POST"])
+@login_required
+@limiter.limit("60 per hour")
+def annuler_clics_signalement(signalement_id):
+    verifier_droits_admin("gerer_signalements")
+    signalement = _signalement_en_attente(signalement_id)
+    if not signalement:
+        return redirect(url_for("admin_signalements"))
+
+    share = signalement.share
+    camp = share.campaign
+    reprendre = request.form.get("reprendre_gains") == "1"
+    exclure = request.form.get("exclure") == "1"
+    note = bleach.clean((request.form.get("note_admin") or "").strip())[:2000]
+
+    nb, montant = annuler_clics_partage(share, reprendre)
+    if exclure:
+        share.exclu = True
+        share.exclu_le = datetime.utcnow()
+
+    signalement.statut = "clics_annules"
+    signalement.clics_annules = nb
+    signalement.montant_repris = montant
+    signalement.note_admin = note or None
+    signalement.traite_par_admin_id = current_user.id
+    signalement.traite_le = datetime.utcnow()
+
+    nom_campagne = html.unescape(camp.promotion_detail or camp.promotion_type or f"#{camp.id}")
+    annonceur = db.session.get(User, camp.user_id)
+    if annonceur:
+        envoyer_notification(
+            annonceur,
+            "Signalement traité : clics annulés",
+            f"{nb} clic(s) du partageur signalé sur « {nom_campagne} » ont été annulés. "
+            f"Ils ne vous sont pas facturés et la diffusion continue jusqu'à votre objectif.",
+            category="success",
+            link=url_for("campagne_partageurs", campaign_id=camp.id),
+        )
+    partageur = db.session.get(User, share.sharer_id)
+    if partageur:
+        message = (
+            f"Après vérification d'un signalement de l'annonceur, vos {nb} clic(s) sur la campagne "
+            f"« {nom_campagne} » ont été annulés : ils ne reflétaient pas de vrais clients intéressés."
+        )
+        if montant:
+            message += f" {montant:,.0f} FCFA déjà versés ont été repris sur votre solde.".replace(",", " ")
+        if exclure:
+            message += " Vous ne pouvez plus partager cette campagne."
+        if note:
+            message += f" Motif : {note}"
+        envoyer_notification(partageur, "Clics annulés sur une campagne", message, category="danger",
+                             link=url_for("dashboard_partageur"))
+
+    db.session.commit()
+    logger.warning(
+        "[SIGNALEMENT] #%d : %d clic(s) annulé(s), %.0f FCFA repris, exclu=%s, partage=%d, admin=%d",
+        signalement.id, nb, montant, exclure, share.id, current_user.id
+    )
+    flash(f"{nb} clic(s) annulé(s) et rendus à l'objectif de la campagne.", "success")
+    return redirect(url_for("admin_signalements"))
+
+
+@app.route("/admin/signalements/<int:signalement_id>/rejeter", methods=["POST"])
+@login_required
+@limiter.limit("60 per hour")
+def rejeter_signalement(signalement_id):
+    verifier_droits_admin("gerer_signalements")
+    signalement = _signalement_en_attente(signalement_id)
+    if not signalement:
+        return redirect(url_for("admin_signalements"))
+
+    note = bleach.clean((request.form.get("note_admin") or "").strip())[:2000]
+    if not note:
+        flash("Indiquez à l'annonceur pourquoi le signalement est rejeté.", "warning")
+        return redirect(url_for("admin_signalements"))
+
+    signalement.statut = "rejete"
+    signalement.note_admin = note
+    signalement.traite_par_admin_id = current_user.id
+    signalement.traite_le = datetime.utcnow()
+
+    annonceur = db.session.get(User, signalement.annonceur_id)
+    if annonceur:
+        envoyer_notification(
+            annonceur,
+            "Signalement examiné",
+            f"Après vérification, les clics du partageur signalé sont maintenus. {note}",
+            category="info",
+            link=url_for("campagne_partageurs", campaign_id=signalement.share.campaign_id),
+        )
+    db.session.commit()
+    flash("Signalement rejeté, l'annonceur est prévenu.", "success")
+    return redirect(url_for("admin_signalements"))
 
 
 # ==========================================

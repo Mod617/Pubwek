@@ -221,7 +221,12 @@
                 </div>
 
                 <!-- Republication : le bouton suit l'etat reel du dernier statut publie -->
-                {% if item.statut_en_ligne %}
+                {% if item.exclu %}
+                  <p class="flex items-start gap-1 font-caption text-caption font-semibold text-error">
+                    <span class="material-symbols-outlined text-[14px] shrink-0">block</span>
+                    <span>Vous avez été retiré de cette campagne après un signalement de l'annonceur. Retirez votre statut.</span>
+                  </p>
+                {% elif item.statut_en_ligne %}
                   <a href="{{ url_for('instructions_partage', campaign_id=camp.id) }}"
                      class="pw-btn pw-btn-sm pw-btn-neutral w-full !text-brand-deep">
                     <span class="material-symbols-outlined text-[18px]">check_circle</span>

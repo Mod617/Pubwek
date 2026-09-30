@@ -293,6 +293,7 @@
                     {% elif m.transaction_type == "withdrawal" %}Retrait
                     {% elif m.transaction_type == "withdrawal_refund" %}Retrait recrédité
                     {% elif m.transaction_type == "refund_credit" %}Remboursement campagne
+                    {% elif m.transaction_type == "click_reward_cancelled" %}Clics annulés
                     {% elif m.transaction_type == "campaign_payment" %}Paiement campagne
                     {% else %}{{ m.transaction_type }}{% endif %}
                 </td>

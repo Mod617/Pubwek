@@ -152,6 +152,25 @@
                  "Solde minimum requis pour qu'un partageur puisse demander un retrait.",
                  pas="1") }}
       </div>
+
+      <!-- Qualite des clics -->
+      <div class="space-y-space-sm">
+        <h3 class="pb-1 border-b border-outline-variant/40 font-label-caps text-label-caps uppercase tracking-wider text-on-surface-variant font-bold">
+          Qualité des clics
+        </h3>
+        {{ champ("part_max_objectif_par_partageur", "part_max_objectif_par_partageur", "Part maximale par partageur",
+                 config.part_max_objectif_par_partageur, "group", "% de l'objectif",
+                 "Au-delà, les clics d'un partageur ne sont ni payés ni comptés et reviennent aux autres. La limite s'élargit quand la campagne a peu de partageurs, pour que l'objectif reste atteignable. 0 : aucune limite.",
+                 pas="1", maxi=100) }}
+        {{ champ("plancher_clics_par_partageur", "plancher_clics_par_partageur", "Limite minimale par partageur",
+                 config.plancher_clics_par_partageur, "speed", "clics",
+                 "Sur une petite campagne, un partageur peut toujours obtenir au moins ce nombre de clics.",
+                 pas="1") }}
+        {{ champ("delai_campagnes_partageur_en_retrait", "delai_campagnes_partageur_en_retrait", "Délai pour les partageurs mal notés",
+                 config.delai_campagnes_partageur_en_retrait, "hourglass_top", "heures",
+                 "Un partageur noté « Aucun contact » par au moins deux annonceurs, ou dont les clics ont été annulés dans les 60 derniers jours, ne voit les nouvelles campagnes qu'après ce délai.",
+                 pas="1") }}
+      </div>
     </div>
 
     <div class="flex justify-end gap-space-xs pt-space-sm border-t border-outline-variant/30">

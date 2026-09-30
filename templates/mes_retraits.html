@@ -194,6 +194,8 @@
               <span class="pw-chip pw-chip-warning"><span class="material-symbols-outlined text-[14px]">restore</span> Retrait recrédité</span>
             {% elif m.transaction_type == "refund_credit" %}
               <span class="pw-chip pw-chip-warning"><span class="material-symbols-outlined text-[14px]">savings</span> Remboursement campagne</span>
+            {% elif m.transaction_type == "click_reward_cancelled" %}
+              <span class="pw-chip pw-chip-danger"><span class="material-symbols-outlined text-[14px]">block</span> Clics annulés</span>
             {% elif m.transaction_type == "campaign_payment" %}
               <span class="pw-chip pw-chip-neutral"><span class="material-symbols-outlined text-[14px]">campaign</span> Paiement campagne</span>
             {% else %}

@@ -1,0 +1,196 @@
+{% extends "base_v2.html" %}
+
+{% block content %}
+<section class="py-space-lg bg-background">
+<div class="max-w-6xl mx-auto px-margin space-y-space-sm">
+
+  <!-- En-tete -->
+  <div class="flex flex-wrap items-end justify-between gap-space-sm">
+    <div class="min-w-0">
+      <span class="pw-badge bg-amber-soft text-amber-rich">Administration</span>
+      <h1 class="mt-1 font-headline-md text-headline-md text-slate-night">Partageurs signalés</h1>
+      <p class="font-caption text-caption text-on-surface-variant">
+        Un annonceur estime que les clics d'un partageur ne lui amènent pas de vrais clients.
+      </p>
+    </div>
+    <a href="{{ url_for('admin_validate') }}" class="pw-btn pw-btn-sm pw-btn-neutral">
+      <span class="material-symbols-outlined text-[18px]">arrow_back</span> Panneau d'administration
+    </a>
+  </div>
+
+  <!-- ================= EN ATTENTE ================= -->
+  <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
+    En attente
+    <span class="pw-chip {{ 'pw-chip-warning' if en_attente else 'pw-chip-neutral' }}">{{ en_attente|length }}</span>
+  </h2>
+
+  {% if en_attente %}
+  <div class="grid grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-space-sm">
+    {% for sig in en_attente %}
+    {% set d = details[sig.id] %}
+    {% set share = sig.share %}
+    <div class="pw-tile flex flex-col">
+      <div class="flex items-start justify-between gap-space-xs">
+        <h3 class="font-headline-md text-body-md font-bold text-slate-midnight min-w-0 truncate">
+          {{ share.sharer.pseudo if share.sharer else "Partageur supprimé" }}
+        </h3>
+        {% if d.en_retrait %}<span class="pw-chip pw-chip-danger shrink-0">Déjà mal noté</span>{% endif %}
+      </div>
+      <p class="font-caption text-caption text-on-surface-variant">
+        Campagne #{{ share.campaign_id }} · {{ share.campaign.promotion_detail or share.campaign.promotion_type }}
+      </p>
+
+      <dl class="mt-1 grid grid-cols-2 gap-x-space-sm gap-y-0.5 font-caption text-caption text-on-surface-variant">
+        <dt>Clics payés</dt><dd class="text-right font-semibold text-slate-midnight">{{ d.clics_payes }} ({{ d.part_objectif }} % de l'objectif)</dd>
+        <dt>Déjà crédités</dt><dd class="text-right font-semibold text-slate-midnight">{{ d.clics_credites }} · {{ "{:,.0f}".format(d.clics_credites * d.gain_par_clic).replace(",", " ") }} FCFA</dd>
+        <dt>Autres signalements</dt><dd class="text-right font-semibold text-slate-midnight">{{ d.autres_signalements }}</dd>
+        <dt>Notes reçues</dt>
+        <dd class="text-right font-semibold text-slate-midnight">
+          {% for libelle, nb in d.notes.items() %}{{ libelle }} : {{ nb }}{{ "" if loop.last else " · " }}{% else %}Aucune{% endfor %}
+        </dd>
+      </dl>
+
+      <div class="mt-1.5 pw-card-flat">
+        <p class="font-label-caps text-label-caps uppercase tracking-wider text-on-surface-variant font-bold">
+          {{ sig.annonceur.company_name or sig.annonceur.email if sig.annonceur else "Annonceur" }} a constaté
+        </p>
+        <p class="mt-0.5 font-body-sm text-body-sm text-on-surface">{{ sig.motif }}</p>
+      </div>
+
+      <p class="mt-1 flex items-center gap-1 font-caption text-caption text-on-surface-variant">
+        <span class="material-symbols-outlined text-[14px]">schedule</span>
+        Signalé {{ sig.created_at | il_y_a }}
+      </p>
+
+      <div class="mt-auto pt-space-xs flex flex-wrap gap-space-2xs">
+        <button type="button" class="pw-btn pw-btn-sm pw-btn-danger flex-1 min-w-[11rem]" data-pw-modal="annulerModal{{ sig.id }}">
+          <span class="material-symbols-outlined text-[18px]">block</span> Annuler ses clics
+        </button>
+        <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral flex-1 min-w-[11rem]" data-pw-modal="rejeterModal{{ sig.id }}">
+          <span class="material-symbols-outlined text-[18px]">cancel</span> Rejeter
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Fenetres par signalement -->
+  {% for sig in en_attente %}
+  {% set d = details[sig.id] %}
+  <div class="pw-modal fixed inset-0 z-[90] hidden items-center justify-center p-space-md bg-slate-night/80 overflow-y-auto"
+       id="annulerModal{{ sig.id }}" aria-modal="true" role="dialog">
+    <div class="pw-modal-panel w-full max-w-lg my-auto rounded-2xl bg-surface-container-lowest shadow-2xl overflow-hidden">
+      <form action="{{ url_for('annuler_clics_signalement', signalement_id=sig.id) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="pw-modal-head bg-error text-white">
+          <span>Annuler les clics de {{ sig.share.sharer.pseudo if sig.share.sharer else "ce partageur" }}</span>
+          <button type="button" class="pw-modal-close opacity-70 hover:opacity-100" aria-label="Fermer">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+        <div class="pw-modal-body">
+          <p class="font-caption text-caption text-on-surface-variant">
+            Ses <strong class="text-slate-midnight">{{ d.clics_payes }} clics payés</strong> sur cette campagne ne seront plus
+            comptés : ils sont rendus à l'objectif de l'annonceur et la diffusion reprend si elle était terminée.
+            Le partageur et l'annonceur sont prévenus.
+          </p>
+          <label class="flex items-start gap-space-xs font-body-sm text-body-sm text-on-surface">
+            <input type="checkbox" name="reprendre_gains" value="1" class="mt-1" {{ 'checked' if d.clics_credites }}>
+            <span>Reprendre les gains déjà versés ({{ "{:,.0f}".format(d.clics_credites * d.gain_par_clic).replace(",", " ") }} FCFA).
+              <span class="block font-caption text-caption text-on-surface-variant">Son solde peut devenir négatif : ses gains suivants le comblent et il ne peut pas retirer d'ici là.</span></span>
+          </label>
+          <label class="flex items-start gap-space-xs font-body-sm text-body-sm text-on-surface">
+            <input type="checkbox" name="exclure" value="1" class="mt-1" checked>
+            <span>Le retirer de cette campagne.
+              <span class="block font-caption text-caption text-on-surface-variant">Ses clics suivants ne seront ni payés ni comptés, et il ne verra plus les campagnes de cet annonceur.</span></span>
+          </label>
+          <div>
+            <label class="pw-label" for="noteAnnuler{{ sig.id }}">Motif transmis au partageur (facultatif)</label>
+            <textarea name="note_admin" id="noteAnnuler{{ sig.id }}" class="pw-input resize-y" rows="2"
+                      placeholder="Exemple : clics venant de contacts sollicités, sans intérêt pour l'offre."></textarea>
+          </div>
+        </div>
+        <div class="pw-modal-foot">
+          <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral pw-modal-close">Fermer</button>
+          <button type="submit" class="pw-btn pw-btn-sm pw-btn-danger">Confirmer l'annulation</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="pw-modal fixed inset-0 z-[90] hidden items-center justify-center p-space-md bg-slate-night/80 overflow-y-auto"
+       id="rejeterModal{{ sig.id }}" aria-modal="true" role="dialog">
+    <div class="pw-modal-panel w-full max-w-lg my-auto rounded-2xl bg-surface-container-lowest shadow-2xl overflow-hidden">
+      <form action="{{ url_for('rejeter_signalement', signalement_id=sig.id) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="pw-modal-head bg-slate-night text-white">
+          <span>Rejeter le signalement</span>
+          <button type="button" class="pw-modal-close opacity-70 hover:opacity-100" aria-label="Fermer">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+        <div class="pw-modal-body">
+          <p class="font-caption text-caption text-on-surface-variant">Les clics restent comptés et payés. L'annonceur reçoit votre explication.</p>
+          <div>
+            <label class="pw-label" for="noteRejeter{{ sig.id }}">Explication pour l'annonceur <span class="text-error">*</span></label>
+            <textarea name="note_admin" id="noteRejeter{{ sig.id }}" class="pw-input resize-y" rows="2" required
+                      placeholder="Exemple : clics répartis sur toute la journée, depuis des appareils différents."></textarea>
+          </div>
+        </div>
+        <div class="pw-modal-foot">
+          <button type="button" class="pw-btn pw-btn-sm pw-btn-neutral pw-modal-close">Fermer</button>
+          <button type="submit" class="pw-btn pw-btn-sm bg-slate-night text-white hover:opacity-90">Confirmer le rejet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% else %}
+  <div class="pw-card !p-space-lg text-center">
+    <span class="material-symbols-outlined text-[36px] text-on-surface-variant">verified_user</span>
+    <p class="mt-1 font-body-sm text-body-sm text-on-surface-variant">Aucun signalement en attente.</p>
+  </div>
+  {% endif %}
+
+  <!-- ================= HISTORIQUE ================= -->
+  {% if traites %}
+  <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
+    Historique
+    <span class="pw-chip pw-chip-neutral">{{ traites|length }}</span>
+  </h2>
+  <div class="pw-table-wrap">
+    <table class="pw-table">
+      <thead>
+        <tr>
+          <th>Partageur</th>
+          <th>Campagne</th>
+          <th>Décision</th>
+          <th>Note admin</th>
+          <th>Traité le</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sig in traites %}
+        <tr>
+          <td class="font-semibold text-slate-midnight">{{ sig.share.sharer.pseudo if sig.share.sharer else "-" }}</td>
+          <td class="font-caption text-caption text-on-surface-variant">#{{ sig.share.campaign_id }}</td>
+          <td>
+            {% if sig.statut == "clics_annules" %}
+              <span class="pw-chip pw-chip-danger">{{ sig.clics_annules }} clic{{ 's' if sig.clics_annules != 1 }} annulé{{ 's' if sig.clics_annules != 1 }}{% if sig.montant_repris %} · {{ "{:,.0f}".format(sig.montant_repris).replace(",", " ") }} FCFA repris{% endif %}</span>
+            {% else %}
+              <span class="pw-chip pw-chip-neutral">Rejeté</span>
+            {% endif %}
+          </td>
+          <td class="font-caption text-caption text-on-surface-variant">{{ sig.note_admin or "-" }}</td>
+          <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">{{ sig.traite_le | heure_locale if sig.traite_le else "-" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+</div>
+</section>
+{% endblock %}

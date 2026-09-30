@@ -164,6 +164,9 @@
     {% if current_user.role == "admin" or current_user.has_permission("configurer_tarifs") %}
     <a class="pw-admin-lien" href="{{ url_for('admin_settings') }}">Tarifs</a>
     {% endif %}
+    {% if current_user.role == "admin" or current_user.has_permission("gerer_signalements") %}
+    <a class="pw-admin-lien" href="{{ url_for('admin_signalements') }}">Signalements</a>
+    {% endif %}
     {% if current_user.role == "admin" or current_user.has_permission("gerer_suppressions_compte") %}
     <a class="pw-admin-lien !text-error" href="{{ url_for('admin_suppressions_compte') }}">Suppressions</a>
     {% endif %}

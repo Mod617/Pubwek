@@ -1,5 +1,36 @@
 {% extends "base_v2.html" %}
 
+{# Appreciation de l'annonceur sur les contacts recus via ce partageur #}
+{% macro choix_note(p) %}
+<form method="POST" action="{{ url_for('noter_partageur', share_id=p.share_id) }}"
+      class="inline-flex rounded-full border border-outline-variant/40 bg-surface-container-lowest p-0.5">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% for code, libelle in notes_annonceur.items() %}
+    <button type="submit" name="note" value="{{ code }}" title="{{ libelle }}"
+            class="whitespace-nowrap rounded-full px-2 py-0.5 font-caption text-[11px] font-semibold transition-colors
+                   {% if p.note == code %}
+                     {{ 'bg-success-light text-success-deep' if code == 'bons_contacts'
+                        else 'bg-error-container text-on-error-container' if code == 'aucun_contact'
+                        else 'bg-amber-soft text-secondary' }}
+                   {% else %}text-on-surface-variant hover:bg-surface-container-low{% endif %}"
+            {% if p.note == code %}aria-pressed="true"{% endif %}>{{ libelle }}</button>
+  {% endfor %}
+</form>
+{% endmacro %}
+
+{% macro etat_signalement(p) %}
+  {% if p.exclu %}
+    <span class="pw-chip pw-chip-danger">Retiré de la campagne</span>
+  {% elif p.signale %}
+    <span class="pw-chip pw-chip-warning">Signalement en cours</span>
+  {% else %}
+    <button type="button" data-pw-modal="signaler{{ p.share_id }}"
+            class="inline-flex items-center gap-1 font-caption text-caption font-semibold text-on-surface-variant hover:text-error">
+      <span class="material-symbols-outlined text-[16px]">report</span> Signaler
+    </button>
+  {% endif %}
+{% endmacro %}
+
 {% block content %}
 <section class="py-space-lg bg-background">
 <div class="max-w-5xl mx-auto px-margin space-y-space-sm">
@@ -110,6 +141,15 @@
 
   <!-- Liste des partageurs -->
   {% if partageurs %}
+    <div class="flex items-start gap-space-xs rounded-xl border border-outline-variant/30 bg-surface-container-lowest px-space-md py-space-sm">
+      <span class="material-symbols-outlined text-[20px] text-brand-primary shrink-0">chat</span>
+      <p class="font-caption text-caption text-on-surface-variant">
+        Chaque client qui vous écrit sur WhatsApp arrive avec un message qui indique <strong class="text-slate-midnight">le pseudo du partageur</strong>.
+        Dites-nous qui vous amène de vrais clients : un partageur noté <strong class="text-slate-midnight">Aucun contact</strong>
+        ne verra plus vos prochaines campagnes. S'il obtient beaucoup de clics sans aucune conversation,
+        signalez-le : après vérification, ses clics sont annulés, non facturés et rendus à votre objectif.
+      </p>
+    </div>
     <!-- Tableau (a partir de sm) -->
     <div class="pw-table-wrap hidden sm:block">
       <table class="pw-table">
@@ -119,6 +159,7 @@
             <th>Clics WhatsApp</th>
             <th>Clics site web</th>
             <th>A partagé le</th>
+            <th>Contacts reçus</th>
           </tr>
         </thead>
         <tbody>
@@ -127,7 +168,10 @@
             <td>
               <span class="flex items-center gap-space-xs">
                 <span class="w-7 h-7 shrink-0 rounded-full bg-brand-light text-brand-deep font-headline-md text-[13px] font-bold flex items-center justify-center uppercase">{{ p.pseudo[0] }}</span>
-                <span class="font-semibold text-slate-midnight">{{ p.pseudo }}</span>
+                <span class="min-w-0">
+                  <span class="block font-semibold text-slate-midnight">{{ p.pseudo }}</span>
+                  <span class="block whitespace-nowrap font-caption text-[11px] text-on-surface-variant">{{ p.part_objectif }} % de l'objectif</span>
+                </span>
               </span>
             </td>
             <td>
@@ -151,6 +195,12 @@
               {% endif %}
             </td>
             <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">{{ p.partage_le or "-" }}</td>
+            <td>
+              <div class="flex flex-col items-start gap-1">
+                {{ choix_note(p) }}
+                {{ etat_signalement(p) }}
+              </div>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
@@ -191,6 +241,11 @@
             <dd class="text-on-surface-variant">{{ p.partage_le or "-" }}</dd>
           </div>
         </dl>
+        <div class="mt-space-xs pt-space-xs border-t border-outline-variant/30 space-y-1.5">
+          <p class="font-caption text-caption text-on-surface-variant">Contacts reçus</p>
+          {{ choix_note(p) }}
+          <div class="text-right">{{ etat_signalement(p) }}</div>
+        </div>
       </div>
       {% endfor %}
     </div>
@@ -202,6 +257,39 @@
       </p>
     </div>
   {% endif %}
+
+  {% for p in partageurs if not p.exclu and not p.signale %}
+  <div class="pw-modal fixed inset-0 z-[90] hidden items-center justify-center p-space-md bg-slate-night/80 overflow-y-auto"
+       id="signaler{{ p.share_id }}" aria-modal="true" role="dialog">
+    <div class="pw-modal-panel w-full max-w-lg my-auto rounded-2xl bg-surface-container-lowest shadow-2xl overflow-hidden">
+      <form action="{{ url_for('signaler_partageur', share_id=p.share_id) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="pw-modal-head bg-error text-white">
+          <span>Signaler {{ p.pseudo }}</span>
+          <button type="button" class="pw-modal-close opacity-70 hover:opacity-100" aria-label="Fermer">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+        <div class="pw-modal-body">
+          <p class="font-caption text-caption text-on-surface-variant">
+            {{ p.pseudo }} a obtenu {{ p.total_clics }} clic{{ 's' if p.total_clics != 1 else '' }} sur cette campagne.
+            L'administration vérifie ses clics. S'ils ne viennent pas de clients réellement intéressés, ils sont annulés :
+            vous ne les payez pas et ils sont rendus à votre objectif.
+          </p>
+          <div>
+            <label class="pw-label" for="motif{{ p.share_id }}">Ce que vous avez constaté</label>
+            <textarea name="motif" id="motif{{ p.share_id }}" class="pw-input resize-y" rows="3" required minlength="10"
+                      placeholder="Exemple : 80 clics mais seulement 2 messages reçus avec son pseudo."></textarea>
+          </div>
+        </div>
+        <div class="pw-modal-foot">
+          <button type="button" class="pw-modal-close pw-btn pw-btn-sm pw-btn-neutral">Annuler</button>
+          <button type="submit" class="pw-btn pw-btn-sm pw-btn-danger">Envoyer le signalement</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
 
   <p class="flex items-start gap-space-xs font-caption text-caption text-on-surface-variant">
     <span class="material-symbols-outlined text-[16px] text-brand-primary shrink-0">verified_user</span>

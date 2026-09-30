@@ -985,6 +985,18 @@ class CampaignShare(db.Model):
     # ci-dessus, qui ne gardait que le jour : un seul rappel par expiration.
     dernier_rappel_expiration_le = db.Column(db.DateTime, nullable=True)
 
+    # =========================================================================
+    # QUALITÉ DES CLICS
+    # exclu : écarté de la campagne après un signalement traité par l'admin ;
+    #         ses clics suivants ne sont ni payés ni comptés.
+    # note_annonceur : appréciation de l'annonceur sur les contacts reçus via
+    #         ce partageur (NOTES_ANNONCEUR).
+    # =========================================================================
+    exclu = db.Column(db.Boolean, nullable=False, default=False)
+    exclu_le = db.Column(db.DateTime, nullable=True)
+    note_annonceur = db.Column(db.String(20), nullable=True)
+    note_annonceur_le = db.Column(db.DateTime, nullable=True)
+
     campaign = db.relationship(
         "Campaign",
         backref=db.backref("campaign_shares", lazy=True, cascade="all, delete-orphan")
@@ -1012,6 +1024,12 @@ class CampaignShare(db.Model):
         jours.discard("")
         jours.add(str(jour))
         self.jours_rappel_urgent_envoyes = ",".join(sorted(jours, key=int))
+
+    NOTES_ANNONCEUR = {
+        "bons_contacts": "De vrais clients",
+        "peu_de_contacts": "Peu de contacts",
+        "aucun_contact": "Aucun contact",
+    }
 
     # Un statut WhatsApp disparaît 24 heures après sa publication.
     DUREE_STATUT_HEURES = 24
@@ -1494,6 +1512,22 @@ class SystemConfig(db.Model):
     min_seconds_between_paid_clicks = db.Column(db.Integer, default=20)
 
     # =========================================================================
+    # QUALITÉ DES CLICS : éviter qu'un partageur fasse cliquer ses proches
+    #
+    # Part maximale de l'objectif d'une campagne qu'un seul partageur peut
+    # obtenir (en %, 0 = pas de limite). Au-delà, ses clics ne sont ni payés
+    # ni comptés : ils reviennent aux autres partageurs. Le plancher évite de
+    # bloquer les petites campagnes : la limite n'est jamais inférieure à
+    # plancher_clics_par_partageur clics.
+    # =========================================================================
+    part_max_objectif_par_partageur = db.Column(db.Integer, nullable=False, default=25)
+    plancher_clics_par_partageur = db.Column(db.Integer, nullable=False, default=30)
+
+    # Un partageur mal noté par les annonceurs (voir partageur_en_retrait dans
+    # main.py) ne voit les nouvelles campagnes qu'après ce délai, en heures.
+    delai_campagnes_partageur_en_retrait = db.Column(db.Integer, nullable=False, default=24)
+
+    # =========================================================================
     # 🆕 EXIGENCE DE PREUVE DE PARTAGE (capture d'écran de fin de journée)
     #
     # True (défaut) : chaque partageur doit envoyer sa capture de fin de
@@ -1729,3 +1763,35 @@ class ZonePartageur(db.Model):
 
     def __repr__(self):
         return f"<ZonePartageur user_id={self.user_id} {self.province}/{self.commune}>"
+
+
+
+class SignalementPartageur(db.Model):
+    """Un annonceur signale un partageur dont les clics ne lui amènent pas de
+    vrais clients. L'admin vérifie, puis annule ses clics (non payés et
+    rendus à l'objectif de l'annonceur) ou rejette le signalement."""
+    __tablename__ = "signalements_partageur"
+
+    id = db.Column(db.Integer, primary_key=True)
+    campaign_share_id = db.Column(db.Integer, db.ForeignKey("campaign_shares.id"), nullable=False, index=True)
+    annonceur_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    motif = db.Column(db.Text, nullable=False)
+
+    # "en_attente" | "clics_annules" | "rejete"
+    statut = db.Column(db.String(20), nullable=False, default="en_attente", index=True)
+    note_admin = db.Column(db.Text, nullable=True)
+    clics_annules = db.Column(db.Integer, nullable=False, default=0)
+    montant_repris = db.Column(db.Float, nullable=False, default=0.0)
+    traite_par_admin_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    traite_le = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    share = db.relationship(
+        "CampaignShare",
+        backref=db.backref("signalements", lazy=True, cascade="all, delete-orphan")
+    )
+    annonceur = db.relationship("User", foreign_keys=[annonceur_id])
+    traite_par = db.relationship("User", foreign_keys=[traite_par_admin_id])
+
+    def __repr__(self):
+        return f"<SignalementPartageur share={self.campaign_share_id} statut={self.statut}>"

@@ -96,6 +96,34 @@ with app.app_context():
                 shared_to_partageurs=True, **etat))
         _db.session.commit()
 
+        # Partages de demonstration sur la campagne active : le partageur de
+        # demo (statut expire) et deux autres, dont un signale par l'annonceur
+        from models import CampaignShare, CampaignClick, SignalementPartageur
+        active = Campaign.query.filter_by(is_active=True).first()
+        autres = []
+        for pseudo in ("Koffi229", "Awa_ctn"):
+            u = User(email=f"{pseudo.lower()}@example.com", role="partageur", pseudo=pseudo,
+                     province="Littoral", commune="Cotonou", is_confirmed=True, has_accepted_terms=True,
+                     password_hash=p.password_hash)
+            _db.session.add(u)
+            autres.append(u)
+        _db.session.commit()
+        heure = datetime.datetime.utcnow()
+        for u, nb_clics, il_y_a in ((p, 12, 30), (autres[0], 95, 20), (autres[1], 40, 10)):
+            s = CampaignShare(campaign_id=active.id, sharer_id=u.id,
+                              created_at=heure - datetime.timedelta(hours=il_y_a))
+            _db.session.add(s)
+            _db.session.flush()
+            for i in range(nb_clics):
+                _db.session.add(CampaignClick(campaign_share_id=s.id, link_type="whatsapp", is_paid=True,
+                                              ip=f"10.9.{i // 200}.{i % 200}", day_number=1))
+            if u is autres[0]:
+                s.note_annonceur = "aucun_contact"
+                _db.session.add(SignalementPartageur(
+                    campaign_share_id=s.id, annonceur_id=a.id,
+                    motif="95 clics mais seulement deux messages recus avec son pseudo."))
+        _db.session.commit()
+
         # Notifications de demonstration, a des heures variees, pour la cloche
         from models import Notification
         maintenant = datetime.datetime.utcnow()

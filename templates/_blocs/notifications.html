@@ -1,0 +1,195 @@
+{#
+  Cloche de notifications, commune aux trois tableaux de bord.
+  A inclure une seule fois par page. Variables attendues :
+    notifications, notifications_non_lues   (passees par la route)
+    notif_wrapper_class   classes du conteneur (position de la cloche)
+    notif_bouton_class    classes du bouton rond
+    notif_aligne          'droite' (defaut) ou 'gauche' : cote d'ouverture du panneau
+#}
+{% set notif_aligne = notif_aligne|default('droite') %}
+<div class="{{ notif_wrapper_class|default('relative') }}" id="notifDropdownWrapper">
+  <button type="button" id="notifToggle" aria-expanded="false" aria-label="Notifications"
+          class="{{ notif_bouton_class|default('relative w-10 h-10 rounded-full border border-outline-variant/40 bg-white shadow-sm flex items-center justify-center text-slate-midnight hover:bg-surface-container-low transition-colors') }}">
+    <span class="material-symbols-outlined text-[20px]">notifications</span>
+    {% if notifications_non_lues > 0 %}
+      <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-error text-white font-caption text-[11px] font-bold flex items-center justify-center" id="notifBadge">{{ notifications_non_lues }}</span>
+    {% endif %}
+  </button>
+
+  <!-- Fond assombri : uniquement sur petit ecran, pour detacher le panneau
+       de tout conteneur parent (overflow/z-index) qui pourrait le rogner. -->
+  <div id="notifBackdrop" class="hidden sm:!hidden fixed inset-0 bg-slate-night/50 z-[55]"></div>
+
+  <!-- Panneau en position fixe : aucun conteneur (carte a coins arrondis,
+       couverture) ne peut le rogner. Sur grand ecran, place sous la cloche en JS. -->
+  <div id="notifPanel" data-aligne="{{ notif_aligne }}"
+       class="hidden fixed left-4 right-4 top-20 max-h-[70vh] flex-col
+              sm:w-96 sm:max-w-[calc(100vw-2rem)] sm:max-h-[28rem]
+              rounded-2xl border border-outline-variant/30 bg-surface-container-lowest shadow-2xl z-[60]">
+    <div class="flex items-center justify-between gap-space-xs px-space-sm pt-2.5 pb-1.5 border-b border-outline-variant/30">
+      <span class="font-label-caps text-label-caps uppercase tracking-wider text-on-surface-variant font-bold">Notifications</span>
+      <div class="flex items-center gap-1">
+        <button type="button" id="notifToutLu"
+                class="{{ '' if notifications_non_lues > 0 else 'hidden' }} inline-flex items-center gap-1 rounded-full px-2 py-1 font-caption text-caption font-semibold text-brand-deep hover:bg-brand-light transition-colors">
+          <span class="material-symbols-outlined text-[16px]">done_all</span> Tout marquer comme lu
+        </button>
+        <button type="button" data-notif-fermer aria-label="Fermer"
+                class="sm:hidden w-7 h-7 rounded-full text-on-surface-variant hover:bg-surface-container-low flex items-center justify-center transition-colors">
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="overflow-y-auto p-1.5" id="notifListe">
+      {% for notif in notifications %}
+        <div class="notif-item group relative flex items-start gap-space-xs rounded-xl hover:bg-surface-container-low transition-colors"
+             data-id="{{ notif.id }}" data-lue="{{ 1 if notif.is_read else 0 }}">
+          <a class="flex min-w-0 flex-1 items-start gap-space-xs py-2 pl-space-sm {{ 'text-on-surface' if not notif.is_read else 'text-on-surface-variant' }}"
+             href="{{ url_for('ouvrir_notification', notif_id=notif.id) }}">
+            <span class="notif-point mt-1.5 w-2 h-2 rounded-full shrink-0
+              {%- if notif.is_read %} bg-transparent
+              {%- elif notif.category == 'success' %} bg-brand-primary
+              {%- elif notif.category == 'warning' %} bg-amber-rich
+              {%- elif notif.category == 'danger' %} bg-error
+              {%- else %} bg-brand-primary{% endif %}"></span>
+            <span class="min-w-0">
+              <span class="notif-titre block font-body-sm text-body-sm {{ 'font-semibold' if not notif.is_read }}">{{ notif.title }}</span>
+              <span class="block font-caption text-caption text-on-surface-variant">{{ notif.message }}</span>
+              <time class="mt-0.5 block font-caption text-[11px] text-on-surface-variant/80"
+                    datetime="{{ notif.created_at.isoformat() if notif.created_at }}Z"
+                    title="{{ notif.created_at | heure_locale('%d/%m/%Y à %H:%M') }}">{{ notif.created_at | il_y_a }}</time>
+            </span>
+          </a>
+          <button type="button" data-notif-supprimer aria-label="Supprimer cette notification"
+                  class="shrink-0 mt-1.5 mr-1 w-7 h-7 rounded-full text-on-surface-variant/70 hover:text-error hover:bg-error-container/40 flex items-center justify-center transition-colors">
+            <span class="material-symbols-outlined text-[16px]">close</span>
+          </button>
+        </div>
+      {% endfor %}
+      <p id="notifVide" class="{{ 'hidden' if notifications }} px-space-sm py-space-sm font-body-sm text-body-sm text-on-surface-variant">Aucune notification pour le moment.</p>
+    </div>
+
+    <div id="notifPied" class="{{ '' if notifications|selectattr('is_read')|list else 'hidden' }} border-t border-outline-variant/30 px-space-sm py-1.5 text-right">
+      <button type="button" id="notifSupprimerLues"
+              class="inline-flex items-center gap-1 rounded-full px-2 py-1 font-caption text-caption font-semibold text-on-surface-variant hover:text-error hover:bg-error-container/40 transition-colors">
+        <span class="material-symbols-outlined text-[16px]">delete</span> Supprimer les notifications lues
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const wrapper = document.getElementById('notifDropdownWrapper');
+  if (!wrapper) return;
+  const toggle = document.getElementById('notifToggle');
+  const panel = document.getElementById('notifPanel');
+  const backdrop = document.getElementById('notifBackdrop');
+  const liste = document.getElementById('notifListe');
+  const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+  const csrf = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+  function envoyer(url) {
+    return fetch(url, { method: 'POST', headers: { 'X-CSRFToken': csrf } }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    });
+  }
+
+  function placer() {
+    if (window.innerWidth < 640) {
+      panel.style.left = panel.style.right = panel.style.top = '';
+      return;
+    }
+    const r = toggle.getBoundingClientRect();
+    panel.style.top = (r.bottom + 8) + 'px';
+    if (panel.dataset.aligne === 'gauche') {
+      panel.style.left = Math.max(16, r.left) + 'px';
+      panel.style.right = 'auto';
+    } else {
+      panel.style.right = Math.max(16, window.innerWidth - r.right) + 'px';
+      panel.style.left = 'auto';
+    }
+  }
+
+  function ouvrir() {
+    placer();
+    panel.classList.remove('hidden');
+    panel.classList.add('flex');
+    backdrop.classList.remove('hidden');
+    toggle.setAttribute('aria-expanded', 'true');
+  }
+  function fermer() {
+    panel.classList.add('hidden');
+    panel.classList.remove('flex');
+    backdrop.classList.add('hidden');
+    toggle.setAttribute('aria-expanded', 'false');
+  }
+
+  function majCompteur(nonLues) {
+    let badge = document.getElementById('notifBadge');
+    if (nonLues > 0) {
+      if (badge) badge.textContent = nonLues;
+    } else if (badge) {
+      badge.remove();
+    }
+    document.getElementById('notifToutLu').classList.toggle('hidden', nonLues === 0);
+  }
+
+  function majPiedEtVide() {
+    const items = liste.querySelectorAll('.notif-item');
+    const lues = liste.querySelectorAll('.notif-item[data-lue="1"]');
+    document.getElementById('notifVide').classList.toggle('hidden', items.length > 0);
+    document.getElementById('notifPied').classList.toggle('hidden', lues.length === 0);
+  }
+
+  function afficherCommeLue(item) {
+    item.dataset.lue = '1';
+    const lien = item.querySelector('a');
+    lien.classList.remove('text-on-surface');
+    lien.classList.add('text-on-surface-variant');
+    item.querySelector('.notif-titre').classList.remove('font-semibold');
+    const point = item.querySelector('.notif-point');
+    point.className = 'notif-point mt-1.5 w-2 h-2 rounded-full shrink-0 bg-transparent';
+  }
+
+  toggle.addEventListener('click', function (e) {
+    e.stopPropagation();
+    panel.classList.contains('hidden') ? ouvrir() : fermer();
+  });
+  backdrop.addEventListener('click', fermer);
+  window.addEventListener('resize', function () { if (!panel.classList.contains('hidden')) placer(); });
+  window.addEventListener('scroll', function () { if (!panel.classList.contains('hidden')) placer(); }, { passive: true });
+  panel.querySelectorAll('[data-notif-fermer]').forEach(function (b) { b.addEventListener('click', fermer); });
+  document.addEventListener('click', function (e) { if (!wrapper.contains(e.target)) fermer(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') fermer(); });
+
+  document.getElementById('notifToutLu').addEventListener('click', function () {
+    envoyer('{{ url_for("marquer_notifications_lues") }}').then(function (res) {
+      liste.querySelectorAll('.notif-item[data-lue="0"]').forEach(afficherCommeLue);
+      majCompteur(res.non_lues);
+      majPiedEtVide();
+    }).catch(function (err) { console.error('Notifications :', err); });
+  });
+
+  liste.addEventListener('click', function (e) {
+    const bouton = e.target.closest('[data-notif-supprimer]');
+    if (!bouton) return;
+    e.preventDefault();
+    const item = bouton.closest('.notif-item');
+    envoyer('{{ url_for("supprimer_notification", notif_id=987654321) }}'.replace('987654321', item.dataset.id)).then(function (res) {
+      item.remove();
+      majCompteur(res.non_lues);
+      majPiedEtVide();
+    }).catch(function (err) { console.error('Notifications :', err); });
+  });
+
+  document.getElementById('notifSupprimerLues').addEventListener('click', function () {
+    envoyer('{{ url_for("supprimer_notifications_lues") }}').then(function (res) {
+      liste.querySelectorAll('.notif-item[data-lue="1"]').forEach(function (item) { item.remove(); });
+      majCompteur(res.non_lues);
+      majPiedEtVide();
+    }).catch(function (err) { console.error('Notifications :', err); });
+  });
+})();
+</script>

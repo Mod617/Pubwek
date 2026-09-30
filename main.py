@@ -7294,19 +7294,54 @@ def push_unsubscribe():
     return jsonify({"success": True})
 
 # ==========================================
-# 🆕 ROUTE : MARQUER TOUTES LES NOTIFICATIONS COMME LUES
-# Appelée en arrière-plan (fetch JS) dès que l'utilisateur ouvre la cloche
-# de notifications — partageur, annonceur ou admin/sous-admin, peu importe
-# le rôle, puisque le système Notification est commun à tous.
+# ROUTES : NOTIFICATIONS (cloche commune à tous les rôles, voir
+# templates/_blocs/notifications.html). Chaque route ne touche qu'aux
+# notifications de l'utilisateur connecté.
 # ==========================================
+def _non_lues():
+    return Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
+
+
 @app.route("/notifications/marquer-lues", methods=["POST"])
 @login_required
 def marquer_notifications_lues():
+    """Bouton « Tout marquer comme lu »."""
     Notification.query.filter_by(user_id=current_user.id, is_read=False).update(
         {"is_read": True}
     )
     db.session.commit()
-    return jsonify({"success": True})
+    return jsonify({"success": True, "non_lues": 0})
+
+
+@app.route("/notifications/<int:notif_id>/ouvrir")
+@login_required
+def ouvrir_notification(notif_id):
+    """Marque la notification comme lue, puis suit son lien."""
+    notif = Notification.query.filter_by(id=notif_id, user_id=current_user.id).first_or_404()
+    if not notif.is_read:
+        notif.is_read = True
+        db.session.commit()
+    lien = notif.link or ""
+    # Uniquement un chemin interne : jamais de redirection vers un autre site.
+    if not lien.startswith("/") or lien.startswith("//") or "\\" in lien:
+        return redirect(request.referrer or url_for("index"))
+    return redirect(lien)
+
+
+@app.route("/notifications/<int:notif_id>/supprimer", methods=["POST"])
+@login_required
+def supprimer_notification(notif_id):
+    Notification.query.filter_by(id=notif_id, user_id=current_user.id).delete()
+    db.session.commit()
+    return jsonify({"success": True, "non_lues": _non_lues()})
+
+
+@app.route("/notifications/supprimer-lues", methods=["POST"])
+@login_required
+def supprimer_notifications_lues():
+    Notification.query.filter_by(user_id=current_user.id, is_read=True).delete()
+    db.session.commit()
+    return jsonify({"success": True, "non_lues": _non_lues()})
 
 
 # ==========================================

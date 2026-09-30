@@ -95,6 +95,24 @@ with app.app_context():
                 views_today=cible // 20, current_day_number=2,
                 shared_to_partageurs=True, **etat))
         _db.session.commit()
+
+        # Notifications de demonstration, a des heures variees, pour la cloche
+        from models import Notification
+        maintenant = datetime.datetime.utcnow()
+        exemples = [
+            ("Votre statut WhatsApp a expiré", "Republiez-le pour continuer à recevoir des clics.", "warning", 3),
+            ("Preuve validée", "Votre preuve du jour 1 a été validée, vos clics sont crédités.", "success", 50),
+            ("Nouvelle campagne disponible", "Une nouvelle campagne est disponible dans votre zone.", "info", 60 * 20),
+            ("Retrait effectué", "Votre retrait de 1 500 FCFA a été envoyé.", "success", 60 * 24 * 4),
+            ("Bienvenue sur Pubwek", "Votre compte est validé.", "info", 60 * 24 * 30),
+        ]
+        for u in (p, a):
+            for i, (titre, message, categorie, minutes) in enumerate(exemples):
+                _db.session.add(Notification(
+                    user_id=u.id, title=titre, message=message, category=categorie,
+                    link="/", is_read=i >= 2,
+                    created_at=maintenant - datetime.timedelta(minutes=minutes)))
+        _db.session.commit()
     # L'admin cree au demarrage n'a pas accepte les CGU : la fenetre modale
     # bloquerait chaque page de l'apercu.
     admin = User.query.filter_by(email=os.environ["ADMIN_EMAIL"]).first()

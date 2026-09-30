@@ -1,5 +1,55 @@
 {% extends "base_v2.html" %}
 
+{# Bouton d'action sur un message (répondu ailleurs, archiver, sortir des archives) #}
+{% macro action(m, cle, icone, libelle) %}
+<form method="POST" action="{{ url_for('classer_message_contact', message_id=m.id, action=cle) }}" class="inline">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit" class="pw-btn pw-btn-sm pw-btn-neutral">
+    <span class="material-symbols-outlined text-[18px]">{{ icone }}</span> {{ libelle }}
+  </button>
+</form>
+{% endmacro %}
+
+{# En-tete et contenu d'un message #}
+{% macro corps(m) %}
+<div class="flex flex-wrap items-start justify-between gap-space-xs">
+  <div class="min-w-0">
+    <div class="flex flex-wrap items-center gap-space-2xs">
+      <strong class="font-headline-md text-body-md text-slate-midnight">{{ m.name }}</strong>
+      {% if m.demandeur %}
+        <span class="pw-chip pw-chip-neutral">Compte : {{ m.demandeur.role }}</span>
+      {% endif %}
+    </div>
+    <a class="font-caption text-caption text-brand-primary hover:underline" href="mailto:{{ m.email }}">{{ m.email }}</a>
+  </div>
+  <span class="font-caption text-caption text-on-surface-variant whitespace-nowrap"
+        title="{{ m.created_at | heure_locale }}">Reçu {{ m.created_at | il_y_a }}</span>
+</div>
+{% if m.subject %}
+  <p class="mt-1.5 font-body-sm text-body-sm">
+    <span class="font-semibold text-slate-midnight">Objet :</span> {{ m.subject }}
+  </p>
+{% endif %}
+<p class="mt-1 font-body-sm text-body-sm text-on-surface" style="white-space: pre-wrap;">{{ m.message }}</p>
+{% endmacro %}
+
+{# Reponse deja donnee #}
+{% macro reponse(m) %}
+{% if m.status == "traite" %}
+<div class="mt-space-xs pw-card-flat">
+  <p class="flex items-center gap-1 font-caption text-caption font-semibold text-brand-deep">
+    <span class="material-symbols-outlined text-[14px]">{{ 'send' if m.admin_reply else 'mark_email_read' }}</span>
+    {{ "Réponse envoyée" if m.admin_reply else "Répondu en dehors de Pubwek" }}
+    {{ m.replied_at | il_y_a if m.replied_at }}
+    {% if m.replied_by %} par {{ m.replied_by.pseudo or m.replied_by.email }}{% endif %}
+  </p>
+  {% if m.admin_reply %}
+    <p class="mt-1 font-body-sm text-body-sm text-on-surface" style="white-space: pre-wrap;">{{ m.admin_reply }}</p>
+  {% endif %}
+</div>
+{% endif %}
+{% endmacro %}
+
 {% block content %}
 <section class="py-space-lg bg-background">
 <div class="max-w-4xl mx-auto px-margin space-y-space-sm">
@@ -13,46 +63,26 @@
     <div class="pw-tabs" role="tablist">
       <button type="button" class="pw-tab is-active" data-tab="nouveaux" role="tab" aria-selected="true">
         <span class="material-symbols-outlined text-[18px]">mark_email_unread</span>
-        Nouveaux
+        Sans réponse
         <span class="pw-chip {{ 'pw-chip-danger' if nouveaux else 'pw-chip-neutral' }}">{{ nouveaux|length }}</span>
       </button>
       <button type="button" class="pw-tab" data-tab="traites" role="tab" aria-selected="false">
         <span class="material-symbols-outlined text-[18px]">done_all</span>
-        Traités
+        Répondus
         <span class="pw-chip pw-chip-neutral">{{ traites|length }}</span>
+      </button>
+      <button type="button" class="pw-tab" data-tab="archives" role="tab" aria-selected="false">
+        <span class="material-symbols-outlined text-[18px]">archive</span>
+        Archivés
+        <span class="pw-chip pw-chip-neutral">{{ archives|length }}</span>
       </button>
     </div>
 
-    <!-- ============ NOUVEAUX ============ -->
+    <!-- ============ SANS REPONSE ============ -->
     <div class="pw-tab-panel is-active space-y-space-xs" data-panel="nouveaux">
-      {% if not nouveaux %}
-        <div class="pw-card !p-space-lg text-center">
-          <span class="material-symbols-outlined text-[36px] text-on-surface-variant">mail</span>
-          <p class="mt-1 font-body-sm text-body-sm text-on-surface-variant">Aucun nouveau message pour le moment.</p>
-        </div>
-      {% else %}
-        {% for m in nouveaux %}
+      {% for m in nouveaux %}
         <div class="pw-tile">
-          <div class="flex flex-wrap items-start justify-between gap-space-xs">
-            <div class="min-w-0">
-              <div class="flex flex-wrap items-center gap-space-2xs">
-                <strong class="font-headline-md text-body-md text-slate-midnight">{{ m.name }}</strong>
-                {% if m.demandeur %}
-                  <span class="pw-chip pw-chip-neutral">Compte : {{ m.demandeur.role }}</span>
-                {% endif %}
-              </div>
-              <a class="font-caption text-caption text-brand-primary hover:underline" href="mailto:{{ m.email }}">{{ m.email }}</a>
-            </div>
-            <span class="font-caption text-caption text-on-surface-variant whitespace-nowrap">{{ m.created_at | heure_locale }}</span>
-          </div>
-
-          {% if m.subject %}
-            <p class="mt-1.5 font-body-sm text-body-sm">
-              <span class="font-semibold text-slate-midnight">Objet :</span> {{ m.subject }}
-            </p>
-          {% endif %}
-          <p class="mt-1 font-body-sm text-body-sm text-on-surface" style="white-space: pre-wrap;">{{ m.message }}</p>
-
+          {{ corps(m) }}
           <form method="POST" action="{{ url_for('repondre_message_contact', message_id=m.id) }}"
                 class="mt-space-sm pt-space-sm border-t border-outline-variant/30 space-y-space-xs">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -65,49 +95,56 @@
               <span class="material-symbols-outlined text-[18px]">send</span> Envoyer la réponse
             </button>
           </form>
-        </div>
-        {% endfor %}
-      {% endif %}
-    </div>
-
-    <!-- ============ TRAITES ============ -->
-    <div class="pw-tab-panel space-y-space-xs" data-panel="traites">
-      {% if not traites %}
-        <div class="pw-card !p-space-lg text-center">
-          <span class="material-symbols-outlined text-[36px] text-on-surface-variant">done_all</span>
-          <p class="mt-1 font-body-sm text-body-sm text-on-surface-variant">Aucun message traité pour le moment.</p>
+          <div class="mt-space-xs flex flex-wrap gap-space-2xs">
+            {{ action(m, "repondu-ailleurs", "mark_email_read", "Déjà répondu ailleurs") }}
+            {{ action(m, "archiver", "archive", "Archiver") }}
+          </div>
         </div>
       {% else %}
-        {% for m in traites %}
-        <div class="pw-tile">
-          <div class="flex flex-wrap items-start justify-between gap-space-xs">
-            <div class="min-w-0">
-              <strong class="font-headline-md text-body-md text-slate-midnight">{{ m.name }}</strong>
-              <a class="ml-1 font-caption text-caption text-brand-primary hover:underline" href="mailto:{{ m.email }}">{{ m.email }}</a>
-            </div>
-            <span class="font-caption text-caption text-on-surface-variant whitespace-nowrap">Reçu le {{ m.created_at | heure_locale }}</span>
-          </div>
-
-          {% if m.subject %}
-            <p class="mt-1.5 font-body-sm text-body-sm">
-              <span class="font-semibold text-slate-midnight">Objet :</span> {{ m.subject }}
-            </p>
-          {% endif %}
-          <p class="mt-1 font-body-sm text-body-sm text-on-surface" style="white-space: pre-wrap;">{{ m.message }}</p>
-
-          {% if m.admin_reply %}
-          <div class="mt-space-xs pw-card-flat">
-            <p class="flex items-center gap-1 font-caption text-caption font-semibold text-brand-deep">
-              <span class="material-symbols-outlined text-[14px]">send</span>
-              Réponse envoyée le {{ m.replied_at | heure_locale }}
-              {% if m.replied_by %} par {{ m.replied_by.pseudo or m.replied_by.email }}{% endif %}
-            </p>
-            <p class="mt-1 font-body-sm text-body-sm text-on-surface" style="white-space: pre-wrap;">{{ m.admin_reply }}</p>
-          </div>
-          {% endif %}
+        <div class="pw-card !p-space-lg text-center">
+          <span class="material-symbols-outlined text-[36px] text-on-surface-variant">mail</span>
+          <p class="mt-1 font-body-sm text-body-sm text-on-surface-variant">Aucun message en attente de réponse.</p>
         </div>
-        {% endfor %}
-      {% endif %}
+      {% endfor %}
+    </div>
+
+    <!-- ============ REPONDUS ============ -->
+    <div class="pw-tab-panel space-y-space-xs" data-panel="traites">
+      {% for m in traites %}
+        <div class="pw-tile">
+          {{ corps(m) }}
+          {{ reponse(m) }}
+          <div class="mt-space-xs">{{ action(m, "archiver", "archive", "Archiver") }}</div>
+        </div>
+      {% else %}
+        <div class="pw-card !p-space-lg text-center">
+          <span class="material-symbols-outlined text-[36px] text-on-surface-variant">done_all</span>
+          <p class="mt-1 font-body-sm text-body-sm text-on-surface-variant">Aucun message répondu pour le moment.</p>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- ============ ARCHIVES ============ -->
+    <div class="pw-tab-panel space-y-space-xs" data-panel="archives">
+      {% for m in archives %}
+        <div class="pw-tile">
+          {{ corps(m) }}
+          {% if m.status == "traite" %}
+            {{ reponse(m) }}
+          {% else %}
+            <p class="mt-space-xs"><span class="pw-chip pw-chip-warning">Archivé sans réponse</span></p>
+          {% endif %}
+          <div class="mt-space-xs flex flex-wrap items-center gap-space-xs">
+            {{ action(m, "desarchiver", "unarchive", "Sortir des archives") }}
+            <span class="font-caption text-caption text-on-surface-variant">Archivé {{ m.archive_le | il_y_a }}</span>
+          </div>
+        </div>
+      {% else %}
+        <div class="pw-card !p-space-lg text-center">
+          <span class="material-symbols-outlined text-[36px] text-on-surface-variant">archive</span>
+          <p class="mt-1 font-body-sm text-body-sm text-on-surface-variant">Aucun message archivé.</p>
+        </div>
+      {% endfor %}
     </div>
   </div>
 

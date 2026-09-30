@@ -1,0 +1,39 @@
+{#
+  Formulaire d'enquete de satisfaction, partage par la fenetre du bandeau
+  (_blocs/annonce.html) et par la page /annonces/<id>. A importer :
+    {% from "_blocs/annonce_formulaire.html" import formulaire_enquete %}
+#}
+{% macro formulaire_enquete(annonce, notes, retour, prefixe="enq") %}
+<form method="POST" action="{{ url_for('repondre_annonce', annonce_id=annonce.id) }}" class="space-y-space-sm">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="retour" value="{{ retour }}">
+
+  <fieldset>
+    <legend class="font-headline-md text-[15px] font-semibold text-slate-midnight">{{ annonce.question }}</legend>
+    <div class="mt-space-xs grid grid-cols-5 gap-1">
+      {% for valeur, (icone, libelle) in notes.items() %}
+      <label class="group cursor-pointer" title="{{ libelle }}">
+        <input type="radio" name="note" value="{{ valeur }}" class="peer sr-only" required>
+        <span class="flex flex-col items-center gap-0.5 rounded-xl border border-outline-variant/40 px-1 py-2 text-on-surface-variant transition-colors
+                     hover:bg-surface-container-low
+                     peer-checked:border-brand-primary peer-checked:bg-brand-light peer-checked:text-brand-deep
+                     peer-focus-visible:ring-2 peer-focus-visible:ring-brand-primary/40">
+          <span class="material-symbols-outlined text-[32px]">{{ icone }}</span>
+          <span class="text-center font-caption text-[10px] leading-tight">{{ libelle }}</span>
+        </span>
+      </label>
+      {% endfor %}
+    </div>
+  </fieldset>
+
+  <div>
+    <label class="pw-label" for="{{ prefixe }}-commentaire">Une remarque, une idée, un souci ? <span class="font-normal text-on-surface-variant">(facultatif)</span></label>
+    <textarea name="commentaire" id="{{ prefixe }}-commentaire" class="pw-input resize-y" rows="3" maxlength="2000"
+              placeholder="Écrivez librement, notre équipe lit chaque message."></textarea>
+  </div>
+
+  <button type="submit" class="pw-btn pw-btn-md pw-btn-primary w-full">
+    <span class="material-symbols-outlined text-[18px]">send</span> Envoyer mon avis
+  </button>
+</form>
+{% endmacro %}

@@ -57,6 +57,7 @@ with app.app_context():
         p = User(email="partageur@example.com", role="partageur", pseudo="Testeur",
                  province="Littoral", commune="Cotonou",
                  whatsapp_number="+2290157290905",
+                 is_confirmed=True,
                  password_hash=main.bcrypt.generate_password_hash("MotDePasse123!").decode())
         a = User(email="annonceur@example.com", role="annonceur",
                  company_name="Delices Alapkgo",
@@ -101,8 +102,9 @@ with app.app_context():
         from models import CampaignShare, CampaignClick, SignalementPartageur
         active = Campaign.query.filter_by(is_active=True).first()
         autres = []
-        for pseudo in ("Koffi229", "Awa_ctn"):
+        for n, pseudo in enumerate(("Koffi229", "Awa_ctn")):
             u = User(email=f"{pseudo.lower()}@example.com", role="partageur", pseudo=pseudo,
+                     whatsapp_number=f"+229015729091{n}",
                      province="Littoral", commune="Cotonou", is_confirmed=True, has_accepted_terms=True,
                      password_hash=p.password_hash)
             _db.session.add(u)

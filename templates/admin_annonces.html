@@ -1,0 +1,190 @@
+{% extends "base_v2.html" %}
+
+{% block content %}
+<section class="py-space-lg bg-background">
+<div class="max-w-5xl mx-auto px-margin space-y-space-sm">
+
+  <div class="flex flex-wrap items-end justify-between gap-space-sm">
+    <div class="min-w-0">
+      <span class="pw-badge bg-amber-soft text-amber-rich">Administration</span>
+      <h1 class="mt-1 font-headline-md text-headline-md text-slate-night">Messages et enquêtes</h1>
+      <p class="font-caption text-caption text-on-surface-variant">
+        Chaque message part dans les notifications et s'affiche en bandeau à chaque visite, jusqu'à ce que la personne l'ait lu ou ait répondu.
+      </p>
+    </div>
+    <a href="{{ url_for('admin_validate') }}" class="pw-btn pw-btn-sm pw-btn-neutral">
+      <span class="material-symbols-outlined text-[18px]">arrow_back</span> Panneau d'administration
+    </a>
+  </div>
+
+  <!-- ================= NOUVEAU MESSAGE ================= -->
+  <form method="POST" class="pw-card space-y-space-sm" id="annonceForm"
+        data-defaut="{{ defaut | tojson | forceescape }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <h2 class="font-headline-md text-body-md font-bold text-slate-midnight">Nouveau message</h2>
+
+    <div class="flex flex-wrap gap-space-xs">
+      {% for code, libelle in types.items() %}
+      <label class="flex-1 min-w-[13rem] cursor-pointer">
+        <input type="radio" name="type" value="{{ code }}" class="peer sr-only" required
+               {{ 'checked' if valeurs.get('type', 'enquete') == code }}>
+        <span class="flex items-start gap-space-xs rounded-xl border-2 border-outline-variant/40 px-space-sm py-2 transition-colors
+                     peer-checked:border-brand-primary peer-checked:bg-brand-light">
+          <span class="material-symbols-outlined text-[22px] text-brand-deep">{{ 'rate_review' if code == 'enquete' else 'campaign' }}</span>
+          <span>
+            <span class="block font-body-sm text-body-sm font-semibold text-slate-midnight">{{ libelle }}</span>
+            <span class="block font-caption text-caption text-on-surface-variant">
+              {{ "Un visage à choisir et une remarque libre, moins d'une minute." if code == 'enquete'
+                 else "Une nouveauté, un changement, une consigne à ne pas manquer." }}
+            </span>
+          </span>
+        </span>
+      </label>
+      {% endfor %}
+    </div>
+
+    <div class="flex flex-wrap gap-space-sm">
+      <div class="flex-1 min-w-[12rem]">
+        <label class="pw-label" for="public">Destinataires</label>
+        <select name="public" id="public" class="pw-select">
+          {% for code, libelle in publics.items() %}
+            <option value="{{ code }}" {{ 'selected' if valeurs.get('public') == code }}>{{ libelle }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="flex-[2] min-w-[16rem]">
+        <label class="pw-label" for="titre">Titre</label>
+        <input type="text" name="titre" id="titre" class="pw-input" maxlength="120" required value="{{ valeurs.get('titre', '') }}">
+      </div>
+    </div>
+
+    <div>
+      <label class="pw-label" for="accroche">Phrase du bandeau <span class="font-normal text-on-surface-variant">(une ligne, 160 caractères)</span></label>
+      <input type="text" name="accroche" id="accroche" class="pw-input" maxlength="160" required value="{{ valeurs.get('accroche', '') }}">
+    </div>
+
+    <div>
+      <label class="pw-label" for="contenu">Message complet</label>
+      <textarea name="contenu" id="contenu" class="pw-input resize-y" rows="6" maxlength="5000" required>{{ valeurs.get('contenu', '') }}</textarea>
+      <p class="pw-help"><strong>{nom}</strong> est remplacé par le nom de chacun : l'entreprise d'un annonceur, le pseudo d'un partageur.</p>
+    </div>
+
+    <div id="blocQuestion">
+      <label class="pw-label" for="question">Question de l'enquête</label>
+      <input type="text" name="question" id="question" class="pw-input" maxlength="200" value="{{ valeurs.get('question', '') }}">
+      <p class="pw-help">La personne y répond en choisissant un visage, de « Pas du tout satisfait » à « Très satisfait », puis peut laisser une remarque.</p>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-between gap-space-xs pt-space-xs border-t border-outline-variant/30">
+      <button type="button" id="texteSuggere" class="font-caption text-caption font-semibold text-brand-deep underline underline-offset-2">
+        Reprendre le texte d'enquête proposé
+      </button>
+      <button type="submit" class="pw-btn pw-btn-sm pw-btn-primary"
+              onclick="return confirm('Publier ce message ? Il sera envoyé tout de suite dans les notifications des destinataires.');">
+        <span class="material-symbols-outlined text-[18px]">send</span> Publier
+      </button>
+    </div>
+  </form>
+
+  <!-- ================= MESSAGES PUBLIES ================= -->
+  <h2 class="font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">Messages publiés</h2>
+  {% if annonces %}
+  <div class="pw-table-wrap">
+    <table class="pw-table">
+      <thead>
+        <tr><th>Message</th><th>Pour</th><th>Vus</th><th>Lus / répondus</th><th>Satisfaction</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for a in annonces %}
+        {% set st = stats[a.id] %}
+        <tr>
+          <td>
+            <span class="block font-semibold text-slate-midnight">{{ a.titre }}</span>
+            <span class="block font-caption text-caption text-on-surface-variant">
+              {{ types[a.type] }} · {{ a.created_at | il_y_a }}
+              {% if not a.active %}· <span class="text-error">retiré</span>{% endif %}
+            </span>
+          </td>
+          <td class="font-caption text-caption text-on-surface-variant">{{ publics[a.public] }} ({{ a.nb_destinataires }})</td>
+          <td class="font-label-numeric-md text-label-numeric-md">{{ st.vues }}</td>
+          <td class="font-label-numeric-md text-label-numeric-md">{{ st.terminees }}</td>
+          <td>
+            {% if st.moyenne is not none %}
+              {% set arrondi = st.moyenne | round | int %}
+              <span class="inline-flex items-center gap-1 font-label-numeric-md text-label-numeric-md text-slate-midnight">
+                <span class="material-symbols-outlined text-[20px] text-brand-deep">{{ notes[arrondi][0] }}</span>{{ st.moyenne }} / 5
+              </span>
+            {% else %}
+              <span class="text-on-surface-variant">-</span>
+            {% endif %}
+          </td>
+          <td class="text-right whitespace-nowrap">
+            {% if a.est_enquete %}
+              <a href="{{ url_for('admin_annonce_resultats', annonce_id=a.id) }}" class="font-caption text-caption font-semibold text-brand-deep hover:underline">Réponses</a>
+            {% endif %}
+            <form method="POST" action="{{ url_for('basculer_annonce', annonce_id=a.id) }}" class="inline ml-space-xs">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="font-caption text-caption font-semibold {{ 'text-error' if a.active else 'text-brand-deep' }} hover:underline">
+                {{ "Retirer" if a.active else "Remettre en ligne" }}
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="pw-card !p-space-lg text-center">
+    <span class="material-symbols-outlined text-[36px] text-on-surface-variant">campaign</span>
+    <p class="mt-1 font-body-sm text-body-sm text-on-surface-variant">Aucun message publié pour le moment.</p>
+  </div>
+  {% endif %}
+
+</div>
+</section>
+
+<script>
+(function () {
+  const form = document.getElementById('annonceForm');
+  const defaut = JSON.parse(form.dataset.defaut);
+  const blocQuestion = document.getElementById('blocQuestion');
+  const question = document.getElementById('question');
+  const champs = ['titre', 'accroche', 'contenu', 'question'];
+
+  function typeChoisi() {
+    const coche = form.querySelector('input[name="type"]:checked');
+    return coche ? coche.value : 'enquete';
+  }
+  function remplir(forcer) {
+    champs.forEach(function (nom) {
+      const champ = document.getElementById(nom);
+      if (forcer || !champ.value.trim()) champ.value = defaut[nom];
+    });
+  }
+  function maj() {
+    const enquete = typeChoisi() === 'enquete';
+    blocQuestion.classList.toggle('hidden', !enquete);
+    question.required = enquete;
+    document.getElementById('texteSuggere').classList.toggle('hidden', !enquete);
+  }
+  form.querySelectorAll('input[name="type"]').forEach(function (radio) {
+    radio.addEventListener('change', function () {
+      if (radio.value === 'enquete') {
+        remplir(false);
+      } else {
+        // Passage à une information : on retire le texte d'enquête proposé
+        champs.forEach(function (nom) {
+          const champ = document.getElementById(nom);
+          if (champ.value === defaut[nom]) champ.value = '';
+        });
+      }
+      maj();
+    });
+  });
+  document.getElementById('texteSuggere').addEventListener('click', function () { remplir(true); });
+  if (typeChoisi() === 'enquete') remplir(false);
+  maj();
+})();
+</script>
+{% endblock %}

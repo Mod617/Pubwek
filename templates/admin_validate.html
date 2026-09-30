@@ -18,7 +18,8 @@
   <td class="align-top" style="white-space: normal !important; overflow-wrap: anywhere !important; word-break: break-word !important;">{{ user.company_name or "-" }}</td>
   <td class="align-top">
     {% if user.whatsapp_number %}
-      <a href="https://wa.me/{{ user.whatsapp_number | replace(' ', '') }}" target="_blank" rel="noopener"
+      <a href="{{ lien_whatsapp(user.whatsapp_number, salutation_whatsapp(user)) }}" target="_blank" rel="noopener"
+         title="Ouvre WhatsApp avec « Bonjour {{ nom_affiche(user) }}, » déjà écrit"
          class="pw-btn pw-btn-sm pw-btn-neutral !py-1 !text-[12px] !text-brand-deep">
         <span class="material-symbols-outlined text-[16px]">chat</span> Contacter
       </a>
@@ -160,6 +161,12 @@
     <span class="pw-admin-lien is-active">Accueil</span>
     {% if current_user.role == "admin" or current_user.has_permission("valider_utilisateurs") %}
     <a class="pw-admin-lien" href="{{ url_for('admin_utilisateurs') }}">Utilisateurs</a>
+    {% endif %}
+    {% if current_user.role == "admin" or current_user.has_permission("valider_utilisateurs") %}
+    <a class="pw-admin-lien" href="{{ url_for('admin_whatsapp_partageurs') }}">WhatsApp</a>
+    {% endif %}
+    {% if current_user.role == "admin" or current_user.has_permission("gerer_annonces") %}
+    <a class="pw-admin-lien" href="{{ url_for('admin_annonces') }}">Messages et enquêtes</a>
     {% endif %}
     {% if current_user.role == "admin" or current_user.has_permission("gerer_retraits") %}
     <a class="pw-admin-lien" href="{{ url_for('admin_retraits') }}">Retraits</a>

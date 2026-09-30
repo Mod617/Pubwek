@@ -1,0 +1,50 @@
+{% extends "base_v2.html" %}
+{% from "_blocs/annonce_formulaire.html" import formulaire_enquete %}
+
+{% block content %}
+<section class="py-space-lg bg-background">
+<div class="max-w-lg mx-auto px-margin space-y-space-sm">
+
+  <div>
+    <span class="pw-badge bg-brand-light text-brand-deep">
+      {{ "Votre avis compte" if annonce.est_enquete else "Message de l'équipe Pubwek" }}
+    </span>
+    <h1 class="mt-1 font-headline-md text-headline-md text-slate-night">{{ annonce.titre }}</h1>
+    <p class="font-caption text-caption text-on-surface-variant">Publié {{ annonce.created_at | il_y_a }}</p>
+  </div>
+
+  <div class="pw-card space-y-space-sm">
+    <p class="font-body-sm text-body-sm text-on-surface" style="white-space: pre-line;">{{ contenu }}</p>
+
+    {% if annonce.est_enquete %}
+      {% if reponse.repondu_le %}
+        <div class="flex items-start gap-space-xs rounded-xl border border-brand-primary/30 bg-brand-light px-space-sm py-2">
+          <span class="material-symbols-outlined text-[24px] text-brand-deep shrink-0">{{ notes[reponse.note][0] }}</span>
+          <p class="font-caption text-caption text-brand-deep">
+            <strong>Merci, votre avis est bien reçu</strong> ({{ notes[reponse.note][1] | lower }}, {{ reponse.repondu_le | il_y_a }}).
+            {% if annonce.active %}Vous pouvez le modifier ci-dessous si votre ressenti a changé.{% endif %}
+          </p>
+        </div>
+      {% endif %}
+      {% if annonce.active %}
+        {{ formulaire_enquete(annonce, notes, url_for('voir_annonce', annonce_id=annonce.id), "page") }}
+      {% elif not reponse.repondu_le %}
+        <p class="font-caption text-caption text-on-surface-variant">Cette enquête est terminée. Merci de votre attention.</p>
+      {% endif %}
+    {% elif not reponse.lue_le %}
+      <form method="POST" action="{{ url_for('annonce_lue', annonce_id=annonce.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="pw-btn pw-btn-md pw-btn-primary w-full">
+          <span class="material-symbols-outlined text-[18px]">check_circle</span> J'ai bien lu, merci
+        </button>
+      </form>
+    {% endif %}
+  </div>
+
+  <a href="{{ url_for('index') }}" class="inline-flex items-center gap-1 font-caption text-caption font-semibold text-brand-deep">
+    <span class="material-symbols-outlined text-[16px]">arrow_back</span> Retour à mon espace
+  </a>
+
+</div>
+</section>
+{% endblock %}

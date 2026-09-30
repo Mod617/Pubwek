@@ -1,0 +1,75 @@
+{% extends "base_v2.html" %}
+
+{% block content %}
+<section class="py-space-lg bg-background">
+<div class="max-w-5xl mx-auto px-margin space-y-space-sm">
+
+  <div class="flex flex-wrap items-end justify-between gap-space-sm">
+    <div class="min-w-0">
+      <span class="pw-badge bg-amber-soft text-amber-rich">Enquête de satisfaction</span>
+      <h1 class="mt-1 font-headline-md text-headline-md text-slate-night">{{ annonce.titre }}</h1>
+      <p class="font-caption text-caption text-on-surface-variant">
+        {{ annonce.question }} · publiée {{ annonce.created_at | il_y_a }} · {{ vues }} vue(s) sur {{ annonce.nb_destinataires }} destinataire(s)
+      </p>
+    </div>
+    <a href="{{ url_for('admin_annonces') }}" class="pw-btn pw-btn-sm pw-btn-neutral">
+      <span class="material-symbols-outlined text-[18px]">arrow_back</span> Messages et enquêtes
+    </a>
+  </div>
+
+  <!-- Repartition des reponses -->
+  {% set total = reponses | length %}
+  <div class="grid grid-cols-5 gap-space-xs">
+    {% for valeur, (icone, libelle) in notes.items() %}
+    {% set nb = repartition[valeur] %}
+    <div class="pw-tile text-center">
+      <span class="material-symbols-outlined text-[30px] {{ 'text-error' if valeur <= 2 else 'text-brand-deep' if valeur >= 4 else 'text-amber-rich' }}">{{ icone }}</span>
+      <span class="block font-label-numeric-md text-label-numeric-md font-bold text-slate-midnight">{{ nb }}</span>
+      <span class="block font-caption text-[11px] text-on-surface-variant">{{ ((nb * 100 / total) | round | int) if total else 0 }} % · {{ libelle }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Reponses individuelles -->
+  <h2 class="font-headline-md text-body-md font-bold text-slate-midnight pt-space-2xs">
+    Réponses <span class="pw-chip pw-chip-neutral">{{ total }}</span>
+  </h2>
+  {% if reponses %}
+  <div class="pw-table-wrap">
+    <table class="pw-table">
+      <thead><tr><th>Utilisateur</th><th>Ressenti</th><th>Remarque</th><th>Quand</th><th></th></tr></thead>
+      <tbody>
+        {% for r in reponses %}
+        <tr>
+          <td>
+            <span class="block font-semibold text-slate-midnight">{{ nom_affiche(r.user) }}</span>
+            <span class="block font-caption text-caption text-on-surface-variant">{{ r.user.liste_profils() | join(" et ") }}</span>
+          </td>
+          <td class="whitespace-nowrap">
+            <span class="inline-flex items-center gap-1 font-caption text-caption {{ 'text-error' if r.note <= 2 else 'text-slate-midnight' }}">
+              <span class="material-symbols-outlined text-[20px]">{{ notes[r.note][0] }}</span> {{ notes[r.note][1] }}
+            </span>
+          </td>
+          <td class="font-body-sm text-body-sm text-on-surface" style="white-space: pre-wrap;">{{ r.commentaire or "-" }}</td>
+          <td class="font-caption text-caption text-on-surface-variant whitespace-nowrap">{{ r.repondu_le | il_y_a }}</td>
+          <td class="text-right whitespace-nowrap">
+            {% if r.user.whatsapp_number %}
+              <a href="{{ lien_whatsapp(r.user.whatsapp_number, salutation_whatsapp(r.user)) }}" target="_blank" rel="noopener"
+                 class="font-caption text-caption font-semibold text-brand-deep hover:underline">Répondre sur WhatsApp</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="pw-card !p-space-lg text-center">
+    <span class="material-symbols-outlined text-[36px] text-on-surface-variant">rate_review</span>
+    <p class="mt-1 font-body-sm text-body-sm text-on-surface-variant">Pas encore de réponse.</p>
+  </div>
+  {% endif %}
+
+</div>
+</section>
+{% endblock %}

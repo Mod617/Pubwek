@@ -96,7 +96,8 @@
           <td>{{ user.company_name or "-" }}</td>
           <td>
             {% if user.whatsapp_number %}
-              <a href="https://wa.me/{{ user.whatsapp_number | replace(' ', '') }}" target="_blank" rel="noopener"
+              <a href="{{ lien_whatsapp(user.whatsapp_number, salutation_whatsapp(user)) }}" target="_blank" rel="noopener"
+                 title="Ouvre WhatsApp avec « Bonjour {{ nom_affiche(user) }}, » déjà écrit"
                  class="pw-btn pw-btn-sm pw-btn-neutral !py-1 !text-[12px] !text-brand-deep">
                 <span class="material-symbols-outlined text-[16px]">chat</span> Contacter
               </a>

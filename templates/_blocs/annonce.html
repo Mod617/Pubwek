@@ -1,0 +1,79 @@
+{#
+  Bandeau flottant d'un message de l'equipe (information ou enquete), et sa
+  fenetre de lecture. Inclus par base_v2.html quand annonce_en_cours existe
+  (voir injecter_annonce_en_cours dans main.py).
+#}
+{% from "_blocs/annonce_formulaire.html" import formulaire_enquete %}
+{% set a = annonce_en_cours %}
+
+<div id="annonceBandeau" role="status"
+     class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:w-[23rem] z-[70]
+            rounded-2xl border border-brand-primary/30 bg-surface-container-lowest shadow-2xl">
+  <div class="flex items-start gap-space-xs p-space-sm">
+    <span class="w-9 h-9 shrink-0 rounded-full bg-brand-light text-brand-deep flex items-center justify-center">
+      <span class="material-symbols-outlined text-[20px]">{{ 'rate_review' if a.est_enquete else 'campaign' }}</span>
+    </span>
+    <button type="button" data-pw-modal="annonceModal" class="min-w-0 flex-1 text-left">
+      <span class="block font-caption text-caption text-on-surface-variant">
+        {{ "Votre avis compte" if a.est_enquete else "Message de l'équipe Pubwek" }}
+      </span>
+      <span class="block font-body-sm text-body-sm font-semibold text-slate-midnight">{{ texte_personnalise(a.accroche, current_user) }}</span>
+      <span class="mt-1 inline-flex items-center gap-1 font-caption text-caption font-bold text-brand-deep">
+        {{ "Donner mon avis" if a.est_enquete else "Lire le message" }}
+        <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+      </span>
+    </button>
+    <button type="button" data-annonce-plus-tard aria-label="Plus tard"
+            class="shrink-0 w-7 h-7 rounded-full text-on-surface-variant hover:bg-surface-container-low flex items-center justify-center">
+      <span class="material-symbols-outlined text-[18px]">close</span>
+    </button>
+  </div>
+</div>
+
+<div class="pw-modal fixed inset-0 z-[90] hidden items-center justify-center p-space-md bg-slate-night/80 overflow-y-auto"
+     id="annonceModal" aria-modal="true" role="dialog">
+  <div class="pw-modal-panel w-full max-w-lg my-auto rounded-2xl bg-surface-container-lowest shadow-2xl overflow-hidden">
+    <div class="pw-modal-head bg-brand-primary text-white">
+      <span>{{ texte_personnalise(a.titre, current_user) }}</span>
+      <button type="button" class="pw-modal-close opacity-70 hover:opacity-100" aria-label="Fermer">
+        <span class="material-symbols-outlined text-[20px]">close</span>
+      </button>
+    </div>
+    <div class="pw-modal-body space-y-space-sm">
+      <p class="font-body-sm text-body-sm text-on-surface" style="white-space: pre-line;">{{ annonce_contenu }}</p>
+      {% if a.est_enquete %}
+        {{ formulaire_enquete(a, annonce_notes, request.full_path.rstrip('?'), "bandeau") }}
+        <button type="button" data-annonce-plus-tard class="w-full text-center font-caption text-caption font-semibold text-on-surface-variant hover:text-slate-midnight">
+          Plus tard, à ma prochaine visite
+        </button>
+      {% else %}
+        <form method="POST" action="{{ url_for('annonce_lue', annonce_id=a.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="pw-btn pw-btn-md pw-btn-primary w-full">
+            <span class="material-symbols-outlined text-[18px]">check_circle</span> J'ai bien lu, merci
+          </button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const bandeau = document.getElementById('annonceBandeau');
+  const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+  document.querySelectorAll('[data-annonce-plus-tard]').forEach(function (bouton) {
+    bouton.addEventListener('click', function () {
+      fetch('{{ url_for("annonce_plus_tard", annonce_id=a.id) }}', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfMeta ? csrfMeta.getAttribute('content') : '' }
+      }).catch(function () {});
+      bandeau.remove();
+      const modal = document.getElementById('annonceModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.body.style.overflow = '';
+    });
+  });
+})();
+</script>

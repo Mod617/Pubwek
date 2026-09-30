@@ -54,6 +54,8 @@ from forms import (
 )
 from models import (
     AccountDeletionRequest,
+    Annonce,
+    ReponseAnnonce,
     Campaign,
     CampaignClick,
     CampaignShare,
@@ -884,6 +886,16 @@ with app.app_context():
         logger.error("Erreur migration users.profils : %s", e)
 
 
+with app.app_context():
+    from sqlalchemy import text
+    try:
+        db.session.execute(text("ALTER TABLE contact_messages ADD COLUMN IF NOT EXISTS archive_le TIMESTAMP"))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Erreur migration contact_messages.archive_le : %s", e)
+
+
 
 
 
@@ -1527,6 +1539,11 @@ def nouvelle_campagne():
                 flash("Le lien du site web semble invalide. Utilisez un format complet (ex: https://monsite.com).", "danger")
                 return redirect(url_for("dashboard_annonceur"))
             website_url = bleach.clean(website_url)
+            if est_lien_whatsapp(website_url):
+                # Le numéro WhatsApp de la campagne suffit : pas de doublon
+                website_url = None
+                flash("Le champ « Site web » contenait un lien WhatsApp : nous l'avons retiré, "
+                      "votre numéro WhatsApp est déjà dans l'annonce.", "info")
 
         # =====================================================================
         # 🆕 VALIDATION DES COMMUNES (raffinement optionnel du ciblage)
@@ -2540,7 +2557,7 @@ def resoumettre_campagne(campaign_id):
         if not re.match(r"^https?://[^\s]+\.[^\s]{2,}$", website_url):
             flash("Le lien du site web semble invalide. Utilisez un format complet (ex: https://monsite.com).", "danger")
             return redirect(url_for("mes_campagnes"))
-        camp.website_url = bleach.clean(website_url)
+        camp.website_url = None if est_lien_whatsapp(website_url) else bleach.clean(website_url)
     elif website_url == "":
         camp.website_url = None
 
@@ -4872,7 +4889,8 @@ def instructions_partage(campaign_id):
             media_urls.append(url_for("serve_upload", filename=f))
     # 🆕 Liens de tracking à insérer dans le statut (whatsapp + site web si disponibles)
     lien_whatsapp_tracking = url_for("tracking_redirect_whatsapp", token=share.tracking_token, _external=True) if camp.whatsapp_number else None
-    lien_site_tracking = url_for("tracking_redirect_site", token=share.tracking_token, _external=True) if camp.website_url else None
+    # Un lien WhatsApp saisi comme « site web » ferait doublon avec le lien WhatsApp
+    lien_site_tracking = url_for("tracking_redirect_site", token=share.tracking_token, _external=True) if site_web_reel(camp) else None
 
     # 🆕 Si l'exigence de preuve est désactivée globalement, on ne calcule
     # même pas les états de preuve : la section ne doit plus apparaître.
@@ -6678,6 +6696,50 @@ def admin_preuves_partage():
 # nouveau format officiel, seul valide pour les SMS/appels réseau) — elle ne
 # sert qu'à construire le numéro tel que wa.me doit le recevoir.
 # =========================================================================
+# Domaines qui mènent à WhatsApp : un tel lien dans le champ « Site web »
+# ferait apparaître deux liens identiques dans le statut du partageur.
+DOMAINES_WHATSAPP = ("wa.me", "whatsapp.com", "whatsapp.net", "wa.link")
+
+
+def est_lien_whatsapp(url):
+    hote = (urllib.parse.urlparse(url or "").hostname or "").lower()
+    return any(hote == d or hote.endswith("." + d) for d in DOMAINES_WHATSAPP)
+
+
+def site_web_reel(camp):
+    """Le site web de la campagne, s'il en est vraiment un (pas un lien WhatsApp)."""
+    return camp.website_url if camp.website_url and not est_lien_whatsapp(camp.website_url) else None
+
+
+def lien_whatsapp(numero, message=""):
+    """Lien wa.me vers un numéro stocké en base, message pré-rempli facultatif.
+    Même conversion que partout ailleurs (numero_pour_wa_me)."""
+    chiffres = numero_pour_wa_me(numero)
+    if not chiffres:
+        return None
+    lien = f"https://wa.me/{chiffres}"
+    return lien + "?text=" + urllib.parse.quote(message) if message else lien
+
+
+app.jinja_env.globals["lien_whatsapp"] = lien_whatsapp
+
+
+def nom_affiche(user):
+    """Nom utilisé pour saluer quelqu'un : l'entreprise d'un annonceur, le
+    pseudo d'un partageur."""
+    if user.role == "annonceur" and user.company_name:
+        return user.company_name
+    return user.pseudo or (user.email or "").split("@")[0]
+
+
+def salutation_whatsapp(user):
+    return f"Bonjour {nom_affiche(user)},\n\n"
+
+
+app.jinja_env.globals["nom_affiche"] = nom_affiche
+app.jinja_env.globals["salutation_whatsapp"] = salutation_whatsapp
+
+
 def numero_pour_wa_me(numero, garder_01=False):
     """Retire le "01" du numéro stocké (+22901XXXXXXXX -> 229XXXXXXXX),
     pour contourner le décalage entre la réforme de numérotation béninoise
@@ -7355,6 +7417,343 @@ def mes_retraits():
 
 
 # ==========================================
+# MESSAGES DE L'ÉQUIPE ET ENQUÊTES DE SATISFACTION
+#
+# L'admin publie une information importante ou une courte enquête. Chaque
+# utilisateur concerné la reçoit dans ses notifications ET la voit en bandeau
+# flottant sur toutes ses pages, tant qu'il ne l'a pas lue ou n'a pas répondu.
+# « Plus tard » la masque jusqu'à sa prochaine connexion (session).
+# ==========================================
+SESSION_ANNONCES_REPORTEES = "annonces_plus_tard"
+
+
+def annonce_concerne(annonce, user):
+    if user.role not in ("annonceur", "partageur"):
+        return False
+    if annonce.public == "annonceurs":
+        return user.a_le_profil("annonceur")
+    if annonce.public == "partageurs":
+        return user.a_le_profil("partageur")
+    return True
+
+
+def texte_personnalise(texte, user):
+    """{nom} devient le nom de la personne ; espace insécable avant la
+    ponctuation double, pour qu'un « ? » ne se retrouve jamais seul à la ligne."""
+    texte = (texte or "").replace("{nom}", nom_affiche(user))
+    return re.sub(r" ([?!:;»])", "\u00a0\\1", texte).replace("« ", "«\u00a0")
+
+
+app.jinja_env.globals["texte_personnalise"] = texte_personnalise
+
+
+def annonce_a_afficher(user):
+    """Plus ancienne annonce active que cet utilisateur n'a ni lue, ni
+    remplie, ni reportée pendant cette session."""
+    reportees = set(session.get(SESSION_ANNONCES_REPORTEES, []))
+    terminees = {
+        r.annonce_id for r in ReponseAnnonce.query.filter(
+            ReponseAnnonce.user_id == user.id,
+            db.or_(ReponseAnnonce.lue_le.isnot(None), ReponseAnnonce.repondu_le.isnot(None)),
+        ).all()
+    }
+    for annonce in Annonce.query.filter_by(active=True).order_by(Annonce.created_at).all():
+        if annonce.id in terminees or annonce.id in reportees:
+            continue
+        if annonce_concerne(annonce, user):
+            return annonce
+    return None
+
+
+def reponse_de(annonce, user, creer=True):
+    reponse = ReponseAnnonce.query.filter_by(annonce_id=annonce.id, user_id=user.id).first()
+    if not reponse and creer:
+        reponse = ReponseAnnonce(annonce_id=annonce.id, user_id=user.id)
+        db.session.add(reponse)
+    return reponse
+
+
+@app.context_processor
+def injecter_annonce_en_cours():
+    """Annonce à montrer en bandeau sur la page en cours, le cas échéant."""
+    if (not current_user.is_authenticated
+            or current_user.role not in ("annonceur", "partageur")
+            or not current_user.has_accepted_terms
+            or request.endpoint in ("voir_annonce", "static")):
+        return {}
+    try:
+        annonce = annonce_a_afficher(current_user)
+    except Exception as e:
+        logger.error("Annonce en cours introuvable : %s", e)
+        return {}
+    if not annonce:
+        return {}
+    if not ReponseAnnonce.query.filter_by(annonce_id=annonce.id, user_id=current_user.id).first():
+        reponse_de(annonce, current_user)
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+    return {
+        "annonce_en_cours": annonce,
+        "annonce_contenu": texte_personnalise(annonce.contenu, current_user),
+        "annonce_notes": Annonce.NOTES,
+    }
+
+
+def _annonce_pour_utilisateur(annonce_id):
+    annonce = db.session.get(Annonce, annonce_id)
+    if not annonce or not annonce_concerne(annonce, current_user):
+        abort(404)
+    return annonce
+
+
+@app.route("/annonces/<int:annonce_id>")
+@login_required
+def voir_annonce(annonce_id):
+    annonce = _annonce_pour_utilisateur(annonce_id)
+    reponse = reponse_de(annonce, current_user)
+    db.session.commit()
+    return render_template(
+        "annonce.html",
+        annonce=annonce,
+        reponse=reponse,
+        contenu=texte_personnalise(annonce.contenu, current_user),
+        notes=Annonce.NOTES,
+    )
+
+
+@app.route("/annonces/<int:annonce_id>/lue", methods=["POST"])
+@login_required
+def annonce_lue(annonce_id):
+    annonce = _annonce_pour_utilisateur(annonce_id)
+    reponse = reponse_de(annonce, current_user)
+    reponse.lue_le = reponse.lue_le or datetime.utcnow()
+    db.session.commit()
+    if request.accept_mimetypes.best == "application/json" or request.is_json:
+        return jsonify({"success": True})
+    return redirect(request.referrer or url_for("index"))
+
+
+@app.route("/annonces/<int:annonce_id>/plus-tard", methods=["POST"])
+@login_required
+def annonce_plus_tard(annonce_id):
+    reportees = set(session.get(SESSION_ANNONCES_REPORTEES, []))
+    reportees.add(annonce_id)
+    session[SESSION_ANNONCES_REPORTEES] = sorted(reportees)
+    return jsonify({"success": True})
+
+
+@app.route("/annonces/<int:annonce_id>/repondre", methods=["POST"])
+@login_required
+@limiter.limit("30 per hour")
+def repondre_annonce(annonce_id):
+    annonce = _annonce_pour_utilisateur(annonce_id)
+    retour = request.form.get("retour") or request.referrer or url_for("index")
+    if not retour.startswith("/") or retour.startswith("//"):
+        retour = url_for("index")
+    if not annonce.est_enquete or not annonce.active:
+        flash("Cette enquête est terminée. Merci quand même de votre attention.", "info")
+        return redirect(retour)
+
+    try:
+        note = int(request.form.get("note", ""))
+    except ValueError:
+        note = None
+    if note not in Annonce.NOTES:
+        flash("Choisissez le visage qui correspond le mieux à votre ressenti.", "warning")
+        return redirect(retour)
+
+    reponse = reponse_de(annonce, current_user)
+    deja = reponse.repondu_le is not None
+    reponse.note = note
+    reponse.commentaire = bleach.clean((request.form.get("commentaire") or "").strip())[:2000] or None
+    reponse.repondu_le = datetime.utcnow()
+
+    # Un avis déçu mérite une réaction rapide de l'équipe
+    if note <= 2 and not deja:
+        notifier_admins_avec_permission(
+            "gerer_annonces",
+            "Avis déçu reçu",
+            f"{nom_affiche(current_user)} ({current_user.role}) a répondu « {Annonce.NOTES[note][1]} » "
+            f"à « {annonce.titre} ».",
+            category="warning",
+            link=url_for("admin_annonce_resultats", annonce_id=annonce.id),
+        )
+    db.session.commit()
+
+    merci = f"Merci {nom_affiche(current_user)}, votre avis est bien reçu et notre équipe le lit avec attention."
+    if note <= 2:
+        merci += " Nous sommes désolés que votre expérience ne soit pas à la hauteur : nous allons tout faire pour l'améliorer."
+    flash(merci, "success")
+    return redirect(retour)
+
+
+# ---------------------------------------------------------------- admin
+TEXTES_PAR_DEFAUT_ENQUETE = {
+    "titre": "Votre avis nous aide à mieux vous servir",
+    "accroche": "Une minute pour nous dire comment se passe votre expérience sur Pubwek ?",
+    "contenu": (
+        "Bonjour {nom},\n\n"
+        "Votre satisfaction est notre priorité. Nous voulons que Pubwek vous soit vraiment utile, "
+        "et personne ne sait mieux que vous ce qui fonctionne bien et ce qui peut être amélioré.\n\n"
+        "Dites-nous simplement ce que vous ressentez. Chaque réponse est lue par notre équipe, "
+        "et si vous nous signalez un souci, nous faisons le nécessaire."
+    ),
+    "question": "Dans l'ensemble, êtes-vous satisfait de Pubwek ?",
+}
+
+
+def destinataires_annonce(public):
+    query = User.query.filter(User.is_confirmed.is_(True), User.is_disabled.is_(False))
+    if public == "annonceurs":
+        return query.filter(filtre_profil("annonceur")).all()
+    if public == "partageurs":
+        return query.filter(filtre_profil("partageur")).all()
+    return query.filter(db.or_(filtre_profil("annonceur"), filtre_profil("partageur"))).all()
+
+
+@app.route("/admin/annonces", methods=["GET", "POST"])
+@login_required
+def admin_annonces():
+    verifier_droits_admin("gerer_annonces")
+
+    if request.method == "POST":
+        type_ = request.form.get("type")
+        public = request.form.get("public")
+        titre = bleach.clean((request.form.get("titre") or "").strip())[:120]
+        accroche = bleach.clean((request.form.get("accroche") or "").strip())[:160]
+        contenu = bleach.clean((request.form.get("contenu") or "").strip())[:5000]
+        question = bleach.clean((request.form.get("question") or "").strip())[:200]
+
+        if type_ not in Annonce.TYPES or public not in Annonce.PUBLICS:
+            flash("Choisissez le type de message et les destinataires.", "warning")
+        elif not titre or not accroche or not contenu:
+            flash("Le titre, la phrase d'accroche et le message sont obligatoires.", "warning")
+        elif type_ == "enquete" and not question:
+            flash("Une enquête a besoin d'une question.", "warning")
+        else:
+            annonce = Annonce(type=type_, public=public, titre=titre, accroche=accroche, contenu=contenu,
+                              question=question if type_ == "enquete" else None,
+                              created_by_admin_id=current_user.id)
+            db.session.add(annonce)
+            db.session.flush()
+            destinataires = destinataires_annonce(public)
+            annonce.nb_destinataires = len(destinataires)
+            lien = url_for("voir_annonce", annonce_id=annonce.id)
+            for u in destinataires:
+                envoyer_notification(u, titre, texte_personnalise(accroche, u),
+                                     category="info", link=lien, push_async=True)
+            db.session.commit()
+            logger.info("[ANNONCE] #%d (%s) publiée pour %d utilisateur(s) par admin id=%d",
+                        annonce.id, type_, len(destinataires), current_user.id)
+            flash(f"Message publié : {len(destinataires)} utilisateur(s) le verront à leur prochaine visite.", "success")
+            return redirect(url_for("admin_annonces"))
+
+    annonces = Annonce.query.order_by(Annonce.created_at.desc()).all()
+    stats = {}
+    for a in annonces:
+        lignes = ReponseAnnonce.query.filter_by(annonce_id=a.id)
+        notes = [r.note for r in lignes.filter(ReponseAnnonce.note.isnot(None)).all()]
+        stats[a.id] = {
+            "vues": lignes.count(),
+            "terminees": lignes.filter(db.or_(ReponseAnnonce.lue_le.isnot(None),
+                                              ReponseAnnonce.repondu_le.isnot(None))).count(),
+            "moyenne": round(sum(notes) / len(notes), 1) if notes else None,
+        }
+    return render_template(
+        "admin_annonces.html",
+        annonces=annonces,
+        stats=stats,
+        types=Annonce.TYPES,
+        publics=Annonce.PUBLICS,
+        defaut=TEXTES_PAR_DEFAUT_ENQUETE,
+        notes=Annonce.NOTES,
+        valeurs=request.form,
+    )
+
+
+@app.route("/admin/annonces/<int:annonce_id>")
+@login_required
+def admin_annonce_resultats(annonce_id):
+    verifier_droits_admin("gerer_annonces")
+    annonce = db.session.get(Annonce, annonce_id)
+    if not annonce:
+        abort(404)
+    reponses = (
+        ReponseAnnonce.query.filter(ReponseAnnonce.annonce_id == annonce.id,
+                                    ReponseAnnonce.repondu_le.isnot(None))
+        .order_by(ReponseAnnonce.repondu_le.desc()).all()
+    )
+    repartition = {n: 0 for n in Annonce.NOTES}
+    for r in reponses:
+        if r.note in repartition:
+            repartition[r.note] += 1
+    return render_template(
+        "admin_annonce_resultats.html",
+        annonce=annonce,
+        reponses=reponses,
+        repartition=repartition,
+        notes=Annonce.NOTES,
+        vues=ReponseAnnonce.query.filter_by(annonce_id=annonce.id).count(),
+    )
+
+
+@app.route("/admin/annonces/<int:annonce_id>/basculer", methods=["POST"])
+@login_required
+def basculer_annonce(annonce_id):
+    verifier_droits_admin("gerer_annonces")
+    annonce = db.session.get(Annonce, annonce_id)
+    if not annonce:
+        abort(404)
+    annonce.active = not annonce.active
+    annonce.cloturee_le = None if annonce.active else datetime.utcnow()
+    db.session.commit()
+    flash("Message remis en ligne." if annonce.active else "Message retiré : il ne s'affiche plus.", "success")
+    return redirect(url_for("admin_annonces"))
+
+
+# ==========================================
+# MESSAGES WHATSAPP AUX PARTAGEURS, UN PAR UN
+#
+# WhatsApp n'autorise pas l'envoi automatique en masse depuis un numéro
+# ordinaire (il faut l'API WhatsApp Business, payante, avec des modèles de
+# messages validés par Meta). Cette page prépare chaque message : l'admin
+# l'écrit une fois, {nom} devient le pseudo de chacun, et un clic ouvre
+# WhatsApp avec le texte prêt à envoyer.
+# ==========================================
+@app.route("/admin/whatsapp")
+@login_required
+def admin_whatsapp_partageurs():
+    verifier_droits_admin("valider_utilisateurs")
+    province = request.args.get("province", "").strip()
+    recherche = request.args.get("q", "").strip()
+    page = request.args.get("page", 1, type=int)
+
+    query = User.query.filter(
+        filtre_profil("partageur"),
+        User.is_confirmed.is_(True),
+        User.is_disabled.is_(False),
+        User.whatsapp_number.isnot(None),
+    )
+    if province in DEPARTEMENTS_COMMUNES:
+        query = filtrer_partageurs_par_zone(query, [province], [])
+    if recherche:
+        terme = f"%{recherche}%"
+        query = query.filter(db.or_(User.pseudo.ilike(terme), User.email.ilike(terme),
+                                    User.whatsapp_number.ilike(terme)))
+    partageurs = query.order_by(User.created_at.desc()).paginate(page=page, per_page=100, error_out=False)
+
+    return render_template(
+        "admin_whatsapp.html",
+        partageurs=partageurs,
+        province=province,
+        recherche=recherche,
+        provinces=list(DEPARTEMENTS_COMMUNES),
+    )
+
+
+# ==========================================
 # 🆕 GESTION DES SOUS-ADMINS — RÉSERVÉ AU SUPER-ADMIN UNIQUEMENT
 # ==========================================
 
@@ -7370,6 +7769,7 @@ PERMISSIONS_DISPONIBLES = {
     "gerer_suppressions_compte": "Traiter les demandes de suppression de compte",
     "gerer_contacts": "Consulter et traiter les messages de contact",  # 🆕
     "gerer_signalements": "Traiter les signalements de partageurs par les annonceurs",
+    "gerer_annonces": "Publier des messages et des enquêtes de satisfaction",
 }
 
 
@@ -8536,19 +8936,47 @@ def admin_contacts():
     for m in messages:
         m.demandeur = db.session.get(User, m.user_id) if m.user_id else None
 
-    nouveaux = [m for m in messages if m.status == "nouveau"]
-    traites = [m for m in messages if m.status != "nouveau"]
+    nouveaux = [m for m in messages if not m.archive_le and m.status == "nouveau"]
+    traites = [m for m in messages if not m.archive_le and m.status != "nouveau"]
+    archives = sorted((m for m in messages if m.archive_le), key=lambda m: m.archive_le, reverse=True)
 
     return render_template(
         "admin_contacts.html",
         nouveaux=nouveaux,
-        traites=traites
+        traites=traites,
+        archives=archives,
     )
 
 
 # ==========================================
-# 🆕 ROUTE ADMIN : MARQUER UN MESSAGE COMME TRAITÉ
+# ROUTES ADMIN : RÉPONDU AILLEURS, ARCHIVER, SORTIR DES ARCHIVES
 # ==========================================
+@app.route("/admin/contacts/<int:message_id>/<action>", methods=["POST"])
+@login_required
+@limiter.limit("120 per hour")
+def classer_message_contact(message_id, action):
+    verifier_droits_admin("gerer_contacts")
+    msg = db.session.get(ContactMessage, message_id)
+    if not msg or action not in ("repondu-ailleurs", "archiver", "desarchiver"):
+        abort(404)
+
+    if action == "repondu-ailleurs":
+        # Réponse donnée par WhatsApp ou téléphone : le message passe dans
+        # « Traités », sans email envoyé.
+        msg.status = "traite"
+        msg.replied_at = datetime.utcnow()
+        msg.replied_by_admin_id = current_user.id
+        flash(f"Message de {msg.name} marqué comme répondu.", "success")
+    elif action == "archiver":
+        msg.archive_le = datetime.utcnow()
+        flash(f"Message de {msg.name} archivé.", "success")
+    else:
+        msg.archive_le = None
+        flash(f"Message de {msg.name} sorti des archives.", "success")
+    db.session.commit()
+    return redirect(url_for("admin_contacts"))
+
+
 # ==========================================
 # 🆕 ROUTE ADMIN : RÉPONDRE À UN MESSAGE DE CONTACT
 # ==========================================

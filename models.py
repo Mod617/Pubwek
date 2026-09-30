@@ -64,6 +64,10 @@ class ContactMessage(db.Model):
     replied_at = db.Column(db.DateTime, nullable=True)
     replied_by_admin_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
 
+    # Rangé par un admin (répondu ailleurs, spam, sans suite) : sort des listes
+    # « Nouveaux » et « Traités » sans rien perdre. Vide = non archivé.
+    archive_le = db.Column(db.DateTime, nullable=True, index=True)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
     user = db.relationship("User", foreign_keys=[user_id])
@@ -1835,3 +1839,70 @@ class SignalementPartageur(db.Model):
 
     def __repr__(self):
         return f"<SignalementPartageur share={self.campaign_share_id} statut={self.statut}>"
+
+
+class Annonce(db.Model):
+    """Message de l'équipe Pubwek aux utilisateurs : une information
+    importante, ou une courte enquête de satisfaction. Affiché en bandeau
+    flottant à chaque connexion tant que l'utilisateur ne l'a pas lu (ou n'a
+    pas répondu), et envoyé aussi dans ses notifications."""
+    __tablename__ = "annonces"
+
+    TYPES = {"information": "Information importante", "enquete": "Enquête de satisfaction"}
+    PUBLICS = {"tous": "Tous les utilisateurs", "annonceurs": "Annonceurs", "partageurs": "Partageurs"}
+    NOTES = {
+        1: ("sentiment_very_dissatisfied", "Pas du tout satisfait"),
+        2: ("sentiment_dissatisfied", "Peu satisfait"),
+        3: ("sentiment_neutral", "Moyennement satisfait"),
+        4: ("sentiment_satisfied", "Satisfait"),
+        5: ("sentiment_very_satisfied", "Très satisfait"),
+    }
+
+    id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.String(20), nullable=False, default="information")
+    public = db.Column(db.String(20), nullable=False, default="tous")
+    titre = db.Column(db.String(120), nullable=False)
+    accroche = db.Column(db.String(160), nullable=False)  # une ligne, dans le bandeau
+    contenu = db.Column(db.Text, nullable=False)          # {nom} devient le nom de chacun
+    question = db.Column(db.String(200), nullable=True)   # enquête uniquement
+    active = db.Column(db.Boolean, nullable=False, default=True, index=True)
+    nb_destinataires = db.Column(db.Integer, nullable=False, default=0)
+    created_by_admin_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    cloturee_le = db.Column(db.DateTime, nullable=True)
+
+    @property
+    def est_enquete(self):
+        return self.type == "enquete"
+
+    def __repr__(self):
+        return f"<Annonce #{self.id} {self.type} {self.public}>"
+
+
+class ReponseAnnonce(db.Model):
+    """Ce qu'un utilisateur a fait d'une annonce : vue, lue, notée."""
+    __tablename__ = "reponses_annonce"
+
+    id = db.Column(db.Integer, primary_key=True)
+    annonce_id = db.Column(db.Integer, db.ForeignKey("annonces.id"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    vue_le = db.Column(db.DateTime, default=datetime.utcnow)
+    lue_le = db.Column(db.DateTime, nullable=True)        # information : « J'ai compris »
+    note = db.Column(db.Integer, nullable=True)           # enquête : 1 à 5
+    commentaire = db.Column(db.Text, nullable=True)
+    repondu_le = db.Column(db.DateTime, nullable=True)
+
+    annonce = db.relationship(
+        "Annonce", backref=db.backref("reponses", lazy=True, cascade="all, delete-orphan")
+    )
+    user = db.relationship(
+        "User", backref=db.backref("reponses_annonce", lazy=True, cascade="all, delete-orphan")
+    )
+
+    __table_args__ = (
+        UniqueConstraint("annonce_id", "user_id", name="uq_reponse_annonce_user"),
+    )
+
+    @property
+    def terminee(self):
+        return bool(self.lue_le or self.repondu_le)

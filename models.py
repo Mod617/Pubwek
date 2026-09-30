@@ -290,6 +290,46 @@ class User(UserMixin, db.Model):
     disabled_at = db.Column(db.DateTime, nullable=True)
     disabled_by_admin_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
 
+    # =========================================================================
+    # DEUX PROFILS SUR UN MÊME COMPTE (annonceur et partageur)
+    #
+    # role reste le profil ACTIF : tout le code qui teste current_user.role
+    # continue de fonctionner, la bascule ne fait que changer role.
+    # profils : "annonceur,partageur" quand le compte a les deux ; vide sinon.
+    # profil_partageur_en_attente : un annonceur a ajouté le profil partageur,
+    # que l'admin doit encore valider (même règle qu'une inscription).
+    # =========================================================================
+    profils = db.Column(db.Text, nullable=True)
+    profil_partageur_en_attente = db.Column(db.Boolean, nullable=False, default=False)
+
+    PROFILS_PUBLICS = ("annonceur", "partageur")
+
+    def liste_profils(self):
+        """Profils du compte, le profil actif en premier."""
+        if self.role not in self.PROFILS_PUBLICS:
+            return [self.role]
+        autres = [p for p in (self.profils or "").split(",") if p in self.PROFILS_PUBLICS and p != self.role]
+        return [self.role] + autres
+
+    def a_le_profil(self, profil, y_compris_en_attente=False):
+        if profil not in self.liste_profils():
+            return False
+        if profil == "partageur" and self.profil_partageur_en_attente and not y_compris_en_attente:
+            return False
+        return True
+
+    def autre_profil(self):
+        """L'autre profil public (ajouté ou non), ou None pour un admin."""
+        if self.role == "annonceur":
+            return "partageur"
+        if self.role == "partageur":
+            return "annonceur"
+        return None
+
+    def peut_basculer(self):
+        autre = self.autre_profil()
+        return bool(autre and self.a_le_profil(autre))
+
     # Relations Existantes
     products = db.relationship("Product", backref="owner", lazy=True, cascade="all, delete-orphan")
     shares = db.relationship("Share", backref="sharer", lazy=True, cascade="all, delete-orphan")

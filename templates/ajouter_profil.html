@@ -1,0 +1,109 @@
+{% extends "base_v2.html" %}
+
+{% block content %}
+<section class="py-space-lg bg-background">
+<div class="max-w-lg mx-auto px-margin space-y-space-sm">
+
+  <div>
+    <span class="pw-badge bg-brand-light text-brand-deep">Mon compte</span>
+    <h1 class="mt-1 font-headline-md text-headline-md text-slate-night">
+      {{ "Devenir aussi partageur" if cible == "partageur" else "Devenir aussi annonceur" }}
+    </h1>
+    <p class="font-body-sm text-body-sm text-on-surface-variant">
+      {% if cible == "partageur" %}
+        Gagnez de l'argent en publiant des annonces sur votre statut WhatsApp, avec le même compte
+        et le même portefeuille. Vous passez d'un espace à l'autre depuis l'en-tête.
+      {% else %}
+        Faites connaître votre activité par les partageurs, avec le même compte et le même
+        portefeuille : vos gains de partageur peuvent payer vos campagnes.
+      {% endif %}
+    </p>
+  </div>
+
+  <form method="POST" class="pw-card space-y-space-sm" id="profilForm"
+        data-communes="{{ departements_communes | tojson | forceescape }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    {% if cible == "annonceur" %}
+      <div>
+        <label class="pw-label" for="company_name">Nom de l'entreprise ou de l'activité</label>
+        <input type="text" name="company_name" id="company_name" class="pw-input" maxlength="150" required
+               value="{{ valeurs.get('company_name', '') }}" placeholder="Ex : Boutique Chez Awa">
+        {% if erreurs.company_name %}<p class="pw-error">{{ erreurs.company_name }}</p>{% endif %}
+      </div>
+    {% else %}
+      <div>
+        <p class="pw-label">Votre zone principale</p>
+        <div class="flex flex-wrap gap-space-xs">
+          <select name="province" id="province" class="pw-select flex-1 min-w-[9rem]" aria-label="Province" required>
+            <option value="">Province</option>
+            {% for province in departements_communes %}
+              <option value="{{ province }}" {{ 'selected' if valeurs.get('province') == province }}>{{ province }}</option>
+            {% endfor %}
+          </select>
+          <select name="commune" id="commune" class="pw-select flex-1 min-w-[9rem]" aria-label="Commune" required
+                  data-initiale="{{ valeurs.get('commune', '') }}">
+            <option value="">Commune</option>
+          </select>
+        </div>
+        {% if erreurs.commune %}<p class="pw-error">{{ erreurs.commune }}</p>{% endif %}
+        <p class="pw-help">Vous pourrez ajouter deux autres zones depuis votre espace partageur.</p>
+      </div>
+
+      {% if not current_user.whatsapp_number %}
+      <div>
+        <label class="pw-label" for="whatsapp_number">Numéro WhatsApp</label>
+        <div class="flex">
+          <span class="inline-flex items-center rounded-l-xl border border-r-0 border-outline-variant/50 bg-surface-container px-space-md font-label-numeric-md text-label-numeric-md font-bold text-slate-midnight">+22901</span>
+          <input type="text" name="whatsapp_number" id="whatsapp_number" class="pw-input rounded-l-none"
+                 inputmode="numeric" maxlength="8" required value="{{ valeurs.get('whatsapp_number', '') }}" placeholder="57290905">
+        </div>
+        {% if erreurs.whatsapp_number %}<p class="pw-error">{{ erreurs.whatsapp_number }}</p>{% endif %}
+      </div>
+      {% endif %}
+
+      {% if validation_requise %}
+      <p class="flex items-start gap-space-xs rounded-xl border border-outline-variant/30 bg-surface-container-low px-space-sm py-space-xs font-caption text-caption text-on-surface-variant">
+        <span class="material-symbols-outlined text-[16px] text-brand-primary shrink-0">verified_user</span>
+        Comme pour toute inscription de partageur, l'équipe Pubwek vérifie votre profil avant de l'ouvrir.
+        Votre espace annonceur reste disponible pendant ce temps.
+      </p>
+      {% endif %}
+    {% endif %}
+
+    <div class="flex justify-end gap-space-xs pt-space-xs">
+      <a href="{{ url_for('dashboard_' ~ current_user.role) }}" class="pw-btn pw-btn-sm pw-btn-neutral">Annuler</a>
+      <button type="submit" class="pw-btn pw-btn-sm pw-btn-primary">
+        <span class="material-symbols-outlined text-[18px]">add</span>
+        {{ "Ajouter le profil partageur" if cible == "partageur" else "Ajouter le profil annonceur" }}
+      </button>
+    </div>
+  </form>
+
+</div>
+</section>
+
+<script>
+(function () {
+  const form = document.getElementById('profilForm');
+  const province = document.getElementById('province');
+  const commune = document.getElementById('commune');
+  if (!form || !province || !commune) return;
+  const communes = JSON.parse(form.dataset.communes);
+  function remplir(choix) {
+    commune.innerHTML = '<option value="">Commune</option>';
+    (communes[province.value] || []).forEach(function (nom) {
+      const option = document.createElement('option');
+      option.value = nom;
+      option.textContent = nom;
+      if (nom === choix) option.selected = true;
+      commune.appendChild(option);
+    });
+  }
+  remplir(commune.dataset.initiale || '');
+  province.addEventListener('change', function () { remplir(''); });
+  const numero = document.getElementById('whatsapp_number');
+  if (numero) numero.addEventListener('input', function () { this.value = this.value.replace(/\D/g, '').slice(0, 8); });
+})();
+</script>
+{% endblock %}

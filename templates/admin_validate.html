@@ -2,10 +2,19 @@
 
 {# ============ Ligne de tableau : un utilisateur en attente ============ #}
 {% macro user_row(user) %}
+{% set profil_ajoute = user.profil_partageur_en_attente %}
+{% set en_attente = not user.is_confirmed or profil_ajoute %}
 <tr class="border-b border-outline-variant/20">
   <td class="align-top font-semibold text-slate-midnight" style="white-space: normal !important; overflow-wrap: anywhere !important; word-break: break-word !important;">{{ user.email }}</td>
-  <td class="align-top"><span class="pw-chip pw-chip-neutral capitalize">{{ user.role }}</span></td>
-  <td class="align-top" style="white-space: normal !important; overflow-wrap: anywhere !important; word-break: break-word !important;">{{ zones_en_texte(user) if user.role == "partageur" else (user.province or "Non spécifié") }}</td>
+  <td class="align-top">
+    {% if profil_ajoute %}
+      <span class="pw-chip pw-chip-neutral">partageur</span>
+      <span class="mt-0.5 block font-caption text-[11px] text-on-surface-variant">déjà annonceur</span>
+    {% else %}
+      <span class="pw-chip pw-chip-neutral capitalize">{{ user.role }}</span>
+    {% endif %}
+  </td>
+  <td class="align-top" style="white-space: normal !important; overflow-wrap: anywhere !important; word-break: break-word !important;">{{ zones_en_texte(user) if user.role == "partageur" or profil_ajoute else (user.province or "Non spécifié") }}</td>
   <td class="align-top" style="white-space: normal !important; overflow-wrap: anywhere !important; word-break: break-word !important;">{{ user.company_name or "-" }}</td>
   <td class="align-top">
     {% if user.whatsapp_number %}
@@ -18,7 +27,7 @@
     {% endif %}
   </td>
   <td class="align-top">
-    {% if user.is_confirmed %}
+    {% if not en_attente %}
       <span class="pw-chip pw-chip-success"><span class="material-symbols-outlined text-[14px]">check_circle</span> Confirmé</span>
     {% else %}
       <span class="pw-chip pw-chip-warning"><span class="material-symbols-outlined text-[14px]">hourglass_top</span> En attente</span>
@@ -41,7 +50,7 @@
     {% endif %}
   </td>
   <td class="align-top">
-    {% if user.is_confirmed %}
+    {% if not en_attente %}
       <button class="pw-btn pw-btn-sm pw-btn-neutral !py-1 !text-[12px]" disabled>Déjà validé</button>
     {% elif user.contacted_by_id and user.contacted_by_id != current_user.id and current_user.role != "admin" %}
       <button class="pw-btn pw-btn-sm pw-btn-neutral !py-1 !text-[12px]" disabled>
@@ -62,7 +71,7 @@
             <button type="submit" class="pw-btn pw-btn-sm pw-btn-primary !py-1.5 !text-[12px]">Confirmer</button>
           </form>
           <form action="{{ url_for('refuse_user', user_id=user.id) }}" method="POST"
-                onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?');">
+                onsubmit="return confirm('{{ 'Refuser le profil partageur ? Son compte annonceur reste actif.' if profil_ajoute else 'Êtes-vous sûr de vouloir supprimer cet utilisateur ?' }}');">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="pw-btn pw-btn-sm pw-btn-neutral !py-1.5 !text-[12px] !text-error">Refuser</button>
           </form>
@@ -177,8 +186,8 @@
 
   <!-- ================= UTILISATEURS EN ATTENTE ================= -->
   {% if peut_voir_utilisateurs %}
-    {% set annonceurs = users | selectattr("role", "equalto", "annonceur") | list %}
-    {% set partageurs = users | selectattr("role", "equalto", "partageur") | list %}
+    {% set annonceurs = users | selectattr("role", "equalto", "annonceur") | rejectattr("profil_partageur_en_attente") | list %}
+    {% set partageurs = (users | selectattr("role", "equalto", "partageur") | list) + (users | selectattr("profil_partageur_en_attente") | list) %}
     {% set admins = users | rejectattr("role", "equalto", "annonceur") | rejectattr("role", "equalto", "partageur") | list %}
 
     <div data-pw-tabs>

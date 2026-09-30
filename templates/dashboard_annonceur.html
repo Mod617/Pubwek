@@ -427,6 +427,24 @@
     </form>
   </div>
 
+  <!-- ================= AUTRE PROFIL ================= -->
+  {% if current_user.a_le_profil("partageur", y_compris_en_attente=True) and not current_user.a_le_profil("partageur") %}
+  <p class="flex items-center gap-space-xs rounded-2xl border border-outline-variant/30 bg-surface-container-lowest px-space-md py-space-sm font-caption text-caption text-on-surface-variant">
+    <span class="material-symbols-outlined text-[18px] text-amber-rich">hourglass_top</span>
+    Votre profil partageur attend la validation de l'équipe Pubwek. Vous serez prévenu dès qu'il est ouvert.
+  </p>
+  {% elif not current_user.a_le_profil("partageur") %}
+  <div class="flex flex-wrap items-center justify-between gap-space-sm rounded-2xl border border-outline-variant/30 bg-surface-container-lowest px-space-md py-space-sm">
+    <p class="font-caption text-caption text-on-surface-variant">
+      <strong class="text-slate-midnight">Envie de gagner de l'argent avec votre statut WhatsApp ?</strong>
+      Ajoutez un profil partageur à ce compte, sans nouvelle inscription.
+    </p>
+    <a href="{{ url_for('ajouter_profil') }}" class="pw-btn pw-btn-sm pw-btn-neutral">
+      <span class="material-symbols-outlined text-[18px]">link</span> Devenir aussi partageur
+    </a>
+  </div>
+  {% endif %}
+
   <!-- ================= ZONE DE DANGER ================= -->
   <details class="group rounded-2xl border border-error/30 bg-error-container/40">
     <summary class="flex items-center gap-1.5 cursor-pointer select-none px-space-md py-space-sm font-headline-md text-[14px] font-semibold text-error list-none">

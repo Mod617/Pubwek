@@ -476,7 +476,7 @@ def memoriser_ip_partageur():
     inutile à chaque requête des autres utilisateurs, et l'écriture n'a lieu
     que si l'adresse a réellement changé.
     """
-    if not current_user.is_authenticated or current_user.role != "partageur":
+    if not current_user.is_authenticated or not current_user.a_le_profil("partageur"):
         return
 
     ip = ip_client()
@@ -865,6 +865,23 @@ with app.app_context():
     except Exception as e:
         db.session.rollback()
         logger.error("Erreur migration qualité des clics : %s", e)
+
+
+# =========================================================================
+# MIGRATION : deux profils sur un même compte
+# =========================================================================
+with app.app_context():
+    from sqlalchemy import text
+    try:
+        db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS profils TEXT"))
+        db.session.execute(text(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS profil_partageur_en_attente BOOLEAN NOT NULL DEFAULT FALSE"
+        ))
+        db.session.commit()
+        logger.info("Migration users.profils vérifiée.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Erreur migration users.profils : %s", e)
 
 
 
@@ -3614,7 +3631,7 @@ def register(role):
             # auto-confirmé ou en attente de validation admin.
             if role == "partageur" and referrer_id_to_save:
                 parrain = db.session.get(User, referrer_id_to_save)
-                if parrain and parrain.role == "partageur":
+                if parrain and parrain.a_le_profil("partageur"):
                     crediter_parrainage_partageur(parrain, new_user, ip_client())
                     db.session.commit()
 
@@ -3995,6 +4012,147 @@ def dashboard_partageur():
         zones_supplementaires=current_user.zones_supplementaires,
         zones_max=ZonePartageur.ZONES_MAX,
         departements_communes=DEPARTEMENTS_COMMUNES,
+    )
+
+
+# ==========================================
+# DEUX PROFILS SUR UN MÊME COMPTE (annonceur et partageur)
+#
+# User.role est le profil actif ; basculer ne fait que le changer. Les pages
+# propres à un profil restent protégées par leur test habituel sur
+# current_user.role : bascule_automatique_de_profil() passe au bon profil
+# avant, quand le compte possède les deux (lien de notification, favori...).
+# ==========================================
+PAGES_ANNONCEUR = {
+    "dashboard_annonceur", "nouvelle_campagne", "mes_campagnes", "campagne_partageurs",
+    "noter_partageur", "signaler_partageur", "campagne_en_attente", "payer_campagne",
+    "confirmer_paiement_wallet", "resoumettre_campagne", "mes_transactions",
+    "mes_transactions_pdf", "reclamer_remboursement",
+    "update_name_ajax", "delete_logo_ajax", "delete_cover_ajax", "update_logo_ajax",
+    "update_cover_ajax", "update_bio_ajax", "update_slogan_ajax",
+    "update_cover_position_ajax", "update_logo_position_ajax",
+}
+PAGES_PARTAGEUR = {
+    "dashboard_partageur", "ajouter_zone_partageur", "retirer_zone_partageur",
+    "partager_campagne_partageur", "confirmer_republication", "instructions_partage",
+    "envoyer_preuve_partage",
+}
+
+
+def filtre_profil(profil):
+    """Condition SQL : le compte possède ce profil (actif ou non en ce
+    moment). Un profil partageur encore en attente de validation ne compte pas."""
+    condition = db.or_(User.role == profil, User.profils.like(f"%{profil}%"))
+    if profil == "partageur":
+        condition = db.and_(condition, User.profil_partageur_en_attente.is_(False))
+    return condition
+
+
+@app.before_request
+def bascule_automatique_de_profil():
+    if not current_user.is_authenticated or not current_user.peut_basculer():
+        return
+    cible = None
+    if request.endpoint in PAGES_ANNONCEUR and current_user.role == "partageur":
+        cible = "annonceur"
+    elif request.endpoint in PAGES_PARTAGEUR and current_user.role == "annonceur":
+        cible = "partageur"
+    if cible:
+        current_user.role = cible
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+
+@app.route("/profil/basculer", methods=["POST"])
+@login_required
+def basculer_profil():
+    cible = current_user.autre_profil()
+    if not cible or not current_user.a_le_profil(cible):
+        flash("Ce profil n'est pas encore disponible sur votre compte.", "warning")
+        return redirect(url_for("index"))
+    current_user.role = cible
+    db.session.commit()
+    return redirect(url_for(f"dashboard_{cible}"))
+
+
+@app.route("/profil/ajouter", methods=["GET", "POST"])
+@login_required
+@limiter.limit("20 per hour", methods=["POST"])
+def ajouter_profil():
+    cible = current_user.autre_profil()
+    if not cible:
+        abort(403)
+    if current_user.a_le_profil(cible, y_compris_en_attente=True):
+        if current_user.a_le_profil(cible):
+            flash("Votre compte a déjà ce profil.", "info")
+        else:
+            flash("Votre profil partageur attend la validation de l'équipe Pubwek.", "info")
+        return redirect(url_for(f"dashboard_{current_user.role}"))
+
+    config = SystemConfig.get_config()
+    erreurs = {}
+    valeurs = request.form
+
+    if request.method == "POST":
+        if cible == "annonceur":
+            entreprise = bleach.clean((valeurs.get("company_name") or "").strip())[:150]
+            if not entreprise:
+                erreurs["company_name"] = "Indiquez le nom de votre entreprise ou de votre activité."
+        else:
+            province = (valeurs.get("province") or "").strip()
+            commune = (valeurs.get("commune") or "").strip()
+            if not province or not commune or not commune_appartient_a(commune, province):
+                erreurs["commune"] = "Choisissez votre province puis une commune de cette province."
+            numero = None
+            if not current_user.whatsapp_number:
+                chiffres = re.sub(r"\D", "", valeurs.get("whatsapp_number") or "")
+                numero = "+22901" + chiffres
+                if len(chiffres) != 8 or not numero_whatsapp_valide(numero):
+                    erreurs["whatsapp_number"] = MESSAGE_NUMERO_INVALIDE
+                elif User.query.filter(User.whatsapp_number == numero, User.id != current_user.id).first():
+                    erreurs["whatsapp_number"] = "Ce numéro est déjà utilisé par un autre compte."
+
+        if not erreurs:
+            current_user.profils = "annonceur,partageur"
+            if cible == "annonceur":
+                current_user.company_name = entreprise
+                current_user.role = "annonceur"
+                db.session.commit()
+                flash("Votre profil annonceur est prêt. Vous passez de l'un à l'autre depuis l'en-tête.", "success")
+                return redirect(url_for("dashboard_annonceur"))
+
+            current_user.province = province
+            current_user.commune = commune
+            if numero:
+                current_user.whatsapp_number = numero
+            if config.exiger_validation_partageur:
+                current_user.profil_partageur_en_attente = True
+                db.session.commit()
+                notifier_admins_avec_permission(
+                    "valider_utilisateurs",
+                    "Profil partageur à valider",
+                    f"{current_user.company_name or current_user.email}, déjà annonceur, demande à devenir partageur.",
+                    category="info",
+                    link=url_for("admin_validate"),
+                )
+                db.session.commit()
+                flash("Demande envoyée. L'équipe Pubwek va vérifier votre profil partageur, "
+                      "comme pour toute inscription. Vous serez prévenu dès qu'il est validé.", "success")
+                return redirect(url_for("dashboard_annonceur"))
+            current_user.role = "partageur"
+            db.session.commit()
+            flash("Votre profil partageur est prêt. Vous passez de l'un à l'autre depuis l'en-tête.", "success")
+            return redirect(url_for("dashboard_partageur"))
+
+    return render_template(
+        "ajouter_profil.html",
+        cible=cible,
+        erreurs=erreurs,
+        valeurs=valeurs,
+        departements_communes=DEPARTEMENTS_COMMUNES,
+        validation_requise=config.exiger_validation_partageur,
     )
 
 
@@ -4418,7 +4576,10 @@ def admin_validate():
     if peut_voir_utilisateurs:
         # 🆕 Filtre : uniquement les comptes NON confirmés — file d'attente d'action.
         # Les comptes déjà validés se consultent désormais sur /admin/utilisateurs.
-        users = User.query.filter_by(is_confirmed=False).order_by(User.created_at.desc()).all()
+        # Inscriptions en attente, et annonceurs qui ont ajouté un profil partageur
+        users = User.query.filter(
+            db.or_(User.is_confirmed.is_(False), User.profil_partageur_en_attente.is_(True))
+        ).order_by(User.created_at.desc()).all()
         for u in users:
             if u.whatsapp_number:
                 u.whatsapp_message = urllib.parse.quote(
@@ -4519,11 +4680,12 @@ def admin_utilisateurs():
     # Compteurs de chaque onglet — uniquement des COUNT, jamais un .all()
     compteurs = {}
     for nom_onglet, info in ONGLETS_UTILISATEURS.items():
-        compteurs[nom_onglet] = User.query.filter_by(
-            role=info["role"], is_confirmed=True
+        compteurs[nom_onglet] = User.query.filter(
+            filtre_profil(info["role"]), User.is_confirmed.is_(True)
         ).count()
 
-    query = User.query.filter_by(role=role_cible, is_confirmed=True)
+    # Un compte à deux profils apparaît dans les deux onglets.
+    query = User.query.filter(filtre_profil(role_cible), User.is_confirmed.is_(True))
 
     if recherche:
         terme = f"%{recherche}%"
@@ -4964,7 +5126,9 @@ def partager_campagne_admin(campaign_id):
     )
 
     # 2️⃣ Recherche des partageurs confirmés dans ces zones
-    query = User.query.filter(User.role == "partageur", User.is_confirmed == True)
+    # Les comptes à deux profils sont prévenus même s'ils sont en ce moment
+    # sur leur profil annonceur.
+    query = User.query.filter(filtre_profil("partageur"), User.is_confirmed == True)
 
     # Sinon : provinces == "Toutes" et aucune commune précisée -> tous les partageurs confirmés
     query = filtrer_partageurs_par_zone(query, provinces_ciblees, communes_ciblees)
@@ -5258,6 +5422,16 @@ def confirm_user(user_id):
         flash("Ce dossier est pris en charge par un autre administrateur. Vous ne pouvez pas le traiter.", "danger")
         return redirect(url_for("admin_validate"))
 
+    if user.profil_partageur_en_attente:
+        # Annonceur qui a ajouté le profil partageur : seul ce profil est validé
+        user.profil_partageur_en_attente = False
+        envoyer_notification(
+            user,
+            "Profil partageur validé",
+            "Votre profil partageur est validé. Passez-y depuis l'en-tête pour voir les campagnes de vos zones.",
+            category="success",
+            link=url_for("dashboard_partageur"),
+        )
     user.is_confirmed = True
     db.session.commit()
     logger.warning(
@@ -5304,6 +5478,27 @@ def refuse_user(user_id):
         flash("Ce dossier est pris en charge par un autre administrateur. Vous ne pouvez pas le traiter.", "danger")
         return redirect(url_for("admin_validate"))
 
+    if user.profil_partageur_en_attente:
+        # Profil partageur ajouté par un annonceur : on retire ce profil
+        # seulement, le compte annonceur reste intact.
+        user.profils = None
+        user.profil_partageur_en_attente = False
+        user.contacted_by_id = None
+        user.contacted_at = None
+        if user.role == "partageur":
+            user.role = "annonceur"
+        envoyer_notification(
+            user,
+            "Profil partageur refusé",
+            "Votre demande de profil partageur n'a pas été acceptée. Votre compte annonceur reste actif.",
+            category="warning",
+            link=url_for("dashboard_annonceur"),
+        )
+        db.session.commit()
+        logger.warning("[ACTION ADMIN] Profil partageur refusé pour id=%d par admin id=%d", user_id, current_user.id)
+        flash(f"Profil partageur de {escape(user.email)} refusé. Son compte annonceur reste actif.", "warning")
+        return redirect(url_for("admin_validate"))
+
     whatsapp = user.whatsapp_number
     email_log = user.email
     db.session.delete(user)
@@ -5346,7 +5541,7 @@ def contacter_partageur_verification(user_id):
     if not user:
         flash("Utilisateur introuvable.", "danger")
         return redirect(url_for("admin_validate"))
-    if user.is_confirmed:
+    if user.is_confirmed and not user.profil_partageur_en_attente:
         flash("Cet utilisateur est déjà confirmé.", "warning")
         return redirect(url_for("admin_validate"))
 

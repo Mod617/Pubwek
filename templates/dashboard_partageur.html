@@ -280,6 +280,12 @@
       <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
       Mes gains &amp; retraits
     </a>
+    {% if not current_user.a_le_profil("annonceur") %}
+    <a href="{{ url_for('ajouter_profil') }}" class="pw-btn pw-btn-sm pw-btn-neutral">
+      <span class="material-symbols-outlined text-[18px]">campaign</span>
+      Devenir aussi annonceur
+    </a>
+    {% endif %}
   </div>
 
   <!-- ================= ZONE DE DANGER ================= -->

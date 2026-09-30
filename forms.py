@@ -63,6 +63,24 @@ class LoginForm(FlaskForm):
     submit = SubmitField("Se connecter")
 
 
+CHOIX_PROVINCES = [
+    ("", "Sélectionnez une province"),
+    ("Alibori", "Alibori"),
+    ("Atacora", "Atacora"),
+    ("Atlantique", "Atlantique"),
+    ("Borgou", "Borgou"),
+    ("Collines", "Collines"),
+    ("Couffo", "Couffo"),
+    ("Donga", "Donga"),
+    ("Littoral", "Littoral"),
+    ("Mono", "Mono"),
+    ("Ouémé", "Ouémé"),
+    ("Plateau", "Plateau"),
+    ("Zou", "Zou"),
+]
+CHOIX_COMMUNES = [("", "Sélectionnez d'abord une province")] + [(c, c) for c in toutes_les_communes()]
+
+
 # ------------------------------
 # 🧾 Formulaire d'inscription
 # ------------------------------
@@ -94,35 +112,17 @@ class RegisterForm(FlaskForm):
         validators=[DataRequired()],
     )
 
-    province = SelectField(
-        "Province",
-        choices=[
-            ("", "Sélectionnez une province"),
-            ("Alibori", "Alibori"),
-            ("Atacora", "Atacora"),
-            ("Atlantique", "Atlantique"),
-            ("Borgou", "Borgou"),
-            ("Collines", "Collines"),
-            ("Couffo", "Couffo"),
-            ("Donga", "Donga"),
-            ("Littoral", "Littoral"),
-            ("Mono", "Mono"),
-            ("Ouémé", "Ouémé"),
-            ("Plateau", "Plateau"),
-            ("Zou", "Zou"),
-        ],
-        default="",
-        validators=[Optional()],
-    )
+    province = SelectField("Province", choices=CHOIX_PROVINCES, default="", validators=[Optional()])
 
     # 🆕 Commune — la liste affichée est filtrée en JS selon la province choisie,
     # mais on garde toutes les communes valides côté serveur pour la validation.
-    commune = SelectField(
-        "Commune",
-        choices=[("", "Sélectionnez d'abord une province")] + [(c, c) for c in toutes_les_communes()],
-        default="",
-        validators=[Optional()],
-    )
+    commune = SelectField("Commune", choices=CHOIX_COMMUNES, default="", validators=[Optional()])
+
+    # Zones supplémentaires facultatives du partageur (trois zones au plus)
+    province_2 = SelectField("Province", choices=CHOIX_PROVINCES, default="", validators=[Optional()])
+    commune_2 = SelectField("Commune", choices=CHOIX_COMMUNES, default="", validators=[Optional()])
+    province_3 = SelectField("Province", choices=CHOIX_PROVINCES, default="", validators=[Optional()])
+    commune_3 = SelectField("Commune", choices=CHOIX_COMMUNES, default="", validators=[Optional()])
 
     company_name = StringField("Nom de l'entreprise", validators=[Optional()])
 
@@ -176,6 +176,24 @@ class RegisterForm(FlaskForm):
             if not self.whatsapp_number.data or not self.whatsapp_number.data.strip():
                 self.whatsapp_number.errors.append("Le numéro WhatsApp est obligatoire pour les partageurs.")
                 is_valid = False
+
+            # Zones supplémentaires : facultatives, mais complètes, cohérentes
+            # et distinctes de la zone principale.
+            communes_vues = {self.commune.data} if self.commune.data else set()
+            for province, commune in ((self.province_2, self.commune_2), (self.province_3, self.commune_3)):
+                if not province.data and not commune.data:
+                    continue
+                if not province.data or not commune.data:
+                    commune.errors.append("Choisissez la province et la commune de cette zone, ou laissez les deux vides.")
+                    is_valid = False
+                elif not commune_appartient_a(commune.data, province.data):
+                    commune.errors.append("La commune sélectionnée ne correspond pas à la province choisie.")
+                    is_valid = False
+                elif commune.data in communes_vues:
+                    commune.errors.append("Vous avez déjà choisi cette commune.")
+                    is_valid = False
+                else:
+                    communes_vues.add(commune.data)
 
         # Validation ANNONCEUR
         if self.role.data == "annonceur":

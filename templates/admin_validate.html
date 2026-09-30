@@ -5,7 +5,7 @@
 <tr class="border-b border-outline-variant/20">
   <td class="align-top font-semibold text-slate-midnight" style="white-space: normal !important; overflow-wrap: anywhere !important; word-break: break-word !important;">{{ user.email }}</td>
   <td class="align-top"><span class="pw-chip pw-chip-neutral capitalize">{{ user.role }}</span></td>
-  <td class="align-top" style="white-space: normal !important; overflow-wrap: anywhere !important; word-break: break-word !important;">{{ user.province or user.department or "Non spécifié" }}</td>
+  <td class="align-top" style="white-space: normal !important; overflow-wrap: anywhere !important; word-break: break-word !important;">{{ zones_en_texte(user) if user.role == "partageur" else (user.province or "Non spécifié") }}</td>
   <td class="align-top" style="white-space: normal !important; overflow-wrap: anywhere !important; word-break: break-word !important;">{{ user.company_name or "-" }}</td>
   <td class="align-top">
     {% if user.whatsapp_number %}

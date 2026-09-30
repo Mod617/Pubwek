@@ -1697,3 +1697,35 @@ class Notification(db.Model):
 
     def __repr__(self):
         return f"<Notification #{self.id} pour user_id={self.user_id}>"
+
+
+class ZonePartageur(db.Model):
+    """Zones supplémentaires d'un partageur (au plus ZONES_MAX - 1).
+
+    La zone principale reste dans User.province / User.commune, remplies à
+    l'inscription : rien ne change pour les comptes existants. Un partageur
+    voit les campagnes qui ciblent l'une quelconque de ses zones (voir
+    zones_du_partageur et campagne_cible_utilisateur dans main.py).
+    """
+    __tablename__ = "zones_partageur"
+
+    ZONES_MAX = 3
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    province = db.Column(db.String(100), nullable=False)
+    commune = db.Column(db.String(100), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship(
+        "User",
+        backref=db.backref("zones_supplementaires", lazy=True, cascade="all, delete-orphan",
+                           order_by="ZonePartageur.id")
+    )
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "commune", name="uq_zone_partageur_commune"),
+    )
+
+    def __repr__(self):
+        return f"<ZonePartageur user_id={self.user_id} {self.province}/{self.commune}>"

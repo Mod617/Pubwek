@@ -34,8 +34,7 @@
 
     <form id="registerForm" method="POST" action="" enctype="multipart/form-data"
           class="space-y-space-sm"
-          data-communes="{{ departements_communes | tojson | forceescape }}"
-          data-commune-initiale="{{ form.commune.data or '' }}">
+          data-communes="{{ departements_communes | tojson | forceescape }}">
       {{ form.hidden_tag() }}
       <input type="hidden" name="role" value="{{ role }}">
 
@@ -82,24 +81,41 @@
       </div>
 
       {% if role == "partageur" %}
-      <!-- Province -->
-      <div>
-        {{ form.province.label(class="pw-label") }}
-        {{ form.province(class="pw-select", id="province") }}
-        {% for error in form.province.errors %}
-          <p class="pw-error">{{ error }}</p>
-        {% endfor %}
-      </div>
+      <!-- Zones : la principale est obligatoire, deux autres sont facultatives -->
+      <fieldset class="space-y-space-sm">
+        <legend class="pw-label">Vos zones de diffusion</legend>
+        <p class="pw-help !mt-0">Vous verrez les campagnes qui ciblent l'une de vos zones. Trois zones au plus.</p>
 
-      <!-- Commune -->
-      <div>
-        {{ form.commune.label(class="pw-label") }}
-        {{ form.commune(class="pw-select", id="commune") }}
-        {% for error in form.commune.errors %}
-          <p class="pw-error">{{ error }}</p>
+        {% for province, commune, numero in [(form.province, form.commune, 1), (form.province_2, form.commune_2, 2), (form.province_3, form.commune_3, 3)] %}
+        {% set visible = numero == 1 or province.data or commune.data or commune.errors %}
+        <div class="zone-ligne {{ '' if visible else 'hidden' }} rounded-xl border border-outline-variant/30 p-space-sm space-y-space-xs" data-zone="{{ numero }}">
+          <div class="flex items-center justify-between gap-space-xs">
+            <span class="font-caption text-caption font-bold text-on-surface-variant">
+              {{ "Zone principale" if numero == 1 else "Zone " ~ numero }}
+            </span>
+            {% if numero > 1 %}
+            <button type="button" class="zone-retirer font-caption text-caption font-semibold text-on-surface-variant hover:text-error">Retirer</button>
+            {% endif %}
+          </div>
+          <div class="flex flex-wrap gap-space-xs">
+            <div class="flex-1 min-w-[9rem]">
+              {{ province(class="pw-select zone-province", id="province" if numero == 1 else "province_" ~ numero, aria_label="Province") }}
+            </div>
+            <div class="flex-1 min-w-[9rem]">
+              {{ commune(class="pw-select zone-commune", id="commune" if numero == 1 else "commune_" ~ numero,
+                         aria_label="Commune", data_initiale=commune.data or "") }}
+            </div>
+          </div>
+          {% for error in (province.errors|list) + (commune.errors|list) %}
+            <p class="pw-error">{{ error }}</p>
+          {% endfor %}
+        </div>
         {% endfor %}
-        <p class="pw-help">Sélectionnez d'abord votre province ci-dessus.</p>
-      </div>
+
+        <button type="button" id="zoneAjouter" class="pw-btn pw-btn-sm pw-btn-neutral">
+          <span class="material-symbols-outlined text-[18px]">add</span> Ajouter une zone
+        </button>
+      </fieldset>
 
       <!-- WhatsApp -->
       <div>
@@ -187,12 +203,8 @@ function togglePasswordVisibility(fieldId, btn) {
 document.addEventListener("DOMContentLoaded", function() {
   const registerForm = document.getElementById("registerForm");
   const DEPARTEMENTS_COMMUNES = JSON.parse(registerForm.dataset.communes);
-  const COMMUNE_INITIALE = registerForm.dataset.communeInitiale || "";
 
-  function remplirCommunes(provinceSelectionnee, communeAChoisirParDefaut) {
-    const communeSelect = document.getElementById("commune");
-    if (!communeSelect) return;
-
+  function remplirCommunes(communeSelect, provinceSelectionnee, communeAChoisirParDefaut) {
     communeSelect.innerHTML = "";
 
     const communes = DEPARTEMENTS_COMMUNES[provinceSelectionnee] || [];
@@ -207,7 +219,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const optionVide = document.createElement("option");
     optionVide.value = "";
-    optionVide.textContent = "Sélectionnez votre commune";
+    optionVide.textContent = "Sélectionnez la commune";
     communeSelect.appendChild(optionVide);
 
     communes.forEach(function(commune) {
@@ -221,14 +233,39 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  const provinceSelect = document.getElementById("province");
-  if (provinceSelect) {
-    // Initialisation au chargement (utile si l'utilisateur revient apres une erreur de formulaire)
-    remplirCommunes(provinceSelect.value, COMMUNE_INITIALE);
-
+  // Chaque zone : la liste des communes suit la province choisie.
+  // Initialisation au chargement, utile au retour d'une erreur de formulaire.
+  const lignesZone = Array.from(document.querySelectorAll(".zone-ligne"));
+  lignesZone.forEach(function(ligne) {
+    const provinceSelect = ligne.querySelector(".zone-province");
+    const communeSelect = ligne.querySelector(".zone-commune");
+    remplirCommunes(communeSelect, provinceSelect.value, communeSelect.dataset.initiale || "");
     provinceSelect.addEventListener("change", function() {
-      remplirCommunes(this.value, "");
+      remplirCommunes(communeSelect, this.value, "");
     });
+    const retirer = ligne.querySelector(".zone-retirer");
+    if (retirer) {
+      retirer.addEventListener("click", function() {
+        provinceSelect.value = "";
+        remplirCommunes(communeSelect, "", "");
+        ligne.classList.add("hidden");
+        majBoutonAjout();
+      });
+    }
+  });
+
+  const boutonAjout = document.getElementById("zoneAjouter");
+  function majBoutonAjout() {
+    if (!boutonAjout) return;
+    boutonAjout.classList.toggle("hidden", !lignesZone.some(function(l) { return l.classList.contains("hidden"); }));
+  }
+  if (boutonAjout) {
+    boutonAjout.addEventListener("click", function() {
+      const suivante = lignesZone.find(function(l) { return l.classList.contains("hidden"); });
+      if (suivante) suivante.classList.remove("hidden");
+      majBoutonAjout();
+    });
+    majBoutonAjout();
   }
 
   // Numero WhatsApp : n'autorise que la saisie de chiffres dans le champ,

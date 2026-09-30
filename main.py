@@ -69,6 +69,7 @@ from models import (
     UserSubscription,
     WalletTransaction,
     WithdrawalRequest,
+    ZonePartageur,
     db,
 )
 
@@ -1116,11 +1117,51 @@ def campagne_cible_utilisateur(camp, user):
         if camp.provinces and camp.provinces != "Toutes" else []
     )
 
+    # Un partageur peut avoir jusqu'à trois zones : il suffit que l'une
+    # d'elles soit ciblée.
+    zones = zones_du_partageur(user)
     if communes_ciblees:
-        return user.commune in communes_ciblees
+        return any(commune in communes_ciblees for _, commune in zones)
     if provinces_ciblees:
-        return user.province in provinces_ciblees
+        return any(province in provinces_ciblees for province, _ in zones)
     return True
+
+
+def zones_du_partageur(user):
+    """Zones d'un partageur, sous forme de couples (département, commune) :
+    la zone principale de l'inscription, puis ses zones supplémentaires."""
+    zones = []
+    if user.commune:
+        zones.append((user.province, user.commune))
+    elif user.province and user.province not in ("Non spécifiée", "Admin"):
+        zones.append((user.province, None))
+    zones.extend((z.province, z.commune) for z in user.zones_supplementaires)
+    return zones
+
+
+def zones_en_texte(user):
+    """« Cotonou (Littoral), Ouidah (Atlantique) » pour l'affichage admin."""
+    morceaux = [f"{c} ({p})" if c else p for p, c in zones_du_partageur(user)]
+    return ", ".join(morceaux) or user.province or "Non spécifié"
+
+
+app.jinja_env.globals["zones_en_texte"] = zones_en_texte
+
+
+def filtrer_partageurs_par_zone(query, provinces_ciblees, communes_ciblees):
+    """Restreint une requête sur User aux partageurs dont l'une des zones
+    est ciblée. Même règle que campagne_cible_utilisateur."""
+    if communes_ciblees:
+        return query.filter(db.or_(
+            User.commune.in_(communes_ciblees),
+            User.zones_supplementaires.any(ZonePartageur.commune.in_(communes_ciblees)),
+        ))
+    if provinces_ciblees:
+        return query.filter(db.or_(
+            User.province.in_(provinces_ciblees),
+            User.zones_supplementaires.any(ZonePartageur.province.in_(provinces_ciblees)),
+        ))
+    return query
 
 
 def enregistrer_upload(filename, owner_id, kind=None):
@@ -3361,6 +3402,11 @@ def register(role):
             referrer_id=referrer_id_to_save,
             has_launched_first_campaign=False
         )
+        if role == "partageur":
+            for province, commune in ((form.province_2.data, form.commune_2.data),
+                                      (form.province_3.data, form.commune_3.data)):
+                if province and commune:
+                    new_user.zones_supplementaires.append(ZonePartageur(province=province, commune=commune))
 
         try:
             db.session.add(new_user)
@@ -3751,8 +3797,46 @@ def dashboard_partageur():
         taux_parrainage_annonceur=config.referral_reward_rate,  # 🆕
         notifications=notifications,
         notifications_non_lues=notifications_non_lues,
-        campagnes_disponibles=campagnes_disponibles
+        campagnes_disponibles=campagnes_disponibles,
+        zones_supplementaires=current_user.zones_supplementaires,
+        zones_max=ZonePartageur.ZONES_MAX,
+        departements_communes=DEPARTEMENTS_COMMUNES,
     )
+
+
+# ==========================================
+# ROUTES : ZONES SUPPLÉMENTAIRES DU PARTAGEUR (trois zones au plus)
+# ==========================================
+@app.route("/partageur/zones/ajouter", methods=["POST"])
+@login_required
+@limiter.limit("30 per hour")
+def ajouter_zone_partageur():
+    if current_user.role != "partageur":
+        abort(403)
+    province = (request.form.get("province") or "").strip()
+    commune = (request.form.get("commune") or "").strip()
+
+    if not province or not commune or not commune_appartient_a(commune, province):
+        flash("Choisissez une province puis une commune de cette province.", "warning")
+    elif len(zones_du_partageur(current_user)) >= ZonePartageur.ZONES_MAX:
+        flash(f"Vous avez déjà {ZonePartageur.ZONES_MAX} zones. Retirez-en une pour en ajouter une autre.", "warning")
+    elif commune in [c for _, c in zones_du_partageur(current_user)]:
+        flash(f"{commune} fait déjà partie de vos zones.", "info")
+    else:
+        db.session.add(ZonePartageur(user_id=current_user.id, province=province, commune=commune))
+        db.session.commit()
+        flash(f"Zone ajoutée : {commune}. Vous verrez aussi les campagnes qui la ciblent.", "success")
+    return redirect(url_for("dashboard_partageur"))
+
+
+@app.route("/partageur/zones/<int:zone_id>/retirer", methods=["POST"])
+@login_required
+def retirer_zone_partageur(zone_id):
+    zone = ZonePartageur.query.filter_by(id=zone_id, user_id=current_user.id).first_or_404()
+    db.session.delete(zone)
+    db.session.commit()
+    flash(f"Zone retirée : {zone.commune}.", "success")
+    return redirect(url_for("dashboard_partageur"))
 
 
 
@@ -4680,11 +4764,8 @@ def partager_campagne_admin(campaign_id):
     # 2️⃣ Recherche des partageurs confirmés dans ces zones
     query = User.query.filter(User.role == "partageur", User.is_confirmed == True)
 
-    if communes_ciblees:
-        query = query.filter(User.commune.in_(communes_ciblees))
-    elif provinces_ciblees:
-        query = query.filter(User.province.in_(provinces_ciblees))
     # Sinon : provinces == "Toutes" et aucune commune précisée -> tous les partageurs confirmés
+    query = filtrer_partageurs_par_zone(query, provinces_ciblees, communes_ciblees)
 
     partageurs_cibles = query.all()
 

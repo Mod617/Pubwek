@@ -125,11 +125,22 @@
     <div class="flex items-center justify-between gap-space-sm">
       <h2 class="font-headline-sm text-body-md font-bold text-slate-midnight flex items-center gap-1.5">
         <span class="material-symbols-outlined text-[20px] text-brand-primary">storefront</span>
-        Campagnes disponibles dans votre zone
+        Campagnes disponibles dans vos zones
       </h2>
       {% if campagnes_disponibles %}
         <span class="pw-chip pw-chip-neutral">{{ campagnes_disponibles | length }} disponible{{ 's' if campagnes_disponibles | length > 1 else '' }}</span>
       {% endif %}
+    </div>
+
+    <!-- Zones du partageur : la principale (inscription) et jusqu'a deux autres -->
+    {% set nb_zones = (1 if current_user.commune else 0) + zones_supplementaires | length %}
+    <div class="flex flex-wrap items-center gap-1.5 font-caption text-caption text-on-surface-variant">
+      <span class="material-symbols-outlined text-[16px]">location_on</span>
+      {% if current_user.commune %}<span class="pw-chip pw-chip-neutral">{{ current_user.commune }}</span>{% endif %}
+      {% for z in zones_supplementaires %}<span class="pw-chip pw-chip-neutral">{{ z.commune }}</span>{% endfor %}
+      <button type="button" data-pw-modal="zonesModal" class="font-semibold text-brand-deep underline underline-offset-2">
+        {{ "Ajouter une zone" if nb_zones < zones_max else "Gérer mes zones" }}
+      </button>
     </div>
 
     {% if campagnes_disponibles %}
@@ -246,7 +257,7 @@
         <span class="material-symbols-outlined text-[36px] text-amber-rich">hourglass_top</span>
         <h3 class="mt-1 font-headline-md text-headline-md text-slate-midnight">Aucune opportunité pour le moment</h3>
         <p class="mx-auto mt-1 max-w-lg font-body-sm text-body-sm text-on-surface-variant">
-          Il n'y a pas encore de campagne active pour votre commune ou votre département.
+          Il n'y a pas encore de campagne active dans vos zones.
           De nouvelles campagnes sont ajoutées régulièrement : dès qu'une campagne ciblera
           votre zone, elle apparaîtra ici et vous pourrez la partager immédiatement.
         </p>
@@ -297,7 +308,81 @@
 </div>
 </section>
 
+<!-- Fenetre : zones du partageur -->
+<div class="pw-modal fixed inset-0 z-[90] hidden items-center justify-center p-space-md bg-slate-night/80 overflow-y-auto"
+     id="zonesModal" aria-modal="true" role="dialog">
+  <div class="pw-modal-panel w-full max-w-md my-auto rounded-2xl bg-surface-container-lowest shadow-2xl overflow-hidden">
+    <div class="pw-modal-head bg-brand-primary text-white">
+      <span>Mes zones de diffusion</span>
+      <button type="button" class="pw-modal-close opacity-70 hover:opacity-100" aria-label="Fermer">
+        <span class="material-symbols-outlined text-[20px]">close</span>
+      </button>
+    </div>
+    <div class="pw-modal-body space-y-space-sm">
+      <p class="font-caption text-caption text-on-surface-variant">
+        Vous voyez les campagnes qui ciblent l'une de vos zones, {{ zones_max }} au plus.
+      </p>
+      <ul class="space-y-1.5">
+        {% if current_user.commune %}
+        <li class="flex items-center justify-between gap-space-xs rounded-xl border border-outline-variant/30 px-space-sm py-2">
+          <span class="font-body-sm text-body-sm text-slate-midnight"><strong>{{ current_user.commune }}</strong> · {{ current_user.province }}</span>
+          <span class="font-caption text-caption text-on-surface-variant">Zone principale</span>
+        </li>
+        {% endif %}
+        {% for z in zones_supplementaires %}
+        <li class="flex items-center justify-between gap-space-xs rounded-xl border border-outline-variant/30 px-space-sm py-2">
+          <span class="font-body-sm text-body-sm text-slate-midnight"><strong>{{ z.commune }}</strong> · {{ z.province }}</span>
+          <form method="POST" action="{{ url_for('retirer_zone_partageur', zone_id=z.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="font-caption text-caption font-semibold text-on-surface-variant hover:text-error">Retirer</button>
+          </form>
+        </li>
+        {% endfor %}
+      </ul>
+
+      {% if nb_zones < zones_max %}
+      <form method="POST" action="{{ url_for('ajouter_zone_partageur') }}" id="zoneForm"
+            class="space-y-space-xs pt-space-xs border-t border-outline-variant/30"
+            data-communes="{{ departements_communes | tojson | forceescape }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <p class="pw-label !mb-0">Ajouter une zone</p>
+        <div class="flex flex-wrap gap-space-xs">
+          <select name="province" id="zoneProvince" class="pw-select flex-1 min-w-[9rem]" aria-label="Province" required>
+            <option value="">Province</option>
+            {% for province in departements_communes %}<option value="{{ province }}">{{ province }}</option>{% endfor %}
+          </select>
+          <select name="commune" id="zoneCommune" class="pw-select flex-1 min-w-[9rem]" aria-label="Commune" required>
+            <option value="">Commune</option>
+          </select>
+        </div>
+        <button type="submit" class="pw-btn pw-btn-sm pw-btn-primary w-full">
+          <span class="material-symbols-outlined text-[18px]">add</span> Ajouter cette zone
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
 <script>
+// Fenetre des zones : la liste des communes suit la province choisie
+(function () {
+  const form = document.getElementById('zoneForm');
+  if (!form) return;
+  const communes = JSON.parse(form.dataset.communes);
+  const province = document.getElementById('zoneProvince');
+  const commune = document.getElementById('zoneCommune');
+  province.addEventListener('change', function () {
+    commune.innerHTML = '<option value="">Commune</option>';
+    (communes[province.value] || []).forEach(function (nom) {
+      const option = document.createElement('option');
+      option.value = nom;
+      option.textContent = nom;
+      commune.appendChild(option);
+    });
+  });
+})();
+
 function copyReferralLink() {
     var copyText = document.getElementById("referralLink");
     copyText.select();

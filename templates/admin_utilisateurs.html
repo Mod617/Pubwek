@@ -70,7 +70,7 @@
         <tr>
           <td class="font-semibold text-slate-midnight">{{ user.email }}</td>
           <td><span class="pw-chip pw-chip-neutral capitalize">{{ user.role }}</span></td>
-          <td>{{ user.province or "Non spécifié" }}</td>
+          <td>{{ zones_en_texte(user) if user.role == "partageur" else (user.province or "Non spécifié") }}</td>
           <td>{{ user.company_name or "-" }}</td>
           <td>
             {% if user.whatsapp_number %}

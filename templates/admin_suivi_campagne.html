@@ -25,7 +25,7 @@
 
   <!-- Progression de la diffusion -->
   {% set quota_jour = campaign.quota_effectif_du_jour() %}
-  {% set pct_jour = (campaign.views_today / quota_jour * 100) if quota_jour else 0 %}
+  {% set pct_jour = (campaign.vues_du_jour() / quota_jour * 100) if quota_jour else 0 %}
   <div class="pw-card !p-space-md">
     <div class="flex flex-wrap items-center justify-between gap-space-xs mb-space-xs">
       <h2 class="flex items-center gap-1.5 font-headline-md text-body-md font-bold text-slate-midnight">
@@ -52,7 +52,7 @@
       </div>
       <div class="pw-card-flat">
         <span class="pw-tile-label">Clics aujourd'hui</span>
-        <div class="pw-tile-value !text-xl text-brand-deep">{{ campaign.views_today or 0 }} <span class="text-sm text-on-surface-variant">/ {{ quota_jour }}</span></div>
+        <div class="pw-tile-value !text-xl text-brand-deep">{{ campaign.vues_du_jour() }} <span class="text-sm text-on-surface-variant">/ {{ quota_jour }}</span></div>
       </div>
       <div class="pw-card-flat">
         <span class="pw-tile-label">Clics totaux / objectif</span>

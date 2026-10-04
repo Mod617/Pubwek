@@ -823,6 +823,14 @@ class Campaign(db.Model):
             self.is_active = False
         db.session.commit()
 
+    def vues_du_jour(self):
+        """Clics obtenus aujourd'hui, lecture seule. views_today n'est remis à
+        zéro que lorsqu'un clic arrive : tant qu'aucun clic n'a eu lieu depuis
+        minuit, il contient encore la valeur de la veille."""
+        if self.current_day_number != self.jour_diffusion_campagne():
+            return 0
+        return self.views_today or 0
+
     def quota_effectif_du_jour(self):
         """Quota de clics exigé aujourd'hui : l'objectif restant EN DÉBUT DE
         JOURNÉE, réparti sur les jours de diffusion restants (jour courant

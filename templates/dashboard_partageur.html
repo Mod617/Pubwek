@@ -110,14 +110,19 @@
       </div>
     </div>
 
-    <div class="flex flex-wrap gap-space-2xs">
-      <input type="text" class="pw-input font-label-numeric-md text-label-numeric-md sm:rounded-r-none" id="referralLink" value="{{ affiliate_link }}" readonly>
-      <button class="pw-btn pw-btn-sm pw-btn-primary shrink-0 sm:rounded-l-none" type="button" onclick="copyReferralLink()">
+    <textarea class="pw-input text-body-sm" id="referralLink" rows="4" readonly>Bonjour ! Je gagne de l'argent avec Pubwek en partageant des publicités sur mon statut WhatsApp. Si tu es partageur ou si tu veux faire connaître ton activité, inscris-toi avec mon lien :
+{{ affiliate_link }}</textarea>
+    <div class="mt-space-2xs flex flex-wrap gap-space-2xs">
+      <button class="pw-btn pw-btn-sm pw-btn-primary" type="button" onclick="shareReferralLink()">
+        <span class="material-symbols-outlined text-[18px]">share</span>
+        Partager
+      </button>
+      <button class="pw-btn pw-btn-sm pw-btn-neutral" type="button" onclick="copyReferralLink()">
         <span class="material-symbols-outlined text-[18px]">content_copy</span>
-        Copier
+        Copier le message
       </button>
     </div>
-    <p id="copyFeedback" class="hidden mt-1 font-caption text-caption font-semibold text-success">Lien copié avec succès</p>
+    <p id="copyFeedback" class="hidden mt-1 font-caption text-caption font-semibold text-success">Message copié avec succès</p>
   </div>
 
   <!-- ================= CAMPAGNES DISPONIBLES ================= -->
@@ -408,6 +413,16 @@ function copyReferralLink() {
     }).catch(function(err) {
         console.error('Erreur lors de la copie : ', err);
     });
+}
+
+/* Feuille de partage du téléphone avec le message complet ; à défaut, copie. */
+function shareReferralLink() {
+    var texte = document.getElementById("referralLink").value;
+    if (navigator.share) {
+        navigator.share({ text: texte }).catch(function() {});
+    } else {
+        copyReferralLink();
+    }
 }
 
 </script>

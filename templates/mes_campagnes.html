@@ -394,7 +394,7 @@
     <div class="grid grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-space-sm">
       {% for campaign in en_cours %}
       {% set quota_jour = campaign.quota_effectif_du_jour() %}
-      {% set jour_pct = (campaign.views_today / quota_jour * 100) if quota_jour else 0 %}
+      {% set jour_pct = (campaign.vues_du_jour() / quota_jour * 100) if quota_jour else 0 %}
       <div id="campagne-{{ campaign.id }}" class="pw-tile flex flex-col">
         <div class="flex items-start justify-between gap-space-xs mb-1">
           <h3 class="font-headline-md text-body-md font-bold text-slate-midnight leading-snug min-w-0">
@@ -411,7 +411,7 @@
           <div class="flex items-center justify-between gap-space-xs font-caption text-caption">
             <span class="font-bold text-slate-midnight">Jour {{ campaign.current_day_number or 1 }} / {{ campaign.duration_days }}</span>
             <span class="text-on-surface-variant">
-              {{ campaign.views_today or 0 }}/{{ quota_jour }} aujourd'hui ·
+              {{ campaign.vues_du_jour() }}/{{ quota_jour }} aujourd'hui ·
               {{ campaign.whatsapp_views or 0 }}/{{ campaign.target_whatsapp_views }} au total
             </span>
           </div>

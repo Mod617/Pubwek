@@ -386,7 +386,7 @@
 
             {% if camp.validated and camp.is_active and camp.current_day_number %}
               <div class="mt-1 pt-1 border-t border-outline-variant/30">
-                <span class="pw-chip pw-chip-success">Jour {{ camp.current_day_number }} / {{ camp.duration_days }}</span>
+                <span class="pw-chip pw-chip-success">Jour {{ camp.jour_diffusion_campagne() }} / {{ camp.duration_days }}</span>
                 <div class="mt-0.5 font-caption text-caption text-on-surface-variant">
                   {{ camp.vues_du_jour() }} / {{ camp.quota_effectif_du_jour() }} clics aujourd'hui
                 </div>

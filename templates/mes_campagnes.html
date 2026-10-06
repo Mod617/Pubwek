@@ -409,7 +409,7 @@
 
         <div class="mt-1 rounded-xl bg-canvas-cream px-space-sm py-1.5">
           <div class="flex items-center justify-between gap-space-xs font-caption text-caption">
-            <span class="font-bold text-slate-midnight">Jour {{ campaign.current_day_number or 1 }} / {{ campaign.duration_days }}</span>
+            <span class="font-bold text-slate-midnight">Jour {{ campaign.jour_diffusion_campagne() }} / {{ campaign.duration_days }}</span>
             <span class="text-on-surface-variant">
               {{ campaign.vues_du_jour() }}/{{ quota_jour }} aujourd'hui ·
               {{ campaign.whatsapp_views or 0 }}/{{ campaign.target_whatsapp_views }} au total

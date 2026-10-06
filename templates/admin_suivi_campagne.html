@@ -33,7 +33,7 @@
         Progression de la diffusion
       </h2>
       {% if campaign.is_active and campaign.current_day_number %}
-        <span class="pw-chip pw-chip-success">Jour {{ campaign.current_day_number }} / {{ campaign.duration_days }}</span>
+        <span class="pw-chip pw-chip-success">Jour {{ campaign.jour_diffusion_campagne() }} / {{ campaign.duration_days }}</span>
       {% elif campaign.status == "terminee" %}
         <span class="pw-chip pw-chip-success"><span class="material-symbols-outlined text-[14px]">task_alt</span> Diffusion terminée</span>
       {% else %}

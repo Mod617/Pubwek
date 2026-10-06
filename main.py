@@ -5957,6 +5957,9 @@ MOTIFS_REJET_LIBELLES = {
     MOTIF_RAFALE: "Délai anti-rafale non respecté (clics trop rapprochés)",
     MOTIF_PLAFOND_PARTAGE: "Plafond quotidien de ce partage atteint",
     MOTIF_PLAFOND_IP: "Plafond quotidien de cette adresse IP atteint",
+    MOTIF_PLAFOND_OBJECTIF: "Part maximale de l'objectif atteinte par ce partageur",
+    MOTIF_EXCLU: "Partageur écarté de cette campagne après un signalement",
+    MOTIF_ANNULE: "Clic annulé après un signalement de l'annonceur",
 }
 
 # Signatures d'agents automatiques. Le premier cas est le plus important :

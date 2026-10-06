@@ -1,0 +1,24 @@
+{% extends "base_v2.html" %}
+
+{% block content %}
+<section class="py-space-lg md:py-space-xl bg-gradient-to-b from-canvas-cream via-surface-container-low to-background">
+<div class="w-full max-w-md mx-auto px-margin">
+
+  <div class="pw-card text-center space-y-space-sm">
+    <div class="w-12 h-12 mx-auto rounded-xl bg-amber-soft text-secondary flex items-center justify-center">
+      <span class="material-symbols-outlined text-[26px]">hourglass_top</span>
+    </div>
+    <h1 class="font-headline-md text-headline-md text-slate-night">Trop de tentatives</h1>
+    <p class="font-body-md text-body-md text-on-surface-variant">
+      Vous avez fait trop de tentatives en peu de temps. Par sécurité, cette action est
+      suspendue un instant. Réessayez {{ delai }}.
+    </p>
+    <p class="font-caption text-caption text-on-surface-variant">
+      Votre compte n'est pas bloqué et rien n'a été perdu.
+    </p>
+    <a href="{{ url_for('index') }}" class="pw-btn pw-btn-md pw-btn-primary w-full">Retour à l'accueil</a>
+  </div>
+
+</div>
+</section>
+{% endblock %}

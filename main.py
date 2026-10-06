@@ -3415,7 +3415,7 @@ def page_partageurs():
 
 
 @app.route("/login", methods=["GET", "POST"])
-@limiter.limit("5 per minute")
+@limiter.limit("5 per minute", methods=["POST"])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
@@ -3538,7 +3538,7 @@ def reclamer_remboursement(campaign_id):
 
 
 @app.route("/register/<role>", methods=["GET", "POST"])
-@limiter.limit("10 per hour")
+@limiter.limit("10 per hour", methods=["POST"])
 def register(role):
     if role not in ["annonceur", "partageur"]:
         flash("Rôle invalide", "danger")
@@ -8063,7 +8063,7 @@ def envoyer_email_reset_async(app, destinataire, reset_url):
 # 🔑 MOT DE PASSE OUBLIÉ — DEMANDE DE RÉINITIALISATION
 # ==========================================
 @app.route("/mot-de-passe-oublie", methods=["GET", "POST"])
-@limiter.limit("5 per hour")
+@limiter.limit("5 per hour", methods=["POST"])
 def forgot_password():
     if request.method == "POST":
         # Sans service d'envoi configuré, autant le dire : afficher « un lien
@@ -9100,6 +9100,31 @@ with app.app_context():
 # =========================================================================
 # 🚀 Point d'entrée
 # =========================================================================
+
+@app.errorhandler(429)
+def trop_de_requetes(e):
+    """Limite de requêtes atteinte : une page lisible plutôt que le message
+    technique par défaut, et du JSON pour les appels faits en JavaScript."""
+    delai = "dans quelques minutes"
+    try:
+        fenetre = e.limit.limit.get_expiry()
+        if fenetre <= 60:
+            delai = "dans une minute"
+        elif fenetre >= 3600:
+            delai = "dans une heure"
+    except Exception:
+        pass
+    message = f"Trop de tentatives en peu de temps. Réessayez {delai}."
+    attend_du_json = (
+        request.is_json
+        or request.path.endswith("_ajax")
+        or request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        or request.accept_mimetypes.best == "application/json"
+    )
+    if attend_du_json:
+        return jsonify({"success": False, "error": message}), 429
+    return render_template("trop_de_requetes.html", delai=delai), 429
+
 
 if __name__ == "__main__":
     # FIX: debug=False en production. Pour dev local uniquement, passez DEBUG=true en variable d'env.

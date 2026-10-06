@@ -61,11 +61,11 @@
     </div>
 
     <div class="mt-space-xs h-1.5 rounded-full bg-surface-container overflow-hidden">
-      <div class="h-full rounded-full {{ 'bg-amber-rich' if campaign.daily_quota_paused else 'bg-brand-primary' }}"
+      <div class="h-full rounded-full {{ 'bg-amber-rich' if campaign.quota_en_pause() else 'bg-brand-primary' }}"
            style="width: {{ [pct_jour, 100] | min }}%;"></div>
     </div>
 
-    {% if campaign.daily_quota_paused %}
+    {% if campaign.quota_en_pause() %}
     <p class="mt-space-xs flex items-start gap-1 rounded-xl bg-amber-soft px-space-sm py-1.5 font-caption text-caption text-secondary">
       <span class="material-symbols-outlined text-[14px] shrink-0">warning</span>
       <span>Le quota du jour est atteint. Les partageurs ont été notifiés qu'ils peuvent retirer leur statut ;
@@ -163,6 +163,7 @@
           <th>Lien</th>
           <th>Statut</th>
           <th>Motif (si bloqué)</th>
+          <th>Navigateur</th>
         </tr>
       </thead>
       <tbody>
@@ -185,6 +186,7 @@
             {% endif %}
           </td>
           <td class="font-caption text-caption text-on-surface-variant">{{ c.motif or "-" }}</td>
+          <td class="font-caption text-caption text-on-surface-variant" style="min-width: 260px; white-space: normal; overflow-wrap: anywhere;">{{ c.navigateur or "-" }}</td>
         </tr>
         {% endfor %}
       </tbody>

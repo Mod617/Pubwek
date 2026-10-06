@@ -393,7 +393,7 @@
                 <div class="font-caption text-caption text-on-surface-variant">
                   {{ camp.whatsapp_views or 0 }} / {{ camp.target_whatsapp_views }} au total
                 </div>
-                {% if camp.daily_quota_paused %}
+                {% if camp.quota_en_pause() %}
                   <span class="pw-chip pw-chip-warning mt-0.5">Quota du jour atteint</span>
                 {% endif %}
               </div>

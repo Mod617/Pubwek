@@ -3986,7 +3986,7 @@ def dashboard_partageur():
         # les ignore ici (lecture seule, aucune écriture pendant un GET).
         # =====================================================================
         jour_reel = camp.jour_diffusion_campagne()
-        compteurs_a_jour = (camp.current_day_number == jour_reel)
+        compteurs_a_jour = camp.compteurs_du_jour_a_jour()
         vues_aujourdhui = (camp.views_today or 0) if compteurs_a_jour else 0
         quota_atteint = bool(deja_partagee and compteurs_a_jour and camp.daily_quota_paused)
 
@@ -4352,6 +4352,7 @@ def admin_suivi_campagne(campaign_id):
                 "is_paid": c.is_paid,
                 "motif": MOTIFS_REJET_LIBELLES.get(c.rejection_reason, c.rejection_reason) if not c.is_paid else None,
                 "ip": c.ip,
+                "navigateur": c.user_agent,
             })
 
     return render_template(
@@ -6888,8 +6889,7 @@ def relancer_rappels_republication(maintenant=None):
     for camp in campagnes_actives:
         if camp.target_whatsapp_views and (camp.whatsapp_views or 0) >= camp.target_whatsapp_views:
             continue
-        jour_reel = camp.jour_diffusion_campagne(maintenant)
-        if camp.current_day_number == jour_reel and camp.daily_quota_paused:
+        if camp.quota_en_pause():
             continue
 
         nom_campagne = html.unescape(camp.promotion_detail or camp.promotion_type or f"#{camp.id}")

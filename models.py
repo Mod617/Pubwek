@@ -827,9 +827,29 @@ class Campaign(db.Model):
         """Clics obtenus aujourd'hui, lecture seule. views_today n'est remis à
         zéro que lorsqu'un clic arrive : tant qu'aucun clic n'a eu lieu depuis
         minuit, il contient encore la valeur de la veille."""
-        if self.current_day_number != self.jour_diffusion_campagne():
+        if not self.compteurs_du_jour_a_jour():
             return 0
         return self.views_today or 0
+
+    def compteurs_du_jour_a_jour(self):
+        """Les compteurs journaliers (views_today, daily_quota_paused) portent-ils
+        bien sur la journée en cours ? Le numéro de jour ne suffit pas : il est
+        plafonné à la durée, donc il ne change plus une fois la campagne en
+        prolongation. On compare aussi la date du dernier reset."""
+        return (
+            self.current_day_number == self.jour_diffusion_campagne()
+            and self.last_quota_date == datetime.utcnow().date()
+        )
+
+    def quota_en_pause(self):
+        """Le quota du jour est-il réellement atteint aujourd'hui ? Lecture
+        seule, pour l'affichage : le drapeau daily_quota_paused seul peut dater
+        d'un jour précédent."""
+        return bool(
+            self.daily_quota_paused
+            and self.compteurs_du_jour_a_jour()
+            and self.quota_du_jour_atteint()
+        )
 
     def quota_effectif_du_jour(self):
         """Quota de clics exigé aujourd'hui : l'objectif restant EN DÉBUT DE
@@ -848,7 +868,7 @@ class Campaign(db.Model):
         # views_today n'est fiable que s'il a été resynchronisé sur le jour
         # réel (voir verifier_et_reset_quota_journalier) ; sinon aucun clic
         # n'a encore été reçu aujourd'hui et il faut le considérer comme 0.
-        deja_fait_aujourdhui = (self.views_today or 0) if self.current_day_number == jour_actuel else 0
+        deja_fait_aujourdhui = (self.views_today or 0) if self.compteurs_du_jour_a_jour() else 0
 
         restant_debut_journee = max(
             0,
@@ -864,8 +884,9 @@ class Campaign(db.Model):
         depuis le dernier passage : reset le compteur du jour, réactive la campagne
         et efface l'instant d'atteinte du quota (fin du délai de grâce de la veille)
         ainsi que le drapeau de pré-alerte.
-        last_quota_date est conservée à titre informatif (traçabilité/support), elle
-        ne pilote plus la logique.
+        En prolongation, le jour calculé reste bloqué sur le dernier jour prévu :
+        c'est alors last_quota_date (date du dernier reset) qui déclenche la
+        remise à zéro quotidienne.
         Retourne True si un changement de jour a eu lieu.
         """
         nouveau_jour = self.jour_diffusion_campagne()
@@ -881,8 +902,9 @@ class Campaign(db.Model):
             self.quota_prealerte_envoyee = False  # 🆕 [PRÉ-ALERTE]
             return True
 
-        # Changement de jour détecté (comparaison sur le jour calculé, plus sur la date brute)
-        if nouveau_jour != self.current_day_number:
+        # Changement de jour détecté : le jour calculé a changé, ou bien la date
+        # a changé alors que le jour calculé est plafonné (prolongation)
+        if nouveau_jour != self.current_day_number or self.last_quota_date != datetime.utcnow().date():
             self.last_quota_date = datetime.utcnow().date()
             self.current_day_number = nouveau_jour
             self.views_today = 0

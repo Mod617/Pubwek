@@ -400,7 +400,7 @@
           <h3 class="font-headline-md text-body-md font-bold text-slate-midnight leading-snug min-w-0">
             {{ campaign.promotion_type | capitalize }} · {{ campaign.promotion_detail }}
           </h3>
-          {% if campaign.daily_quota_paused %}
+          {% if campaign.quota_en_pause() %}
             <span class="pw-chip pw-chip-warning shrink-0">Quota atteint</span>
           {% else %}
             <span class="pw-chip pw-chip-success shrink-0">En diffusion</span>
@@ -416,7 +416,7 @@
             </span>
           </div>
           <div class="mt-1 h-1.5 rounded-full bg-surface-container overflow-hidden">
-            <div class="h-full rounded-full {{ 'bg-amber-rich' if campaign.daily_quota_paused else 'bg-brand-primary' }}"
+            <div class="h-full rounded-full {{ 'bg-amber-rich' if campaign.quota_en_pause() else 'bg-brand-primary' }}"
                  style="width: {{ [jour_pct, 100] | min }}%;"></div>
           </div>
         </div>

@@ -125,6 +125,34 @@
     <p id="copyFeedback" class="hidden mt-1 font-caption text-caption font-semibold text-success">Message copié avec succès</p>
   </div>
 
+  <!-- ================= TUTORIELS VIDEO ================= -->
+  <div class="pw-card !p-space-md">
+    <div class="flex flex-wrap items-start justify-between gap-space-xs mb-space-xs">
+      <div class="min-w-0">
+        <h2 class="font-headline-sm text-body-md font-bold text-slate-midnight flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[20px] text-brand-primary">smart_display</span>
+          Comment partager une campagne
+        </h2>
+        <p class="font-caption text-caption text-on-surface-variant">
+          Un tutoriel vidéo pour chacun des trois types de campagnes.
+        </p>
+      </div>
+      <a href="{{ CHAINE_YOUTUBE }}" target="_blank" rel="noopener"
+         class="inline-flex items-center gap-1 font-caption text-caption font-semibold text-brand-deep underline underline-offset-2">
+        Notre chaîne YouTube
+        <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+      </a>
+    </div>
+    <div class="flex flex-wrap gap-space-2xs">
+      {% for tutoriel in TUTORIELS_PARTAGE.values() %}
+      <a href="{{ tutoriel.url }}" target="_blank" rel="noopener" class="pw-btn pw-btn-sm pw-btn-neutral">
+        <span class="material-symbols-outlined text-[18px]">play_circle</span>
+        {{ tutoriel.nom }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+
   <!-- ================= CAMPAGNES DISPONIBLES ================= -->
   <div id="produitsDisponibles" class="space-y-space-xs">
     <div class="flex items-center justify-between gap-space-sm">

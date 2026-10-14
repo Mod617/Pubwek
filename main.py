@@ -946,6 +946,27 @@ def manifest():
 
 
 # =============================================================================
+# Tutoriels video pour les partageurs
+#
+# Un tutoriel par type de campagne (Campaign.display_option). Ils s'ouvrent
+# dans YouTube plutot que dans la page : rien a charger pour qui ne les
+# regarde pas, et la CSP reste sans domaine externe. Pour changer une video,
+# il suffit de remplacer son lien ici.
+# =============================================================================
+TUTORIELS_PARTAGE = {
+    "A": {"nom": "Vidéo", "sujet": "une campagne vidéo",
+          "url": "https://youtube.com/shorts/HadhuVd3fL0"},
+    "B": {"nom": "Multi-statut", "sujet": "une campagne multi-statut",
+          "url": "https://youtube.com/shorts/O2E4DwYdITI"},
+    "C": {"nom": "Texte seul", "sujet": "une campagne texte seul",
+          "url": "https://youtube.com/shorts/onEe0cZFCVg"},
+}
+CHAINE_YOUTUBE = "https://www.youtube.com/@pubwek1"
+
+app.jinja_env.globals.update(TUTORIELS_PARTAGE=TUTORIELS_PARTAGE, CHAINE_YOUTUBE=CHAINE_YOUTUBE)
+
+
+# =============================================================================
 # Moteurs de recherche : robots.txt et plan du site
 #
 # Les espaces connectes sont exclus de l'indexation. Les liens de suivi /t/,

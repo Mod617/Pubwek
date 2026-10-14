@@ -35,6 +35,24 @@
           <span class="block font-caption text-caption text-on-surface-variant">C'est ce que vous gagnez pour chaque clic validé sur cette campagne.</span>
         </span>
       </div>
+
+      <!-- Tutoriel video du type de cette campagne -->
+      {% set tutoriel = TUTORIELS_PARTAGE.get(camp.display_option) %}
+      {% if tutoriel %}
+      <div class="mt-space-xs flex flex-wrap items-center justify-between gap-space-xs rounded-xl border border-outline-variant/50 bg-surface-container px-space-sm py-2">
+        <span class="flex items-center gap-space-xs min-w-[11rem] flex-1">
+          <span class="material-symbols-outlined text-[22px] text-brand-primary shrink-0">smart_display</span>
+          <span class="min-w-0">
+            <span class="block font-body-sm text-body-sm font-semibold text-slate-midnight">Comment partager {{ tutoriel.sujet }} ?</span>
+            <span class="block font-caption text-caption text-on-surface-variant">Notre tutoriel en vidéo vous montre la bonne méthode.</span>
+          </span>
+        </span>
+        <a href="{{ tutoriel.url }}" target="_blank" rel="noopener" class="pw-btn pw-btn-sm pw-btn-neutral shrink-0">
+          <span class="material-symbols-outlined text-[18px]">play_circle</span>
+          Voir le tutoriel
+        </a>
+      </div>
+      {% endif %}
     </div>
 
     <!-- ETAPE 1 : copier la legende / le texte -->

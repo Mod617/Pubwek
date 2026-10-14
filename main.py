@@ -406,13 +406,15 @@ def create_app():
     # Le niveau suit ENV plutôt qu'un bloc à décommenter à la main : un bloc
     # commenté finit toujours par être oublié le jour du déploiement.
     # =========================================================================
+    # Plus aucun domaine externe : Tailwind est compile en local et les
+    # polices sont auto-hebergees depuis la refonte (static/fonts/).
     csp = {
-        "default-src": ["'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
-        "style-src":   ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
-        "script-src":  ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
-        "img-src":     ["'self'", "data:", "blob:", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+        "default-src": ["'self'"],
+        "style-src":   ["'self'", "'unsafe-inline'"],
+        "script-src":  ["'self'", "'unsafe-inline'"],
+        "img-src":     ["'self'", "data:", "blob:"],
         "media-src":   ["'self'", "blob:", "data:"],
-        "font-src":    ["'self'", "data:", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+        "font-src":    ["'self'", "data:"],
     }
 
     Talisman(
@@ -941,6 +943,110 @@ def service_worker():
 @app.route('/manifest.json')
 def manifest():
     return send_from_directory('.', 'manifest.json', mimetype='application/manifest+json')
+
+
+# =============================================================================
+# Moteurs de recherche : robots.txt et plan du site
+#
+# Les espaces connectes sont exclus de l'indexation. Les liens de suivi /t/,
+# les fichiers /uploads/ et les pages /verifier/ restent volontairement
+# ouverts : les robots d'apercu de WhatsApp et de Facebook doivent continuer
+# a les lire exactement comme avant.
+# =============================================================================
+ZONES_NON_INDEXEES = (
+    "/admin/", "/dashboard/", "/annonceur/", "/partageur/", "/mes-campagnes",
+    "/campagnes/", "/notifications/", "/annonces/", "/compte/", "/profil/",
+    "/push/", "/webhooks/", "/reinitialiser-mot-de-passe/",
+)
+
+PAGES_DU_PLAN_DU_SITE = (
+    ("index", {}), ("page_annonceurs", {}), ("page_partageurs", {}),
+    ("register", {"role": "annonceur"}), ("register", {"role": "partageur"}),
+    ("a_propos", {}), ("contact", {}), ("cgu", {}), ("confidentialite", {}),
+)
+
+
+@app.route("/robots.txt")
+def robots_txt():
+    lignes = ["User-agent: *"]
+    lignes += [f"Disallow: {zone}" for zone in ZONES_NON_INDEXEES]
+    lignes += ["", f"Sitemap: {url_for('sitemap_xml', _external=True)}", ""]
+    reponse = make_response("\n".join(lignes))
+    reponse.mimetype = "text/plain"
+    return reponse
+
+
+@app.route("/sitemap.xml")
+def sitemap_xml():
+    adresses = "".join(
+        f"<url><loc>{escape(url_for(endpoint, _external=True, **valeurs))}</loc></url>"
+        for endpoint, valeurs in PAGES_DU_PLAN_DU_SITE
+    )
+    reponse = make_response(
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{adresses}</urlset>'
+    )
+    reponse.mimetype = "application/xml"
+    return reponse
+
+
+# =============================================================================
+# Mise en cache des fichiers statiques
+#
+# Chaque url_for('static', ...) recoit une empreinte du contenu (?v=...). Une
+# adresse versionnee ne change jamais de contenu : le telephone la garde un an
+# sans redemander. Quand le fichier change (CSS recompile, image remplacee),
+# l'empreinte change et l'ancienne copie n'est plus jamais demandee.
+#
+# Les polices ne sont pas versionnees : fonts.css les appelle par une adresse
+# relative sans empreinte, et le prechargement de base_v2.html doit demander
+# exactement la meme adresse, sinon la police est telechargee deux fois.
+# Elles, comme tout fichier appele sans empreinte, sont gardees une heure :
+# une icone ajoutee au sous-ensemble Material Symbols apparait donc au plus
+# une heure apres le deploiement.
+# =============================================================================
+_empreintes_statiques = {}
+
+
+def empreinte_statique(filename):
+    """Empreinte courte du contenu d'un fichier de static/, recalculee
+    seulement quand sa date ou sa taille change."""
+    chemin = os.path.join(app.static_folder, filename)
+    try:
+        etat = os.stat(chemin)
+    except OSError:
+        return None
+    cle = (etat.st_mtime_ns, etat.st_size)
+    connue = _empreintes_statiques.get(filename)
+    if connue and connue[0] == cle:
+        return connue[1]
+    with open(chemin, "rb") as fichier:
+        empreinte = hashlib.md5(fichier.read(), usedforsecurity=False).hexdigest()[:10]
+    _empreintes_statiques[filename] = (cle, empreinte)
+    return empreinte
+
+
+@app.url_defaults
+def versionner_fichiers_statiques(endpoint, values):
+    if endpoint != "static" or "v" in values:
+        return
+    filename = values.get("filename")
+    if not filename or filename.startswith("fonts/"):
+        return
+    empreinte = empreinte_statique(filename)
+    if empreinte:
+        values["v"] = empreinte
+
+
+@app.after_request
+def cache_fichiers_statiques(response):
+    if request.endpoint != "static" or response.status_code not in (200, 304):
+        return response
+    if request.args.get("v"):
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    else:
+        response.headers["Cache-Control"] = "public, max-age=3600"
+    return response
 
 
 @app.route("/generer-description-auto", methods=["POST"])

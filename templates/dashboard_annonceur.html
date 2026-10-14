@@ -49,11 +49,11 @@
            data-pos-x="{{ current_user.logo_position_x or 50 }}" data-pos-y="{{ current_user.logo_position_y or 50 }}">
         {% if current_user.logo %}
           <img id="userLogoPreview" src="{{ url_for('serve_upload', filename=current_user.logo) }}" alt="Logo"
-               class="w-full h-full rounded-full border-4 border-white object-cover select-none dynamic-logo-pos" draggable="false" onerror="this.src='{{ url_for('static', filename='images/logo.png') }}'"
+               class="w-full h-full rounded-full border-4 border-white object-cover select-none dynamic-logo-pos" draggable="false" onerror="this.src='{{ url_for('static', filename='images/logo-256.png') }}'"
                data-pos-x="{{ current_user.logo_position_x or 50 }}" data-pos-y="{{ current_user.logo_position_y or 50 }}">
         {% else %}
           <img id="userLogoPreview" src="{{ url_for('static', filename='uploads/logos/default_company.png') }}" alt="Logo"
-               class="w-full h-full rounded-full border-4 border-white object-cover select-none" draggable="false" onerror="this.src='{{ url_for('static', filename='images/logo.png') }}'">
+               class="w-full h-full rounded-full border-4 border-white object-cover select-none" draggable="false" onerror="this.src='{{ url_for('static', filename='images/logo-256.png') }}'">
         {% endif %}
 
         <button type="button" onclick="triggerLogoUpload()"

@@ -1,4 +1,5 @@
 {% extends "base_v2.html" %}
+{% from "_blocs/lien_video.html" import lien_video %}
 {% set title = "Pour les partageurs" %}
 
 {% block meta_description %}Vous publiez des annonces déjà validées sur votre statut, avec un lien qui n'appartient qu'à vous. Chaque clic de vos contacts vous est payé.{% endblock %}
@@ -30,6 +31,7 @@ dans le simulateur plus bas.
 <span class="material-symbols-outlined text-[20px]">analytics</span> Estimer mes gains
 </a>
 </div>
+{{ lien_video(VIDEOS_PRESENTATION.partageur, "Voir la vidéo pour les partageurs", "text-amber-rich") }}
 <div class="pt-space-xs flex flex-wrap items-center gap-y-2 gap-x-space-md text-on-surface-variant font-caption text-caption">
 <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-amber-rich">bolt</span> Retrait d&egrave;s 500 FCFA</span>
 <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-amber-rich">lock_clock</span> Aucun investissement de d&eacute;part</span>

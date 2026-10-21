@@ -1,4 +1,5 @@
 {% extends "base_v2.html" %}
+{% from "_blocs/lien_video.html" import lien_video %}
 
 {% block head_extra %}
 <style>
@@ -79,6 +80,7 @@
               Gagner de l'argent par statut
             </a>
 </div>
+{{ lien_video(VIDEOS_PRESENTATION.introduction, "Découvrir Pubwek en vidéo", "text-brand-primary") }}
 <!-- Micro-Trust Pillars -->
 <div class="pt-space-sm flex flex-wrap items-center gap-y-2 gap-x-space-md text-on-surface-variant font-caption text-caption">
 <span class="inline-flex items-center gap-1">

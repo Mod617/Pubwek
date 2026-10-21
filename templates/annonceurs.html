@@ -1,4 +1,5 @@
 {% extends "base_v2.html" %}
+{% from "_blocs/lien_video.html" import lien_video %}
 {% set title = "Pour les annonceurs" %}
 
 {% block meta_description %}Votre annonce est publiée sur les statuts WhatsApp de personnes que leur quartier connaît déjà. Vous choisissez les communes, vous fixez le nombre de clics visé, et vous ne payez que ceux qui arrivent vraiment.{% endblock %}
@@ -30,6 +31,7 @@ Vous choisissez les communes, vous fixez le nombre de clics vis&eacute;, et vous
 <span class="material-symbols-outlined text-[20px]">analytics</span> Estimer mon budget
 </a>
 </div>
+{{ lien_video(VIDEOS_PRESENTATION.annonceur, "Voir la vidéo pour les annonceurs", "text-brand-primary") }}
 <div class="pt-space-xs flex flex-wrap items-center gap-y-2 gap-x-space-md text-on-surface-variant font-caption text-caption">
 <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-brand-primary">location_on</span> Ciblage par d&eacute;partement et commune</span>
 <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-brand-primary">shield</span> Clics frauduleux non factur&eacute;s</span>

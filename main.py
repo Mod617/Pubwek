@@ -955,15 +955,24 @@ def manifest():
 # =============================================================================
 TUTORIELS_PARTAGE = {
     "A": {"nom": "Vidéo", "sujet": "une campagne vidéo",
-          "url": "https://youtube.com/shorts/HadhuVd3fL0"},
+          "url": "https://youtube.com/shorts/CZUU-eqjMio"},
     "B": {"nom": "Multi-statut", "sujet": "une campagne multi-statut",
-          "url": "https://youtube.com/shorts/O2E4DwYdITI"},
+          "url": "https://youtube.com/shorts/Ff6R6mV9Mls"},
     "C": {"nom": "Texte seul", "sujet": "une campagne texte seul",
-          "url": "https://youtube.com/shorts/onEe0cZFCVg"},
+          "url": "https://youtube.com/shorts/C5PHtpJf7sI"},
 }
 CHAINE_YOUTUBE = "https://www.youtube.com/@pubwek1"
 
-app.jinja_env.globals.update(TUTORIELS_PARTAGE=TUTORIELS_PARTAGE, CHAINE_YOUTUBE=CHAINE_YOUTUBE)
+# Videos de presentation des pages publiques : l'accueil, la page annonceurs
+# et la page partageurs (haut de page, sous les boutons).
+VIDEOS_PRESENTATION = {
+    "introduction": "https://youtube.com/shorts/6YW2gn3WWLw",
+    "annonceur": "https://youtube.com/shorts/BP9maIT-pgg",
+    "partageur": "https://youtube.com/shorts/JmFQyydJrto",
+}
+
+app.jinja_env.globals.update(TUTORIELS_PARTAGE=TUTORIELS_PARTAGE, CHAINE_YOUTUBE=CHAINE_YOUTUBE,
+                             VIDEOS_PRESENTATION=VIDEOS_PRESENTATION)
 
 
 # =============================================================================

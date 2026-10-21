@@ -1,0 +1,12 @@
+{# Lien vers une video YouTube, sous les boutons du haut d'une page publique.
+   Elle s'ouvre dans YouTube : la CSP reste sans domaine externe.
+   Usage : {% from "_blocs/lien_video.html" import lien_video %}
+           {{ lien_video(VIDEOS_PRESENTATION.annonceur, "Voir la vidéo pour les annonceurs", "text-brand-primary") }} #}
+{% macro lien_video(url, libelle, couleur_icone) %}
+<div>
+<a class="inline-flex items-center gap-1.5 font-body-sm text-body-sm font-semibold text-slate-midnight underline underline-offset-2 hover:text-brand-deep transition-colors" href="{{ url }}" target="_blank" rel="noopener">
+<span class="material-symbols-outlined text-[22px] {{ couleur_icone }} no-underline">play_circle</span>
+{{ libelle }}
+</a>
+</div>
+{% endmacro %}

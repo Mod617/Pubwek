@@ -53,7 +53,7 @@ pywebpush==2.0.0
 # --- Traitement des images ---------------------------------------------------
 # Sert à valider réellement le contenu des images téléversées (PIL.Image.open),
 # pas seulement leur extension.
-Pillow==12.3.0
+Pillow==13.0.0
 # Retirés avec la génération vidéo (Creatomate / diaporama) :
 #   moviepy, numpy  — montage du diaporama
 #   celery          — file d'attente du rendu

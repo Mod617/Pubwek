@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link rel="stylesheet" href="file:///home/user/Pubwek/static/css/fonts.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#050B14}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:'Plus Jakarta Sans','Inter',sans-serif;color:#fff}
+.scene{position:absolute;inset:0;display:none;will-change:transform,opacity}
+.bg{position:absolute;inset:0}
+.bg-blue{background:radial-gradient(120% 70% at 50% 18%,#0E6FA8 0%,#08486E 38%,#0A1A2E 75%,#050B14 100%)}
+.bg-night{background:radial-gradient(90% 60% at 75% 10%,#3B3486 0%,#1E1B4B 45%,#0B1026 100%)}
+.bg-warm{background:linear-gradient(180deg,#FFF1DA 0%,#FFE0B0 55%,#FDBA74 100%)}
+.bg-dark{background:radial-gradient(100% 60% at 50% 40%,#1B2436 0%,#0A0F1A 70%,#04070D 100%)}
+.dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.07) 2px,transparent 2.5px);background-size:44px 44px}
+.title{position:absolute;left:70px;right:70px;top:210px;font-weight:800;font-size:88px;line-height:1.04;letter-spacing:-2px}
+.title .hl{color:#FBBF24}
+.title .bl{color:#7DD3FC}
+.row{display:flex;align-items:center;gap:26px}
+.badge{width:132px;height:132px;border-radius:50%;background:#FBBF24;color:#0F172A;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:86px;box-shadow:0 12px 40px rgba(251,191,36,.45);flex:none}
+.steptitle{position:absolute;left:66px;right:60px;top:200px}
+.steptitle h1{font-size:82px;font-weight:800;line-height:1.02;letter-spacing:-2px}
+.pill{display:inline-flex;align-items:center;gap:14px;border-radius:999px;padding:14px 28px;font-weight:800;font-size:40px}
+.phone{position:absolute;left:240px;top:560px;width:600px;height:1262px;border-radius:84px;background:#0B0F19;padding:16px;box-shadow:0 50px 140px rgba(0,0,0,.6),inset 0 0 0 3px #2B3446,0 0 0 2px #000;transform-origin:50% 40%}
+.screen{position:relative;width:568px;height:1230px;border-radius:68px;overflow:hidden;background:#fff}
+.screen .shot{position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden}
+.screen .shot img{position:absolute;left:0;top:44px;width:568px;transform-origin:0 0}
+.sbar{position:absolute;left:0;right:0;top:0;height:44px;background:#fff;color:#0F172A;font:700 22px Inter;display:flex;align-items:center;justify-content:space-between;padding:6px 52px 0;z-index:3}
+.sbar.dark{background:transparent;color:#fff}
+.island{position:absolute;left:50%;top:12px;width:150px;height:40px;margin-left:-75px;border-radius:30px;background:#000;z-index:5}
+.ring{position:absolute;border:7px solid #FBBF24;border-radius:24px;box-shadow:0 0 0 9999px rgba(15,23,42,.0),0 0 34px rgba(251,191,36,.9);z-index:4;opacity:0}
+.tap{position:absolute;width:96px;height:96px;margin:-48px 0 0 -48px;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 6px 24px rgba(0,0,0,.45);z-index:20;opacity:0}
+.tap::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:6px solid #fff;opacity:var(--r,0);transform:scale(var(--rs,1))}
+.chip{position:absolute;background:#fff;color:#0F172A;border-radius:30px;box-shadow:0 18px 50px rgba(0,0,0,.35);padding:22px 26px;font-weight:800}
+.toast{position:absolute;left:50%;transform:translateX(-50%);background:#047857;color:#fff;border-radius:999px;padding:16px 30px;font:800 30px 'Plus Jakarta Sans';white-space:nowrap;z-index:6;opacity:0;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.notif{position:absolute;background:rgba(255,255,255,.97);color:#0F172A;border-radius:34px;padding:24px 28px;display:flex;gap:22px;align-items:center;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.notif .ic{width:86px;height:86px;border-radius:22px;background:#fff;box-shadow:inset 0 0 0 2px #E2E8F0;display:flex;align-items:center;justify-content:center;flex:none}
+.notif .ic img{width:70px}
+.coin{position:absolute;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFE68A,#F5B700 55%,#C98800);border:5px solid #B07400;color:#7A4B00;font:800 40px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center;opacity:0;z-index:15}
+.plus{position:absolute;font:800 52px 'Plus Jakarta Sans';color:#FBBF24;text-shadow:0 4px 14px rgba(0,0,0,.6);opacity:0;z-index:15;white-space:nowrap}
+.av{position:absolute;width:104px;height:104px;margin:-52px 0 0 -52px;border-radius:50%;color:#fff;font:800 50px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center;border:5px solid #fff;box-shadow:0 10px 30px rgba(0,0,0,.4);opacity:0;z-index:12}
+.op{display:flex;align-items:center;justify-content:center;border-radius:26px;font:800 36px 'Plus Jakarta Sans';height:104px;padding:0 26px;box-shadow:0 14px 34px rgba(0,0,0,.35);opacity:0}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;z-index:30;pointer-events:none}
+svg{display:block}
+</style></head>
+<body><div id="stage">
+
+<!-- ============ S1 : ACCROCHE ============ -->
+<section class="scene" id="s1">
+ <div class="bg bg-dark"></div><div class="dots"></div>
+ <div class="title" id="s1t1">Tous les jours, tes contacts regardent <span class="bl">ton statut</span>…</div>
+ <div class="title" id="s1t2" style="opacity:0">…et toi, tu gagnes <span class="hl">combien&nbsp;?</span></div>
+ <div class="phone" id="s1ph"><div class="island"></div>
+  <div class="screen" style="background:linear-gradient(160deg,#6D4AE0,#4527A0)">
+   <div class="sbar dark"><span>08:15</span><span>▮▮▮ 4G</span></div>
+   <div style="position:absolute;left:28px;right:28px;top:62px;height:6px;border-radius:3px;background:rgba(255,255,255,.35)"><div id="s1prog" style="height:100%;width:30%;background:#fff;border-radius:3px"></div></div>
+   <div style="position:absolute;left:28px;top:96px;display:flex;align-items:center;gap:18px">
+     <div style="width:76px;height:76px;border-radius:50%;background:#FBBF24;color:#0F172A;font:800 36px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center">M</div>
+     <div><div style="font:800 32px 'Plus Jakarta Sans'">Mon statut</div><div style="font:500 24px Inter;opacity:.8">il y a 2 h</div></div>
+   </div>
+   <div style="position:absolute;left:40px;right:40px;top:250px;text-align:center">
+     <svg width="150" height="150" viewBox="0 0 100 100" style="margin:0 auto 30px"><circle cx="50" cy="50" r="22" fill="#FDE047"/><g stroke="#FDE047" stroke-width="7" stroke-linecap="round"><path d="M50 8v12M50 80v12M8 50h12M80 50h12M20 20l8 8M72 72l8 8M80 20l-8 8M28 72l-8 8"/></g></svg>
+     <div style="font:800 58px/1.15 'Plus Jakarta Sans'">Bonjour la famille&nbsp;!<br>Bonne journée à tous</div>
+   </div>
+   <div id="s1views" style="position:absolute;left:0;right:0;bottom:0;height:520px;background:#fff;color:#0F172A;border-radius:44px 44px 0 0;padding:34px 40px;transform:translateY(420px)">
+     <div style="display:flex;align-items:center;gap:16px;font:800 40px 'Plus Jakarta Sans'">
+       <svg width="52" height="52" viewBox="0 0 24 24"><path d="M12 5C6 5 2 12 2 12s4 7 10 7 10-7 10-7-4-7-10-7z" fill="none" stroke="#0F172A" stroke-width="2.2"/><circle cx="12" cy="12" r="3.4" fill="#0F172A"/></svg>
+       Vu par <span id="s1count" style="color:#066FA7">0</span>
+     </div>
+     <div id="s1list" style="margin-top:26px;display:flex;flex-direction:column;gap:18px"></div>
+   </div>
+  </div>
+ </div>
+ <div id="s1zero" style="position:absolute;left:540px;top:1060px;width:470px;height:470px;margin:-235px 0 0 -235px;border-radius:50%;background:#DC2626;border:14px solid #fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(0,0,0,.55);opacity:0;z-index:10">
+   <div style="font:800 190px/1 'Plus Jakarta Sans';letter-spacing:-6px">0&nbsp;F</div>
+   <div style="font:800 42px 'Plus Jakarta Sans';margin-top:6px">pour toi</div>
+ </div>
+</section>
+
+<!-- ============ S2 : LE RETOURNEMENT ============ -->
+<section class="scene" id="s2">
+ <div class="bg bg-warm"></div>
+ <div style="position:absolute;left:0;top:800px;width:1080px;height:1100px" id="s2m"></div>
+ <div class="title" style="color:#0F172A;top:180px" id="s2t">Avec <span style="color:#066FA7">Pubwek</span>,<br>ton statut peut<br><span style="background:#FBBF24;padding:0 16px;border-radius:16px">te rapporter.</span></div>
+ <div class="notif" id="s2n" style="left:70px;right:70px;top:560px;opacity:0">
+   <div class="ic"><img src="emblem.png"></div>
+   <div style="flex:1"><div style="display:flex;justify-content:space-between;font:600 26px Inter;color:#64748B"><span>Pubwek</span><span>à l'instant</span></div>
+   <div style="font:800 38px 'Plus Jakarta Sans';margin-top:4px">Retrait effectué ✓</div>
+   <div style="font:500 30px Inter;color:#334155">Ton retrait de <b>1&nbsp;500&nbsp;FCFA</b> a été envoyé.</div></div>
+ </div>
+ <div id="s2ex" style="position:absolute;right:86px;top:528px;background:#0F172A;color:#FBBF24;font:800 24px Inter;letter-spacing:2px;padding:8px 16px;border-radius:10px;opacity:0;z-index:3">EXEMPLE</div>
+ <svg id="s2vib" style="position:absolute;left:0;top:800px;opacity:0" width="1080" height="1100" viewBox="0 0 1080 1100"><g fill="none" stroke="#0F172A" stroke-width="9" stroke-linecap="round"><path d="M372 560 q-30 70 0 140"/><path d="M340 540 q-44 90 0 180"/><path d="M570 560 q30 70 0 140"/><path d="M602 540 q44 90 0 180"/></g></svg>
+ <div id="s2coins"></div>
+</section>
+
+<!-- ============ S3 : ÉTAPE 1 INSCRIPTION ============ -->
+<section class="scene" id="s3">
+ <div class="bg bg-blue"></div><div class="dots"></div>
+ <div class="steptitle"><div class="row"><div class="badge">1</div><h1>Inscris-toi<br><span style="color:#4ADE80">gratuitement</span></h1></div></div>
+ <div class="phone" id="s3ph"><div class="island"></div><div class="screen"><div class="sbar"><span>08:16</span><span>▮▮▮ 4G</span></div>
+   <div class="shot"><img id="s3img" src="register.png"></div><div class="ring" id="s3ring"></div></div></div>
+ <div class="chip" id="s3url" style="left:70px;top:1360px;font-size:44px;display:flex;align-items:center;gap:16px;opacity:0;z-index:8">
+   <svg width="44" height="44" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2" fill="#066FA7"/><path d="M8 10V7a4 4 0 018 0v3" stroke="#066FA7" stroke-width="2.4" fill="none"/></svg>pubwek.com</div>
+ <div id="s3zero" style="position:absolute;left:800px;top:660px;width:250px;height:250px;margin:-125px 0 0 -125px;border-radius:50%;background:#16A34A;border:9px solid #fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 20px 50px rgba(0,0,0,.45);opacity:0;z-index:8">
+   <div style="font:800 92px/1 'Plus Jakarta Sans'">0&nbsp;F</div><div style="font:800 30px 'Plus Jakarta Sans'">à payer</div></div>
+</section>
+
+<!-- ============ S4 : ÉTAPE 2 CHOISIR ============ -->
+<section class="scene" id="s4">
+ <div class="bg bg-blue"></div><div class="dots"></div>
+ <div class="steptitle"><div class="row"><div class="badge">2</div><h1>Choisis<br>une pub</h1></div></div>
+ <div id="s4chips" style="position:absolute;left:60px;right:60px;top:430px;display:flex;gap:18px;z-index:8">
+  <div class="chip c4" style="position:relative;flex:1.15;padding:18px 20px;background:#FBBF24">
+    <div style="display:flex;align-items:center;gap:10px;font-size:32px"><svg width="40" height="40" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3" fill="#0F172A"/><path d="M10 9l5 3-5 3z" fill="#FBBF24"/></svg>Vidéo</div>
+    <div style="font-size:44px;margin-top:4px">10 F <span style="font-size:28px">/ clic</span></div></div>
+  <div class="chip c4" style="position:relative;flex:1;padding:18px 20px">
+    <div style="display:flex;align-items:center;gap:10px;font-size:30px"><svg width="40" height="40" viewBox="0 0 24 24"><rect x="2" y="2" width="9" height="9" rx="2" fill="#066FA7"/><rect x="13" y="2" width="9" height="9" rx="2" fill="#066FA7"/><rect x="2" y="13" width="9" height="9" rx="2" fill="#066FA7"/><rect x="13" y="13" width="9" height="9" rx="2" fill="#066FA7"/></svg>Images</div>
+    <div style="font-size:40px;margin-top:4px">5 F <span style="font-size:26px">/ image</span></div></div>
+  <div class="chip c4" style="position:relative;flex:1;padding:18px 20px">
+    <div style="display:flex;align-items:center;gap:10px;font-size:30px"><svg width="40" height="40" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4" fill="#066FA7"/><path d="M7 8h10M12 8v9" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>Texte</div>
+    <div style="font-size:40px;margin-top:4px">5 F <span style="font-size:26px">/ clic</span></div></div>
+ </div>
+ <div class="phone" id="s4ph" style="top:640px"><div class="island"></div><div class="screen"><div class="sbar"><span>08:17</span><span>▮▮▮ 4G</span></div>
+   <div class="shot"><img id="s4imgA" src="dash_camps.png"><img id="s4imgB" src="dash_video.png" style="opacity:0"></div><div class="ring" id="s4ring"></div></div></div>
+ <div class="tap" id="s4tap"></div>
+ <div class="toast" id="s4toast" style="top:1500px">Partage enregistré ✓</div>
+</section>
+
+<!-- ============ S5 : ÉTAPE 3 PUBLIER ============ -->
+<section class="scene" id="s5">
+ <div class="bg bg-blue"></div><div class="dots"></div>
+ <div class="steptitle"><div class="row"><div class="badge">3</div><h1>Publie sur<br>ton statut</h1></div></div>
+ <div class="phone" id="s5ph"><div class="island"></div><div class="screen" id="s5scr"><div class="sbar"><span>08:18</span><span>▮▮▮ 4G</span></div>
+   <div class="shot" id="s5shot"><img id="s5img" src="instr_top.png"></div><div class="ring" id="s5ring"></div>
+   <div id="s5status" style="position:absolute;inset:0;opacity:0;background:#0B141A;z-index:4">
+     <div class="sbar dark"><span>08:19</span><span>▮▮▮ 4G</span></div>
+     <div style="position:absolute;left:28px;right:28px;top:62px;height:6px;border-radius:3px;background:rgba(255,255,255,.35)"><div style="height:100%;width:55%;background:#fff;border-radius:3px"></div></div>
+     <div style="position:absolute;left:28px;top:96px;display:flex;align-items:center;gap:18px">
+       <div style="width:76px;height:76px;border-radius:50%;background:#FBBF24;color:#0F172A;font:800 36px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center">M</div>
+       <div><div style="font:800 32px 'Plus Jakarta Sans'">Mon statut</div><div style="font:500 24px Inter;opacity:.8">à l'instant</div></div></div>
+     <div style="position:absolute;left:34px;right:34px;top:230px;height:560px;border-radius:30px;overflow:hidden;background:linear-gradient(160deg,#FCE7F3,#FBCFE8 40%,#F9A8D4)">
+       <svg viewBox="0 0 200 160" width="100%" height="100%"><rect x="50" y="78" width="100" height="50" rx="8" fill="#FFF7ED"/><rect x="50" y="78" width="100" height="14" rx="7" fill="#F472B6"/><rect x="62" y="46" width="76" height="34" rx="7" fill="#FFFBEB"/><rect x="62" y="46" width="76" height="10" rx="5" fill="#EC4899"/><g fill="#FBBF24"><rect x="78" y="28" width="5" height="18" rx="2"/><rect x="98" y="24" width="5" height="22" rx="2"/><rect x="118" y="28" width="5" height="18" rx="2"/></g><g fill="#F97316"><ellipse cx="80.5" cy="24" rx="4" ry="6"/><ellipse cx="100.5" cy="20" rx="4" ry="6"/><ellipse cx="120.5" cy="24" rx="4" ry="6"/></g><g fill="#BE185D"><circle cx="66" cy="108" r="4"/><circle cx="84" cy="112" r="4"/><circle cx="102" cy="108" r="4"/><circle cx="120" cy="112" r="4"/><circle cx="136" cy="108" r="4"/></g></svg>
+     </div>
+     <div style="position:absolute;left:40px;right:40px;top:820px;font:800 38px/1.2 'Plus Jakarta Sans'">Pâtisserie Doux Matin</div>
+     <div style="position:absolute;left:40px;right:40px;top:872px;font:500 29px/1.3 Inter;opacity:.9">Gâteaux d'anniversaire sur commande, livrés partout à Cotonou.</div>
+     <div style="position:absolute;left:40px;right:40px;top:976px;font:600 28px Inter;color:#7DD3FC;text-decoration:underline">pubwek.com/t/k7Pq2/whatsapp</div>
+   </div>
+ </div></div>
+ <div class="toast" id="s5toast" style="top:1420px">Texte copié ✓</div>
+ <div class="chip" id="s5cnt" style="left:60px;top:440px;opacity:0;z-index:9;display:flex;align-items:center;gap:16px;font-size:38px">
+   <svg width="46" height="46" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#16A34A"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg>
+   Vrais clics : <span id="s5n" style="color:#066FA7">0</span></div>
+ <div class="chip" id="s5fake" style="right:56px;top:440px;opacity:0;z-index:9;display:flex;align-items:center;gap:12px;font-size:32px;background:#FEE2E2;color:#991B1B">
+   <svg width="40" height="40" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#DC2626"/><path d="M8 8l8 8M16 8l-8 8" stroke="#fff" stroke-width="2.8" stroke-linecap="round"/></svg>Faux clic = 0 F</div>
+ <div id="s5fx"></div>
+</section>
+
+<!-- ============ S6 : ÉTAPE 4 PREUVE DU SOIR ============ -->
+<section class="scene" id="s6">
+ <div class="bg bg-night"></div>
+ <div id="s6stars"></div>
+ <svg style="position:absolute;right:70px;top:190px" width="150" height="150" viewBox="0 0 100 100"><path d="M64 10a40 40 0 1 0 26 62A34 34 0 0 1 64 10z" fill="#FDE68A"/></svg>
+ <div class="steptitle"><div class="row"><div class="badge">4</div><h1>Le soir,<br><span class="hl">envoie la capture</span></h1></div></div>
+ <div class="phone" id="s6ph"><div class="island"></div><div class="screen"><div class="sbar"><span>21:30</span><span>▮▮▮ 4G</span></div>
+   <div class="shot"><img id="s6img" src="instr_proof.png"></div><div class="ring" id="s6ring"></div>
+   <div id="s6stat" style="position:absolute;inset:0;background:#0B141A;z-index:4">
+     <div class="sbar dark"><span>21:30</span><span>▮▮▮ 4G</span></div>
+     <div style="position:absolute;left:34px;right:34px;top:120px;height:560px;border-radius:30px;background:linear-gradient(160deg,#FCE7F3,#F9A8D4)"></div>
+     <div style="position:absolute;left:40px;top:720px;font:800 38px 'Plus Jakarta Sans'">Pâtisserie Doux Matin</div>
+     <div style="position:absolute;left:0;right:0;bottom:0;height:200px;background:#fff;color:#0F172A;border-radius:44px 44px 0 0;padding:44px 40px;font:800 42px 'Plus Jakarta Sans';display:flex;gap:16px;align-items:flex-start">
+       <svg width="52" height="52" viewBox="0 0 24 24"><path d="M12 5C6 5 2 12 2 12s4 7 10 7 10-7 10-7-4-7-10-7z" fill="none" stroke="#0F172A" stroke-width="2.2"/><circle cx="12" cy="12" r="3.4" fill="#0F172A"/></svg>Vu par 87</div>
+   </div>
+   <div class="flash" id="s6flash" style="border-radius:68px"></div>
+ </div></div>
+ <div id="s6thumb" style="position:absolute;width:200px;height:433px;border-radius:24px;border:6px solid #fff;overflow:hidden;background:#0B141A;box-shadow:0 20px 50px rgba(0,0,0,.6);opacity:0;z-index:12">
+   <div style="position:absolute;left:12px;right:12px;top:30px;height:200px;border-radius:12px;background:linear-gradient(160deg,#FCE7F3,#F9A8D4)"></div>
+   <div style="position:absolute;left:0;right:0;bottom:0;height:70px;background:#fff;color:#0F172A;font:800 22px 'Plus Jakarta Sans';padding:20px 14px">👁 Vu par 87</div>
+ </div>
+ <div class="tap" id="s6tap"></div>
+ <div class="toast" id="s6toast" style="top:1420px">Preuve envoyée ✓</div>
+ <div class="chip" id="s6warn" style="left:60px;right:60px;top:450px;opacity:0;z-index:9;display:flex;align-items:center;gap:18px;font-size:34px;background:#FEF3C7;color:#78350F;padding:20px 26px">
+   <svg width="54" height="54" viewBox="0 0 24 24" style="flex:none"><path d="M12 2L1 21h22z" fill="#D97706"/><path d="M12 9v5" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="12" cy="17.3" r="1.5" fill="#fff"/></svg>
+   Sans capture, les clics du jour ne sont pas payés.</div>
+</section>
+
+<!-- ============ S7 : ÉTAPE 5 RETRAIT ============ -->
+<section class="scene" id="s7">
+ <div class="bg bg-blue"></div><div class="dots"></div>
+ <div class="steptitle"><div class="row"><div class="badge">5</div><h1>Retire<br>ton argent</h1></div></div>
+ <div id="s7min" style="position:absolute;left:870px;top:300px;width:250px;height:250px;margin:-125px 0 0 -125px;border-radius:50%;background:#FBBF24;color:#0F172A;border:9px solid #fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 20px 50px rgba(0,0,0,.45);opacity:0;z-index:9;transform:rotate(8deg)">
+   <div style="font:800 34px 'Plus Jakarta Sans'">dès</div><div style="font:800 82px/1 'Plus Jakarta Sans';letter-spacing:-2px">500 F</div></div>
+ <div id="s7ops" style="position:absolute;left:60px;right:60px;top:450px;display:grid;grid-template-columns:1fr 1fr;gap:18px;z-index:8">
+   <div class="op" style="background:#FFCC00;color:#111">MTN MoMo</div>
+   <div class="op" style="background:#0A5BB5;color:#fff">Moov Money</div>
+   <div class="op" style="background:#00A859;color:#fff">Celtiis Cash</div>
+   <div class="op" style="background:#1DC8F2;color:#0B1B2B">Wave</div>
+ </div>
+ <div class="phone" id="s7ph" style="top:720px"><div class="island"></div><div class="screen"><div class="sbar"><span>08:20</span><span>▮▮▮ 4G</span></div>
+   <div class="shot"><img id="s7img" src="retrait_form.png"></div><div class="ring" id="s7ring"></div>
+   <div class="notif" id="s7n" style="left:16px;right:16px;top:60px;padding:18px 20px;gap:16px;opacity:0;z-index:6">
+     <div class="ic" style="width:70px;height:70px"><img src="emblem.png" style="width:56px"></div>
+     <div><div style="font:800 30px 'Plus Jakarta Sans'">Demande envoyée ✓</div><div style="font:500 24px Inter;color:#475569">Ton retrait est en cours de traitement.</div></div></div>
+ </div></div>
+ <div class="tap" id="s7tap"></div>
+ <div class="chip" id="s7ex" style="left:70px;right:70px;top:1250px;opacity:0;z-index:10;text-align:center;padding:26px">
+   <div style="font:800 24px Inter;letter-spacing:3px;color:#D97706">EXEMPLE — VIDÉO</div>
+   <div style="font:800 58px 'Plus Jakarta Sans';margin-top:6px">50 clics × 10 F = <span style="color:#16A34A">500 F</span></div></div>
+</section>
+
+<!-- ============ S8 : HONNÊTETÉ ============ -->
+<section class="scene" id="s8">
+ <div class="bg bg-warm"></div>
+ <div style="position:absolute;left:90px;top:960px;width:900px;height:917px" id="s8m"></div>
+ <div class="title" style="color:#0F172A;top:180px;font-size:84px" id="s8a">Ce n'est pas un <span style="position:relative;display:inline-block">salaire<span id="s8strike" style="position:absolute;left:-8px;right:-8px;top:52%;height:12px;background:#DC2626;border-radius:6px;transform-origin:0 50%;transform:scaleX(0)"></span></span>.</div>
+ <div id="s8b" style="position:absolute;left:70px;top:370px;opacity:0"><span class="pill" style="background:#066FA7;color:#fff;font-size:66px;padding:16px 36px">C'est un complément</span></div>
+ <div id="s8cards" style="position:absolute;left:60px;right:60px;top:560px;display:flex;gap:20px">
+  <div class="chip s8c" style="position:relative;flex:1;text-align:center;padding:26px 10px;opacity:0">
+    <svg width="96" height="96" viewBox="0 0 24 24" style="margin:0 auto 10px"><rect x="3" y="15" width="3.4" height="6" rx="1" fill="#066FA7"/><rect x="8.5" y="11" width="3.4" height="10" rx="1" fill="#066FA7"/><rect x="14" y="7" width="3.4" height="14" rx="1" fill="#066FA7"/><rect x="19.5" y="3" width="3.4" height="18" rx="1" fill="#066FA7"/></svg>
+    <div style="font-size:38px">Ton crédit</div></div>
+  <div class="chip s8c" style="position:relative;flex:1;text-align:center;padding:26px 10px;opacity:0">
+    <svg width="96" height="96" viewBox="0 0 48 48" style="margin:0 auto 10px"><circle cx="11" cy="34" r="7" fill="none" stroke="#066FA7" stroke-width="4"/><circle cx="37" cy="34" r="7" fill="none" stroke="#066FA7" stroke-width="4"/><path d="M11 34l9-12h10l7 12M20 22l-3-6h-5M30 22l2-7h5" stroke="#066FA7" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="28" cy="10" r="4" fill="#D97706"/></svg>
+    <div style="font-size:38px">Ton zém</div></div>
+  <div class="chip s8c" style="position:relative;flex:1;text-align:center;padding:26px 10px;opacity:0">
+    <svg width="96" height="96" viewBox="0 0 24 24" style="margin:0 auto 10px"><circle cx="12" cy="12" r="11" fill="#16A34A"/><path d="M12 6v12M6 12h12" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>
+    <div style="font-size:38px">Un petit plus</div></div>
+ </div>
+</section>
+
+<!-- ============ S9 : APPEL À L'ACTION ============ -->
+<section class="scene" id="s9">
+ <div class="bg bg-blue"></div><div class="dots"></div>
+ <div id="s9glow" style="position:absolute;left:540px;top:430px;width:900px;height:900px;margin:-450px 0 0 -450px;border-radius:50%;background:radial-gradient(circle,rgba(125,211,252,.45),rgba(125,211,252,0) 65%)"></div>
+ <div id="s9logo" style="position:absolute;left:540px;top:400px;width:330px;height:330px;margin:-165px 0 0 -165px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(0,0,0,.45);opacity:0"><img src="emblem.png" style="width:270px"></div>
+ <div id="s9word" style="position:absolute;left:0;right:0;top:600px;text-align:center;opacity:0"><div style="font:800 92px 'Plus Jakarta Sans';letter-spacing:12px">PUBWEK</div></div>
+ <div id="s9url" style="position:absolute;left:80px;right:80px;top:760px;height:150px;border-radius:999px;background:#fff;color:#0F172A;display:flex;align-items:center;gap:24px;padding:0 50px;box-shadow:0 24px 60px rgba(0,0,0,.4);opacity:0">
+   <svg width="60" height="60" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2" fill="#066FA7"/><path d="M8 10V7a4 4 0 018 0v3" stroke="#066FA7" stroke-width="2.4" fill="none"/></svg>
+   <span id="s9typed" style="font:800 80px 'Plus Jakarta Sans';letter-spacing:-1px"></span><span id="s9cur" style="width:6px;height:80px;background:#066FA7"></span></div>
+ <div id="s9btn" style="position:absolute;left:80px;right:80px;top:960px;height:150px;border-radius:999px;background:#FBBF24;color:#0F172A;display:flex;align-items:center;justify-content:center;font:800 60px 'Plus Jakarta Sans';box-shadow:0 20px 60px rgba(251,191,36,.5);opacity:0">Inscris-toi gratuitement</div>
+ <div id="s9list" style="position:absolute;left:80px;right:80px;top:1160px;display:flex;flex-direction:column;gap:18px">
+   <div class="s9li" style="display:flex;align-items:center;gap:20px;font:700 44px 'Plus Jakarta Sans';opacity:0"><svg width="56" height="56" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#22C55E"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg>Inscription gratuite</div>
+   <div class="s9li" style="display:flex;align-items:center;gap:20px;font:700 44px 'Plus Jakarta Sans';opacity:0"><svg width="56" height="56" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#22C55E"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg>Sans abonnement</div>
+   <div class="s9li" style="display:flex;align-items:center;gap:20px;font:700 44px 'Plus Jakarta Sans';opacity:0"><svg width="56" height="56" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#22C55E"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg>Retrait dès 500 F</div>
+ </div>
+ <div class="tap" id="s9tap"></div>
+</section>
+
+<!-- sous-titres (remplis quand la voix off sera là) -->
+<div id="sub" style="position:absolute;left:60px;right:60px;top:1330px;text-align:center;z-index:50;display:none">
+  <span id="subt" style="display:inline;background:rgba(5,11,20,.82);color:#fff;font:800 50px/1.32 'Plus Jakarta Sans';padding:8px 22px;border-radius:18px;-webkit-box-decoration-break:clone;box-decoration-break:clone"></span></div>
+</div>
+
+<script src="maman.js"></script>
+<script>
+// ===================== moteur d'animation =====================
+const $=id=>document.getElementById(id);
+const cl=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const P=(t,a,d)=>cl((t-a)/d);
+const eo=x=>1-Math.pow(1-x,3);
+const eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const back=x=>{x=cl(x);const c1=1.9,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
+const lerp=(a,b,k)=>a+(b-a)*k;
+function st(el,{o,x=0,y=0,s=1,r=0,extra=''}){if(typeof el==='string')el=$(el);if(o!==undefined)el.style.opacity=o;el.style.transform=`translate(${x}px,${y}px) scale(${s}) rotate(${r}deg) ${extra}`;}
+function popIn(el,t,a,{dy=40,dur=.5}={}){const k=P(t,a,dur);st(el,{o:cl(k*2.5),y:(1-eo(k))*dy,s:lerp(.6,1,back(k))});}
+
+// Durées des scènes (secondes). Recalées sur la voix off au montage final.
+const T=window.T||{s1:[0,5],s2:[5,9],s3:[9,13.5],s4:[13.5,19],s5:[19,24.5],s6:[24.5,29],s7:[29,35],s8:[35,40],s9:[40,46.5]};
+const DUR=T.s9[1];
+const TR=.34; // durée des transitions
+
+// Écran de téléphone : zoom sur un rectangle (coordonnées CSS de la page, 390 px de large)
+const K=568/390, SH=1230-44;
+function focus(img,ring,rect,z,ringO){
+  // rect = [x1,y1,x2,y2] ; z = zoom
+  const cx=(rect[0]+rect[2])/2*K, cy=(rect[1]+rect[3])/2*K;
+  let tx=568/2-cx*z, ty=SH*0.42-cy*z;
+  tx=cl(tx,568-568*z,0); ty=cl(ty,SH-844*K*z,0);
+  img.style.transform=`translate(${tx}px,${ty}px) scale(${z})`;
+  if(ring){const pad=10;ring.style.left=(tx+rect[0]*K*z-pad)+'px';ring.style.top=(44+ty+rect[1]*K*z-pad)+'px';
+    ring.style.width=((rect[2]-rect[0])*K*z+pad*2)+'px';ring.style.height=((rect[3]-rect[1])*K*z+pad*2)+'px';ring.style.opacity=ringO;}
+  return {tx,ty,z};
+}
+function lerpRect(a,b,k){return a.map((v,i)=>lerp(v,b[i],k));}
+// position à l'écran (stage) d'un point de la page dans un téléphone
+function phonePt(ph,f,px,py,phoneTop){const left=240+16, top=(phoneTop)+16+44;return [left+f.tx+px*K*f.z, top+f.ty+py*K*f.z];}
+function tap(el,t,a,x,y){const k=P(t,a-.35,.35),u=P(t,a,.5);const o=t<a-.35?0:(t<a+.5?1:1-P(t,a+.5,.25));
+  el.style.left=x+'px';el.style.top=y+'px';const press=t>=a&&t<a+.15?.82:1;
+  el.style.opacity=o;el.style.transform=`translate(${(1-eo(k))*60}px,${(1-eo(k))*80}px) scale(${press})`;
+  el.style.setProperty('--r',t>=a?1-u:0);el.style.setProperty('--rs',1+u*1.4);}
+
+// ---------- préparation ----------
+const NAMES=[['Awa','#E11D48'],['Koffi','#2563EB'],['Mariam','#16A34A'],['Éric','#D97706'],['Judith','#7C3AED'],['Habib','#0891B2'],['Prisca','#DB2777'],['Sika','#65A30D']];
+$('s1list').innerHTML=NAMES.slice(0,5).map(([n,c],i)=>`<div class="s1li" style="display:flex;align-items:center;gap:20px;opacity:0"><div style="width:72px;height:72px;border-radius:50%;background:${c};color:#fff;font:800 34px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center">${n[0]}</div><div><div style="font:800 32px 'Plus Jakarta Sans'">${n}</div><div style="font:500 22px Inter;color:#64748B">à l'instant</div></div></div>`).join('');
+$('s2m').innerHTML=MAMAN_SVG;
+$('s8m').innerHTML=MAMAN_SVG.replace(/id="mm-/g,'id="m8-').replace(/url\(#(wax|gele|glow|wood)\)/g,'url(#$1_8)').replace(/id="(wax|gele|glow|wood)"/g,'id="$1_8"');
+// pièces S2
+const COINS=[];for(let i=0;i<12;i++){const d=document.createElement('div');d.className='coin';d.textContent='F';$('s2coins').appendChild(d);
+  const side=i%2?1:-1;const a=-Math.PI/2+side*(0.55+(i%6)*0.13);COINS.push({d,a,v:900+(i*53)%300,delay:(i%5)*.06});}
+// avatars + "+10 F" S5
+const S5A=[];[[175,820],[910,900],[165,1120],[915,1190],[180,1380]].forEach(([x,y],i)=>{const a=document.createElement('div');a.className='av';a.style.left=x+'px';a.style.top=y+'px';a.style.background=NAMES[i][1];a.textContent=NAMES[i][0][0];$('s5fx').appendChild(a);
+  const p=document.createElement('div');p.className='plus';p.textContent='+10 F';p.style.left=(x-70)+'px';p.style.top=(y-120)+'px';$('s5fx').appendChild(p);S5A.push({a,p});});
+const s5fakeAv=document.createElement('div');s5fakeAv.className='av';s5fakeAv.style.cssText+='left:910px;top:900px;background:#2563EB';s5fakeAv.textContent='K';$('s5fx').appendChild(s5fakeAv);
+// étoiles S6
+let sh='';for(let i=0;i<60;i++){const x=(i*137)%1080,y=(i*251)%1100,r=1+(i%3);sh+=`<div class="star" style="position:absolute;left:${x}px;top:${y}px;width:${r*2}px;height:${r*2}px;border-radius:50%;background:#fff;opacity:.6"></div>`;}$('s6stars').innerHTML=sh;
+
+// ---------- transitions entre scènes ----------
+function sceneWrap(id,t){
+  const [a,b]=T[id],el=$(id);
+  if(t<a-0.0001||(t>b+TR&&id!=='s9')){el.style.display='none';return null;}
+  el.style.display='block';
+  let x=0,o=1,s=1,blur=0;
+  if(id!=='s1'){const k=eo(P(t,a,TR));x=(1-k)*1080;}
+  if(t>b&&id!=='s9'){const e=eio(P(t,b,TR));x=-e*380;o=1-e*.6;s=1-e*.06;blur=e*8;}
+  el.style.opacity=o;el.style.transform=`translateX(${x}px) scale(${s})`;el.style.filter=blur?`blur(${blur}px)`:'none';
+  el.style.zIndex=t>b?1:2;
+  return t-a;
+}
+
+// ---------- scènes ----------
+function S1(t){
+  const ph=$('s1ph');
+  st(ph,{s:lerp(1.06,1,eo(P(t,0,4))),y:lerp(30,0,eo(P(t,0,1)))});
+  $('s1prog').style.width=(30+P(t,0,5)*60)+'%';
+  st('s1views',{y:420-eo(P(t,.35,.5))*420});
+  const n=Math.floor(87*eo(P(t,.5,2.2)));$('s1count').textContent=n;
+  document.querySelectorAll('.s1li').forEach((e,i)=>{const k=P(t,.7+i*.28,.3);e.style.opacity=k;e.style.transform=`translateX(${(1-eo(k))*60}px)`;});
+  const sw=P(t,2.45,.35);
+  st('s1t1',{o:1-sw,y:-sw*40});st('s1t2',{o:sw,y:(1-eo(sw))*40});
+  // tampon 0 F
+  const z=P(t,3.05,.42);const shake=t>3.3&&t<3.75?Math.sin(t*90)*10*(1-P(t,3.3,.45)):0;
+  st('s1zero',{o:z>0?1:0,s:lerp(2.6,1,eo(z)),r:-12});
+  ph.style.marginLeft=shake+'px';
+}
+function S2(t){
+  // personnage
+  const head=$('mm-head'),phone=$('mm-phone');
+  head.style.transform=`rotate(${Math.sin(t*2.2)*2}deg)`;
+  const vib=t>.55&&t<1.5?Math.sin(t*95)*5:0;
+  phone.style.transform=`rotate(${vib}deg) translateY(${t>1.5?-eo(P(t,1.5,.5))*20:0}px)`;
+  $('mm-glow').setAttribute('opacity',cl(P(t,.55,.3))*(.7+.3*Math.sin(t*8)));
+  $('s2vib').style.opacity=t>.55&&t<1.5?(Math.sin(t*40)>0?1:.4):0;
+  const sm=t>1.15;$('mm-mouth-s').setAttribute('opacity',sm?1:0);$('mm-mouth-o').setAttribute('opacity',sm?0:1);
+  const bl=(t%2.6)>2.45;$('mm-eyes').style.transform=bl?'scaleY(.1)':'none';
+  st('s2m',{y:lerp(80,0,eo(P(t,0,.6)))});
+  popIn($('s2t'),t,.15,{dy:50});
+  const n=P(t,1.0,.55);st('s2n',{o:cl(n*3),y:(1-back(n))*-180});
+  $('s2ex').style.opacity=P(t,1.5,.3);
+  COINS.forEach(c=>{const k=t-1.25-c.delay;if(k<0){c.d.style.opacity=0;return}
+    const x=470+Math.cos(c.a)*c.v*k*.55, y=800+590+Math.sin(c.a)*c.v*k+1300*k*k;
+    c.d.style.left=x+'px';c.d.style.top=y+'px';c.d.style.opacity=k<1.6?1:0;c.d.style.transform=`rotate(${k*400}deg) scaleX(${Math.abs(Math.cos(k*7))*.6+.4})`;});
+}
+function stepTitle(sc,t){const h=document.querySelector(`#${sc} .steptitle`);const k=P(t,.1,.45);st(h,{o:cl(k*2),x:(1-eo(k))*-80});
+  const b=document.querySelector(`#${sc} .badge`);st(b,{s:lerp(.3,1,back(P(t,.1,.5))),r:(1-eo(P(t,.1,.5)))*-90});}
+function S3(t){
+  stepTitle('s3',t);
+  const ph=$('s3ph');st(ph,{y:(1-eo(P(t,.15,.6)))*700});
+  const k=eio(P(t,1.1,.8));
+  focus($('s3img'),$('s3ring'),lerpRect([0,0,390,844],[30,96,360,258],k),lerp(1,1.15,k),P(t,1.6,.3));
+  popIn($('s3zero'),t,1.9,{dy:0});
+  popIn($('s3url'),t,2.4,{dy:30});
+}
+let s4f={tx:0,ty:0,z:1};
+function S4(t){
+  stepTitle('s4',t);
+  document.querySelectorAll('#s4 .c4').forEach((c,i)=>popIn(c,t,.55+i*.22,{dy:30}));
+  const ph=$('s4ph');st(ph,{y:(1-eo(P(t,.1,.6)))*700});
+  const sw=P(t,1.5,.45);
+  $('s4imgA').style.opacity=1-sw;$('s4imgB').style.opacity=sw;
+  const ya=-sw*260;
+  $('s4imgA').style.transform=`translateY(${ya}px)`;
+  if(sw<1){ $('s4imgB').style.transform=`translateY(${(1-sw)*260}px)`; $('s4ring').style.opacity=0; }
+  else{
+    const k=eio(P(t,2.1,.7));
+    s4f=focus($('s4imgB'),$('s4ring'),lerpRect([0,0,390,844],[32,138,358,342],k),lerp(1,1.22,k),P(t,2.75,.25));
+    if(t>3.6){const k2=eio(P(t,3.6,.4));s4f=focus($('s4imgB'),$('s4ring'),lerpRect([32,138,358,342],[40,288,350,337],k2),1.22,1);}
+  }
+  const [x,y]=phonePt(ph,s4f,195,312,640);
+  tap($('s4tap'),t,4.3,x,y);
+  const to=P(t,4.55,.3);$('s4toast').style.opacity=t>5.3?1-P(t,5.3,.2):to;$('s4toast').style.transform=`translateX(-50%) scale(${lerp(.7,1,back(to))})`;
+}
+function S5(t){
+  stepTitle('s5',t);
+  const ph=$('s5ph');st(ph,{y:(1-eo(P(t,.1,.6)))*700});
+  let f;
+  if(t<1.3){const k=eio(P(t,.5,.6));f=focus($('s5img'),$('s5ring'),lerpRect([0,0,390,844],[40,208,350,282],k),lerp(1,1.2,k),P(t,.8,.25));}
+  else{const k=eio(P(t,1.3,.6));f=focus($('s5img'),$('s5ring'),lerpRect([40,208,350,282],[40,604,270,655],k),1.2,1);}
+  const [x,y]=phonePt(ph,f,154,629,560);
+  tap($('s5tap')||mkTap('s5'),t,2.05,x,y);
+  const to=P(t,2.2,.25);$('s5toast').style.opacity=t>2.75?1-P(t,2.75,.2):to;$('s5toast').style.transform=`translateX(-50%) scale(${lerp(.7,1,back(to))})`;
+  const sw=P(t,2.75,.35);$('s5status').style.opacity=sw;$('s5status').style.transform=`translateY(${(1-eo(sw))*80}px)`;
+  // clics
+  const times=[3.15,3.45,3.75,4.35,4.65];let cnt=0;
+  S5A.forEach(({a,p},i)=>{const ta=times[i];const k=P(t,ta-.25,.3);a.style.opacity=k*(1-P(t,ta+.9,.3));a.style.transform=`scale(${lerp(.4,1,back(k))})`;
+    const u=P(t,ta,.9);p.style.opacity=u>0&&u<1?1-u*u:0;p.style.transform=`translateY(${-u*120}px) scale(${lerp(.6,1.1,eo(P(t,ta,.25)))})`;if(t>=ta)cnt++;});
+  $('s5n').textContent=cnt;popIn($('s5cnt'),t,2.95,{dy:-30});
+  // faux clic : même personne qui clique encore
+  const fk=P(t,4.05,.25);s5fakeAv.style.opacity=t<4.05?0:(t<4.8?1:1-P(t,4.8,.2));s5fakeAv.style.transform=`scale(${lerp(.4,1,back(fk))})`;
+  s5fakeAv.style.boxShadow=t>4.15?'0 0 0 10px #DC2626':'';
+  popIn($('s5fake'),t,4.15,{dy:-30});
+}
+function mkTap(sc){const d=document.createElement('div');d.className='tap';d.id=sc+'tap';$(sc).appendChild(d);return d;}
+function S6(t){
+  stepTitle('s6',t);
+  document.querySelectorAll('#s6 .star').forEach((s,i)=>s.style.opacity=.3+.5*Math.abs(Math.sin(t*2+i)));
+  const ph=$('s6ph');st(ph,{y:(1-eo(P(t,.1,.6)))*700});
+  // capture d'écran
+  const fl=P(t,.75,.08),fo=P(t,.83,.35);$('s6flash').style.opacity=t<.75?0:(t<.83?fl:1-fo);
+  const th=$('s6thumb');
+  if(t>.85){const k=eio(P(t,.85,.5));const k2=eio(P(t,2.0,.45));
+    // de plein écran vers coin, puis vers la carte de preuve
+    let x=lerp(256,700,k),y=lerp(620,600,k),s=lerp(2.84,1,k);
+    if(t>2.0){x=lerp(700,300,k2);y=lerp(600,1180,k2);s=lerp(1,.25,k2);}
+    th.style.left=x+'px';th.style.top=y+'px';th.style.transformOrigin='0 0';th.style.transform=`scale(${s}) rotate(${(1-k)*0+(t>2?0:k*6)}deg)`;th.style.opacity=t>2.45?1-P(t,2.45,.1):1;
+  }else th.style.opacity=0;
+  $('s6stat').style.opacity=1-P(t,1.35,.35);
+  const k=eio(P(t,1.5,.6));
+  const f=focus($('s6img'),$('s6ring'),lerpRect([0,0,390,844],[38,308,352,452],k),lerp(1,1.15,k),P(t,1.9,.25));
+  const [x,y]=phonePt(ph,f,262,412,560);
+  tap($('s6tap'),t,2.85,x,y);
+  const to=P(t,3.0,.25);$('s6toast').style.opacity=to;$('s6toast').style.transform=`translateX(-50%) scale(${lerp(.7,1,back(to))})`;
+  popIn($('s6warn'),t,3.25,{dy:-30});
+}
+function S7(t){
+  stepTitle('s7',t);
+  document.querySelectorAll('#s7 .op').forEach((o,i)=>popIn(o,t,.45+i*.16,{dy:30}));
+  const m=P(t,1.15,.45);st('s7min',{o:cl(m*3),s:lerp(2,1,eo(m)),r:8});
+  const ph=$('s7ph');st(ph,{y:(1-eo(P(t,.1,.6)))*700});
+  let f;
+  if(t<2.4){const k=eio(P(t,1.3,.6));f=focus($('s7img'),$('s7ring'),lerpRect([0,0,390,844],[38,464,352,524],k),lerp(1,1.12,k),P(t,1.6,.25));}
+  else{const k=eio(P(t,2.4,.4));f=focus($('s7img'),$('s7ring'),lerpRect([38,464,352,524],[38,604,310,655],k),1.12,1);}
+  const [x,y]=phonePt(ph,f,174,629,720);
+  tap($('s7tap'),t,2.95,x,y);
+  const n=P(t,3.2,.5);st('s7n',{o:cl(n*3),y:(1-back(n))*-120});
+  if(t>3.2&&t<3.9)ph.style.marginLeft=Math.sin(t*95)*6+'px';else ph.style.marginLeft='0px';
+  popIn($('s7ex'),t,4.0,{dy:60});
+}
+function S8(t){
+  const k=P(t,.1,.45);st('s8a',{o:cl(k*2),y:(1-eo(k))*40});
+  $('s8strike').style.transform=`scaleX(${eo(P(t,.85,.35))})`;
+  popIn($('s8b'),t,1.35,{dy:30});
+  document.querySelectorAll('.s8c').forEach((c,i)=>popIn(c,t,2.2+i*.38,{dy:50}));
+  st('s8m',{y:lerp(200,0,eo(P(t,.2,.7)))});
+  $('m8-mouth-s').setAttribute('opacity',1);$('m8-mouth-o').setAttribute('opacity',0);
+  $('m8-head').style.transform=`rotate(${Math.sin(t*2.4)*2.5}deg)`;
+  $('m8-eyes').style.transform=(t%2.3)>2.15?'scaleY(.1)':'none';
+}
+function S9(t){
+  const g=1+.06*Math.sin(t*3);st('s9glow',{s:g});
+  const l=P(t,.1,.5);st('s9logo',{o:cl(l*3),s:lerp(.3,1,back(l))});
+  popIn($('s9word'),t,.4,{dy:30});
+  popIn($('s9url'),t,.75,{dy:40});
+  const txt='pubwek.com';const nch=Math.floor(cl((t-1.0)/1.0)*txt.length+.0001);$('s9typed').textContent=txt.slice(0,nch);
+  $('s9cur').style.opacity=(Math.floor(t*2.5)%2)?1:.1;
+  const b=P(t,2.1,.5);const pulse=t>2.8?1+.04*Math.sin((t-2.8)*6):1;st('s9btn',{o:cl(b*3),s:lerp(.6,1,back(b))*pulse});
+  document.querySelectorAll('.s9li').forEach((e,i)=>{const k=P(t,2.7+i*.3,.35);e.style.opacity=k;e.style.transform=`translateX(${(1-eo(k))*-60}px)`;});
+  tap($('s9tap'),t,4.6,860,1060);
+}
+
+// ---------- sous-titres ----------
+window.SUBS=window.SUBS||[]; // [[début,fin,"texte"],...]
+function SUB(t){const s=SUBS.find(s=>t>=s[0]&&t<s[1]);const box=$('sub');if(!s||!SUBS.length){box.style.display='none';return}
+  box.style.display='block';$('subt').textContent=s[2];const k=P(t,s[0],.12);box.style.opacity=k;box.style.transform=`translateY(${(1-k)*10}px)`;}
+
+const FN={s1:S1,s2:S2,s3:S3,s4:S4,s5:S5,s6:S6,s7:S7,s8:S8,s9:S9};
+window.render=function(t){for(const id in FN){const lt=sceneWrap(id,t);if(lt!==null)FN[id](lt);}SUB(t);};
+window.DUR=DUR;
+render(0);
+</script>
+</body></html>

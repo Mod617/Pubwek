@@ -50,7 +50,9 @@ svg{display:block}
 <!-- ============ S1 : ACCROCHE ============ -->
 <section class="scene" id="s1">
  <div class="bg bg-dark"></div><div class="dots"></div>
- <div class="title" id="s1t1">Tous les jours, tes contacts regardent <span class="bl">ton statut</span>…</div>
+ <div class="title" id="s1t0" style="opacity:0">Oui, toi qui fais des <span class="bl">statuts WhatsApp</span> tous les jours&nbsp;!</div>
+ <div class="title" id="s1t1" style="opacity:0">Tes contacts <span class="bl">les regardent</span>…</div>
+ <div id="s1hey" style="position:absolute;left:0;right:0;top:640px;text-align:center;font:800 210px/0.95 'Plus Jakarta Sans';letter-spacing:-8px;color:#FBBF24;text-shadow:0 14px 50px rgba(0,0,0,.7);z-index:11">HÉ,<br>TOI&nbsp;!</div>
  <div class="title" id="s1t2" style="opacity:0">…et toi, tu gagnes <span class="hl">combien&nbsp;?</span></div>
  <div class="phone" id="s1ph"><div class="island"></div>
   <div class="screen" style="background:linear-gradient(160deg,#6D4AE0,#4527A0)">
@@ -350,16 +352,21 @@ function sceneWrap(id,t){
 
 // ---------- scènes ----------
 function S1(t){
-  const ph=$('s1ph');
-  st(ph,{s:lerp(1.06,1,eo(P(t,0,4))),y:lerp(30,0,eo(P(t,0,1)))});
-  $('s1prog').style.width=(30+P(t,0,5)*60)+'%';
-  st('s1views',{y:420-eo(P(t,.35,.5))*420});
-  const n=Math.floor(87*eo(P(t,.5,2.2)));$('s1count').textContent=n;
-  document.querySelectorAll('.s1li').forEach((e,i)=>{const k=P(t,.7+i*.28,.3);e.style.opacity=k;e.style.transform=`translateX(${(1-eo(k))*60}px)`;});
-  const sw=P(t,2.45,.35);
-  st('s1t1',{o:1-sw,y:-sw*40});st('s1t2',{o:sw,y:(1-eo(sw))*40});
-  // tampon 0 F
-  const z=P(t,4.05,.42);const shake=t>4.3&&t<4.75?Math.sin(t*90)*10*(1-P(t,4.3,.45)):0;
+  const Z=window.EXTRA&&EXTRA.zero||7.15;
+  // « HÉ, TOI ! » : coup de poing visuel dès la 1re image
+  const hk=P(t,0,.18);const hshake=t<.6?Math.sin(t*80)*14*(1-P(t,0,.6)):0;
+  const hout=P(t,.85,.25);
+  st('s1hey',{o:(1-hout),s:lerp(1.6,1,eo(hk))*lerp(1,.6,hout),x:hshake,y:-hout*200});
+  const ph=$('s1ph');const pin=eo(P(t,.9,.6));
+  st(ph,{o:pin,s:lerp(1.06,1,eo(P(t,.9,5))),y:(1-pin)*500});
+  $('s1prog').style.width=(30+P(t,1,Z)*60)+'%';
+  st('s1views',{y:420-eo(P(t,4.15,.5))*420});
+  const n=Math.floor(87*eo(P(t,4.3,1.8)));$('s1count').textContent=n;
+  document.querySelectorAll('.s1li').forEach((e,i)=>{const k=P(t,4.5+i*.25,.3);e.style.opacity=k;e.style.transform=`translateX(${(1-eo(k))*60}px)`;});
+  const a0=P(t,1.0,.3),b0=P(t,4.1,.25);st('s1t0',{o:a0*(1-b0),y:(1-eo(a0))*40-b0*40});
+  const a1=P(t,4.2,.3),b1=P(t,5.5,.25);st('s1t1',{o:a1*(1-b1),y:(1-eo(a1))*40-b1*40});
+  const a2=P(t,5.6,.3);st('s1t2',{o:a2,y:(1-eo(a2))*40});
+  const z=P(t,Z-.1,.42);const shake=t>Z+.15&&t<Z+.6?Math.sin(t*90)*12*(1-P(t,Z+.15,.45)):0;
   st('s1zero',{o:z>0?1:0,s:lerp(2.6,1,eo(z)),r:-12});
   ph.style.marginLeft=shake+'px';
 }
@@ -385,60 +392,67 @@ function S3(t){
   const ph=$('s3ph');st(ph,{y:(1-eo(P(t,.15,.6)))*700});
   const k=eio(P(t,1.1,.8));
   focus($('s3img'),$('s3ring'),lerpRect([0,0,390,844],[30,96,360,258],k),lerp(1,1.15,k),P(t,1.6,.3));
-  popIn($('s3zero'),t,3.1,{dy:0});
-  popIn($('s3url'),t,1.95,{dy:30});
+  popIn($('s3zero'),t,2.95,{dy:0});
+  popIn($('s3url'),t,1.55,{dy:30});
 }
 let s4f={tx:0,ty:0,z:1};
 function S4(t){
   stepTitle('s4',t);
-  document.querySelectorAll('#s4 .c4').forEach((c,i)=>popIn(c,t,2.15+i*.2,{dy:30}));
+  const TY=[2.15,2.9,3.7];   // « une vidéo », « des images », « un simple texte »
+  const order=[0,1,2];        // chips : Vidéo, Images, Texte
+  document.querySelectorAll('#s4 .c4').forEach((c,i)=>popIn(c,t,TY[i],{dy:30}));
   const ph=$('s4ph');st(ph,{y:(1-eo(P(t,.1,.6)))*700});
-  const sw=P(t,0.9,.4);
+  const SW=4.95; // « Une vidéo, c'est dix francs par clic »
+  const sw=P(t,SW,.4);
   $('s4imgA').style.opacity=1-sw;$('s4imgB').style.opacity=sw;
-  const ya=-sw*260;
-  $('s4imgA').style.transform=`translateY(${ya}px)`;
-  if(sw<1){ $('s4imgB').style.transform=`translateY(${(1-sw)*260}px)`; $('s4ring').style.opacity=0; }
-  else{
-    const k=eio(P(t,1.4,.6));
-    s4f=focus($('s4imgB'),$('s4ring'),lerpRect([0,0,390,844],[32,138,358,342],k),lerp(1,1.22,k),P(t,2.0,.25));
-    if(t>3.0){const k2=eio(P(t,3.0,.4));s4f=focus($('s4imgB'),$('s4ring'),lerpRect([32,138,358,342],[40,288,350,337],k2),1.22,1);}
+  const cards={v:[30,358,360,542],i:[30,556,360,745],x:[30,176,360,340]};
+  if(sw<1){
+    $('s4imgB').style.transform=`translateY(${(1-sw)*260}px)`;
+    let r=null,ro=0;
+    if(t>=TY[2])r=cards.x;else if(t>=TY[1])r=cards.i;else if(t>=TY[0])r=cards.v;
+    if(r){s4f=focus($('s4imgA'),$('s4ring'),r,1,(1-sw));}else{s4f=focus($('s4imgA'),null,[0,0,390,844],1,0);$('s4ring').style.opacity=0;}
+    $('s4imgA').style.transform+=` translateY(${-sw*260}px)`;
+  }else{
+    const k=eio(P(t,SW+.4,.5));
+    s4f=focus($('s4imgB'),$('s4ring'),lerpRect([0,0,390,844],[32,138,358,342],k),lerp(1,1.22,k),P(t,SW+.7,.2));
+    if(t>SW+1.1){const k2=eio(P(t,SW+1.1,.35));s4f=focus($('s4imgB'),$('s4ring'),lerpRect([32,138,358,342],[40,288,350,337],k2),1.22,1);}
   }
   const [x,y]=phonePt(ph,s4f,195,312,640);
-  tap($('s4tap'),t,3.5,x,y);
-  const to=P(t,3.7,.3);$('s4toast').style.opacity=to;$('s4toast').style.transform=`translateX(-50%) scale(${lerp(.7,1,back(to))})`;
+  tap($('s4tap'),t,SW+1.6,x,y);
+  const to=P(t,SW+1.75,.3);$('s4toast').style.opacity=to;$('s4toast').style.transform=`translateX(-50%) scale(${lerp(.7,1,back(to))})`;
 }
 function S5(t){
   stepTitle('s5',t);
   const ph=$('s5ph');st(ph,{y:(1-eo(P(t,.1,.6)))*700});
-  const rw=P(t,.5,.4);$('s5row').style.opacity=rw*(1-P(t,4.0,.3));$('s5row').style.transform=`translateY(${(1-eo(rw))*30}px)`;
+  const rw=P(t,.5,.4);$('s5row').style.opacity=rw*(1-P(t,5.9,.3));$('s5row').style.transform=`translateY(${(1-eo(rw))*30}px)`;
   // 1) copier la légende  2) envoyer la vidéo (vrais écrans Pubwek)
   let f;
-  if(t<1.7){const k=eio(P(t,.6,.5));f=focus($('s5img'),$('s5ring'),lerpRect([0,0,390,844],[40,282,240,333],k),lerp(1,1.15,k),P(t,.95,.2));}
-  else{const k=eio(P(t,1.7,.4));f=focus($('s5img'),$('s5ring'),lerpRect([40,282,240,333],[40,618,350,696],k),1.15,1);}
+  if(t<1.75){const k=eio(P(t,.6,.5));f=focus($('s5img'),$('s5ring'),lerpRect([0,0,390,844],[40,282,240,333],k),lerp(1,1.15,k),P(t,.95,.2));}
+  else{const k=eio(P(t,1.75,.35));f=focus($('s5img'),$('s5ring'),lerpRect([40,282,240,333],[40,618,350,696],k),1.15,1);}
   const tp=t<1.9?[139,307]:[195,657];const [x,y]=phonePt(ph,f,tp[0],tp[1],560);
   const tapEl=$('s5tap')||mkTap('s5');
-  if(t<1.9)tap(tapEl,t,1.35,x,y);
-  else if(t<2.75)tap(tapEl,t,2.3,x,y);
-  else tap(tapEl,t,3.6,256+523,576+785);
-  const to=P(t,1.5,.25);$('s5toast').style.opacity=t>2.1?1-P(t,2.1,.2):to;$('s5toast').style.transform=`translateX(-50%) scale(${lerp(.7,1,back(to))})`;
+  if(t<1.9)tap(tapEl,t,1.5,x,y);
+  else if(t<2.8)tap(tapEl,t,2.35,x,y);
+  else tap(tapEl,t,4.55,256+523,576+785);
+  const to=P(t,1.65,.25);$('s5toast').style.opacity=t>2.2?1-P(t,2.2,.2):to;$('s5toast').style.transform=`translateX(-50%) scale(${lerp(.7,1,back(to))})`;
   // 3) écran de publication du statut : la vidéo + la légende avec le lien
-  const ed=P(t,2.55,.35);$('s5ed').style.opacity=ed;$('s5ed').style.transform=`translateY(${(1-eo(ed))*120}px)`;
-  if(t>2.4&&t<4.1)vid('v5a',t-2.55);
-  const pasted=t>=3.1;$('s5ph1').style.display=pasted?'none':'inline';$('s5txt').style.display=pasted?'inline':'none';
-  $('s5bar').style.boxShadow=t>3.1&&t<3.5?`0 0 0 ${6*(1-P(t,3.1,.4))}px #FBBF24`:'none';
-  $('s5send').style.transform=`scale(${t>3.55&&t<3.75?.85:1})`;
+  const ed=P(t,2.6,.35);$('s5ed').style.opacity=ed;$('s5ed').style.transform=`translateY(${(1-eo(ed))*120}px)`;
+  if(t>2.45&&t<5.0)vid('v5a',t-2.6);
+  const pasted=t>=2.9;$('s5ph1').style.display=pasted?'none':'inline';$('s5txt').style.display=pasted?'inline':'none';
+  $('s5bar').style.boxShadow=t>3.35&&t<4.45?'0 0 0 6px #FBBF24, 0 0 30px rgba(251,191,36,.8)':'none';
+  $('s5send').style.transform=`scale(${t>4.5&&t<4.7?.85:1})`;
   // 4) statut publié : les contacts voient la pub et cliquent sur le lien
-  const sp=P(t,3.85,.3);$('s5st').style.opacity=sp;
-  if(t>3.7)vid('v5b',1.0+(t-3.85));
-  $('s5prog').style.width=(10+P(t,3.85,3)*60)+'%';
-  const times=[4.35,4.65,4.95,5.55,5.85];let cnt=0;
+  const sp=P(t,4.75,.3);$('s5st').style.opacity=sp;
+  if(t>4.6)vid('v5b',1.0+(t-4.75));
+  $('s5prog').style.width=(10+P(t,4.75,4)*60)+'%';
+  const times=[6.3,6.6,6.9,7.5,7.8];let cnt=0;
   S5A.forEach(({a,p},i)=>{const ta=times[i];const k=P(t,ta-.25,.3);a.style.opacity=k*(1-P(t,ta+.9,.3));a.style.transform=`scale(${lerp(.4,1,back(k))})`;
     const u=P(t,ta,.9);p.style.opacity=u>0&&u<1?1-u*u:0;p.style.transform=`translateY(${-u*120}px) scale(${lerp(.6,1.1,eo(P(t,ta,.25)))})`;if(t>=ta)cnt++;});
   const lk=times.some(ta=>t>=ta&&t<ta+.2);$('s5link').style.background=lk?'rgba(125,211,252,.35)':'transparent';
-  $('s5n').textContent=cnt;popIn($('s5cnt'),t,4.15,{dy:-30});
-  const fk=P(t,5.2,.25);s5fakeAv.style.opacity=t<5.2?0:(t<5.95?1:1-P(t,5.95,.2));s5fakeAv.style.transform=`scale(${lerp(.4,1,back(fk))})`;
-  s5fakeAv.style.boxShadow=t>5.3?'0 0 0 10px #DC2626':'';
-  popIn($('s5fake'),t,5.3,{dy:-30});
+  $('s5n').textContent=cnt;popIn($('s5cnt'),t,6.1,{dy:-30});
+  const fk=P(t,8.1,.25);s5fakeAv.style.opacity=t<8.1?0:(t<8.85?1:1-P(t,8.85,.2));s5fakeAv.style.transform=`scale(${lerp(.4,1,back(fk))})`;
+  s5fakeAv.style.boxShadow=t>8.2?'0 0 0 10px #DC2626':'';
+  popIn($('s5fake'),t,8.2,{dy:-30});
 }
 function mkTap(sc){const d=document.createElement('div');d.className='tap';d.id=sc+'tap';$(sc).appendChild(d);return d;}
 function S6(t){
@@ -464,20 +478,20 @@ function S6(t){
 }
 function S7(t){
   stepTitle('s7',t);
-  document.querySelectorAll('#s7 .op').forEach((o,i)=>popIn(o,t,[3.7,4.25,4.6,5.0][i],{dy:30}));
+  document.querySelectorAll('#s7 .op').forEach((o,i)=>popIn(o,t,[3.15,3.6,4.0,4.4][i],{dy:30}));
   const m=P(t,.45,.45);st('s7min',{o:cl(m*3),s:lerp(2,1,eo(m)),r:8});
   const ph=$('s7ph');st(ph,{y:(1-eo(P(t,.1,.6)))*700});
   let f;
-  if(t<1.9){const k=eio(P(t,.8,.6));f=focus($('s7img'),$('s7ring'),lerpRect([0,0,390,844],[38,464,352,524],k),lerp(1,1.12,k),P(t,1.1,.25));}
-  else{const k=eio(P(t,1.9,.4));f=focus($('s7img'),$('s7ring'),lerpRect([38,464,352,524],[38,604,310,655],k),1.12,1);}
+  if(t<1.7){const k=eio(P(t,.7,.5));f=focus($('s7img'),$('s7ring'),lerpRect([0,0,390,844],[38,464,352,524],k),lerp(1,1.12,k),P(t,1.1,.25));}
+  else{const k=eio(P(t,1.7,.35));f=focus($('s7img'),$('s7ring'),lerpRect([38,464,352,524],[38,604,310,655],k),1.12,1);}
   const [x,y]=phonePt(ph,f,174,629,720);
-  tap($('s7tap'),t,2.4,x,y);
-  const n=P(t,2.6,.5);st('s7n',{o:cl(n*3),y:(1-back(n))*-120});
-  if(t>2.6&&t<3.3)ph.style.marginLeft=Math.sin(t*95)*6+'px';else ph.style.marginLeft='0px';
-  const zv=P(t,3.3,.3);$('s7v').style.opacity=zv;if(zv>0){vid('v7',4.3+(t-3.3));st('v7',{s:lerp(1.08,1.0,eo(P(t,3.3,2.6)))});}
+  tap($('s7tap'),t,2.2,x,y);
+  const n=P(t,2.4,.5);st('s7n',{o:cl(n*3),y:(1-back(n))*-120});
+  if(t>2.4&&t<3.0)ph.style.marginLeft=Math.sin(t*95)*6+'px';else ph.style.marginLeft='0px';
+  const zv=P(t,2.9,.3);$('s7v').style.opacity=zv;if(zv>0){vid('v7',4.3+(t-2.9));st('v7',{s:lerp(1.08,1.0,eo(P(t,2.9,2.6)))});}
 }
 function S8(t){
-  const A=3.05,B=3.75;
+  const A=3.0,B=3.9;
   if(t<A+.2)vid('v8a',1.2+t);
   if(t>A-.1&&t<B+.2)vid('v8b',2.6+(t-A));
   if(t>B-.1)vid('v8c',5.0+(t-B));
@@ -487,7 +501,7 @@ function S8(t){
   const k=P(t,.1,.45);st('s8a',{o:cl(k*2),y:(1-eo(k))*40});
   $('s8strike').style.transform=`scaleX(${eo(P(t,.85,.35))})`;
   popIn($('s8b'),t,1.35,{dy:30});
-  const ts=[2.55,A+.05,B+.05];
+  const ts=[2.4,A+.05,B+.05];
   document.querySelectorAll('.s8c').forEach((c,i)=>popIn(c,t,ts[i],{dy:50}));
 }
 function S9(t){

@@ -117,7 +117,8 @@ def riser(d):
     x = hp_fast(rng.standard_normal(n), 2500) * (t / d) ** 2
     f = 300 + 1500 * (t / d) ** 2; x += .3 * np.sin(2 * np.pi * np.cumsum(f) / SR) * (t / d) ** 2
     return x
-add(music, riser(1.6), DROP - 1.6, .18)
+ZERO = tl.get("EXTRA", {}).get("zero", DROP - 1.0)
+add(music, riser(1.6), ZERO - 1.6, .18)
 add(music, riser(1.2), T["s9"][0] - 1.2, .16)
 # impact final
 def impact():
@@ -128,6 +129,10 @@ add(music, impact(), DROP, .6)
 end = T["s9"][1]
 fade = np.ones(N); i0 = int((end - 1.2) * SR); fade[i0:] = np.linspace(1, 0, N - i0) ** 1.5
 music *= fade[:, None]
+# coupure nette entre « ZÉRO franc » et « Avec Pubwek »
+i0, i1 = int((ZERO + .05) * SR), int((DROP - .02) * SR)
+if i1 > i0:
+    ramp = int(.03 * SR); music[i0:i0 + ramp] *= np.linspace(1, 0, ramp)[:, None]; music[i0 + ramp:i1] = 0
 add(music, pad(CH[0][1] + [69], 2.0), end - 1.4, .25)
 
 # ------------------------------------------------------------------ bruitages
@@ -179,11 +184,13 @@ def at(sc, lt): return T[sc][0] + lt
 # transitions
 for sc in [k for k in ["s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9"] if k in T]:
     add(sfx, whoosh(), T[sc][0] - .08, .35)
-# S1 : compteur + tampon 0 F
+# S1 : « HÉ, TOI ! » (coup sec) + compteur + tampon 0 F
+add(sfx, impact(), 0.0, .9); add(sfx, clap(), 0.0, .8)
+add(sfx, whoosh(.3), at("s1", .85), .35)
 for k in range(14):
-    add(sfx, tick(), at("s1", .5 + 2.2 * (1 - (1 - k / 14) ** 0.5) * .99), .5)
-add(sfx, bonk(), at("s1", 4.1), .9)
-# S2 : vibration, notification, pièces
+    add(sfx, tick(), at("s1", 4.3 + 1.8 * (1 - (1 - k / 14) ** 0.5) * .99), .5)
+add(sfx, bonk(), ZERO - .05, .95); add(sfx, impact(), ZERO - .05, .6)
+# S2 : vibration, notification, billets
 add(sfx, buzz(.9), at("s2", .55), .55)
 add(sfx, ding2(), at("s2", 1.0), .8)
 def flutter(d=.35):
@@ -195,39 +202,32 @@ def snap():
 add(sfx, snap(), at("s2", 1.2), .5)
 for i in range(10): add(sfx, flutter(.3 + (i % 3) * .08), at("s2", 1.2 + i * .07), .32, (-1) ** i * .5)
 # S3
-add(sfx, pop(), at("s3", .15), .6); add(sfx, pop(), at("s3", 3.1), .7); add(sfx, pop(), at("s3", 1.95), .5)
+add(sfx, pop(), at("s3", .15), .6); add(sfx, pop(), at("s3", 2.95), .7); add(sfx, pop(), at("s3", 1.55), .5)
 # S4
 add(sfx, pop(), at("s4", .15), .6)
-for i in range(3): add(sfx, pop(), at("s4", 2.15 + i * .2), .55)
-add(sfx, click(), at("s4", 3.5), .9); add(sfx, success(), at("s4", 3.7), .6)
+for tt in (2.15, 2.9, 3.7): add(sfx, pop(), at("s4", tt), .6)
+add(sfx, whoosh(.3), at("s4", 4.95), .3)
+add(sfx, click(), at("s4", 6.55), .9); add(sfx, success(), at("s4", 6.7), .6)
 # S5
-add(sfx, pop(), at("s5", .15), .6)
-add(sfx, pop(), at("s5", .5), .45)
-add(sfx, click(), at("s5", 1.35), .9); add(sfx, pop(), at("s5", 1.5), .5)
-add(sfx, click(), at("s5", 2.3), .9); add(sfx, whoosh(.3), at("s5", 2.5), .3)
-add(sfx, pop(), at("s5", 3.1), .4)
-add(sfx, click(), at("s5", 3.6), .9); add(sfx, success(), at("s5", 3.8), .5)
-for i, tt in enumerate([4.35, 4.65, 4.95, 5.55, 5.85]): add(sfx, coin(2600 + i * 120), at("s5", tt), .55, (-1) ** i * .5)
-add(sfx, bonk(), at("s5", 5.3), .35)
-# S6 (seulement si la scène existe)
-if "s6" in T:
-    add(sfx, pop(), at("s6", .15), .6)
-    add(sfx, shutter(), at("s6", .75), .9)
-    add(sfx, whoosh(.3), at("s6", 2.0), .25)
-    add(sfx, click(), at("s6", 2.85), .9); add(sfx, success(), at("s6", 3.0), .6)
-    add(sfx, pop(), at("s6", 3.25), .4)
+add(sfx, pop(), at("s5", .15), .6); add(sfx, pop(), at("s5", .5), .45)
+add(sfx, click(), at("s5", 1.5), .9); add(sfx, pop(), at("s5", 1.65), .5)
+add(sfx, click(), at("s5", 2.35), .9); add(sfx, whoosh(.3), at("s5", 2.55), .3)
+add(sfx, pop(), at("s5", 2.9), .4)
+add(sfx, click(), at("s5", 4.55), .9); add(sfx, success(), at("s5", 4.75), .5)
+for i, tt in enumerate([6.3, 6.6, 6.9, 7.5, 7.8]): add(sfx, coin(2600 + i * 120), at("s5", tt), .55, (-1) ** i * .5)
+add(sfx, bonk(), at("s5", 8.2), .35)
 # S7
 add(sfx, pop(), at("s7", .15), .6)
-for i, tt in enumerate((3.7, 4.25, 4.6, 5.0)): add(sfx, pop(), at("s7", tt), .6, (-1) ** i * .3)
+for i, tt in enumerate((3.15, 3.6, 4.0, 4.4)): add(sfx, pop(), at("s7", tt), .6, (-1) ** i * .3)
 add(sfx, pop(), at("s7", .45), .7)
-add(sfx, click(), at("s7", 2.4), .9)
-add(sfx, buzz(.6), at("s7", 2.6), .45); add(sfx, ding2(), at("s7", 2.65), .6)
-add(sfx, whoosh(.3), at("s7", 3.2), .3)
+add(sfx, click(), at("s7", 2.2), .9)
+add(sfx, buzz(.6), at("s7", 2.4), .45); add(sfx, ding2(), at("s7", 2.45), .6)
+add(sfx, whoosh(.3), at("s7", 2.8), .3)
 # S8
 add(sfx, whoosh(.25), at("s8", .85), .3)
 add(sfx, pop(), at("s8", 1.35), .6)
-for tt in (2.55, 3.1, 3.8): add(sfx, pop(), at("s8", tt), .5)
-for tt in (3.05, 3.75): add(sfx, whoosh(.22), at("s8", tt - .1), .3)
+for tt in (2.4, 3.05, 3.95): add(sfx, pop(), at("s8", tt), .5)
+for tt in (3.0, 3.9): add(sfx, whoosh(.22), at("s8", tt - .1), .3)
 # S9
 add(sfx, pop(), at("s9", .1), .7)
 for i in range(10): add(sfx, type_k(), at("s9", 1.0 + i * .1), .7)

@@ -35,7 +35,7 @@ function S1(t){
 }
 function S2(t){
   vid('v2',4.6+t);st('v2',{s:lerp(1.1,1.0,eo(P(t,0,4)))});
-  popIn($('s2t'),t,.15,{dy:50});popIn($('s2t2'),t,2.8,{dy:30});
+  popIn($('s2t'),t,.15,{dy:50});popIn($('s2t2'),t,X.s2pill||2.8,{dy:30});
   document.querySelectorAll('#s2notifs .notif').forEach((n,i)=>{const k=P(t,1.4+i*.45,.45);n.style.opacity=cl(k*3);n.style.transform=`translateY(${(1-back(k))*-120}px)`;});
 }
 function S3(t){
@@ -123,10 +123,10 @@ function S9(t){
   ['v9a','v9b','v9c','v9d'].forEach((v,i)=>vid(v,[4.0,5.0,2.0,4.5][i]+t*.9));st('s9wall',{s:lerp(1.08,1,eo(P(t,0,6)))});
   const g=1+.06*Math.sin(t*3);st('s9glow',{s:g});
   const l=P(t,.1,.5);st('s9logo',{o:cl(l*3),s:lerp(.3,1,back(l))});
-  popIn($('s9word'),t,.4,{dy:30});popIn($('s9url'),t,.75,{dy:40});
-  const txt='pubwek.com';const nch=Math.floor(cl((t-1.0)/1.0)*txt.length+.0001);$('s9typed').textContent=txt.slice(0,nch);
+  const C9=X.s9||{url:.75,type:1.0,btn:2.1,list:2.7,tap:4.6};popIn($('s9word'),t,.4,{dy:30});popIn($('s9url'),t,C9.url,{dy:40});
+  const txt='pubwek.com';const nch=Math.floor(cl((t-C9.type)/0.9)*txt.length+.0001);$('s9typed').textContent=txt.slice(0,nch);
   $('s9cur').style.opacity=(Math.floor(t*2.5)%2)?1:.1;
-  const b=P(t,2.1,.5);const pulse=t>2.8?1+.04*Math.sin((t-2.8)*6):1;st('s9btn',{o:cl(b*3),s:lerp(.6,1,back(b))*pulse});
-  document.querySelectorAll('.s9li').forEach((e,i)=>{const k=P(t,2.7+i*.3,.35);e.style.opacity=k;e.style.transform=`translateX(${(1-eo(k))*-60}px)`;});
-  tap($('s9tap'),t,4.6,860,1035);
+  const b=P(t,C9.btn,.5);const pulse=t>C9.btn+.7?1+.04*Math.sin((t-C9.btn-.7)*6):1;st('s9btn',{o:cl(b*3),s:lerp(.6,1,back(b))*pulse});
+  document.querySelectorAll('.s9li').forEach((e,i)=>{const k=P(t,C9.list+i*.3,.35);e.style.opacity=k;e.style.transform=`translateX(${(1-eo(k))*-60}px)`;});
+  tap($('s9tap'),t,C9.tap,860,1035);
 }

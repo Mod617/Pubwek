@@ -196,7 +196,7 @@ add(sfx, pop(), at("s1", 3.4), .5)
 add(sfx, bonk(), ZERO - .05, .95); add(sfx, impact(), ZERO - .05, .6)
 # S2 : notifications WhatsApp
 for i in range(3): add(sfx, ding(), at("s2", 1.4 + i * .45), .45)
-add(sfx, pop(), at("s2", 2.8), .5)
+add(sfx, pop(), at("s2", tl.get("EXTRA", {}).get("s2pill", 2.8)), .5)
 # S3 : types de campagne
 add(sfx, pop(), at("s3", .15), .6)
 TY = tl.get("EXTRA", {}).get("s3types", [2.6, 3.2, 3.9])
@@ -232,11 +232,12 @@ add(sfx, bonk(), at("s7", Z7["fake"]), .3); add(sfx, pop(), at("s7", Z7["fake"])
 # S8 : confiance
 for tt in tl.get("EXTRA", {}).get("s8", [.3, 1.2, 2.4]): add(sfx, success(), at("s8", tt), .45)
 # S9
+C9 = tl.get("EXTRA", {}).get("s9", {"url": .75, "type": 1.0, "btn": 2.1, "list": 2.7, "tap": 4.6})
 add(sfx, pop(), at("s9", .1), .7)
-for i in range(10): add(sfx, type_k(), at("s9", 1.0 + i * .1), .7)
-add(sfx, success(), at("s9", 2.1), .6)
-for i in range(3): add(sfx, pop(), at("s9", 2.7 + i * .3), .45)
-add(sfx, click(), at("s9", 4.6), .8)
+for i in range(10): add(sfx, type_k(), at("s9", C9["type"] + i * .09), .7)
+add(sfx, success(), at("s9", C9["btn"]), .6)
+for i in range(3): add(sfx, pop(), at("s9", C9["list"] + i * .3), .45)
+add(sfx, click(), at("s9", C9["tap"]), .8)
 
 def save(x, path):
     x = x / max(1e-9, np.abs(x).max()) * 0.89

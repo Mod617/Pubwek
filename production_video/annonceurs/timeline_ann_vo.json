@@ -1,0 +1,12 @@
+{"T":{"s1":[0,7.95],"s2":[7.95,13.95],"s3":[13.95,19.6],"s4":[19.6,25.9],"s5":[25.9,29.95],"s6":[29.95,38.05],"s7":[38.05,44.6],"s8":[44.6,48.85],"s9":[48.85,54.0]},
+"EXTRA":{"zero":6.35,"vo_b_offset":8.1,"s2pill":4.4,"s3types":[3.28,3.95,4.58],
+ "s4":{"dep":0.9,"obj":3.0,"bud":4.7,"btn":5.9},"s5":{"pay":1.0,"check":1.6,"ok":2.7,"diff":3.5},
+ "s6":{"tap":4.3,"cli":4.6,"chat":5.85,"msg":6.05,"rep":6.7,"moto":7.15},"s7":{"tot":0.9,"obj":1.6,"part":2.4,"fake":4.1},
+ "s8":[0.2,0.75,1.05],"s9":{"url":0.25,"type":0.4,"btn":1.45,"list":2.1,"tap":3.4}},
+"SUBS":[[14.41,16.85,"Un : crée ta campagne sur pubwek.com :"],[17.23,19.5,"ta vidéo, tes images, ou un simple texte."],
+[19.99,22.45,"Deux : choisis tes départements, tes communes,"],[22.57,24.0,"et le nombre de clics que tu veux."],[24.37,25.85,"Le budget se calcule tout seul."],
+[26.28,27.35,"Trois : paie,"],[27.44,29.95,"puis notre équipe vérifie ta publicité avant sa diffusion."],
+[30.70,33.9,"Quatre : des partageurs de ta zone publient ta pub sur leur statut."],[34.37,37.6,"Les clients intéressés cliquent, et t'écrivent directement sur WhatsApp."],
+[38.21,41.8,"Cinq : suis tes clics jour après jour, partageur par partageur."],[42.15,44.0,"Les faux clics ne te sont jamais facturés."],
+[44.77,45.55,"Pas d'abonnement."],[45.59,48.4,"Et si ta publicité est refusée, tu peux demander ton remboursement."],
+[48.96,52.4,"Va sur pubwek.com et lance ta première campagne dès aujourd'hui."]]}

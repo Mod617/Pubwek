@@ -75,8 +75,8 @@ svg{display:block}
  <svg id="s2lines" style="position:absolute;left:0;top:0;z-index:3" width="1080" height="1920" viewBox="0 0 1080 1920">
    <defs><marker id="ah" markerWidth="10" markerHeight="10" refX="6" refY="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#FBBF24"/></marker></defs>
    <path id="l1" d="M300 600 Q540 470 780 600" stroke="#FBBF24" stroke-width="10" fill="none" stroke-linecap="round" marker-end="url(#ah)" stroke-dasharray="600" stroke-dashoffset="600"/>
-   <path id="l2" d="M820 900 Q800 1150 640 1250" stroke="#FBBF24" stroke-width="10" fill="none" stroke-linecap="round" marker-end="url(#ah)" stroke-dasharray="600" stroke-dashoffset="600"/>
-   <path id="l3" d="M440 1250 Q280 1150 260 900" stroke="#FBBF24" stroke-width="10" fill="none" stroke-linecap="round" marker-end="url(#ah)" stroke-dasharray="600" stroke-dashoffset="600"/>
+   <path id="l2" d="M820 900 Q800 1100 650 1170" stroke="#FBBF24" stroke-width="10" fill="none" stroke-linecap="round" marker-end="url(#ah)" stroke-dasharray="600" stroke-dashoffset="600"/>
+   <path id="l3" d="M430 1170 Q280 1100 260 900" stroke="#FBBF24" stroke-width="10" fill="none" stroke-linecap="round" marker-end="url(#ah)" stroke-dasharray="600" stroke-dashoffset="600"/>
  </svg>
  <div class="node" id="n1" style="position:absolute;left:240px;top:760px;margin:-150px 0 0 -150px;width:300px;text-align:center;opacity:0;z-index:4">
    <div style="width:220px;height:220px;margin:0 auto;border-radius:50%;overflow:hidden;border:8px solid #fff;box-shadow:0 20px 50px rgba(0,0,0,.45)"><img src="img_adjara.jpg" style="width:100%;height:100%;object-fit:cover"></div>
@@ -84,7 +84,7 @@ svg{display:block}
  <div class="node" id="n2" style="position:absolute;left:840px;top:760px;margin:-150px 0 0 -150px;width:300px;text-align:center;opacity:0;z-index:4">
    <div style="width:220px;height:220px;margin:0 auto;border-radius:50%;overflow:hidden;border:8px solid #fff;box-shadow:0 20px 50px rgba(0,0,0,.45);background:#000"><video id="v2n" src="clip2.webm" muted preload="auto" style="width:100%;height:100%;object-fit:cover"></video></div>
    <div class="pill" style="background:#FBBF24;color:#0F172A;margin-top:14px;font-size:38px">Partageurs</div></div>
- <div class="node" id="n3" style="position:absolute;left:540px;top:1330px;margin:-150px 0 0 -150px;width:300px;text-align:center;opacity:0;z-index:4">
+ <div class="node" id="n3" style="position:absolute;left:540px;top:1250px;margin:-150px 0 0 -150px;width:300px;text-align:center;opacity:0;z-index:4">
    <div style="width:220px;height:220px;margin:0 auto;border-radius:50%;overflow:hidden;border:8px solid #fff;box-shadow:0 20px 50px rgba(0,0,0,.45);background:#000"><video id="v2c" src="clip3.webm" muted preload="auto" style="width:100%;height:100%;object-fit:cover;object-position:50% 25%"></video></div>
    <div class="pill" style="background:#22C55E;color:#fff;margin-top:14px;font-size:38px">Clients</div></div>
 </section>
@@ -292,11 +292,11 @@ function S1(t){
     n.d.style.transform=`scale(${n.sc*lerp(.2,1,eo(P(k,0,.4)))}) rotateZ(${n.sp*k+Math.sin(k*4+n.ph)*15}deg) rotateX(${Math.sin(k*5+n.ph)*50}deg) rotateY(${Math.cos(k*3.5+n.ph)*30}deg)`;});
 }
 function S2(t){
-  const C=X.s2||{logo:.1,nodes:2.0,l1:2.6,l2:3.3,l3:4.0};
+  const C=X.s2||{logo:.1,nodes:2.0,l1:2.6,l2:3.3,l3:4.0};const NT=C.nt||[C.nodes,C.nodes+.25,C.nodes+.5];
   const l=P(t,C.logo,.5);st('s2logo',{o:cl(l*3),s:lerp(.3,1.35,back(l))*lerp(1,.74,eio(P(t,C.nodes-.4,.5)))});
   popIn($('s2word'),t,C.logo+.25,{dy:30});
   st('s2glow',{s:1+.06*Math.sin(t*3)});
-  ['n1','n2','n3'].forEach((n,i)=>popIn($(n),t,C.nodes+i*.25,{dy:40}));
+  ['n1','n2','n3'].forEach((n,i)=>popIn($(n),t,NT[i],{dy:40}));
   vid('v2n',4.5+t*.8);vid('v2c',1.5+t*.8);
   [['l1',C.l1],['l2',C.l2],['l3',C.l3]].forEach(([id,a])=>{const k=eio(P(t,a,.6));$(id).setAttribute('stroke-dashoffset',600*(1-k));$(id).setAttribute('marker-end',k>.92?'url(#ah)':'none');$(id).style.opacity=k>0?1:0;});
 }

@@ -1,0 +1,13 @@
+{"T":{"s1":[0,6.45],"s2":[6.45,12.6],"s3":[12.6,18.15],"s4":[18.15,23.45],"s5":[23.45,28.8],"s6":[28.8,33.95],"s7":[33.95,39.1],"s8":[39.1,44.8]},
+"EXTRA":{"t2":3.8,"money":5.2,"zero":6.25,
+ "s2":{"logo":0.05,"nodes":3.0,"nt":[3.0,4.2,4.6],"l1":4.4,"l2":4.95,"l3":5.45},
+ "s3":{"com":2.45,"clic":4.5},"s4":{"gain":2.6,"ret":3.3,"plus":[2.7,3.1,3.75,4.1]},
+ "s5":{"phone":2.0,"msg":2.6,"rep":4.2},"s6":[0.2,2.9,3.9],"s7":[0.2,1.8,3.1,3.85],
+ "s8":{"url":0.35,"type":2.75,"b1":0.2,"b2":0.8,"free":1.7,"tap":3.9}},
+"SUBS":[[6.5,7.6,"Voici Pubwek."],[8.37,10.3,"Pubwek relie les commerces du Bénin"],[10.3,12.5,"aux personnes qui publient des statuts WhatsApp."],
+[12.75,14.85,"Les commerces lancent leur publicité,"],[15.04,16.3,"choisissent leurs communes,"],[16.37,18.05,"et ne paient que les vrais clics."],
+[18.28,20.65,"Les partageurs publient la pub sur leur statut,"],[20.76,23.35,"et gagnent de l'argent à chaque vrai clic."],
+[23.57,25.9,"Leurs contacts voient la pub, cliquent,"],[26.03,28.7,"et écrivent directement au commerce sur WhatsApp."],
+[28.96,31.55,"Chaque publicité est vérifiée avant diffusion,"],[31.7,33.85,"et les faux clics sont écartés."],
+[34.06,35.65,"Le commerce trouve des clients."],[35.74,37.65,"Le partageur gagne de l'argent."],[37.78,39.0,"Tout le monde y gagne."],
+[39.22,40.65,"Commerçant ou partageur,"],[40.76,44.2,"inscris-toi gratuitement sur pubwek.com."]]}

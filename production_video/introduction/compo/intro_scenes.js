@@ -36,11 +36,11 @@ function S1(t){
     n.d.style.transform=`scale(${n.sc*lerp(.2,1,eo(P(k,0,.4)))}) rotateZ(${n.sp*k+Math.sin(k*4+n.ph)*15}deg) rotateX(${Math.sin(k*5+n.ph)*50}deg) rotateY(${Math.cos(k*3.5+n.ph)*30}deg)`;});
 }
 function S2(t){
-  const C=X.s2||{logo:.1,nodes:2.0,l1:2.6,l2:3.3,l3:4.0};
+  const C=X.s2||{logo:.1,nodes:2.0,l1:2.6,l2:3.3,l3:4.0};const NT=C.nt||[C.nodes,C.nodes+.25,C.nodes+.5];
   const l=P(t,C.logo,.5);st('s2logo',{o:cl(l*3),s:lerp(.3,1.35,back(l))*lerp(1,.74,eio(P(t,C.nodes-.4,.5)))});
   popIn($('s2word'),t,C.logo+.25,{dy:30});
   st('s2glow',{s:1+.06*Math.sin(t*3)});
-  ['n1','n2','n3'].forEach((n,i)=>popIn($(n),t,C.nodes+i*.25,{dy:40}));
+  ['n1','n2','n3'].forEach((n,i)=>popIn($(n),t,NT[i],{dy:40}));
   vid('v2n',4.5+t*.8);vid('v2c',1.5+t*.8);
   [['l1',C.l1],['l2',C.l2],['l3',C.l3]].forEach(([id,a])=>{const k=eio(P(t,a,.6));$(id).setAttribute('stroke-dashoffset',600*(1-k));$(id).setAttribute('marker-end',k>.92?'url(#ah)':'none');$(id).style.opacity=k>0?1:0;});
 }

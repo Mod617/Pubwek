@@ -186,7 +186,14 @@ add(sfx, bonk(), at("s1", 4.1), .9)
 # S2 : vibration, notification, pièces
 add(sfx, buzz(.9), at("s2", .55), .55)
 add(sfx, ding2(), at("s2", 1.0), .8)
-for i in range(9): add(sfx, coin(2200 + (i * 173) % 900), at("s2", 1.25 + i * .07), .5, (-1) ** i * .4)
+def flutter(d=.35):
+    n = int(d * SR); t = np.arange(n) / SR
+    x = hp_fast(rng.standard_normal(n), 1800) * (0.5 + 0.5 * np.abs(np.sin(2 * np.pi * 14 * t))) * np.sin(np.pi * t / d) ** 1.5
+    return lp_fast(x, 7000) * .9
+def snap():
+    n = int(.06 * SR); return hp_fast(rng.standard_normal(n), 2500) * env(n, .001, .05, 30)
+add(sfx, snap(), at("s2", 1.2), .5)
+for i in range(10): add(sfx, flutter(.3 + (i % 3) * .08), at("s2", 1.2 + i * .07), .32, (-1) ** i * .5)
 # S3
 add(sfx, pop(), at("s3", .15), .6); add(sfx, pop(), at("s3", 3.1), .7); add(sfx, pop(), at("s3", 1.95), .5)
 # S4

@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link rel="stylesheet" href="file:///home/user/Pubwek/static/css/fonts.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#050B14}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:'Plus Jakarta Sans','Inter',sans-serif;color:#fff}
+.scene{position:absolute;inset:0;display:none;will-change:transform,opacity}
+.bg{position:absolute;inset:0}
+.bg-blue{background:radial-gradient(120% 70% at 50% 18%,#0E6FA8 0%,#08486E 38%,#0A1A2E 75%,#050B14 100%)}
+.bg-night{background:radial-gradient(90% 60% at 75% 10%,#3B3486 0%,#1E1B4B 45%,#0B1026 100%)}
+.bg-warm{background:linear-gradient(180deg,#FFF1DA 0%,#FFE0B0 55%,#FDBA74 100%)}
+.bg-dark{background:radial-gradient(100% 60% at 50% 40%,#1B2436 0%,#0A0F1A 70%,#04070D 100%)}
+.dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.07) 2px,transparent 2.5px);background-size:44px 44px}
+.title{position:absolute;left:70px;right:70px;top:210px;font-weight:800;font-size:88px;line-height:1.04;letter-spacing:-2px}
+.title .hl{color:#FBBF24}
+.title .bl{color:#7DD3FC}
+.row{display:flex;align-items:center;gap:26px}
+.badge{width:132px;height:132px;border-radius:50%;background:#FBBF24;color:#0F172A;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:86px;box-shadow:0 12px 40px rgba(251,191,36,.45);flex:none}
+.steptitle{position:absolute;left:66px;right:60px;top:200px}
+.steptitle h1{font-size:82px;font-weight:800;line-height:1.02;letter-spacing:-2px}
+.pill{display:inline-flex;align-items:center;gap:14px;border-radius:999px;padding:14px 28px;font-weight:800;font-size:40px}
+.phone{position:absolute;left:240px;top:560px;width:600px;height:1262px;border-radius:86px;padding:16px;transform-origin:50% 40%;
+ background:linear-gradient(135deg,#6b717b 0%,#2a2e35 12%,#1b1e23 40%,#2d3138 75%,#787f8a 100%);
+ box-shadow:0 70px 140px rgba(0,0,0,.55),0 25px 45px rgba(0,0,0,.35),0 0 0 1.5px #0a0b0d,inset 0 0 0 1.5px rgba(255,255,255,.35),inset 0 0 0 4px #101114,inset 0 0 0 12px #050506}
+.phone::before{content:"";position:absolute;inset:3px;border-radius:83px;border:1px solid rgba(255,255,255,.08);pointer-events:none}
+.pbtn{position:absolute;width:7px;border-radius:3px;background:linear-gradient(90deg,#1c1f24,#7b828c 55%,#2a2e35)}
+.screen{position:relative;width:568px;height:1230px;border-radius:70px;overflow:hidden;background:#fff;box-shadow:0 0 0 2px #000}
+.screen .shot{position:absolute;left:0;top:128px;width:568px;height:1102px;overflow:hidden;background:#F8FAFC}
+.screen .shot img{position:absolute;left:0;top:0;width:568px;transform-origin:0 0}
+.chrome{position:absolute;left:0;right:0;top:48px;height:80px;background:#fff;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;gap:16px;padding:0 20px;z-index:3}
+.chrome .url{flex:1;height:54px;border-radius:27px;background:#F1F3F4;display:flex;align-items:center;gap:10px;padding:0 18px;font:500 24px Inter;color:#202124}
+.gbar{position:absolute;left:50%;bottom:12px;width:150px;height:6px;margin-left:-75px;border-radius:3px;background:rgba(0,0,0,.6);z-index:40}
+.gbar.light{background:rgba(255,255,255,.85)}
+.glare{position:absolute;inset:0;border-radius:70px;background:linear-gradient(118deg,rgba(255,255,255,.13) 0%,rgba(255,255,255,.04) 22%,rgba(255,255,255,0) 38%,rgba(255,255,255,0) 80%,rgba(255,255,255,.05) 100%);pointer-events:none;z-index:45}
+.sbar{position:absolute;left:0;right:0;top:0;height:48px;background:#fff;color:#111;font:600 23px Inter;display:flex;align-items:center;justify-content:space-between;padding:4px 40px 0 44px;z-index:6}
+.sbar.dark{background:transparent;color:#fff}
+.island{position:absolute;left:50%;top:27px;width:32px;height:32px;margin-left:-16px;border-radius:50%;z-index:50;background:radial-gradient(circle at 42% 40%,#3b5168 0,#121a24 28%,#05070a 55%,#000 70%);box-shadow:0 0 0 3px #0c0d10,inset 0 0 4px rgba(120,160,200,.35)}
+.ring{position:absolute;border:7px solid #FBBF24;border-radius:24px;box-shadow:0 0 0 9999px rgba(15,23,42,.0),0 0 34px rgba(251,191,36,.9);z-index:4;opacity:0}
+.tap{position:absolute;width:96px;height:96px;margin:-48px 0 0 -48px;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 6px 24px rgba(0,0,0,.45);z-index:20;opacity:0}
+.tap::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:6px solid #fff;opacity:var(--r,0);transform:scale(var(--rs,1))}
+.chip{position:absolute;background:#fff;color:#0F172A;border-radius:30px;box-shadow:0 18px 50px rgba(0,0,0,.35);padding:22px 26px;font-weight:800}
+.toast{position:absolute;left:50%;transform:translateX(-50%);background:#047857;color:#fff;border-radius:999px;padding:16px 30px;font:800 30px 'Plus Jakarta Sans';white-space:nowrap;z-index:6;opacity:0;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.notif{position:absolute;background:rgba(255,255,255,.97);color:#0F172A;border-radius:34px;padding:24px 28px;display:flex;gap:22px;align-items:center;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.notif .ic{width:86px;height:86px;border-radius:22px;background:#fff;box-shadow:inset 0 0 0 2px #E2E8F0;display:flex;align-items:center;justify-content:center;flex:none}
+.notif .ic img{width:70px}
+.coin{position:absolute;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFE68A,#F5B700 55%,#C98800);border:5px solid #B07400;color:#7A4B00;font:800 40px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center;opacity:0;z-index:15}
+.plus{position:absolute;font:800 52px 'Plus Jakarta Sans';color:#FBBF24;text-shadow:0 4px 14px rgba(0,0,0,.6);opacity:0;z-index:15;white-space:nowrap}
+.av{position:absolute;width:104px;height:104px;margin:-52px 0 0 -52px;border-radius:50%;color:#fff;font:800 50px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center;border:5px solid #fff;box-shadow:0 10px 30px rgba(0,0,0,.4);opacity:0;z-index:12}
+.op{display:flex;align-items:center;justify-content:center;border-radius:26px;font:800 36px 'Plus Jakarta Sans';height:104px;padding:0 26px;box-shadow:0 14px 34px rgba(0,0,0,.35);opacity:0}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;z-index:30;pointer-events:none}
+.vid{position:absolute;left:0;top:0;width:1080px;height:1920px;object-fit:cover}
+.shade{position:absolute;left:0;right:0;top:0;height:820px;background:linear-gradient(180deg,rgba(5,11,20,.88) 0%,rgba(5,11,20,.6) 50%,rgba(5,11,20,0) 100%)}
+.shadeb{position:absolute;left:0;right:0;bottom:0;height:900px;background:linear-gradient(0deg,rgba(5,11,20,.75) 0%,rgba(5,11,20,0) 100%)}
+svg{display:block}
+</style></head>
+<body><div id="stage">
+<!-- ============ S1 : ACCROCHE (criée) ============ -->
+<section class="scene" id="s1">
+ <div class="bg bg-dark"></div>
+ <video class="vid" id="v1" src="clip1.webm" muted preload="auto" style="opacity:0"></video>
+ <div id="s1veil" style="position:absolute;inset:0;background:rgba(5,11,20,.55);opacity:0"></div>
+ <div class="shade" id="s1shade" style="opacity:0"></div>
+ <div id="s1fly" style="position:absolute;inset:0;overflow:hidden;z-index:1"></div>
+ <div class="title" id="s1t0" style="opacity:0;z-index:10">Oui, toi qui as <span class="hl">un commerce</span>&nbsp;!</div>
+ <div class="title" id="s1t1" style="opacity:0;z-index:10">Tu dépenses en <span class="bl">flyers</span> et en <span class="bl">publicités</span>…</div>
+ <div class="title" id="s1t2" style="opacity:0;z-index:10">…mais combien de <span class="hl">clients</span> ça t'a ramenés&nbsp;?</div>
+ <div id="s1hey" style="position:absolute;left:0;right:0;top:640px;text-align:center;font:800 210px/0.95 'Plus Jakarta Sans';letter-spacing:-8px;color:#FBBF24;text-shadow:0 14px 50px rgba(0,0,0,.7);z-index:11">HÉ,<br>TOI&nbsp;!</div>
+ <div id="s1spent" style="position:absolute;left:90px;right:90px;top:620px;display:flex;flex-direction:column;gap:22px;opacity:0;z-index:9">
+   <div class="chip" style="position:relative;display:flex;align-items:center;gap:20px;font-size:44px"><svg width="64" height="64" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2" fill="#F59E0B"/><path d="M8 8h8M8 12h8M8 16h5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>Flyers <span style="margin-left:auto;color:#DC2626">− F</span></div>
+   <div class="chip" style="position:relative;display:flex;align-items:center;gap:20px;font-size:44px"><svg width="64" height="64" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="14" rx="3" fill="#3B82F6"/><path d="M7 21h10M12 18v3" stroke="#3B82F6" stroke-width="2"/></svg>Publicités <span style="margin-left:auto;color:#DC2626">− F</span></div>
+ </div>
+ <div id="s1q" style="position:absolute;left:540px;top:1120px;width:440px;height:440px;margin:-220px 0 0 -220px;border-radius:50%;background:#DC2626;border:14px solid #fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(0,0,0,.55);opacity:0;z-index:12">
+   <div style="font:800 54px 'Plus Jakarta Sans'">Clients</div><div style="font:800 230px/0.9 'Plus Jakarta Sans'">?</div></div>
+</section>
+
+<!-- ============ S2 : LA SOLUTION ============ -->
+<section class="scene" id="s2">
+ <div class="bg" style="background:#000"></div>
+ <video class="vid" id="v2" src="clip5.webm" muted preload="auto"></video>
+ <div class="shade"></div><div class="shadeb" style="height:600px"></div>
+ <div class="title" style="top:170px;font-size:76px" id="s2t">Ta pub sur les <span class="bl">statuts WhatsApp</span> de ta ville.</div>
+ <div id="s2t2" style="position:absolute;left:70px;top:430px;opacity:0"><span class="pill" style="background:#FBBF24;color:#0F172A;font-size:52px;padding:14px 30px">Tu paies seulement les vrais clics</span></div>
+ <div id="s2notifs" style="position:absolute;left:50px;right:50px;top:1060px;z-index:5"></div>
+</section>
+
+<!-- ============ S3 : ÉTAPE 1 CRÉER ============ -->
+<section class="scene" id="s3">
+ <div class="bg bg-blue"></div><div class="dots"></div>
+ <div class="steptitle"><div class="row"><div class="badge">1</div><h1>Crée ta<br>campagne</h1></div></div>
+ <div id="s3chips" style="position:absolute;left:60px;right:60px;top:430px;display:flex;gap:16px;z-index:8">
+  <div class="chip c3" style="position:relative;flex:1.1;padding:16px 18px;background:#FBBF24;opacity:0">
+    <div style="display:flex;align-items:center;gap:10px;font-size:30px"><svg width="38" height="38" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3" fill="#0F172A"/><path d="M10 9l5 3-5 3z" fill="#FBBF24"/></svg>Vidéo</div>
+    <div style="font-size:42px;margin-top:2px">10 F <span style="font-size:26px">/ clic</span></div></div>
+  <div class="chip c3" style="position:relative;flex:1.15;padding:16px 18px;opacity:0">
+    <div style="display:flex;align-items:center;gap:10px;font-size:30px"><svg width="38" height="38" viewBox="0 0 24 24"><rect x="2" y="2" width="9" height="9" rx="2" fill="#066FA7"/><rect x="13" y="2" width="9" height="9" rx="2" fill="#066FA7"/><rect x="2" y="13" width="9" height="9" rx="2" fill="#066FA7"/><rect x="13" y="13" width="9" height="9" rx="2" fill="#066FA7"/></svg>Images</div>
+    <div style="font-size:38px;margin-top:2px">5 F <span style="font-size:24px">/ photo · 25 max</span></div></div>
+  <div class="chip c3" style="position:relative;flex:.9;padding:16px 18px;opacity:0">
+    <div style="display:flex;align-items:center;gap:10px;font-size:30px"><svg width="38" height="38" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4" fill="#066FA7"/><path d="M7 8h10M12 8v9" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>Texte</div>
+    <div style="font-size:38px;margin-top:2px">5 F <span style="font-size:24px">/ clic</span></div></div>
+ </div>
+ <div class="phone" id="s3ph" style="top:640px"><div class="island"></div><div class="screen"><div class="sbar"><span>09:02</span></div>
+   <div class="shot"><img id="s3imgA" src="a_form1.png"><img id="s3imgB" src="a_style1.png" style="opacity:0"></div><div class="ring" id="s3ring"></div></div></div>
+ <div class="tap" id="s3tap"></div>
+</section>
+
+<!-- ============ S4 : ÉTAPE 2 CIBLER ============ -->
+<section class="scene" id="s4">
+ <div class="bg bg-blue"></div><div class="dots"></div>
+ <div class="steptitle"><div class="row"><div class="badge">2</div><h1>Choisis ta zone<br>et tes clics</h1></div></div>
+ <div id="s4zones" style="position:absolute;left:60px;right:60px;top:430px;display:flex;gap:16px;flex-wrap:wrap;z-index:8">
+   <div class="chip z4" style="position:relative;display:flex;align-items:center;gap:12px;font-size:34px;padding:14px 24px;opacity:0"><svg width="36" height="36" viewBox="0 0 24 24"><path d="M12 2a7 7 0 00-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 00-7-7z" fill="#DC2626"/><circle cx="12" cy="9" r="2.6" fill="#fff"/></svg>Littoral</div>
+   <div class="chip z4" style="position:relative;display:flex;align-items:center;gap:12px;font-size:34px;padding:14px 24px;opacity:0"><svg width="36" height="36" viewBox="0 0 24 24"><path d="M12 2a7 7 0 00-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 00-7-7z" fill="#DC2626"/><circle cx="12" cy="9" r="2.6" fill="#fff"/></svg>Atlantique</div>
+   <div class="chip z4" style="position:relative;display:flex;align-items:center;gap:12px;font-size:34px;padding:14px 24px;opacity:0;background:#FBBF24">450 clics · 7 jours</div>
+ </div>
+ <div class="phone" id="s4ph" style="top:640px"><div class="island"></div><div class="screen"><div class="sbar"><span>09:03</span></div>
+   <div class="shot"><img id="s4imgA" src="a_zones.png"><img id="s4imgB" src="a_budget.png" style="opacity:0"></div><div class="ring" id="s4ring"></div></div></div>
+ <div class="tap" id="s4tap"></div>
+ <div class="chip" id="s4budget" style="left:120px;right:120px;top:1250px;opacity:0;z-index:10;text-align:center;padding:22px">
+   <div style="font:800 24px Inter;letter-spacing:3px;color:#D97706">BUDGET CALCULÉ AUTOMATIQUEMENT</div>
+   <div style="font:800 64px 'Plus Jakarta Sans';margin-top:4px">4 995 F</div></div>
+</section>
+
+<!-- ============ S5 : ÉTAPE 3 PAYER + VÉRIFICATION ============ -->
+<section class="scene" id="s5">
+ <div class="bg bg-blue"></div><div class="dots"></div>
+ <div class="steptitle"><div class="row"><div class="badge">3</div><h1>Paie, on vérifie<br>ta pub</h1></div></div>
+ <div id="s5ops" style="position:absolute;left:60px;right:60px;top:430px;display:grid;grid-template-columns:1fr 1fr;gap:14px;z-index:8">
+   <div class="op" style="background:#FFCC00;color:#111;height:86px;font-size:32px">MTN MoMo</div>
+   <div class="op" style="background:#0A5BB5;color:#fff;height:86px;font-size:32px">Moov Money</div>
+   <div class="op" style="background:#00A859;color:#fff;height:86px;font-size:32px">Celtiis Cash</div>
+   <div class="op" style="background:#fff;color:#0F172A;height:86px;font-size:32px;gap:12px"><svg width="40" height="30" viewBox="0 0 40 28"><rect x="1" y="1" width="38" height="26" rx="4" fill="#1E3A8A"/><rect x="1" y="7" width="38" height="5" fill="#FBBF24"/></svg>Carte</div>
+ </div>
+ <div class="phone" id="s5ph" style="top:690px"><div class="island"></div><div class="screen"><div class="sbar"><span>09:05</span></div>
+   <div class="shot"><img id="s5imgA" src="a_attente.png"><img id="s5imgB" src="a_diffusion.png" style="opacity:0"></div><div class="ring" id="s5ring"></div>
+   <div class="notif" id="s5n" style="left:16px;right:16px;top:60px;padding:18px 20px;gap:16px;opacity:0;z-index:12">
+     <div class="ic" style="width:70px;height:70px"><img src="emblem.png" style="width:56px"></div>
+     <div><div style="font:800 30px 'Plus Jakarta Sans'">Campagne validée ✓</div><div style="font:500 24px Inter;color:#475569">Votre campagne #5 a été VALIDÉE.</div></div></div>
+ </div></div>
+ <div id="s5check" style="position:absolute;left:770px;top:760px;width:220px;height:220px;margin:-110px 0 0 -110px;border-radius:50%;background:#16A34A;border:9px solid #fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 20px 50px rgba(0,0,0,.45);opacity:0;z-index:12;transform:rotate(8deg)">
+   <svg width="90" height="90" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#fff" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+   <div style="font:800 28px 'Plus Jakarta Sans'">Vérifiée</div></div>
+</section>
+
+<!-- ============ S6 : ÉTAPE 4 LES CLIENTS ÉCRIVENT ============ -->
+<section class="scene" id="s6">
+ <div class="bg bg-blue"></div><div class="dots"></div>
+ <video class="vid" id="v6a" src="clip3.webm" muted preload="auto" style="opacity:0"></video>
+ <video class="vid" id="v6b" src="clip4.webm" muted preload="auto" style="opacity:0"></video>
+ <div class="shade" id="s6shade" style="opacity:0"></div>
+ <div class="steptitle" style="z-index:6"><div class="row"><div class="badge">4</div><h1>Les clients<br>t'écrivent</h1></div></div>
+ <div class="phone" id="s6ph"><div class="island"></div><div class="screen" id="s6scr" style="background:#000">
+   <div id="s6st" style="position:absolute;inset:0;background:#000;overflow:hidden">
+     <video id="v6s" src="promo.webm" muted preload="auto" style="position:absolute;left:0;top:0;width:568px;height:1230px;object-fit:cover"></video>
+     <div style="position:absolute;left:0;right:0;top:0;height:170px;background:linear-gradient(180deg,rgba(0,0,0,.6),rgba(0,0,0,0))"></div>
+     <div class="sbar dark" style="background:transparent"><span>10:14</span></div>
+     <div style="position:absolute;left:28px;right:28px;top:56px;display:flex;gap:6px"><div style="flex:1;height:6px;border-radius:3px;background:#fff"></div><div style="flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.35)"><div id="s6prog" style="height:100%;width:10%;background:#fff;border-radius:3px"></div></div></div>
+     <svg style="position:absolute;left:18px;top:100px" width="40" height="40" viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z" fill="#fff"/></svg>
+     <div style="position:absolute;left:70px;top:84px;display:flex;align-items:center;gap:16px;color:#fff">
+       <div style="width:66px;height:66px;border-radius:50%;background:#2563EB;color:#fff;font:800 32px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center">K</div>
+       <div><div style="font:800 28px 'Plus Jakarta Sans'">Koffi</div><div style="font:500 22px Inter;opacity:.85">il y a 12 min</div></div></div>
+     <div style="position:absolute;left:0;right:0;top:640px;height:300px;background:linear-gradient(0deg,rgba(0,0,0,.75),rgba(0,0,0,0))"></div>
+     <div style="position:absolute;left:30px;right:30px;top:735px;color:#fff;font:600 27px/1.32 Inter;text-align:center">Gâteaux d'anniversaire sur commande, livrés partout à Cotonou.<br><span id="s6link" style="color:#7DD3FC;text-decoration:underline;font-weight:700">pubwek.com/t/k7Pq2/whatsapp</span></div>
+     <div style="position:absolute;left:24px;right:24px;top:1100px;height:70px;border-radius:35px;border:2px solid rgba(255,255,255,.6);color:#fff;font:500 24px Inter;display:flex;align-items:center;padding:0 26px">Répondre…</div>
+   </div>
+   <div id="s6chat" style="position:absolute;inset:0;opacity:0;background:#ECE5DD;overflow:hidden">
+     <div class="sbar" style="background:#075E54;color:#fff"><span>10:15</span></div>
+     <div style="position:absolute;left:0;right:0;top:48px;height:96px;background:#075E54;display:flex;align-items:center;gap:14px;padding:0 18px;color:#fff">
+       <svg width="36" height="36" viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z" fill="#fff"/></svg>
+       <div style="width:62px;height:62px;border-radius:50%;background:#94A3B8;display:flex;align-items:center;justify-content:center"><svg width="40" height="40" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="#fff"/><path d="M4 21c1-5 15-5 16 0" fill="#fff"/></svg></div>
+       <div style="flex:1"><div style="font:700 28px Inter">+229 01 97 •• •• ••</div><div style="font:400 21px Inter;opacity:.85">en ligne</div></div>
+       <svg width="12" height="36" viewBox="0 0 6 24"><circle cx="3" cy="4" r="2.6" fill="#fff"/><circle cx="3" cy="12" r="2.6" fill="#fff"/><circle cx="3" cy="20" r="2.6" fill="#fff"/></svg>
+     </div>
+     <div style="position:absolute;left:50%;top:170px;transform:translateX(-50%);background:#E1F2FB;color:#475569;font:600 20px Inter;padding:6px 16px;border-radius:10px">AUJOURD'HUI</div>
+     <div id="s6msg" style="position:absolute;left:22px;right:90px;top:220px;background:#fff;border-radius:0 22px 22px 22px;padding:18px 20px 34px;color:#111;font:400 25px/1.38 Inter;box-shadow:0 2px 2px rgba(0,0,0,.12);opacity:0">
+       Bonjour,<br>Je vous contacte suite à votre publicité vue sur Pubwek.<br><br>Campagne : n°5<br>Produit / service : Pâtisserie Doux Matin<br><b>Partageur : Koffi229</b><br><br>Je suis intéressé(e), pouvez-vous me donner plus d'informations ?
+       <span style="position:absolute;right:16px;bottom:8px;font:400 18px Inter;color:#94A3B8">10:15</span></div>
+     <div id="s6rep" style="position:absolute;right:22px;left:150px;top:760px;background:#DCF8C6;border-radius:22px 0 22px 22px;padding:16px 20px 30px;color:#111;font:400 25px/1.38 Inter;box-shadow:0 2px 2px rgba(0,0,0,.12);opacity:0">
+       Bonjour ! Oui bien sûr, pour quelle date ?<span style="position:absolute;right:16px;bottom:6px;font:400 18px Inter;color:#64748B">10:16 ✓✓</span></div>
+     <div style="position:absolute;left:14px;right:14px;top:1090px;display:flex;gap:12px;align-items:center"><div style="flex:1;height:76px;border-radius:38px;background:#fff;color:#94A3B8;font:400 26px Inter;display:flex;align-items:center;padding:0 26px">Message</div><div style="width:76px;height:76px;border-radius:50%;background:#00A884;display:flex;align-items:center;justify-content:center"><svg width="34" height="34" viewBox="0 0 24 24"><path d="M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 006 6.9V21h2v-2.1A7 7 0 0019 12z" fill="#fff"/></svg></div></div>
+   </div>
+ </div></div>
+ <div class="chip" id="s6lbl" style="left:50%;top:1330px;transform:translateX(-50%);opacity:0;z-index:12;font-size:40px;display:flex;align-items:center;gap:14px;white-space:nowrap"></div>
+ <div class="tap" id="s6tap"></div>
+</section>
+
+<!-- ============ S7 : ÉTAPE 5 SUIVI ============ -->
+<section class="scene" id="s7">
+ <div class="bg bg-blue"></div><div class="dots"></div>
+ <div class="steptitle"><div class="row"><div class="badge">5</div><h1>Suis tes clics<br>en direct</h1></div></div>
+ <div id="s7chips" style="position:absolute;left:60px;right:60px;top:430px;display:flex;gap:16px;z-index:8">
+   <div class="chip c7" style="position:relative;flex:1;display:flex;align-items:center;gap:12px;font-size:32px;padding:16px 20px;opacity:0"><svg width="40" height="40" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#16A34A"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg>Vrais clics facturés</div>
+   <div class="chip c7" style="position:relative;flex:1;display:flex;align-items:center;gap:12px;font-size:32px;padding:16px 20px;opacity:0;background:#FEE2E2;color:#991B1B"><svg width="40" height="40" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#DC2626"/><path d="M8 8l8 8M16 8l-8 8" stroke="#fff" stroke-width="2.8" stroke-linecap="round"/></svg>Faux clics : 0 F</div>
+ </div>
+ <div class="phone" id="s7ph" style="top:600px"><div class="island"></div><div class="screen"><div class="sbar"><span>18:40</span></div>
+   <div class="shot"><img id="s7imgA" src="a_stats1.png"><img id="s7imgB" src="a_stats2.png" style="opacity:0"></div><div class="ring" id="s7ring"></div></div></div>
+</section>
+
+<!-- ============ S8 : CONFIANCE ============ -->
+<section class="scene" id="s8">
+ <div class="bg" style="background:#000"></div>
+ <video class="vid" id="v8" src="clip1.webm" muted preload="auto"></video>
+ <div class="shade" style="height:1000px;background:linear-gradient(180deg,rgba(5,11,20,.9) 0%,rgba(5,11,20,.7) 60%,rgba(5,11,20,0) 100%)"></div>
+ <div id="s8list" style="position:absolute;left:70px;right:70px;top:200px;display:flex;flex-direction:column;gap:26px">
+   <div class="s8li" style="display:flex;align-items:center;gap:24px;font:800 62px 'Plus Jakarta Sans';opacity:0"><svg width="76" height="76" viewBox="0 0 24 24" style="flex:none"><circle cx="12" cy="12" r="11" fill="#22C55E"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg>Sans abonnement</div>
+   <div class="s8li" style="display:flex;align-items:center;gap:24px;font:800 62px 'Plus Jakarta Sans';opacity:0"><svg width="76" height="76" viewBox="0 0 24 24" style="flex:none"><circle cx="12" cy="12" r="11" fill="#22C55E"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg>Payé au clic réel</div>
+   <div class="s8li" style="display:flex;align-items:center;gap:24px;font:800 56px/1.1 'Plus Jakarta Sans';opacity:0"><svg width="76" height="76" viewBox="0 0 24 24" style="flex:none"><circle cx="12" cy="12" r="11" fill="#22C55E"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg><span>Pub refusée ?<br><span style="color:#FBBF24">Remboursement possible</span></span></div>
+ </div>
+</section>
+
+<!-- ============ S9 : APPEL À L'ACTION ============ -->
+<section class="scene" id="s9">
+ <div class="bg" style="background:#050B14"></div>
+ <div id="s9wall" style="position:absolute;inset:0">
+  <video id="v9a" src="clip1.webm" muted preload="auto" style="position:absolute;left:0;top:0;width:540px;height:960px;object-fit:cover"></video>
+  <video id="v9b" src="clip5.webm" muted preload="auto" style="position:absolute;left:540px;top:0;width:540px;height:960px;object-fit:cover"></video>
+  <video id="v9c" src="clip3.webm" muted preload="auto" style="position:absolute;left:0;top:960px;width:540px;height:960px;object-fit:cover"></video>
+  <video id="v9d" src="clip2.webm" muted preload="auto" style="position:absolute;left:540px;top:960px;width:540px;height:960px;object-fit:cover"></video>
+ </div>
+ <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,72,110,.55),rgba(5,20,40,.82) 45%,rgba(5,11,20,.9))"></div>
+ <div id="s9glow" style="position:absolute;left:540px;top:430px;width:900px;height:900px;margin:-450px 0 0 -450px;border-radius:50%;background:radial-gradient(circle,rgba(125,211,252,.45),rgba(125,211,252,0) 65%)"></div>
+ <div id="s9logo" style="position:absolute;left:540px;top:400px;width:330px;height:330px;margin:-165px 0 0 -165px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(0,0,0,.45);opacity:0"><img src="emblem.png" style="width:270px"></div>
+ <div id="s9word" style="position:absolute;left:0;right:0;top:600px;text-align:center;opacity:0"><div style="font:800 92px 'Plus Jakarta Sans';letter-spacing:12px">PUBWEK</div></div>
+ <div id="s9url" style="position:absolute;left:80px;right:80px;top:760px;height:150px;border-radius:999px;background:#fff;color:#0F172A;display:flex;align-items:center;gap:24px;padding:0 50px;box-shadow:0 24px 60px rgba(0,0,0,.4);opacity:0">
+   <svg width="60" height="60" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2" fill="#066FA7"/><path d="M8 10V7a4 4 0 018 0v3" stroke="#066FA7" stroke-width="2.4" fill="none"/></svg>
+   <span id="s9typed" style="font:800 80px 'Plus Jakarta Sans';letter-spacing:-1px"></span><span id="s9cur" style="width:6px;height:80px;background:#066FA7"></span></div>
+ <div id="s9btn" style="position:absolute;left:80px;right:80px;top:960px;height:150px;border-radius:999px;background:#FBBF24;color:#0F172A;display:flex;align-items:center;justify-content:center;font:800 58px 'Plus Jakarta Sans';box-shadow:0 20px 60px rgba(251,191,36,.5);opacity:0">Lance ta campagne</div>
+ <div id="s9list" style="position:absolute;left:80px;right:80px;top:1160px;display:flex;flex-direction:column;gap:18px">
+   <div class="s9li" style="display:flex;align-items:center;gap:20px;font:700 44px 'Plus Jakarta Sans';opacity:0"><svg width="56" height="56" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#22C55E"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg>Ciblage par commune</div>
+   <div class="s9li" style="display:flex;align-items:center;gap:20px;font:700 44px 'Plus Jakarta Sans';opacity:0"><svg width="56" height="56" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#22C55E"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg>Payé au clic réel</div>
+   <div class="s9li" style="display:flex;align-items:center;gap:20px;font:700 44px 'Plus Jakarta Sans';opacity:0"><svg width="56" height="56" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#22C55E"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg>Vérifiée avant diffusion</div>
+ </div>
+ <div class="tap" id="s9tap"></div>
+</section>
+
+<div id="sub" style="position:absolute;left:50px;right:50px;top:1462px;text-align:center;z-index:50;display:none">
+  <span id="subt" style="display:inline;background:rgba(5,11,20,.82);color:#fff;font:800 46px/1.36 'Plus Jakarta Sans';padding:8px 22px;border-radius:18px;-webkit-box-decoration-break:clone;box-decoration-break:clone"></span></div>
+</div>
+<script>
+// ===================== moteur d'animation =====================
+const $=id=>document.getElementById(id);
+const cl=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const P=(t,a,d)=>cl((t-a)/d);
+const eo=x=>1-Math.pow(1-x,3);
+const eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const back=x=>{x=cl(x);const c1=1.9,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
+const lerp=(a,b,k)=>a+(b-a)*k;
+function st(el,{o,x=0,y=0,s=1,r=0,extra=''}){if(typeof el==='string')el=$(el);if(o!==undefined)el.style.opacity=o;el.style.transform=`translate(${x}px,${y}px) scale(${s}) rotate(${r}deg) ${extra}`;}
+function popIn(el,t,a,{dy=40,dur=.5}={}){const k=P(t,a,dur);st(el,{o:cl(k*2.5),y:(1-eo(k))*dy,s:lerp(.6,1,back(k))});}
+
+// Durées des scènes (secondes). Recalées sur la voix off au montage final.
+const T=window.T||{s1:[0,5],s2:[5,9],s3:[9,13.5],s4:[13.5,19],s5:[19,24.5],s6:[24.5,29],s7:[29,35],s8:[35,40],s9:[40,46.5]};
+const DUR=T.s9[1];
+const TR=.34; // durée des transitions
+
+// Écran de téléphone : zoom sur un rectangle (coordonnées CSS de la page, 390 px de large)
+const K=568/390, TOPB=128, SH=1230-128;
+function focus(img,ring,rect,z,ringO){
+  // rect = [x1,y1,x2,y2] ; z = zoom
+  const cx=(rect[0]+rect[2])/2*K, cy=(rect[1]+rect[3])/2*K;
+  let tx=568/2-cx*z, ty=SH*0.42-cy*z;
+  tx=cl(tx,568-568*z,0); ty=cl(ty,SH-844*K*z,0);
+  img.style.transform=`translate(${tx}px,${ty}px) scale(${z})`;
+  if(ring){const pad=10;ring.style.left=(tx+rect[0]*K*z-pad)+'px';ring.style.top=(TOPB+ty+rect[1]*K*z-pad)+'px';
+    ring.style.width=((rect[2]-rect[0])*K*z+pad*2)+'px';ring.style.height=((rect[3]-rect[1])*K*z+pad*2)+'px';ring.style.opacity=ringO;}
+  return {tx,ty,z};
+}
+function lerpRect(a,b,k){return a.map((v,i)=>lerp(v,b[i],k));}
+// position à l'écran (stage) d'un point de la page dans un téléphone
+function phonePt(ph,f,px,py,phoneTop){const left=240+16, top=(phoneTop)+16+TOPB;return [left+f.tx+px*K*f.z, top+f.ty+py*K*f.z];}
+function tap(el,t,a,x,y){const k=P(t,a-.35,.35),u=P(t,a,.5);const o=t<a-.35?0:(t<a+.5?1:1-P(t,a+.5,.25));
+  el.style.left=x+'px';el.style.top=y+'px';const press=t>=a&&t<a+.15?.82:1;
+  el.style.opacity=o;el.style.transform=`translate(${(1-eo(k))*60}px,${(1-eo(k))*80}px) scale(${press})`;
+  el.style.setProperty('--r',t>=a?1-u:0);el.style.setProperty('--rs',1+u*1.4);}
+
+// ---------- vidéos : positionnement image par image ----------
+let SEEKS=[];
+function vid(id,time,rate=1){const v=$(id);const d=(v.duration||10)-0.05;const tt=cl(time,0,d);
+  if(Math.abs(v.currentTime-tt)>0.004){SEEKS.push(new Promise(r=>v.addEventListener('seeked',r,{once:true})));v.currentTime=tt;}}
+window.videosReady=()=>[...document.querySelectorAll('video')].every(v=>v.readyState>=2);
+
+// ---------- préparation ----------
+function sbarHTML(time,dark){const c=dark?'#fff':'#111';
+ return `<span>${time}</span><span style="display:flex;align-items:center;gap:10px">
+ <svg width="30" height="22" viewBox="0 0 30 22"><rect x="0" y="15" width="5" height="7" rx="1" fill="${c}"/><rect x="8" y="10" width="5" height="12" rx="1" fill="${c}"/><rect x="16" y="5" width="5" height="17" rx="1" fill="${c}"/><rect x="24" y="0" width="5" height="22" rx="1" fill="${c}" opacity=".35"/></svg>
+ <span style="font:700 17px Inter;margin-left:-4px">4G</span>
+ <svg width="28" height="22" viewBox="0 0 24 18"><path d="M12 17.5l3.4-4.2a5.4 5.4 0 00-6.8 0z" fill="${c}"/><path d="M5.6 9.8a10 10 0 0112.8 0l-2 2.5a6.8 6.8 0 00-8.8 0z" fill="${c}"/><path d="M2.4 6a15 15 0 0119.2 0l-2 2.4a12 12 0 00-15.2 0z" fill="${c}" opacity=".9"/></svg>
+ <span style="display:flex;align-items:center;gap:6px;font:700 19px Inter">78
+ <svg width="40" height="22" viewBox="0 0 40 22"><rect x="1" y="2" width="34" height="18" rx="5" fill="none" stroke="${c}" stroke-width="2" opacity=".55"/><rect x="4" y="5" width="22" height="12" rx="2.5" fill="${c}"/><rect x="36.5" y="8" width="3" height="6" rx="1.5" fill="${c}" opacity=".55"/></svg></span></span>`;}
+const CHROME=`<svg width="34" height="34" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1z" fill="none" stroke="#5f6368" stroke-width="2" stroke-linejoin="round"/></svg>
+ <div class="url"><svg width="26" height="26" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2" fill="#5f6368"/><path d="M8 10V7a4 4 0 018 0v3" stroke="#5f6368" stroke-width="2.2" fill="none"/></svg>pubwek.com</div>
+ <div style="width:36px;height:36px;border:3px solid #5f6368;border-radius:8px;display:flex;align-items:center;justify-content:center;font:700 17px Inter;color:#5f6368">3</div>
+ <svg width="12" height="36" viewBox="0 0 6 24"><circle cx="3" cy="4" r="2.6" fill="#5f6368"/><circle cx="3" cy="12" r="2.6" fill="#5f6368"/><circle cx="3" cy="20" r="2.6" fill="#5f6368"/></svg>`;
+document.querySelectorAll('.sbar').forEach(b=>{const tm=(b.querySelector('span')||{}).textContent||'08:16';b.innerHTML=sbarHTML(tm,b.classList.contains('dark'));});
+document.querySelectorAll('.phone').forEach(ph=>{
+  ph.insertAdjacentHTML('beforeend','<div class="pbtn" style="right:-6px;top:250px;height:110px"></div><div class="pbtn" style="right:-6px;top:395px;height:70px"></div>');
+  const sc=ph.querySelector('.screen');
+  if(sc.querySelector('.shot')){const c=document.createElement('div');c.className='chrome';c.innerHTML=CHROME;sc.appendChild(c);}
+  const dark=!sc.querySelector('.shot');
+  sc.insertAdjacentHTML('beforeend',`<div class="gbar${dark?' light':''}"></div><div class="glare"></div>`);
+});
+
+
+// ---------- préparation (vidéo annonceurs) ----------
+const X=window.EXTRA||{};
+// flyers qui tombent (accroche)
+const FLY=[];for(let i=0;i<16;i++){const d=document.createElement('div');
+  const col=['#EF4444','#F59E0B','#3B82F6','#10B981'][i%4];
+  d.style.cssText='position:absolute;width:190px;height:260px;margin:-130px 0 0 -95px;background:#FFFDF7;border-radius:6px;box-shadow:0 10px 24px rgba(0,0,0,.45);opacity:0;overflow:hidden';
+  d.innerHTML=`<div style="height:70px;background:${col};color:#fff;font:800 34px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center">PROMO</div><div style="margin:18px 16px;height:14px;background:#CBD5E1;border-radius:7px"></div><div style="margin:12px 16px;height:14px;width:60%;background:#CBD5E1;border-radius:7px"></div><div style="margin:12px 16px;height:14px;width:80%;background:#CBD5E1;border-radius:7px"></div><div style="margin:22px 16px 0;height:44px;background:${col};opacity:.35;border-radius:8px"></div>`;
+  $('s1fly').appendChild(d);FLY.push({d,x:80+((i*137)%920),delay:(i*0.17)%2.2,rot:((i*53)%60)-30,spin:((i*29)%40)-20,land:1520+((i*71)%300)});}
+// notifications WhatsApp (scène 2)
+const NOTIFS=[['Awa','Bonjour, je vous contacte suite à votre publicité vue sur Pubwek…'],['Koffi','Bonjour, je vous contacte suite à votre publicité vue sur Pubwek…'],['Mariam','Bonjour, je suis intéressée, vous livrez à Calavi ?']];
+NOTIFS.forEach(([n,m],i)=>{const d=document.createElement('div');d.className='notif';d.style.cssText+=';position:absolute;left:0;right:0;top:'+(i*150)+'px;padding:18px 22px;opacity:0';
+  d.innerHTML=`<div class="ic" style="width:72px;height:72px;background:#25D366;box-shadow:none"><svg width="44" height="44" viewBox="0 0 24 24"><path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2z" fill="#fff"/><path d="M8.6 7.6c.3-.6.6-.6.9-.6h.6c.2 0 .5 0 .7.5l.9 2.1c.1.2 0 .5-.1.7l-.6.7c-.2.2-.2.4 0 .7a7 7 0 003.3 2.9c.3.1.5.1.7-.1l.7-.9c.2-.2.4-.3.7-.2l2 .9c.3.1.5.3.5.5 0 .9-.6 1.9-1.6 2.2-1 .3-2.3.3-4.6-1a10 10 0 01-3.7-4c-.7-1.4-.6-2.6-.3-3.3z" fill="#25D366"/></svg></div>
+  <div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;font:600 24px Inter;color:#64748B"><span>WhatsApp · ${n}</span><span>maintenant</span></div><div style="font:500 27px/1.3 Inter;color:#0F172A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m}</div></div>`;
+  $('s2notifs').appendChild(d);});
+
+// ---------- scènes ----------
+function S1(t){
+  const Z=X.zero||7.2;
+  const hk=P(t,0,.18);const hshake=t<.6?Math.sin(t*80)*14*(1-P(t,0,.6)):0;const hout=P(t,.85,.25);
+  st('s1hey',{o:(1-hout),s:lerp(1.6,1,eo(hk))*lerp(1,.6,hout),x:hshake,y:-hout*200});
+  // la commerçante (« toi qui as un commerce »)
+  const vv=P(t,.9,.3)*(1-P(t,2.6,.3));$('v1').style.opacity=vv;$('s1veil').style.opacity=vv;$('s1shade').style.opacity=vv;
+  if(t>.8&&t<3.0){vid('v1',2.0+t);st('v1',{s:lerp(1.12,1.02,P(t,.9,2))});}
+  const a0=P(t,1.0,.3),b0=P(t,2.6,.25);st('s1t0',{o:a0*(1-b0),y:(1-eo(a0))*40-b0*40});
+  const a1=P(t,2.7,.3),b1=P(t,5.3,.25);st('s1t1',{o:a1*(1-b1),y:(1-eo(a1))*40-b1*40});
+  const a2=P(t,5.4,.3);st('s1t2',{o:a2,y:(1-eo(a2))*40});
+  // les flyers tombent et s'entassent
+  FLY.forEach(f=>{const k=t-2.75-f.delay;if(k<0){f.d.style.opacity=0;return}
+    const y=Math.min(f.land,-200+k*k*1500);const landed=y>=f.land;
+    f.d.style.left=(f.x+Math.sin(k*3+f.rot)*40)+'px';f.d.style.top=y+'px';f.d.style.opacity=1-P(t,Z-.3,.3)*.6;
+    f.d.style.transform=`rotate(${landed?f.rot:f.rot+Math.sin(k*5)*25}deg) scale(${landed?.9:1})`;});
+  const sp=P(t,3.4,.4);st('s1spent',{o:cl(sp*3)*(1-P(t,5.3,.3)),y:(1-eo(sp))*40});
+  const z=P(t,Z-.1,.42);st('s1q',{o:z>0?1:0,s:lerp(2.6,1,eo(z)),r:-10});
+  const sh=t>Z+.15&&t<Z+.6?Math.sin(t*90)*12*(1-P(t,Z+.15,.45)):0;$('s1fly').style.marginLeft=sh+'px';
+}
+function S2(t){
+  vid('v2',4.6+t);st('v2',{s:lerp(1.1,1.0,eo(P(t,0,4)))});
+  popIn($('s2t'),t,.15,{dy:50});popIn($('s2t2'),t,2.8,{dy:30});
+  document.querySelectorAll('#s2notifs .notif').forEach((n,i)=>{const k=P(t,1.4+i*.45,.45);n.style.opacity=cl(k*3);n.style.transform=`translateY(${(1-back(k))*-120}px)`;});
+}
+function S3(t){
+  stepTitle('s3',t);
+  const TY=X.s3types||[2.6,3.2,3.9];
+  document.querySelectorAll('#s3 .c3').forEach((c,i)=>popIn(c,t,TY[i],{dy:30}));
+  const ph=$('s3ph');st(ph,{y:(1-eo(P(t,.1,.6)))*700});
+  const sw=P(t,1.9,.35);$('s3imgA').style.opacity=1-sw;$('s3imgB').style.opacity=sw;
+  let f;
+  if(sw<1){const k=eio(P(t,.7,.6));f=focus($('s3imgA'),$('s3ring'),lerpRect([0,0,390,844],[28,150,362,320],k),lerp(1,1.1,k),P(t,1.1,.25)*(1-sw));}
+  else{const cards=[[40,140,350,259],[40,259,350,378],[40,378,350,497]];let r=cards[0];
+    if(t>=TY[2])r=cards[2];else if(t>=TY[1])r=cards[1];
+    if(t>=TY[2]+.6)r=cards[0];
+    f=focus($('s3imgB'),$('s3ring'),r,1,t>=TY[0]-.2?1:0);}
+  const [x,y]=phonePt(ph,f||{tx:0,ty:0,z:1},195,200,640);
+  tap($('s3tap'),t,TY[2]+.85,x,y);
+}
+function S4(t){
+  stepTitle('s4',t);
+  const Z4=X.s4||{dep:1.1,obj:3.3,bud:4.6,btn:6.0};
+  document.querySelectorAll('#s4 .z4').forEach((c,i)=>popIn(c,t,[Z4.dep,Z4.dep+.6,Z4.obj][i],{dy:30}));
+  const ph=$('s4ph');st(ph,{y:(1-eo(P(t,.1,.6)))*700});
+  const sw=P(t,Z4.obj-.5,.35);$('s4imgA').style.opacity=1-sw;$('s4imgB').style.opacity=sw;
+  let f,tp;
+  if(sw<1){const r=t<Z4.dep+.6?[40,265,350,303]:[40,461,350,499];f=focus($('s4imgA'),$('s4ring'),r,1,P(t,Z4.dep-.2,.2)*(1-sw));tp=t<Z4.dep+.6?[100,284]:[90,480];}
+  else{const r=t<Z4.bud?[50,150,340,210]:(t<Z4.btn-.5?[50,318,340,377]:[40,668,350,724]);f=focus($('s4imgB'),$('s4ring'),r,1,1);tp=[195,696];}
+  const [x,y]=phonePt(ph,f,tp[0],tp[1],640);
+  if(sw<1){if(t<Z4.dep+.6)tap($('s4tap'),t,Z4.dep+.2,x,y);else tap($('s4tap'),t,Z4.dep+.8,x,y);}
+  else tap($('s4tap'),t,Z4.btn,x,y);
+  popIn($('s4budget'),t,Z4.bud+.2,{dy:50});$('s4budget').style.opacity*=(1-P(t,Z4.btn-.4,.3));
+}
+function S5(t){
+  stepTitle('s5',t);
+  const Z5=X.s5||{pay:.5,check:1.4,ok:2.6,diff:3.4};
+  document.querySelectorAll('#s5 .op').forEach((o,i)=>popIn(o,t,Z5.pay+i*.14,{dy:30}));
+  const ph=$('s5ph');st(ph,{y:(1-eo(P(t,.1,.6)))*700});
+  const sw=P(t,Z5.diff,.35);$('s5imgA').style.opacity=1-sw;$('s5imgB').style.opacity=sw;
+  if(sw<1)focus($('s5imgA'),$('s5ring'),[258,132,352,166],1,P(t,Z5.check,.25)*(1-sw));
+  else focus($('s5imgB'),$('s5ring'),[251,132,352,166],1,P(t,Z5.diff+.3,.25));
+  const n=P(t,Z5.ok+.3,.5);st('s5n',{o:cl(n*3)*(1-P(t,Z5.diff-.1,.25)),y:(1-back(n))*-120});
+  const c=P(t,Z5.ok,.45);st('s5check',{o:cl(c*3),s:lerp(2,1,eo(c)),r:8});
+}
+function S6(t){
+  stepTitle('s6',t);
+  const Z6=X.s6||{tap:1.7,cli:2.2,chat:3.6,msg:3.9,rep:5.6,moto:6.3};
+  const ph=$('s6ph');
+  // 1) le statut d'un partageur : la pub avec le lien
+  if(t<Z6.cli+.3)vid('v6s',1.2+t);
+  $('s6prog').style.width=(10+P(t,0,3)*70)+'%';
+  $('s6link').style.background=t>Z6.tap&&t<Z6.tap+.35?'rgba(125,211,252,.4)':'transparent';
+  tap($('s6tap'),t,Z6.tap,256+284,560+16+828);
+  // 2) une cliente clique
+  const cv=P(t,Z6.cli,.3)*(1-P(t,Z6.chat,.3));$('v6a').style.opacity=cv;if(cv>0)vid('v6a',2.0+(t-Z6.cli));
+  // 4) le client arrive
+  const mv=P(t,Z6.moto,.3);$('v6b').style.opacity=mv;if(mv>0)vid('v6b',2.4+(t-Z6.moto));
+  $('s6shade').style.opacity=Math.max(cv,mv);
+  const phoneOut=Math.max(cv,mv);
+  st(ph,{y:(1-eo(P(t,.1,.6)))*700+phoneOut*1400});
+  // 3) le message arrive sur le WhatsApp de l'annonceur
+  $('s6chat').style.opacity=P(t,Z6.chat,.2);
+  const m=P(t,Z6.msg,.35);$('s6msg').style.opacity=m;$('s6msg').style.transform=`translateY(${(1-eo(m))*40}px) scale(${lerp(.9,1,eo(m))})`;
+  const r=P(t,Z6.rep,.35);$('s6rep').style.opacity=r;$('s6rep').style.transform=`translateY(${(1-eo(r))*40}px)`;
+  // étiquettes
+  const L=$('s6lbl');let txt='',o=0;
+  if(t>=Z6.cli+.2&&t<Z6.chat){txt='Une cliente clique sur le lien';o=P(t,Z6.cli+.2,.3);}
+  else if(t>=Z6.msg+.3&&t<Z6.moto){txt='Elle t\'écrit directement sur WhatsApp';o=P(t,Z6.msg+.3,.3);}
+  else if(t>=Z6.moto+.3){txt='Et le client arrive !';o=P(t,Z6.moto+.3,.3);}
+  L.textContent=txt;L.style.opacity=o;L.style.top=(t>=Z6.msg+.3&&t<Z6.moto)?'470px':'1330px';
+}
+function S7(t){
+  stepTitle('s7',t);
+  const Z7=X.s7||{tot:1.2,obj:2.2,part:3.2,fake:4.4};
+  document.querySelectorAll('#s7 .c7').forEach((c,i)=>popIn(c,t,[.5,Z7.fake][i],{dy:30}));
+  const ph=$('s7ph');st(ph,{y:(1-eo(P(t,.1,.6)))*700});
+  const sw=P(t,Z7.part,.35);$('s7imgA').style.opacity=1-sw;$('s7imgB').style.opacity=sw;
+  if(sw<1){const r=t<Z7.obj?[28,234,362,417]:[28,429,362,547];focus($('s7imgA'),$('s7ring'),r,1,P(t,Z7.tot,.25)*(1-sw));}
+  else{const r=t<Z7.fake?[28,156,362,378]:[240,302,350,336];focus($('s7imgB'),$('s7ring'),r,1,P(t,Z7.part+.25,.25));}
+}
+function S8(t){
+  vid('v8',5.0+t*.9);st('v8',{s:lerp(1.08,1,eo(P(t,0,4)))});
+  const T8=X.s8||[.3,1.2,2.4];
+  document.querySelectorAll('.s8li').forEach((e,i)=>{const k=P(t,T8[i],.35);e.style.opacity=k;e.style.transform=`translateX(${(1-eo(k))*-80}px)`;});
+}
+function S9(t){
+  ['v9a','v9b','v9c','v9d'].forEach((v,i)=>vid(v,[4.0,5.0,2.0,4.5][i]+t*.9));st('s9wall',{s:lerp(1.08,1,eo(P(t,0,6)))});
+  const g=1+.06*Math.sin(t*3);st('s9glow',{s:g});
+  const l=P(t,.1,.5);st('s9logo',{o:cl(l*3),s:lerp(.3,1,back(l))});
+  popIn($('s9word'),t,.4,{dy:30});popIn($('s9url'),t,.75,{dy:40});
+  const txt='pubwek.com';const nch=Math.floor(cl((t-1.0)/1.0)*txt.length+.0001);$('s9typed').textContent=txt.slice(0,nch);
+  $('s9cur').style.opacity=(Math.floor(t*2.5)%2)?1:.1;
+  const b=P(t,2.1,.5);const pulse=t>2.8?1+.04*Math.sin((t-2.8)*6):1;st('s9btn',{o:cl(b*3),s:lerp(.6,1,back(b))*pulse});
+  document.querySelectorAll('.s9li').forEach((e,i)=>{const k=P(t,2.7+i*.3,.35);e.style.opacity=k;e.style.transform=`translateX(${(1-eo(k))*-60}px)`;});
+  tap($('s9tap'),t,4.6,860,1035);
+}
+
+// ---------- transitions entre scènes ----------
+function sceneWrap(id,t){
+  if(!T[id]){$(id).style.display='none';return null;}
+  const [a,b]=T[id],el=$(id);
+  if(t<a-0.0001||(t>b+TR&&id!=='s9')){el.style.display='none';return null;}
+  el.style.display='block';
+  let x=0,o=1,s=1,blur=0;
+  if(id!=='s1'){const k=eo(P(t,a,TR));x=(1-k)*1080;}
+  if(t>b&&id!=='s9'){const e=eio(P(t,b,TR));x=-e*380;o=1-e*.6;s=1-e*.06;blur=e*8;}
+  el.style.opacity=o;el.style.transform=`translateX(${x}px) scale(${s})`;el.style.filter=blur?`blur(${blur}px)`:'none';
+  el.style.zIndex=t>b?1:2;
+  return t-a;
+}
+
+
+function stepTitle(sc,t){const h=document.querySelector(`#${sc} .steptitle`);const k=P(t,.1,.45);st(h,{o:cl(k*2),x:(1-eo(k))*-80});
+  const b=document.querySelector(`#${sc} .badge`);st(b,{s:lerp(.3,1,back(P(t,.1,.5))),r:(1-eo(P(t,.1,.5)))*-90});}
+
+function mkTap(sc){const d=document.createElement('div');d.className='tap';d.id=sc+'tap';$(sc).appendChild(d);return d;}
+
+// ---------- sous-titres ----------
+window.SUBS=window.SUBS||[]; // [[début,fin,"texte"],...]
+function SUB(t){const s=SUBS.find(s=>t>=s[0]&&t<s[1]);const box=$('sub');if(!s||!SUBS.length){box.style.display='none';return}
+  box.style.display='block';$('subt').textContent=s[2];const k=P(t,s[0],.12);box.style.opacity=k;box.style.transform=`translateY(${(1-k)*10}px)`;}
+
+
+const FN={s1:S1,s2:S2,s3:S3,s4:S4,s5:S5,s6:S6,s7:S7,s8:S8,s9:S9};
+window.render=function(t){SEEKS=[];for(const id in FN){const lt=sceneWrap(id,t);if(lt!==null)FN[id](lt);}SUB(t);return Promise.all(SEEKS).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));};
+window.DUR=DUR;
+render(0);
+</script></body></html>

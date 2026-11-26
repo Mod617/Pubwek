@@ -1,0 +1,177 @@
+<!-- ============ S1 : ACCROCHE (criée) ============ -->
+<section class="scene" id="s1">
+ <div class="bg bg-dark"></div>
+ <video class="vid" id="v1" src="clip1.webm" muted preload="auto" style="opacity:0"></video>
+ <div id="s1veil" style="position:absolute;inset:0;background:rgba(5,11,20,.55);opacity:0"></div>
+ <div class="shade" id="s1shade" style="opacity:0"></div>
+ <div id="s1fly" style="position:absolute;inset:0;overflow:hidden;z-index:1"></div>
+ <div class="title" id="s1t0" style="opacity:0;z-index:10">Oui, toi qui as <span class="hl">un commerce</span>&nbsp;!</div>
+ <div class="title" id="s1t1" style="opacity:0;z-index:10">Tu dépenses en <span class="bl">flyers</span> et en <span class="bl">publicités</span>…</div>
+ <div class="title" id="s1t2" style="opacity:0;z-index:10">…mais combien de <span class="hl">clients</span> ça t'a ramenés&nbsp;?</div>
+ <div id="s1hey" style="position:absolute;left:0;right:0;top:640px;text-align:center;font:800 210px/0.95 'Plus Jakarta Sans';letter-spacing:-8px;color:#FBBF24;text-shadow:0 14px 50px rgba(0,0,0,.7);z-index:11">HÉ,<br>TOI&nbsp;!</div>
+ <div id="s1spent" style="position:absolute;left:90px;right:90px;top:620px;display:flex;flex-direction:column;gap:22px;opacity:0;z-index:9">
+   <div class="chip" style="position:relative;display:flex;align-items:center;gap:20px;font-size:44px"><svg width="64" height="64" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2" fill="#F59E0B"/><path d="M8 8h8M8 12h8M8 16h5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>Flyers <span style="margin-left:auto;color:#DC2626">− F</span></div>
+   <div class="chip" style="position:relative;display:flex;align-items:center;gap:20px;font-size:44px"><svg width="64" height="64" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="14" rx="3" fill="#3B82F6"/><path d="M7 21h10M12 18v3" stroke="#3B82F6" stroke-width="2"/></svg>Publicités <span style="margin-left:auto;color:#DC2626">− F</span></div>
+ </div>
+ <div id="s1q" style="position:absolute;left:540px;top:1120px;width:440px;height:440px;margin:-220px 0 0 -220px;border-radius:50%;background:#DC2626;border:14px solid #fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(0,0,0,.55);opacity:0;z-index:12">
+   <div style="font:800 54px 'Plus Jakarta Sans'">Clients</div><div style="font:800 230px/0.9 'Plus Jakarta Sans'">?</div></div>
+</section>
+
+<!-- ============ S2 : LA SOLUTION ============ -->
+<section class="scene" id="s2">
+ <div class="bg" style="background:#000"></div>
+ <video class="vid" id="v2" src="clip5.webm" muted preload="auto"></video>
+ <div class="shade"></div><div class="shadeb" style="height:600px"></div>
+ <div class="title" style="top:170px;font-size:76px" id="s2t">Ta pub sur les <span class="bl">statuts WhatsApp</span> de ta ville.</div>
+ <div id="s2t2" style="position:absolute;left:70px;top:430px;opacity:0"><span class="pill" style="background:#FBBF24;color:#0F172A;font-size:52px;padding:14px 30px">Tu paies seulement les vrais clics</span></div>
+ <div id="s2notifs" style="position:absolute;left:50px;right:50px;top:1060px;z-index:5"></div>
+</section>
+
+<!-- ============ S3 : ÉTAPE 1 CRÉER ============ -->
+<section class="scene" id="s3">
+ <div class="bg bg-blue"></div><div class="dots"></div>
+ <div class="steptitle"><div class="row"><div class="badge">1</div><h1>Crée ta<br>campagne</h1></div></div>
+ <div id="s3chips" style="position:absolute;left:60px;right:60px;top:430px;display:flex;gap:16px;z-index:8">
+  <div class="chip c3" style="position:relative;flex:1.1;padding:16px 18px;background:#FBBF24;opacity:0">
+    <div style="display:flex;align-items:center;gap:10px;font-size:30px"><svg width="38" height="38" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3" fill="#0F172A"/><path d="M10 9l5 3-5 3z" fill="#FBBF24"/></svg>Vidéo</div>
+    <div style="font-size:42px;margin-top:2px">10 F <span style="font-size:26px">/ clic</span></div></div>
+  <div class="chip c3" style="position:relative;flex:1.15;padding:16px 18px;opacity:0">
+    <div style="display:flex;align-items:center;gap:10px;font-size:30px"><svg width="38" height="38" viewBox="0 0 24 24"><rect x="2" y="2" width="9" height="9" rx="2" fill="#066FA7"/><rect x="13" y="2" width="9" height="9" rx="2" fill="#066FA7"/><rect x="2" y="13" width="9" height="9" rx="2" fill="#066FA7"/><rect x="13" y="13" width="9" height="9" rx="2" fill="#066FA7"/></svg>Images</div>
+    <div style="font-size:38px;margin-top:2px">5 F <span style="font-size:24px">/ photo · 25 max</span></div></div>
+  <div class="chip c3" style="position:relative;flex:.9;padding:16px 18px;opacity:0">
+    <div style="display:flex;align-items:center;gap:10px;font-size:30px"><svg width="38" height="38" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4" fill="#066FA7"/><path d="M7 8h10M12 8v9" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>Texte</div>
+    <div style="font-size:38px;margin-top:2px">5 F <span style="font-size:24px">/ clic</span></div></div>
+ </div>
+ <div class="phone" id="s3ph" style="top:640px"><div class="island"></div><div class="screen"><div class="sbar"><span>09:02</span></div>
+   <div class="shot"><img id="s3imgA" src="a_form1.png"><img id="s3imgB" src="a_style1.png" style="opacity:0"></div><div class="ring" id="s3ring"></div></div></div>
+ <div class="tap" id="s3tap"></div>
+</section>
+
+<!-- ============ S4 : ÉTAPE 2 CIBLER ============ -->
+<section class="scene" id="s4">
+ <div class="bg bg-blue"></div><div class="dots"></div>
+ <div class="steptitle"><div class="row"><div class="badge">2</div><h1>Choisis ta zone<br>et tes clics</h1></div></div>
+ <div id="s4zones" style="position:absolute;left:60px;right:60px;top:430px;display:flex;gap:16px;flex-wrap:wrap;z-index:8">
+   <div class="chip z4" style="position:relative;display:flex;align-items:center;gap:12px;font-size:34px;padding:14px 24px;opacity:0"><svg width="36" height="36" viewBox="0 0 24 24"><path d="M12 2a7 7 0 00-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 00-7-7z" fill="#DC2626"/><circle cx="12" cy="9" r="2.6" fill="#fff"/></svg>Littoral</div>
+   <div class="chip z4" style="position:relative;display:flex;align-items:center;gap:12px;font-size:34px;padding:14px 24px;opacity:0"><svg width="36" height="36" viewBox="0 0 24 24"><path d="M12 2a7 7 0 00-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 00-7-7z" fill="#DC2626"/><circle cx="12" cy="9" r="2.6" fill="#fff"/></svg>Atlantique</div>
+   <div class="chip z4" style="position:relative;display:flex;align-items:center;gap:12px;font-size:34px;padding:14px 24px;opacity:0;background:#FBBF24">450 clics · 7 jours</div>
+ </div>
+ <div class="phone" id="s4ph" style="top:640px"><div class="island"></div><div class="screen"><div class="sbar"><span>09:03</span></div>
+   <div class="shot"><img id="s4imgA" src="a_zones.png"><img id="s4imgB" src="a_budget.png" style="opacity:0"></div><div class="ring" id="s4ring"></div></div></div>
+ <div class="tap" id="s4tap"></div>
+ <div class="chip" id="s4budget" style="left:120px;right:120px;top:1250px;opacity:0;z-index:10;text-align:center;padding:22px">
+   <div style="font:800 24px Inter;letter-spacing:3px;color:#D97706">BUDGET CALCULÉ AUTOMATIQUEMENT</div>
+   <div style="font:800 64px 'Plus Jakarta Sans';margin-top:4px">4 995 F</div></div>
+</section>
+
+<!-- ============ S5 : ÉTAPE 3 PAYER + VÉRIFICATION ============ -->
+<section class="scene" id="s5">
+ <div class="bg bg-blue"></div><div class="dots"></div>
+ <div class="steptitle"><div class="row"><div class="badge">3</div><h1>Paie, on vérifie<br>ta pub</h1></div></div>
+ <div id="s5ops" style="position:absolute;left:60px;right:60px;top:430px;display:grid;grid-template-columns:1fr 1fr;gap:14px;z-index:8">
+   <div class="op" style="background:#FFCC00;color:#111;height:86px;font-size:32px">MTN MoMo</div>
+   <div class="op" style="background:#0A5BB5;color:#fff;height:86px;font-size:32px">Moov Money</div>
+   <div class="op" style="background:#00A859;color:#fff;height:86px;font-size:32px">Celtiis Cash</div>
+   <div class="op" style="background:#fff;color:#0F172A;height:86px;font-size:32px;gap:12px"><svg width="40" height="30" viewBox="0 0 40 28"><rect x="1" y="1" width="38" height="26" rx="4" fill="#1E3A8A"/><rect x="1" y="7" width="38" height="5" fill="#FBBF24"/></svg>Carte</div>
+ </div>
+ <div class="phone" id="s5ph" style="top:690px"><div class="island"></div><div class="screen"><div class="sbar"><span>09:05</span></div>
+   <div class="shot"><img id="s5imgA" src="a_attente.png"><img id="s5imgB" src="a_diffusion.png" style="opacity:0"></div><div class="ring" id="s5ring"></div>
+   <div class="notif" id="s5n" style="left:16px;right:16px;top:60px;padding:18px 20px;gap:16px;opacity:0;z-index:12">
+     <div class="ic" style="width:70px;height:70px"><img src="emblem.png" style="width:56px"></div>
+     <div><div style="font:800 30px 'Plus Jakarta Sans'">Campagne validée ✓</div><div style="font:500 24px Inter;color:#475569">Votre campagne #5 a été VALIDÉE.</div></div></div>
+ </div></div>
+ <div id="s5check" style="position:absolute;left:770px;top:760px;width:220px;height:220px;margin:-110px 0 0 -110px;border-radius:50%;background:#16A34A;border:9px solid #fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 20px 50px rgba(0,0,0,.45);opacity:0;z-index:12;transform:rotate(8deg)">
+   <svg width="90" height="90" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#fff" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+   <div style="font:800 28px 'Plus Jakarta Sans'">Vérifiée</div></div>
+</section>
+
+<!-- ============ S6 : ÉTAPE 4 LES CLIENTS ÉCRIVENT ============ -->
+<section class="scene" id="s6">
+ <div class="bg bg-blue"></div><div class="dots"></div>
+ <video class="vid" id="v6a" src="clip3.webm" muted preload="auto" style="opacity:0"></video>
+ <video class="vid" id="v6b" src="clip4.webm" muted preload="auto" style="opacity:0"></video>
+ <div class="shade" id="s6shade" style="opacity:0"></div>
+ <div class="steptitle" style="z-index:6"><div class="row"><div class="badge">4</div><h1>Les clients<br>t'écrivent</h1></div></div>
+ <div class="phone" id="s6ph"><div class="island"></div><div class="screen" id="s6scr" style="background:#000">
+   <div id="s6st" style="position:absolute;inset:0;background:#000;overflow:hidden">
+     <video id="v6s" src="promo.webm" muted preload="auto" style="position:absolute;left:0;top:0;width:568px;height:1230px;object-fit:cover"></video>
+     <div style="position:absolute;left:0;right:0;top:0;height:170px;background:linear-gradient(180deg,rgba(0,0,0,.6),rgba(0,0,0,0))"></div>
+     <div class="sbar dark" style="background:transparent"><span>10:14</span></div>
+     <div style="position:absolute;left:28px;right:28px;top:56px;display:flex;gap:6px"><div style="flex:1;height:6px;border-radius:3px;background:#fff"></div><div style="flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.35)"><div id="s6prog" style="height:100%;width:10%;background:#fff;border-radius:3px"></div></div></div>
+     <svg style="position:absolute;left:18px;top:100px" width="40" height="40" viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z" fill="#fff"/></svg>
+     <div style="position:absolute;left:70px;top:84px;display:flex;align-items:center;gap:16px;color:#fff">
+       <div style="width:66px;height:66px;border-radius:50%;background:#2563EB;color:#fff;font:800 32px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center">K</div>
+       <div><div style="font:800 28px 'Plus Jakarta Sans'">Koffi</div><div style="font:500 22px Inter;opacity:.85">il y a 12 min</div></div></div>
+     <div style="position:absolute;left:0;right:0;top:640px;height:300px;background:linear-gradient(0deg,rgba(0,0,0,.75),rgba(0,0,0,0))"></div>
+     <div style="position:absolute;left:30px;right:30px;top:735px;color:#fff;font:600 27px/1.32 Inter;text-align:center">Gâteaux d'anniversaire sur commande, livrés partout à Cotonou.<br><span id="s6link" style="color:#7DD3FC;text-decoration:underline;font-weight:700">pubwek.com/t/k7Pq2/whatsapp</span></div>
+     <div style="position:absolute;left:24px;right:24px;top:1100px;height:70px;border-radius:35px;border:2px solid rgba(255,255,255,.6);color:#fff;font:500 24px Inter;display:flex;align-items:center;padding:0 26px">Répondre…</div>
+   </div>
+   <div id="s6chat" style="position:absolute;inset:0;opacity:0;background:#ECE5DD;overflow:hidden">
+     <div class="sbar" style="background:#075E54;color:#fff"><span>10:15</span></div>
+     <div style="position:absolute;left:0;right:0;top:48px;height:96px;background:#075E54;display:flex;align-items:center;gap:14px;padding:0 18px;color:#fff">
+       <svg width="36" height="36" viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z" fill="#fff"/></svg>
+       <div style="width:62px;height:62px;border-radius:50%;background:#94A3B8;display:flex;align-items:center;justify-content:center"><svg width="40" height="40" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="#fff"/><path d="M4 21c1-5 15-5 16 0" fill="#fff"/></svg></div>
+       <div style="flex:1"><div style="font:700 28px Inter">+229 01 97 •• •• ••</div><div style="font:400 21px Inter;opacity:.85">en ligne</div></div>
+       <svg width="12" height="36" viewBox="0 0 6 24"><circle cx="3" cy="4" r="2.6" fill="#fff"/><circle cx="3" cy="12" r="2.6" fill="#fff"/><circle cx="3" cy="20" r="2.6" fill="#fff"/></svg>
+     </div>
+     <div style="position:absolute;left:50%;top:170px;transform:translateX(-50%);background:#E1F2FB;color:#475569;font:600 20px Inter;padding:6px 16px;border-radius:10px">AUJOURD'HUI</div>
+     <div id="s6msg" style="position:absolute;left:22px;right:90px;top:220px;background:#fff;border-radius:0 22px 22px 22px;padding:18px 20px 34px;color:#111;font:400 25px/1.38 Inter;box-shadow:0 2px 2px rgba(0,0,0,.12);opacity:0">
+       Bonjour,<br>Je vous contacte suite à votre publicité vue sur Pubwek.<br><br>Campagne : n°5<br>Produit / service : Pâtisserie Doux Matin<br><b>Partageur : Koffi229</b><br><br>Je suis intéressé(e), pouvez-vous me donner plus d'informations ?
+       <span style="position:absolute;right:16px;bottom:8px;font:400 18px Inter;color:#94A3B8">10:15</span></div>
+     <div id="s6rep" style="position:absolute;right:22px;left:150px;top:760px;background:#DCF8C6;border-radius:22px 0 22px 22px;padding:16px 20px 30px;color:#111;font:400 25px/1.38 Inter;box-shadow:0 2px 2px rgba(0,0,0,.12);opacity:0">
+       Bonjour ! Oui bien sûr, pour quelle date ?<span style="position:absolute;right:16px;bottom:6px;font:400 18px Inter;color:#64748B">10:16 ✓✓</span></div>
+     <div style="position:absolute;left:14px;right:14px;top:1090px;display:flex;gap:12px;align-items:center"><div style="flex:1;height:76px;border-radius:38px;background:#fff;color:#94A3B8;font:400 26px Inter;display:flex;align-items:center;padding:0 26px">Message</div><div style="width:76px;height:76px;border-radius:50%;background:#00A884;display:flex;align-items:center;justify-content:center"><svg width="34" height="34" viewBox="0 0 24 24"><path d="M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 006 6.9V21h2v-2.1A7 7 0 0019 12z" fill="#fff"/></svg></div></div>
+   </div>
+ </div></div>
+ <div class="chip" id="s6lbl" style="left:50%;top:1330px;transform:translateX(-50%);opacity:0;z-index:12;font-size:40px;display:flex;align-items:center;gap:14px;white-space:nowrap"></div>
+ <div class="tap" id="s6tap"></div>
+</section>
+
+<!-- ============ S7 : ÉTAPE 5 SUIVI ============ -->
+<section class="scene" id="s7">
+ <div class="bg bg-blue"></div><div class="dots"></div>
+ <div class="steptitle"><div class="row"><div class="badge">5</div><h1>Suis tes clics<br>en direct</h1></div></div>
+ <div id="s7chips" style="position:absolute;left:60px;right:60px;top:430px;display:flex;gap:16px;z-index:8">
+   <div class="chip c7" style="position:relative;flex:1;display:flex;align-items:center;gap:12px;font-size:32px;padding:16px 20px;opacity:0"><svg width="40" height="40" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#16A34A"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg>Vrais clics facturés</div>
+   <div class="chip c7" style="position:relative;flex:1;display:flex;align-items:center;gap:12px;font-size:32px;padding:16px 20px;opacity:0;background:#FEE2E2;color:#991B1B"><svg width="40" height="40" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#DC2626"/><path d="M8 8l8 8M16 8l-8 8" stroke="#fff" stroke-width="2.8" stroke-linecap="round"/></svg>Faux clics : 0 F</div>
+ </div>
+ <div class="phone" id="s7ph" style="top:600px"><div class="island"></div><div class="screen"><div class="sbar"><span>18:40</span></div>
+   <div class="shot"><img id="s7imgA" src="a_stats1.png"><img id="s7imgB" src="a_stats2.png" style="opacity:0"></div><div class="ring" id="s7ring"></div></div></div>
+</section>
+
+<!-- ============ S8 : CONFIANCE ============ -->
+<section class="scene" id="s8">
+ <div class="bg" style="background:#000"></div>
+ <video class="vid" id="v8" src="clip1.webm" muted preload="auto"></video>
+ <div class="shade" style="height:1000px;background:linear-gradient(180deg,rgba(5,11,20,.9) 0%,rgba(5,11,20,.7) 60%,rgba(5,11,20,0) 100%)"></div>
+ <div id="s8list" style="position:absolute;left:70px;right:70px;top:200px;display:flex;flex-direction:column;gap:26px">
+   <div class="s8li" style="display:flex;align-items:center;gap:24px;font:800 62px 'Plus Jakarta Sans';opacity:0"><svg width="76" height="76" viewBox="0 0 24 24" style="flex:none"><circle cx="12" cy="12" r="11" fill="#22C55E"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg>Sans abonnement</div>
+   <div class="s8li" style="display:flex;align-items:center;gap:24px;font:800 62px 'Plus Jakarta Sans';opacity:0"><svg width="76" height="76" viewBox="0 0 24 24" style="flex:none"><circle cx="12" cy="12" r="11" fill="#22C55E"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg>Payé au clic réel</div>
+   <div class="s8li" style="display:flex;align-items:center;gap:24px;font:800 56px/1.1 'Plus Jakarta Sans';opacity:0"><svg width="76" height="76" viewBox="0 0 24 24" style="flex:none"><circle cx="12" cy="12" r="11" fill="#22C55E"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg><span>Pub refusée ?<br><span style="color:#FBBF24">Remboursement possible</span></span></div>
+ </div>
+</section>
+
+<!-- ============ S9 : APPEL À L'ACTION ============ -->
+<section class="scene" id="s9">
+ <div class="bg" style="background:#050B14"></div>
+ <div id="s9wall" style="position:absolute;inset:0">
+  <video id="v9a" src="clip1.webm" muted preload="auto" style="position:absolute;left:0;top:0;width:540px;height:960px;object-fit:cover"></video>
+  <video id="v9b" src="clip5.webm" muted preload="auto" style="position:absolute;left:540px;top:0;width:540px;height:960px;object-fit:cover"></video>
+  <video id="v9c" src="clip3.webm" muted preload="auto" style="position:absolute;left:0;top:960px;width:540px;height:960px;object-fit:cover"></video>
+  <video id="v9d" src="clip2.webm" muted preload="auto" style="position:absolute;left:540px;top:960px;width:540px;height:960px;object-fit:cover"></video>
+ </div>
+ <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,72,110,.55),rgba(5,20,40,.82) 45%,rgba(5,11,20,.9))"></div>
+ <div id="s9glow" style="position:absolute;left:540px;top:430px;width:900px;height:900px;margin:-450px 0 0 -450px;border-radius:50%;background:radial-gradient(circle,rgba(125,211,252,.45),rgba(125,211,252,0) 65%)"></div>
+ <div id="s9logo" style="position:absolute;left:540px;top:400px;width:330px;height:330px;margin:-165px 0 0 -165px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(0,0,0,.45);opacity:0"><img src="emblem.png" style="width:270px"></div>
+ <div id="s9word" style="position:absolute;left:0;right:0;top:600px;text-align:center;opacity:0"><div style="font:800 92px 'Plus Jakarta Sans';letter-spacing:12px">PUBWEK</div></div>
+ <div id="s9url" style="position:absolute;left:80px;right:80px;top:760px;height:150px;border-radius:999px;background:#fff;color:#0F172A;display:flex;align-items:center;gap:24px;padding:0 50px;box-shadow:0 24px 60px rgba(0,0,0,.4);opacity:0">
+   <svg width="60" height="60" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2" fill="#066FA7"/><path d="M8 10V7a4 4 0 018 0v3" stroke="#066FA7" stroke-width="2.4" fill="none"/></svg>
+   <span id="s9typed" style="font:800 80px 'Plus Jakarta Sans';letter-spacing:-1px"></span><span id="s9cur" style="width:6px;height:80px;background:#066FA7"></span></div>
+ <div id="s9btn" style="position:absolute;left:80px;right:80px;top:960px;height:150px;border-radius:999px;background:#FBBF24;color:#0F172A;display:flex;align-items:center;justify-content:center;font:800 58px 'Plus Jakarta Sans';box-shadow:0 20px 60px rgba(251,191,36,.5);opacity:0">Lance ta campagne</div>
+ <div id="s9list" style="position:absolute;left:80px;right:80px;top:1160px;display:flex;flex-direction:column;gap:18px">
+   <div class="s9li" style="display:flex;align-items:center;gap:20px;font:700 44px 'Plus Jakarta Sans';opacity:0"><svg width="56" height="56" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#22C55E"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg>Ciblage par commune</div>
+   <div class="s9li" style="display:flex;align-items:center;gap:20px;font:700 44px 'Plus Jakarta Sans';opacity:0"><svg width="56" height="56" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#22C55E"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg>Payé au clic réel</div>
+   <div class="s9li" style="display:flex;align-items:center;gap:20px;font:700 44px 'Plus Jakarta Sans';opacity:0"><svg width="56" height="56" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#22C55E"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg>Vérifiée avant diffusion</div>
+ </div>
+ <div class="tap" id="s9tap"></div>
+</section>

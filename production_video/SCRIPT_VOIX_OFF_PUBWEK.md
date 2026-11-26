@@ -1,6 +1,6 @@
 # Script de la voix off — Pubwek (partageurs)
 
-Durée visée : environ 45 secondes. Ton : chaleureux, souriant et énergique, comme quelqu'un qui partage un bon plan avec une amie. Le texte tutoie, il ne fait pas de discours.
+Durée visée : environ 42 secondes. Ton : chaleureux, souriant et énergique, comme quelqu'un qui partage un bon plan avec une amie. Le texte tutoie, il ne fait pas de discours.
 
 ## Le texte à donner au générateur
 
@@ -17,9 +17,7 @@ Deux : choisis une pub de ta zone. Une vidéo, c'est dix francs par clic.
 
 Trois : copie le texte et publie-le sur ton statut. Chaque vrai clic de tes contacts compte.
 
-Quatre : le soir, envoie la capture de ton statut. Sans capture, les clics du jour ne sont pas payés.
-
-Cinq : dès cinq cents francs, retire ton argent sur MoMo, Moov, Celtiis ou Wave.
+Quatre : dès cinq cents francs, retire ton argent sur MoMo, Moov, Celtiis ou Wave.
 
 Ce n'est pas un salaire. C'est un complément : ton crédit, ton zém, un petit plus.
 
@@ -35,10 +33,9 @@ Va sur pubwek point com et inscris-toi gratuitement. Demain matin, ton statut tr
 | 3 | Étape 1 | Vraie page d'inscription Pubwek, « 0 F à payer » | ~4,5 s |
 | 4 | Étape 2 | Vraie liste des campagnes, et les tarifs : Vidéo 10 F, Images 5 F, Texte 5 F | ~5,5 s |
 | 5 | Étape 3 | Bouton « Copier le texte », le statut publié, des « +10 F » et « Faux clic = 0 F » | ~5,5 s |
-| 6 | Étape 4 | De nuit : capture d'écran, puis envoi de la preuve | ~4,5 s |
-| 7 | Étape 5 | MTN MoMo, Moov Money, Celtiis Cash et Wave, « dès 500 F », l'exemple 50 × 10 F | ~6 s |
-| 8 | Honnêteté | « Ce n'est pas un salaire », puis crédit, zém, petit plus | ~5 s |
-| 9 | Appel à l'action | Logo, pubwek.com tapé à l'écran, bouton « Inscris-toi gratuitement » | ~6,5 s |
+| 6 | Étape 4 | MTN MoMo, Moov Money, Celtiis Cash et Wave, « dès 500 F », le conducteur de zém, l'exemple 50 × 10 F | ~6 s |
+| 7 | Honnêteté | « Ce n'est pas un salaire », puis crédit, zém, petit plus | ~5 s |
+| 8 | Appel à l'action | Logo, pubwek.com tapé à l'écran, bouton « Inscris-toi gratuitement » | ~6,5 s |
 
 Ces durées sont indicatives. C'est la vidéo qui s'adaptera à la voix, pas l'inverse : je recale chaque scène sur la phrase qui lui correspond.
 
@@ -48,7 +45,7 @@ Ces durées sont indicatives. C'est la vidéo qui s'adaptera à la voix, pas l'i
 - **Débit** : légèrement rapide, mais il faut garder une petite pause après « Un : », « Deux : », etc.
 - **Prononciation** : « pubwek point com » est déjà écrit en toutes lettres, pour que le générateur ne lise pas « pubwek.com » de travers. Si « Celtiis » est mal lu, écris « Seltisse ». Si « zém » est mal lu, écris « zèm ».
 - **Format** : WAV, ou MP3 en 320 kbit/s, sans musique ni effet ajouté. Je m'occupe du mixage.
-- **Idéal** : un fichier par paragraphe (9 fichiers). Sinon, un seul fichier avec environ une demi-seconde de silence entre les paragraphes.
+- **Idéal** : un fichier par paragraphe (8 fichiers). Sinon, un seul fichier avec environ une demi-seconde de silence entre les paragraphes.
 
 ## Ce que je ferai quand tu m'enverras la voix
 

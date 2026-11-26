@@ -177,7 +177,7 @@ def type_k(): return click() * .6
 def at(sc, lt): return T[sc][0] + lt
 
 # transitions
-for sc in ["s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9"]:
+for sc in [k for k in ["s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9"] if k in T]:
     add(sfx, whoosh(), T[sc][0] - .08, .35)
 # S1 : compteur + tampon 0 F
 for k in range(14):
@@ -198,12 +198,13 @@ add(sfx, pop(), at("s5", .15), .6)
 add(sfx, click(), at("s5", 2.05), .9); add(sfx, pop(), at("s5", 2.2), .5)
 for i, tt in enumerate([3.15, 3.45, 3.75, 4.35, 4.65]): add(sfx, coin(2600 + i * 120), at("s5", tt), .55, (-1) ** i * .5)
 add(sfx, bonk(), at("s5", 4.15), .35)
-# S6
-add(sfx, pop(), at("s6", .15), .6)
-add(sfx, shutter(), at("s6", .75), .9)
-add(sfx, whoosh(.3), at("s6", 2.0), .25)
-add(sfx, click(), at("s6", 2.85), .9); add(sfx, success(), at("s6", 3.0), .6)
-add(sfx, pop(), at("s6", 3.25), .4)
+# S6 (seulement si la scène existe)
+if "s6" in T:
+    add(sfx, pop(), at("s6", .15), .6)
+    add(sfx, shutter(), at("s6", .75), .9)
+    add(sfx, whoosh(.3), at("s6", 2.0), .25)
+    add(sfx, click(), at("s6", 2.85), .9); add(sfx, success(), at("s6", 3.0), .6)
+    add(sfx, pop(), at("s6", 3.25), .4)
 # S7
 add(sfx, pop(), at("s7", .15), .6)
 for i in range(4): add(sfx, pop(), at("s7", .45 + i * .16), .5, (-1) ** i * .3)

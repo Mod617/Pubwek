@@ -189,7 +189,7 @@ svg{display:block}
 <!-- ============ S7 : ÉTAPE 5 RETRAIT ============ -->
 <section class="scene" id="s7">
  <div class="bg bg-blue"></div><div class="dots"></div>
- <div class="steptitle"><div class="row"><div class="badge">5</div><h1>Retire<br>ton argent</h1></div></div>
+ <div class="steptitle"><div class="row"><div class="badge">4</div><h1>Retire<br>ton argent</h1></div></div>
  <div id="s7min" style="position:absolute;left:870px;top:300px;width:250px;height:250px;margin:-125px 0 0 -125px;border-radius:50%;background:#FBBF24;color:#0F172A;border:9px solid #fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 20px 50px rgba(0,0,0,.45);opacity:0;z-index:9;transform:rotate(8deg)">
    <div style="font:800 34px 'Plus Jakarta Sans'">dès</div><div style="font:800 82px/1 'Plus Jakarta Sans';letter-spacing:-2px">500 F</div></div>
  <div id="s7ops" style="position:absolute;left:60px;right:60px;top:450px;display:grid;grid-template-columns:1fr 1fr;gap:18px;z-index:8">
@@ -206,7 +206,7 @@ svg{display:block}
  </div></div>
  <div class="tap" id="s7tap"></div>
  <div id="s7v" style="position:absolute;inset:0;opacity:0;z-index:9"><video class="vid" id="v7" src="clip2.webm" muted preload="auto"></video><div class="shade" style="height:600px"></div>
-   <div style="position:absolute;left:66px;top:200px" class="row"><div class="badge">5</div><h1 style="font-size:82px;font-weight:800;line-height:1.02;letter-spacing:-2px">Retire<br>ton argent</h1></div></div>
+   <div style="position:absolute;left:66px;top:200px" class="row"><div class="badge">4</div><h1 style="font-size:82px;font-weight:800;line-height:1.02;letter-spacing:-2px">Retire<br>ton argent</h1></div></div>
  <div class="chip" id="s7ex" style="left:70px;right:70px;top:1250px;opacity:0;z-index:10;text-align:center;padding:26px">
    <div style="font:800 24px Inter;letter-spacing:3px;color:#D97706">EXEMPLE — VIDÉO</div>
    <div style="font:800 58px 'Plus Jakarta Sans';margin-top:6px">50 clics × 10 F = <span style="color:#16A34A">500 F</span></div></div>
@@ -322,6 +322,7 @@ let sh='';for(let i=0;i<60;i++){const x=(i*137)%1080,y=(i*251)%1100,r=1+(i%3);sh
 
 // ---------- transitions entre scènes ----------
 function sceneWrap(id,t){
+  if(!T[id]){$(id).style.display='none';return null;}
   const [a,b]=T[id],el=$(id);
   if(t<a-0.0001||(t>b+TR&&id!=='s9')){el.style.display='none';return null;}
   el.style.display='block';

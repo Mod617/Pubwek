@@ -16,8 +16,8 @@ const fs=require('fs');
   if((await btn.innerText()).includes('Partager')){await btn.click(); await p.waitForLoadState('networkidle');}
   await p.goto(B+'/partageur/instructions_partage/5',{waitUntil:'networkidle'}); await shot('instr_top');
   await bx('it_rate','text=10 FCFA par clic valide',1); await bx('it_copy','text=Copier le texte complet');
-  await fixFile(); await scrollTo('text=Envoyez la preuve',90); await shot('instr_proof');
-  await bx('ip_card','text=Preuve à envoyer',2); await bx('ip_send','button:has-text("Envoyer") >> visible=true');
+  if(await p.locator('text=Envoyez la preuve').count()){ await fixFile(); await scrollTo('text=Envoyez la preuve',90); await shot('instr_proof');
+  await bx('ip_card','text=Preuve à envoyer',2); await bx('ip_send','button:has-text("Envoyer") >> visible=true'); }
   await p.goto(B+'/partageur/mes-retraits',{waitUntil:'networkidle'}); await scrollTo('text=Faire une demande de retrait',330); await shot('retrait_form');
   await bx('rf_select','select'); await bx('rf_send','text=Envoyer la demande de retrait');
  } else {

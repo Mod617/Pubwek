@@ -1,6 +1,6 @@
 # Script de la voix off — Pubwek (partageurs)
 
-Durée visée : environ 42 secondes. Ton : chaleureux, souriant et énergique, comme quelqu'un qui partage un bon plan avec une amie. Le texte tutoie, il ne fait pas de discours.
+Durée visée : environ 45 secondes. Ton : chaleureux, souriant et énergique, comme quelqu'un qui partage un bon plan avec une amie. Le texte tutoie, il ne fait pas de discours.
 
 ## Le texte à donner au générateur
 
@@ -13,9 +13,9 @@ Avec Pubwek, ton statut peut enfin te rapporter de l'argent.
 
 Un : inscris-toi gratuitement sur pubwek point com. Tu ne paies rien.
 
-Deux : choisis une pub de ta zone. Une vidéo, c'est dix francs par clic.
+Deux : choisis une pub de ta zone : une vidéo, des images ou un simple texte. Une vidéo, c'est dix francs par clic.
 
-Trois : copie le texte et publie-le sur ton statut. Chaque vrai clic de tes contacts compte.
+Trois : publie la pub sur ton statut, avec sa légende : c'est elle qui contient ton lien. Tes contacts voient la pub, cliquent sur ton lien, et chaque vrai clic compte.
 
 Quatre : dès cinq cents francs, retire ton argent sur MoMo, Moov, Celtiis ou Wave.
 
@@ -32,7 +32,7 @@ Va sur pubwek point com et inscris-toi gratuitement. Demain matin, ton statut tr
 | 2 | Le retournement | La commerçante, son téléphone vibre : « Retrait effectué » | ~4 s |
 | 3 | Étape 1 | Vraie page d'inscription Pubwek, « 0 F à payer » | ~4,5 s |
 | 4 | Étape 2 | Vraie liste des campagnes, et les tarifs : Vidéo 10 F, Images 5 F, Texte 5 F | ~5,5 s |
-| 5 | Étape 3 | Bouton « Copier le texte », le statut publié, des « +10 F » et « Faux clic = 0 F » | ~5,5 s |
+| 5 | Étape 3 | Vrais écrans : « Copier ma légende », puis « Envoyer la vidéo vers mon statut WhatsApp ». La vidéo de la pub avec sa légende et le lien est publiée, puis les contacts cliquent (« +10 F », « Faux clic = 0 F ») | ~7 s |
 | 6 | Étape 4 | MTN MoMo, Moov Money, Celtiis Cash et Wave, « dès 500 F », le conducteur de zém, l'exemple 50 × 10 F | ~6 s |
 | 7 | Honnêteté | « Ce n'est pas un salaire », puis crédit, zém, petit plus | ~5 s |
 | 8 | Appel à l'action | Logo, pubwek.com tapé à l'écran, bouton « Inscris-toi gratuitement » | ~6,5 s |

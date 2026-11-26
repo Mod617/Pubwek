@@ -132,24 +132,35 @@ svg{display:block}
 <!-- ============ S5 : ÉTAPE 3 PUBLIER ============ -->
 <section class="scene" id="s5">
  <div class="bg bg-blue"></div><div class="dots"></div>
- <div class="steptitle"><div class="row"><div class="badge">3</div><h1>Publie sur<br>ton statut</h1></div></div>
+ <div class="steptitle"><div class="row"><div class="badge">3</div><h1>Publie la pub<br>sur ton statut</h1></div></div>
+ <div id="s5row" style="position:absolute;left:60px;right:60px;top:440px;display:flex;gap:14px;z-index:9;opacity:0">
+  <div class="chip" style="position:relative;flex:1;display:flex;align-items:center;gap:10px;padding:14px 16px;font-size:30px"><svg width="40" height="40" viewBox="0 0 24 24" style="flex:none"><rect x="2" y="5" width="20" height="14" rx="3" fill="#DB2777"/><path d="M10 9l5 3-5 3z" fill="#fff"/></svg>La pub</div>
+  <div style="align-self:center;font:800 44px 'Plus Jakarta Sans'">+</div>
+  <div class="chip" style="position:relative;flex:1.35;display:flex;align-items:center;gap:10px;padding:14px 16px;font-size:30px"><svg width="40" height="40" viewBox="0 0 24 24" style="flex:none"><path d="M10 14a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 10a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1" stroke="#066FA7" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>Légende + ton lien</div>
+ </div>
  <div class="phone" id="s5ph"><div class="island"></div><div class="screen" id="s5scr"><div class="sbar"><span>08:18</span><span>▮▮▮ 4G</span></div>
-   <div class="shot" id="s5shot"><img id="s5img" src="instr_top.png"></div><div class="ring" id="s5ring"></div>
-   <div id="s5status" style="position:absolute;inset:0;opacity:0;background:#0B141A;z-index:4">
-     <div class="sbar dark"><span>08:19</span><span>▮▮▮ 4G</span></div>
-     <div style="position:absolute;left:28px;right:28px;top:62px;height:6px;border-radius:3px;background:rgba(255,255,255,.35)"><div style="height:100%;width:55%;background:#fff;border-radius:3px"></div></div>
-     <div style="position:absolute;left:28px;top:96px;display:flex;align-items:center;gap:18px">
-       <div style="width:76px;height:76px;border-radius:50%;background:#FBBF24;color:#0F172A;font:800 36px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center">M</div>
-       <div><div style="font:800 32px 'Plus Jakarta Sans'">Mon statut</div><div style="font:500 24px Inter;opacity:.8">à l'instant</div></div></div>
-     <div style="position:absolute;left:34px;right:34px;top:230px;height:560px;border-radius:30px;overflow:hidden;background:linear-gradient(160deg,#FCE7F3,#FBCFE8 40%,#F9A8D4)">
-       <svg viewBox="0 0 200 160" width="100%" height="100%"><rect x="50" y="78" width="100" height="50" rx="8" fill="#FFF7ED"/><rect x="50" y="78" width="100" height="14" rx="7" fill="#F472B6"/><rect x="62" y="46" width="76" height="34" rx="7" fill="#FFFBEB"/><rect x="62" y="46" width="76" height="10" rx="5" fill="#EC4899"/><g fill="#FBBF24"><rect x="78" y="28" width="5" height="18" rx="2"/><rect x="98" y="24" width="5" height="22" rx="2"/><rect x="118" y="28" width="5" height="18" rx="2"/></g><g fill="#F97316"><ellipse cx="80.5" cy="24" rx="4" ry="6"/><ellipse cx="100.5" cy="20" rx="4" ry="6"/><ellipse cx="120.5" cy="24" rx="4" ry="6"/></g><g fill="#BE185D"><circle cx="66" cy="108" r="4"/><circle cx="84" cy="112" r="4"/><circle cx="102" cy="108" r="4"/><circle cx="120" cy="112" r="4"/><circle cx="136" cy="108" r="4"/></g></svg>
-     </div>
-     <div style="position:absolute;left:40px;right:40px;top:820px;font:800 38px/1.2 'Plus Jakarta Sans'">Pâtisserie Doux Matin</div>
-     <div style="position:absolute;left:40px;right:40px;top:872px;font:500 29px/1.3 Inter;opacity:.9">Gâteaux d'anniversaire sur commande, livrés partout à Cotonou.</div>
-     <div style="position:absolute;left:40px;right:40px;top:976px;font:600 28px Inter;color:#7DD3FC;text-decoration:underline">pubwek.com/t/k7Pq2/whatsapp</div>
+   <div class="shot" id="s5shot"><img id="s5img" src="instr_v1.png"></div><div class="ring" id="s5ring"></div>
+   <div id="s5ed" style="position:absolute;inset:0;opacity:0;background:#000;z-index:4;overflow:hidden">
+     <video id="v5a" src="promo.webm" muted preload="auto" style="position:absolute;left:0;top:0;width:568px;height:1230px;object-fit:cover"></video>
+     <div style="position:absolute;left:0;right:0;top:0;height:120px;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0))"></div>
+     <div style="position:absolute;left:30px;top:62px;color:#fff;font:800 34px Inter">✕</div>
+     <div id="s5bar" style="position:absolute;left:20px;right:96px;top:740px;min-height:84px;border-radius:42px;background:rgba(30,36,40,.92);color:#E5E7EB;font:500 25px/1.3 Inter;padding:16px 26px;display:flex;align-items:center">
+       <span id="s5ph1" style="color:#9CA3AF">Ajouter une légende…</span>
+       <span id="s5txt" style="display:none">Gâteaux d'anniversaire sur commande, livrés partout à Cotonou.<br><span style="color:#7DD3FC;text-decoration:underline">pubwek.com/t/k7Pq2/whatsapp</span></span></div>
+     <div id="s5send" style="position:absolute;right:16px;top:750px;width:70px;height:70px;border-radius:50%;background:#22C55E;display:flex;align-items:center;justify-content:center"><svg width="34" height="34" viewBox="0 0 24 24"><path d="M3 20l18-8L3 4v6l12 2-12 2z" fill="#fff"/></svg></div>
+   </div>
+   <div id="s5st" style="position:absolute;inset:0;opacity:0;background:#000;z-index:5;overflow:hidden">
+     <video id="v5b" src="promo.webm" muted preload="auto" style="position:absolute;left:0;top:0;width:568px;height:1230px;object-fit:cover"></video>
+     <div style="position:absolute;left:0;right:0;top:0;height:170px;background:linear-gradient(180deg,rgba(0,0,0,.6),rgba(0,0,0,0))"></div>
+     <div style="position:absolute;left:28px;right:28px;top:56px;height:6px;border-radius:3px;background:rgba(255,255,255,.35)"><div id="s5prog" style="height:100%;width:10%;background:#fff;border-radius:3px"></div></div>
+     <div style="position:absolute;left:28px;top:84px;display:flex;align-items:center;gap:16px;color:#fff">
+       <div style="width:66px;height:66px;border-radius:50%;background:#FBBF24;color:#0F172A;font:800 32px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center">M</div>
+       <div><div style="font:800 28px 'Plus Jakarta Sans'">Mon statut</div><div style="font:500 22px Inter;opacity:.85">à l'instant</div></div></div>
+     <div style="position:absolute;left:0;right:0;top:640px;height:300px;background:linear-gradient(0deg,rgba(0,0,0,.75),rgba(0,0,0,0))"></div>
+     <div style="position:absolute;left:30px;right:30px;top:735px;color:#fff;font:600 27px/1.32 Inter;text-align:center">Gâteaux d'anniversaire sur commande, livrés partout à Cotonou.<br><span id="s5link" style="color:#7DD3FC;text-decoration:underline;font-weight:700">pubwek.com/t/k7Pq2/whatsapp</span></div>
    </div>
  </div></div>
- <div class="toast" id="s5toast" style="top:1420px">Texte copié ✓</div>
+ <div class="toast" id="s5toast" style="top:1380px">Légende copiée ✓</div>
  <div class="chip" id="s5cnt" style="left:60px;top:440px;opacity:0;z-index:9;display:flex;align-items:center;gap:16px;font-size:38px">
    <svg width="46" height="46" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#16A34A"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg>
    Vrais clics : <span id="s5n" style="color:#066FA7">0</span></div>
@@ -399,22 +410,35 @@ function S4(t){
 function S5(t){
   stepTitle('s5',t);
   const ph=$('s5ph');st(ph,{y:(1-eo(P(t,.1,.6)))*700});
+  const rw=P(t,.5,.4);$('s5row').style.opacity=rw*(1-P(t,4.0,.3));$('s5row').style.transform=`translateY(${(1-eo(rw))*30}px)`;
+  // 1) copier la légende  2) envoyer la vidéo (vrais écrans Pubwek)
   let f;
-  if(t<1.3){const k=eio(P(t,.5,.6));f=focus($('s5img'),$('s5ring'),lerpRect([0,0,390,844],[40,208,350,282],k),lerp(1,1.2,k),P(t,.8,.25));}
-  else{const k=eio(P(t,1.3,.6));f=focus($('s5img'),$('s5ring'),lerpRect([40,208,350,282],[40,604,270,655],k),1.2,1);}
-  const [x,y]=phonePt(ph,f,154,629,560);
-  tap($('s5tap')||mkTap('s5'),t,2.05,x,y);
-  const to=P(t,2.2,.25);$('s5toast').style.opacity=t>2.75?1-P(t,2.75,.2):to;$('s5toast').style.transform=`translateX(-50%) scale(${lerp(.7,1,back(to))})`;
-  const sw=P(t,2.75,.35);$('s5status').style.opacity=sw;$('s5status').style.transform=`translateY(${(1-eo(sw))*80}px)`;
-  // clics
-  const times=[3.15,3.45,3.75,4.35,4.65];let cnt=0;
+  if(t<1.7){const k=eio(P(t,.6,.5));f=focus($('s5img'),$('s5ring'),lerpRect([0,0,390,844],[40,282,240,333],k),lerp(1,1.15,k),P(t,.95,.2));}
+  else{const k=eio(P(t,1.7,.4));f=focus($('s5img'),$('s5ring'),lerpRect([40,282,240,333],[40,618,350,696],k),1.15,1);}
+  const tp=t<1.9?[139,307]:[195,657];const [x,y]=phonePt(ph,f,tp[0],tp[1],560);
+  const tapEl=$('s5tap')||mkTap('s5');
+  if(t<1.9)tap(tapEl,t,1.35,x,y);
+  else if(t<2.75)tap(tapEl,t,2.3,x,y);
+  else tap(tapEl,t,3.6,256+523,576+785);
+  const to=P(t,1.5,.25);$('s5toast').style.opacity=t>2.1?1-P(t,2.1,.2):to;$('s5toast').style.transform=`translateX(-50%) scale(${lerp(.7,1,back(to))})`;
+  // 3) écran de publication du statut : la vidéo + la légende avec le lien
+  const ed=P(t,2.55,.35);$('s5ed').style.opacity=ed;$('s5ed').style.transform=`translateY(${(1-eo(ed))*120}px)`;
+  if(t>2.4&&t<4.1)vid('v5a',t-2.55);
+  const pasted=t>=3.1;$('s5ph1').style.display=pasted?'none':'inline';$('s5txt').style.display=pasted?'inline':'none';
+  $('s5bar').style.boxShadow=t>3.1&&t<3.5?`0 0 0 ${6*(1-P(t,3.1,.4))}px #FBBF24`:'none';
+  $('s5send').style.transform=`scale(${t>3.55&&t<3.75?.85:1})`;
+  // 4) statut publié : les contacts voient la pub et cliquent sur le lien
+  const sp=P(t,3.85,.3);$('s5st').style.opacity=sp;
+  if(t>3.7)vid('v5b',1.0+(t-3.85));
+  $('s5prog').style.width=(10+P(t,3.85,3)*60)+'%';
+  const times=[4.35,4.65,4.95,5.55,5.85];let cnt=0;
   S5A.forEach(({a,p},i)=>{const ta=times[i];const k=P(t,ta-.25,.3);a.style.opacity=k*(1-P(t,ta+.9,.3));a.style.transform=`scale(${lerp(.4,1,back(k))})`;
     const u=P(t,ta,.9);p.style.opacity=u>0&&u<1?1-u*u:0;p.style.transform=`translateY(${-u*120}px) scale(${lerp(.6,1.1,eo(P(t,ta,.25)))})`;if(t>=ta)cnt++;});
-  $('s5n').textContent=cnt;popIn($('s5cnt'),t,2.95,{dy:-30});
-  // faux clic : même personne qui clique encore
-  const fk=P(t,4.05,.25);s5fakeAv.style.opacity=t<4.05?0:(t<4.8?1:1-P(t,4.8,.2));s5fakeAv.style.transform=`scale(${lerp(.4,1,back(fk))})`;
-  s5fakeAv.style.boxShadow=t>4.15?'0 0 0 10px #DC2626':'';
-  popIn($('s5fake'),t,4.15,{dy:-30});
+  const lk=times.some(ta=>t>=ta&&t<ta+.2);$('s5link').style.background=lk?'rgba(125,211,252,.35)':'transparent';
+  $('s5n').textContent=cnt;popIn($('s5cnt'),t,4.15,{dy:-30});
+  const fk=P(t,5.2,.25);s5fakeAv.style.opacity=t<5.2?0:(t<5.95?1:1-P(t,5.95,.2));s5fakeAv.style.transform=`scale(${lerp(.4,1,back(fk))})`;
+  s5fakeAv.style.boxShadow=t>5.3?'0 0 0 10px #DC2626':'';
+  popIn($('s5fake'),t,5.3,{dy:-30});
 }
 function mkTap(sc){const d=document.createElement('div');d.className='tap';d.id=sc+'tap';$(sc).appendChild(d);return d;}
 function S6(t){

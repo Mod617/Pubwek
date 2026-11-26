@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<link rel="stylesheet" href="file:///home/user/Pubwek/static/css/fonts.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#050B14}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:'Plus Jakarta Sans','Inter',sans-serif;color:#fff}
+.scene{position:absolute;inset:0;display:none;will-change:transform,opacity}
+.bg{position:absolute;inset:0}
+.bg-blue{background:radial-gradient(120% 70% at 50% 18%,#0E6FA8 0%,#08486E 38%,#0A1A2E 75%,#050B14 100%)}
+.bg-night{background:radial-gradient(90% 60% at 75% 10%,#3B3486 0%,#1E1B4B 45%,#0B1026 100%)}
+.bg-warm{background:linear-gradient(180deg,#FFF1DA 0%,#FFE0B0 55%,#FDBA74 100%)}
+.bg-dark{background:radial-gradient(100% 60% at 50% 40%,#1B2436 0%,#0A0F1A 70%,#04070D 100%)}
+.dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.07) 2px,transparent 2.5px);background-size:44px 44px}
+.title{position:absolute;left:70px;right:70px;top:210px;font-weight:800;font-size:88px;line-height:1.04;letter-spacing:-2px}
+.title .hl{color:#FBBF24}
+.title .bl{color:#7DD3FC}
+.row{display:flex;align-items:center;gap:26px}
+.badge{width:132px;height:132px;border-radius:50%;background:#FBBF24;color:#0F172A;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:86px;box-shadow:0 12px 40px rgba(251,191,36,.45);flex:none}
+.steptitle{position:absolute;left:66px;right:60px;top:200px}
+.steptitle h1{font-size:82px;font-weight:800;line-height:1.02;letter-spacing:-2px}
+.pill{display:inline-flex;align-items:center;gap:14px;border-radius:999px;padding:14px 28px;font-weight:800;font-size:40px}
+.phone{position:absolute;left:240px;top:560px;width:600px;height:1262px;border-radius:86px;padding:16px;transform-origin:50% 40%;
+ background:linear-gradient(135deg,#6b717b 0%,#2a2e35 12%,#1b1e23 40%,#2d3138 75%,#787f8a 100%);
+ box-shadow:0 70px 140px rgba(0,0,0,.55),0 25px 45px rgba(0,0,0,.35),0 0 0 1.5px #0a0b0d,inset 0 0 0 1.5px rgba(255,255,255,.35),inset 0 0 0 4px #101114,inset 0 0 0 12px #050506}
+.phone::before{content:"";position:absolute;inset:3px;border-radius:83px;border:1px solid rgba(255,255,255,.08);pointer-events:none}
+.pbtn{position:absolute;width:7px;border-radius:3px;background:linear-gradient(90deg,#1c1f24,#7b828c 55%,#2a2e35)}
+.screen{position:relative;width:568px;height:1230px;border-radius:70px;overflow:hidden;background:#fff;box-shadow:0 0 0 2px #000}
+.screen .shot{position:absolute;left:0;top:128px;width:568px;height:1102px;overflow:hidden;background:#F8FAFC}
+.screen .shot img{position:absolute;left:0;top:0;width:568px;transform-origin:0 0}
+.chrome{position:absolute;left:0;right:0;top:48px;height:80px;background:#fff;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;gap:16px;padding:0 20px;z-index:3}
+.chrome .url{flex:1;height:54px;border-radius:27px;background:#F1F3F4;display:flex;align-items:center;gap:10px;padding:0 18px;font:500 24px Inter;color:#202124}
+.gbar{position:absolute;left:50%;bottom:12px;width:150px;height:6px;margin-left:-75px;border-radius:3px;background:rgba(0,0,0,.6);z-index:40}
+.gbar.light{background:rgba(255,255,255,.85)}
+.glare{position:absolute;inset:0;border-radius:70px;background:linear-gradient(118deg,rgba(255,255,255,.13) 0%,rgba(255,255,255,.04) 22%,rgba(255,255,255,0) 38%,rgba(255,255,255,0) 80%,rgba(255,255,255,.05) 100%);pointer-events:none;z-index:45}
+.sbar{position:absolute;left:0;right:0;top:0;height:48px;background:#fff;color:#111;font:600 23px Inter;display:flex;align-items:center;justify-content:space-between;padding:4px 40px 0 44px;z-index:6}
+.sbar.dark{background:transparent;color:#fff}
+.island{position:absolute;left:50%;top:27px;width:32px;height:32px;margin-left:-16px;border-radius:50%;z-index:50;background:radial-gradient(circle at 42% 40%,#3b5168 0,#121a24 28%,#05070a 55%,#000 70%);box-shadow:0 0 0 3px #0c0d10,inset 0 0 4px rgba(120,160,200,.35)}
+.ring{position:absolute;border:7px solid #FBBF24;border-radius:24px;box-shadow:0 0 0 9999px rgba(15,23,42,.0),0 0 34px rgba(251,191,36,.9);z-index:4;opacity:0}
+.tap{position:absolute;width:96px;height:96px;margin:-48px 0 0 -48px;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 6px 24px rgba(0,0,0,.45);z-index:20;opacity:0}
+.tap::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:6px solid #fff;opacity:var(--r,0);transform:scale(var(--rs,1))}
+.chip{position:absolute;background:#fff;color:#0F172A;border-radius:30px;box-shadow:0 18px 50px rgba(0,0,0,.35);padding:22px 26px;font-weight:800}
+.toast{position:absolute;left:50%;transform:translateX(-50%);background:#047857;color:#fff;border-radius:999px;padding:16px 30px;font:800 30px 'Plus Jakarta Sans';white-space:nowrap;z-index:6;opacity:0;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.notif{position:absolute;background:rgba(255,255,255,.97);color:#0F172A;border-radius:34px;padding:24px 28px;display:flex;gap:22px;align-items:center;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.notif .ic{width:86px;height:86px;border-radius:22px;background:#fff;box-shadow:inset 0 0 0 2px #E2E8F0;display:flex;align-items:center;justify-content:center;flex:none}
+.notif .ic img{width:70px}
+.coin{position:absolute;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFE68A,#F5B700 55%,#C98800);border:5px solid #B07400;color:#7A4B00;font:800 40px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center;opacity:0;z-index:15}
+.plus{position:absolute;font:800 52px 'Plus Jakarta Sans';color:#FBBF24;text-shadow:0 4px 14px rgba(0,0,0,.6);opacity:0;z-index:15;white-space:nowrap}
+.av{position:absolute;width:104px;height:104px;margin:-52px 0 0 -52px;border-radius:50%;color:#fff;font:800 50px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center;border:5px solid #fff;box-shadow:0 10px 30px rgba(0,0,0,.4);opacity:0;z-index:12}
+.op{display:flex;align-items:center;justify-content:center;border-radius:26px;font:800 36px 'Plus Jakarta Sans';height:104px;padding:0 26px;box-shadow:0 14px 34px rgba(0,0,0,.35);opacity:0}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;z-index:30;pointer-events:none}
+.vid{position:absolute;left:0;top:0;width:1080px;height:1920px;object-fit:cover}
+.shade{position:absolute;left:0;right:0;top:0;height:820px;background:linear-gradient(180deg,rgba(5,11,20,.88) 0%,rgba(5,11,20,.6) 50%,rgba(5,11,20,0) 100%)}
+.shadeb{position:absolute;left:0;right:0;bottom:0;height:900px;background:linear-gradient(0deg,rgba(5,11,20,.75) 0%,rgba(5,11,20,0) 100%)}
+svg{display:block}
+</style></head>
+<body><div id="stage">
+<!-- ============ S1 : ACCROCHE ============ -->
+<section class="scene" id="s1">
+ <div class="bg bg-dark"></div>
+ <div id="s1wall" style="position:absolute;left:-180px;top:-260px;width:1440px;height:2600px;transform:rotate(-8deg);display:grid;grid-template-columns:repeat(4,330px);gap:26px;opacity:0"></div>
+ <div id="s1veil" style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,11,20,.95) 0%,rgba(5,11,20,.55) 35%,rgba(5,11,20,.35) 60%,rgba(5,11,20,.85) 100%)"></div>
+ <div class="title" id="s1t0" style="opacity:0;z-index:10;-webkit-text-stroke:12px #050B14;paint-order:stroke fill">Tous les jours, tu regardes des <span class="bl">statuts WhatsApp</span>…</div>
+ <div class="title" id="s1t1" style="opacity:0;z-index:10;-webkit-text-stroke:12px #050B14;paint-order:stroke fill">Et si ces statuts devenaient <span class="hl">de l'argent</span>&nbsp;?</div>
+ <div id="s1hey" style="position:absolute;left:0;right:0;top:640px;text-align:center;font:800 210px/0.95 'Plus Jakarta Sans';letter-spacing:-8px;color:#FBBF24;text-shadow:0 14px 50px rgba(0,0,0,.7);z-index:11">HÉ,<br>TOI&nbsp;!</div>
+ <div id="s1notes" style="position:absolute;inset:0;z-index:9;perspective:1400px"></div>
+</section>
+
+<!-- ============ S2 : VOICI PUBWEK ============ -->
+<section class="scene" id="s2">
+ <div class="bg bg-blue"></div><div class="dots"></div>
+ <div id="s2glow" style="position:absolute;left:540px;top:760px;width:1000px;height:1000px;margin:-500px 0 0 -500px;border-radius:50%;background:radial-gradient(circle,rgba(125,211,252,.4),rgba(125,211,252,0) 62%)"></div>
+ <div id="s2logo" style="position:absolute;left:540px;top:760px;width:300px;height:300px;margin:-150px 0 0 -150px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(0,0,0,.45);z-index:5;opacity:0"><img src="emblem.png" style="width:245px"></div>
+ <div id="s2word" style="position:absolute;left:0;right:0;top:230px;text-align:center;opacity:0"><div style="font:800 120px 'Plus Jakarta Sans';letter-spacing:14px">PUBWEK</div><div style="font:700 40px Inter;color:#7DD3FC;margin-top:6px">Payé au clic réel</div></div>
+ <svg id="s2lines" style="position:absolute;left:0;top:0;z-index:3" width="1080" height="1920" viewBox="0 0 1080 1920">
+   <defs><marker id="ah" markerWidth="10" markerHeight="10" refX="6" refY="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#FBBF24"/></marker></defs>
+   <path id="l1" d="M300 600 Q540 470 780 600" stroke="#FBBF24" stroke-width="10" fill="none" stroke-linecap="round" marker-end="url(#ah)" stroke-dasharray="600" stroke-dashoffset="600"/>
+   <path id="l2" d="M820 900 Q800 1150 640 1250" stroke="#FBBF24" stroke-width="10" fill="none" stroke-linecap="round" marker-end="url(#ah)" stroke-dasharray="600" stroke-dashoffset="600"/>
+   <path id="l3" d="M440 1250 Q280 1150 260 900" stroke="#FBBF24" stroke-width="10" fill="none" stroke-linecap="round" marker-end="url(#ah)" stroke-dasharray="600" stroke-dashoffset="600"/>
+ </svg>
+ <div class="node" id="n1" style="position:absolute;left:240px;top:760px;margin:-150px 0 0 -150px;width:300px;text-align:center;opacity:0;z-index:4">
+   <div style="width:220px;height:220px;margin:0 auto;border-radius:50%;overflow:hidden;border:8px solid #fff;box-shadow:0 20px 50px rgba(0,0,0,.45)"><img src="img_adjara.jpg" style="width:100%;height:100%;object-fit:cover"></div>
+   <div class="pill" style="background:#fff;color:#0F172A;margin-top:14px;font-size:38px">Commerces</div></div>
+ <div class="node" id="n2" style="position:absolute;left:840px;top:760px;margin:-150px 0 0 -150px;width:300px;text-align:center;opacity:0;z-index:4">
+   <div style="width:220px;height:220px;margin:0 auto;border-radius:50%;overflow:hidden;border:8px solid #fff;box-shadow:0 20px 50px rgba(0,0,0,.45);background:#000"><video id="v2n" src="clip2.webm" muted preload="auto" style="width:100%;height:100%;object-fit:cover"></video></div>
+   <div class="pill" style="background:#FBBF24;color:#0F172A;margin-top:14px;font-size:38px">Partageurs</div></div>
+ <div class="node" id="n3" style="position:absolute;left:540px;top:1330px;margin:-150px 0 0 -150px;width:300px;text-align:center;opacity:0;z-index:4">
+   <div style="width:220px;height:220px;margin:0 auto;border-radius:50%;overflow:hidden;border:8px solid #fff;box-shadow:0 20px 50px rgba(0,0,0,.45);background:#000"><video id="v2c" src="clip3.webm" muted preload="auto" style="width:100%;height:100%;object-fit:cover;object-position:50% 25%"></video></div>
+   <div class="pill" style="background:#22C55E;color:#fff;margin-top:14px;font-size:38px">Clients</div></div>
+</section>
+
+<!-- ============ S3 : LES COMMERCES ============ -->
+<section class="scene" id="s3">
+ <div class="bg" style="background:#000"></div>
+ <div id="s3car" style="position:absolute;inset:0"></div>
+ <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,11,20,.92) 0%,rgba(5,11,20,.55) 40%,rgba(5,11,20,.7) 100%)"></div>
+ <div class="steptitle"><div class="row"><div class="badge" style="background:#fff"><svg width="80" height="80" viewBox="0 0 24 24"><path d="M3 9l1.5-5h15L21 9M3 9v11h18V9M3 9h18M9 20v-6h6v6" stroke="#066FA7" stroke-width="2" fill="none" stroke-linejoin="round"/></svg></div><h1>Les<br>commerces</h1></div></div>
+ <div id="s3chips" style="position:absolute;left:60px;right:60px;top:430px;display:flex;gap:16px;z-index:8">
+   <div class="chip c3" style="position:relative;flex:1;display:flex;align-items:center;gap:12px;font-size:32px;padding:16px 20px;opacity:0"><svg width="40" height="40" viewBox="0 0 24 24"><path d="M12 2a7 7 0 00-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 00-7-7z" fill="#DC2626"/><circle cx="12" cy="9" r="2.6" fill="#fff"/></svg>Ciblage par commune</div>
+   <div class="chip c3" style="position:relative;flex:1;display:flex;align-items:center;gap:12px;font-size:32px;padding:16px 20px;opacity:0;background:#FBBF24"><svg width="40" height="40" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#0F172A"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#FBBF24" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg>Payé au clic réel</div>
+ </div>
+ <div class="phone" id="s3ph" style="top:640px"><div class="island"></div><div class="screen"><div class="sbar"><span>09:03</span></div>
+   <div class="shot"><img id="s3imgA" src="a_style1.png"><img id="s3imgB" src="a_zones.png" style="opacity:0"><img id="s3imgC" src="a_budget.png" style="opacity:0"></div><div class="ring" id="s3ring"></div></div></div>
+</section>
+
+<!-- ============ S4 : LES PARTAGEURS ============ -->
+<section class="scene" id="s4">
+ <div class="bg" style="background:#000"></div>
+ <video class="vid" id="v4" src="clip2.webm" muted preload="auto"></video>
+ <div class="shade"></div><div class="shadeb" style="height:700px"></div>
+ <div class="steptitle" style="z-index:6"><div class="row"><div class="badge"><svg width="76" height="76" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3" stroke="#0F172A" stroke-width="2" fill="none"/><circle cx="12" cy="18" r="1.3" fill="#0F172A"/></svg></div><h1>Les<br>partageurs</h1></div></div>
+ <div id="s4chips" style="position:absolute;left:60px;right:60px;top:430px;display:flex;gap:16px;z-index:8">
+   <div class="chip c4" style="position:relative;flex:1;padding:16px 20px;opacity:0;background:#FBBF24"><div style="font-size:28px">Gain par clic (vidéo)</div><div style="font-size:52px">10 F</div></div>
+   <div class="chip c4" style="position:relative;flex:1;padding:16px 20px;opacity:0"><div style="font-size:28px">Retrait Mobile Money</div><div style="font-size:52px">dès 500 F</div></div>
+ </div>
+ <div id="s4fx" style="position:absolute;inset:0;z-index:9"></div>
+</section>
+
+<!-- ============ S5 : LES CLIENTS ============ -->
+<section class="scene" id="s5">
+ <div class="bg bg-blue"></div><div class="dots"></div>
+ <video class="vid" id="v5" src="clip3.webm" muted preload="auto"></video>
+ <div class="shade" id="s5shade"></div>
+ <div class="steptitle" style="z-index:6"><div class="row"><div class="badge" style="background:#22C55E"><svg width="76" height="76" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="#fff"/><path d="M4 21c1-5 15-5 16 0" fill="#fff"/></svg></div><h1>Les<br>clients</h1></div></div>
+ <div class="phone" id="s5ph"><div class="island"></div><div class="screen" style="background:#ECE5DD">
+   <div id="s5chat" style="position:absolute;inset:0;background:#ECE5DD;overflow:hidden">
+     <div class="sbar" style="background:#075E54;color:#fff"><span>10:15</span></div>
+     <div style="position:absolute;left:0;right:0;top:48px;height:96px;background:#075E54;display:flex;align-items:center;gap:14px;padding:0 18px;color:#fff">
+       <svg width="36" height="36" viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z" fill="#fff"/></svg>
+       <div style="width:62px;height:62px;border-radius:50%;overflow:hidden"><img src="img_lea.jpg" style="width:100%;height:100%;object-fit:cover"></div>
+       <div style="flex:1"><div style="font:700 28px Inter">Chez Léa Traiteur</div><div style="font:400 21px Inter;opacity:.85">en ligne</div></div></div>
+     <div style="position:absolute;left:50%;top:170px;transform:translateX(-50%);background:#E1F2FB;color:#475569;font:600 20px Inter;padding:6px 16px;border-radius:10px">AUJOURD'HUI</div>
+     <div id="s5msg" style="position:absolute;right:22px;left:70px;top:220px;background:#DCF8C6;border-radius:22px 0 22px 22px;padding:18px 20px 34px;color:#111;font:400 25px/1.38 Inter;box-shadow:0 2px 2px rgba(0,0,0,.12);opacity:0">
+       Bonjour,<br>Je vous contacte suite à votre publicité vue sur Pubwek.<br><br>Campagne : n°12<br>Produit / service : Chez Léa Traiteur<br><b>Partageur : Awa_ctn</b><br><br>Je suis intéressé(e), pouvez-vous me donner plus d'informations ?
+       <span style="position:absolute;right:16px;bottom:8px;font:400 18px Inter;color:#64748B">10:15 ✓✓</span></div>
+     <div id="s5rep" style="position:absolute;left:22px;right:150px;top:770px;background:#fff;border-radius:0 22px 22px 22px;padding:16px 20px 30px;color:#111;font:400 25px/1.38 Inter;box-shadow:0 2px 2px rgba(0,0,0,.12);opacity:0">
+       Bonjour ! Bien sûr, voici notre menu du jour.<span style="position:absolute;right:16px;bottom:6px;font:400 18px Inter;color:#94A3B8">10:16</span></div>
+     <div style="position:absolute;left:14px;right:14px;top:1090px;display:flex;gap:12px;align-items:center"><div style="flex:1;height:76px;border-radius:38px;background:#fff;color:#94A3B8;font:400 26px Inter;display:flex;align-items:center;padding:0 26px">Message</div><div style="width:76px;height:76px;border-radius:50%;background:#00A884"></div></div>
+   </div></div></div>
+ <div class="chip" id="s5lbl" style="left:50%;top:470px;transform:translateX(-50%);opacity:0;z-index:12;font-size:38px;white-space:nowrap">Message direct au commerce</div>
+</section>
+
+<!-- ============ S6 : CONFIANCE ============ -->
+<section class="scene" id="s6">
+ <div class="bg bg-dark"></div><div class="dots"></div>
+ <div id="s6a" class="chip" style="left:70px;right:70px;top:330px;padding:40px 36px;display:flex;align-items:center;gap:30px;opacity:0">
+   <svg width="150" height="150" viewBox="0 0 24 24" style="flex:none"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z" fill="#066FA7"/><path d="M8 12l3 3 5-6" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+   <div><div style="font:800 58px/1.1 'Plus Jakarta Sans'">Chaque pub vérifiée</div><div style="font:600 36px Inter;color:#475569;margin-top:8px">avant sa diffusion</div></div></div>
+ <div id="s6b" class="chip" style="left:70px;right:70px;top:700px;padding:40px 36px;display:flex;align-items:center;gap:30px;opacity:0">
+   <svg width="150" height="150" viewBox="0 0 24 24" style="flex:none"><circle cx="12" cy="12" r="11" fill="#DC2626"/><path d="M8 8l8 8M16 8l-8 8" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>
+   <div><div style="font:800 58px/1.1 'Plus Jakarta Sans'">Faux clics écartés</div><div style="font:600 36px Inter;color:#475569;margin-top:8px">ni payés, ni facturés</div></div></div>
+ <div id="s6c" class="chip" style="left:70px;right:70px;top:1070px;padding:40px 36px;display:flex;align-items:center;gap:30px;opacity:0">
+   <svg width="150" height="150" viewBox="0 0 24 24" style="flex:none"><circle cx="12" cy="12" r="11" fill="#16A34A"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>
+   <div><div style="font:800 58px/1.1 'Plus Jakarta Sans'">Inscription gratuite</div><div style="font:600 36px Inter;color:#475569;margin-top:8px">sans abonnement</div></div></div>
+</section>
+
+<!-- ============ S7 : TOUT LE MONDE Y GAGNE ============ -->
+<section class="scene" id="s7">
+ <div class="bg" style="background:#000"></div>
+ <div class="strip" id="st1" style="position:absolute;left:0;top:0;width:360px;height:1920px;overflow:hidden;opacity:0"><video id="v7a" src="clip1.webm" muted preload="auto" style="position:absolute;left:-360px;top:0;width:1080px;height:1920px;object-fit:cover"></video></div>
+ <div class="strip" id="st2" style="position:absolute;left:360px;top:0;width:360px;height:1920px;overflow:hidden;opacity:0"><video id="v7b" src="clip2.webm" muted preload="auto" style="position:absolute;left:-360px;top:0;width:1080px;height:1920px;object-fit:cover"></video></div>
+ <div class="strip" id="st3" style="position:absolute;left:720px;top:0;width:360px;height:1920px;overflow:hidden;opacity:0"><video id="v7c" src="clip3.webm" muted preload="auto" style="position:absolute;left:-360px;top:0;width:1080px;height:1920px;object-fit:cover"></video></div>
+ <div style="position:absolute;left:358px;top:0;width:4px;height:1920px;background:#fff;z-index:2"></div><div style="position:absolute;left:718px;top:0;width:4px;height:1920px;background:#fff;z-index:2"></div>
+ <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,11,20,.2) 0%,rgba(5,11,20,0) 40%,rgba(5,11,20,.75) 100%)"></div>
+ <div class="g7" style="position:absolute;left:0;width:360px;top:1180px;text-align:center;opacity:0;z-index:4"><div class="pill" style="background:#fff;color:#0F172A;font-size:30px;padding:12px 20px">Le commerce</div><div style="font:800 46px/1.1 'Plus Jakarta Sans';margin-top:12px;text-shadow:0 4px 16px #000">des clients</div></div>
+ <div class="g7" style="position:absolute;left:360px;width:360px;top:1180px;text-align:center;opacity:0;z-index:4"><div class="pill" style="background:#FBBF24;color:#0F172A;font-size:30px;padding:12px 20px">Le partageur</div><div style="font:800 46px/1.1 'Plus Jakarta Sans';margin-top:12px;text-shadow:0 4px 16px #000">de l'argent</div></div>
+ <div class="g7" style="position:absolute;left:720px;width:360px;top:1180px;text-align:center;opacity:0;z-index:4"><div class="pill" style="background:#22C55E;color:#fff;font-size:30px;padding:12px 20px">Le client</div><div style="font:800 46px/1.1 'Plus Jakarta Sans';margin-top:12px;text-shadow:0 4px 16px #000">la bonne offre</div></div>
+ <div id="s7win" style="position:absolute;left:60px;right:60px;top:200px;text-align:center;opacity:0;z-index:5"><span class="pill" style="background:#FBBF24;color:#0F172A;font-size:74px;padding:18px 40px;box-shadow:0 20px 50px rgba(0,0,0,.5)">Tout le monde y gagne</span></div>
+</section>
+
+<!-- ============ S8 : APPEL À L'ACTION ============ -->
+<section class="scene" id="s8">
+ <div class="bg" style="background:#050B14"></div>
+ <div id="s8wall" style="position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,360px);grid-auto-rows:640px"></div>
+ <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,72,110,.6),rgba(5,20,40,.85) 45%,rgba(5,11,20,.92))"></div>
+ <div id="s8logo" style="position:absolute;left:540px;top:380px;width:300px;height:300px;margin:-150px 0 0 -150px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(0,0,0,.45);opacity:0"><img src="emblem.png" style="width:245px"></div>
+ <div id="s8word" style="position:absolute;left:0;right:0;top:565px;text-align:center;opacity:0"><div style="font:800 92px 'Plus Jakarta Sans';letter-spacing:12px">PUBWEK</div></div>
+ <div id="s8url" style="position:absolute;left:80px;right:80px;top:720px;height:150px;border-radius:999px;background:#fff;color:#0F172A;display:flex;align-items:center;gap:24px;padding:0 50px;box-shadow:0 24px 60px rgba(0,0,0,.4);opacity:0">
+   <svg width="60" height="60" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2" fill="#066FA7"/><path d="M8 10V7a4 4 0 018 0v3" stroke="#066FA7" stroke-width="2.4" fill="none"/></svg>
+   <span id="s8typed" style="font:800 80px 'Plus Jakarta Sans';letter-spacing:-1px"></span><span id="s8cur" style="width:6px;height:80px;background:#066FA7"></span></div>
+ <div id="s8b1" style="position:absolute;left:80px;right:80px;top:920px;height:130px;border-radius:999px;background:#066FA7;color:#fff;display:flex;align-items:center;justify-content:center;gap:18px;font:800 50px 'Plus Jakarta Sans';box-shadow:0 20px 50px rgba(6,111,167,.5);opacity:0">Je suis commerçant</div>
+ <div id="s8b2" style="position:absolute;left:80px;right:80px;top:1080px;height:130px;border-radius:999px;background:#FBBF24;color:#0F172A;display:flex;align-items:center;justify-content:center;gap:18px;font:800 50px 'Plus Jakarta Sans';box-shadow:0 20px 50px rgba(251,191,36,.45);opacity:0">Je veux gagner de l'argent</div>
+ <div id="s8free" style="position:absolute;left:0;right:0;top:1250px;text-align:center;font:700 40px Inter;color:#A7F3D0;opacity:0">Inscription gratuite · Sans abonnement</div>
+ <div class="tap" id="s8tap"></div>
+</section>
+
+<div id="sub" style="position:absolute;left:50px;right:50px;top:1462px;text-align:center;z-index:50;display:none">
+  <span id="subt" style="display:inline;background:rgba(5,11,20,.82);color:#fff;font:800 46px/1.36 'Plus Jakarta Sans';padding:8px 22px;border-radius:18px;-webkit-box-decoration-break:clone;box-decoration-break:clone"></span></div>
+</div>
+<script src="billets.js"></script>
+<script>
+// ===================== moteur d'animation =====================
+const $=id=>document.getElementById(id);
+const cl=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const P=(t,a,d)=>cl((t-a)/d);
+const eo=x=>1-Math.pow(1-x,3);
+const eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const back=x=>{x=cl(x);const c1=1.9,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
+const lerp=(a,b,k)=>a+(b-a)*k;
+function st(el,{o,x=0,y=0,s=1,r=0,extra=''}){if(typeof el==='string')el=$(el);if(o!==undefined)el.style.opacity=o;el.style.transform=`translate(${x}px,${y}px) scale(${s}) rotate(${r}deg) ${extra}`;}
+function popIn(el,t,a,{dy=40,dur=.5}={}){const k=P(t,a,dur);st(el,{o:cl(k*2.5),y:(1-eo(k))*dy,s:lerp(.6,1,back(k))});}
+
+// Durées des scènes (secondes). Recalées sur la voix off au montage final.
+const T=window.T||{s1:[0,5],s2:[5,9],s3:[9,13.5],s4:[13.5,19],s5:[19,24.5],s6:[24.5,29],s7:[29,35],s8:[35,40],s9:[40,46.5]};
+const DUR=Math.max(...Object.values(T).map(v=>v[1]));
+const TR=.34; // durée des transitions
+
+// Écran de téléphone : zoom sur un rectangle (coordonnées CSS de la page, 390 px de large)
+const K=568/390, TOPB=128, SH=1230-128;
+function focus(img,ring,rect,z,ringO){
+  // rect = [x1,y1,x2,y2] ; z = zoom
+  const cx=(rect[0]+rect[2])/2*K, cy=(rect[1]+rect[3])/2*K;
+  let tx=568/2-cx*z, ty=SH*0.42-cy*z;
+  tx=cl(tx,568-568*z,0); ty=cl(ty,SH-844*K*z,0);
+  img.style.transform=`translate(${tx}px,${ty}px) scale(${z})`;
+  if(ring){const pad=10;ring.style.left=(tx+rect[0]*K*z-pad)+'px';ring.style.top=(TOPB+ty+rect[1]*K*z-pad)+'px';
+    ring.style.width=((rect[2]-rect[0])*K*z+pad*2)+'px';ring.style.height=((rect[3]-rect[1])*K*z+pad*2)+'px';ring.style.opacity=ringO;}
+  return {tx,ty,z};
+}
+function lerpRect(a,b,k){return a.map((v,i)=>lerp(v,b[i],k));}
+// position à l'écran (stage) d'un point de la page dans un téléphone
+function phonePt(ph,f,px,py,phoneTop){const left=240+16, top=(phoneTop)+16+TOPB;return [left+f.tx+px*K*f.z, top+f.ty+py*K*f.z];}
+function tap(el,t,a,x,y){const k=P(t,a-.35,.35),u=P(t,a,.5);const o=t<a-.35?0:(t<a+.5?1:1-P(t,a+.5,.25));
+  el.style.left=x+'px';el.style.top=y+'px';const press=t>=a&&t<a+.15?.82:1;
+  el.style.opacity=o;el.style.transform=`translate(${(1-eo(k))*60}px,${(1-eo(k))*80}px) scale(${press})`;
+  el.style.setProperty('--r',t>=a?1-u:0);el.style.setProperty('--rs',1+u*1.4);}
+
+// ---------- vidéos : positionnement image par image ----------
+let SEEKS=[];
+function vid(id,time,rate=1){const v=$(id);const d=(v.duration||10)-0.05;const tt=cl(time,0,d);
+  if(Math.abs(v.currentTime-tt)>0.004){SEEKS.push(new Promise(r=>v.addEventListener('seeked',r,{once:true})));v.currentTime=tt;}}
+window.videosReady=()=>[...document.querySelectorAll('video')].every(v=>v.readyState>=2);
+
+const LAST=Object.keys(T).pop();
+// ---------- préparation ----------
+function sbarHTML(time,dark){const c=dark?'#fff':'#111';
+ return `<span>${time}</span><span style="display:flex;align-items:center;gap:10px">
+ <svg width="30" height="22" viewBox="0 0 30 22"><rect x="0" y="15" width="5" height="7" rx="1" fill="${c}"/><rect x="8" y="10" width="5" height="12" rx="1" fill="${c}"/><rect x="16" y="5" width="5" height="17" rx="1" fill="${c}"/><rect x="24" y="0" width="5" height="22" rx="1" fill="${c}" opacity=".35"/></svg>
+ <span style="font:700 17px Inter;margin-left:-4px">4G</span>
+ <svg width="28" height="22" viewBox="0 0 24 18"><path d="M12 17.5l3.4-4.2a5.4 5.4 0 00-6.8 0z" fill="${c}"/><path d="M5.6 9.8a10 10 0 0112.8 0l-2 2.5a6.8 6.8 0 00-8.8 0z" fill="${c}"/><path d="M2.4 6a15 15 0 0119.2 0l-2 2.4a12 12 0 00-15.2 0z" fill="${c}" opacity=".9"/></svg>
+ <span style="display:flex;align-items:center;gap:6px;font:700 19px Inter">78
+ <svg width="40" height="22" viewBox="0 0 40 22"><rect x="1" y="2" width="34" height="18" rx="5" fill="none" stroke="${c}" stroke-width="2" opacity=".55"/><rect x="4" y="5" width="22" height="12" rx="2.5" fill="${c}"/><rect x="36.5" y="8" width="3" height="6" rx="1.5" fill="${c}" opacity=".55"/></svg></span></span>`;}
+const CHROME=`<svg width="34" height="34" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1z" fill="none" stroke="#5f6368" stroke-width="2" stroke-linejoin="round"/></svg>
+ <div class="url"><svg width="26" height="26" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2" fill="#5f6368"/><path d="M8 10V7a4 4 0 018 0v3" stroke="#5f6368" stroke-width="2.2" fill="none"/></svg>pubwek.com</div>
+ <div style="width:36px;height:36px;border:3px solid #5f6368;border-radius:8px;display:flex;align-items:center;justify-content:center;font:700 17px Inter;color:#5f6368">3</div>
+ <svg width="12" height="36" viewBox="0 0 6 24"><circle cx="3" cy="4" r="2.6" fill="#5f6368"/><circle cx="3" cy="12" r="2.6" fill="#5f6368"/><circle cx="3" cy="20" r="2.6" fill="#5f6368"/></svg>`;
+document.querySelectorAll('.sbar').forEach(b=>{const tm=(b.querySelector('span')||{}).textContent||'08:16';b.innerHTML=sbarHTML(tm,b.classList.contains('dark'));});
+document.querySelectorAll('.phone').forEach(ph=>{
+  ph.insertAdjacentHTML('beforeend','<div class="pbtn" style="right:-6px;top:250px;height:110px"></div><div class="pbtn" style="right:-6px;top:395px;height:70px"></div>');
+  const sc=ph.querySelector('.screen');
+  if(sc.querySelector('.shot')){const c=document.createElement('div');c.className='chrome';c.innerHTML=CHROME;sc.appendChild(c);}
+  const dark=!sc.querySelector('.shot');
+  sc.insertAdjacentHTML('beforeend',`<div class="gbar${dark?' light':''}"></div><div class="glare"></div>`);
+});
+
+
+// ---------- préparation (vidéo d'introduction) ----------
+const X=window.EXTRA||{};
+const PICS=['img_burger.jpg','img_adjara.jpg','img_jus.jpg','img_lea.jpg','img_tech.jpg','img_beaute.jpg','img_electro.jpg','img_wheke.jpg','img_plomb.jpg'];
+// mur de statuts
+let wh='';for(let i=0;i<24;i++){const im=PICS[i%PICS.length];const v=150+((i*397)%2400);
+ wh+=`<div style="position:relative;width:330px;height:587px;border-radius:28px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.5);background:#111">
+  <img src="${im}" style="width:100%;height:100%;object-fit:cover">
+  <div style="position:absolute;left:14px;right:14px;top:12px;height:5px;border-radius:3px;background:rgba(255,255,255,.4)"><div style="width:${30+(i*23)%60}%;height:100%;background:#fff;border-radius:3px"></div></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;height:90px;background:linear-gradient(0deg,rgba(0,0,0,.75),rgba(0,0,0,0))"></div>
+  <div class="vw" data-v="${v}" style="position:absolute;left:18px;bottom:16px;display:flex;align-items:center;gap:8px;color:#fff;font:700 26px Inter"><svg width="30" height="30" viewBox="0 0 24 24"><path d="M12 5C6 5 2 12 2 12s4 7 10 7 10-7 10-7-4-7-10-7z" fill="none" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="3.2" fill="#fff"/></svg><span>0</span></div></div>`;}
+$('s1wall').innerHTML=wh;
+// billets qui jaillissent (« de l'argent ? »)
+const NOTES=[];for(let i=0;i<14;i++){const d=document.createElement('div');d.style.cssText='position:absolute;width:360px;height:170px;margin:-85px 0 0 -180px;opacity:0;filter:drop-shadow(0 14px 18px rgba(0,0,0,.45))';
+  d.innerHTML=BILLET(i%3===2?500:1000);$('s1notes').appendChild(d);
+  const a=(i/14)*Math.PI*2+.3;NOTES.push({d,a,v:900+(i*83)%400,ph:i*1.3,sp:(i%2?1:-1)*(30+(i*11)%25),sc:.7+((i*7)%10)/30});}
+// carrousel de commerces (scène 3)
+$('s3car').innerHTML=PICS.map((p,i)=>`<img class="car" src="${p}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0">`).join('');
+// +10 F (scène 4)
+const PL=[];[[230,1060],[850,1120],[200,1330],[880,1380]].forEach(([x,y])=>{const p=document.createElement('div');p.className='plus';p.textContent='+10 F';p.style.left=(x-70)+'px';p.style.top=y+'px';p.style.fontSize='70px';$('s4fx').appendChild(p);PL.push(p);});
+// mur final
+$('s8wall').innerHTML=PICS.map(p=>`<div style="overflow:hidden"><img src="${p}" style="width:100%;height:100%;object-fit:cover"></div>`).join('');
+
+// ---------- scènes ----------
+function S1(t){
+  const Z=X.money||4.9;
+  const hk=P(t,0,.18);const hshake=t<.6?Math.sin(t*80)*14*(1-P(t,0,.6)):0;const hout=P(t,.85,.25);
+  st('s1hey',{o:(1-hout),s:lerp(1.6,1,eo(hk))*lerp(1,.6,hout),x:hshake,y:-hout*200});
+  const w=P(t,.7,.5);$('s1wall').style.opacity=w;$('s1wall').style.transform=`rotate(-8deg) translateY(${-t*90}px) scale(${lerp(1.15,1,eo(w))})`;
+  document.querySelectorAll('#s1wall .vw').forEach(e=>{e.lastChild.textContent=Math.floor(+e.dataset.v*eo(P(t,.9,3.2))).toLocaleString('fr-FR');});
+  const a0=P(t,1.0,.3),b0=P(t,X.t2||3.6,.25);st('s1t0',{o:a0*(1-b0),y:(1-eo(a0))*40-b0*40});
+  const a1=P(t,(X.t2||3.6)+.1,.3);st('s1t1',{o:a1,y:(1-eo(a1))*40});
+  $('s1wall').style.filter=t>Z?`saturate(${1-P(t,Z,.4)*.6}) brightness(${1-P(t,Z,.4)*.35})`:'none';
+  NOTES.forEach(n=>{const k=t-Z;if(k<0){n.d.style.opacity=0;return}
+    const drag=1-Math.exp(-k*2.4);const x=540+Math.cos(n.a)*n.v*drag/2.4*1.6+Math.sin(k*3+n.ph)*40, y=1000+Math.sin(n.a)*n.v*drag/2.4*1.6+180*k*k;
+    n.d.style.left=x+'px';n.d.style.top=y+'px';n.d.style.opacity=cl(k/.15);
+    n.d.style.transform=`scale(${n.sc*lerp(.2,1,eo(P(k,0,.4)))}) rotateZ(${n.sp*k+Math.sin(k*4+n.ph)*15}deg) rotateX(${Math.sin(k*5+n.ph)*50}deg) rotateY(${Math.cos(k*3.5+n.ph)*30}deg)`;});
+}
+function S2(t){
+  const C=X.s2||{logo:.1,nodes:2.0,l1:2.6,l2:3.3,l3:4.0};
+  const l=P(t,C.logo,.5);st('s2logo',{o:cl(l*3),s:lerp(.3,1.35,back(l))*lerp(1,.74,eio(P(t,C.nodes-.4,.5)))});
+  popIn($('s2word'),t,C.logo+.25,{dy:30});
+  st('s2glow',{s:1+.06*Math.sin(t*3)});
+  ['n1','n2','n3'].forEach((n,i)=>popIn($(n),t,C.nodes+i*.25,{dy:40}));
+  vid('v2n',4.5+t*.8);vid('v2c',1.5+t*.8);
+  [['l1',C.l1],['l2',C.l2],['l3',C.l3]].forEach(([id,a])=>{const k=eio(P(t,a,.6));$(id).setAttribute('stroke-dashoffset',600*(1-k));$(id).setAttribute('marker-end',k>.92?'url(#ah)':'none');$(id).style.opacity=k>0?1:0;});
+}
+function S3(t){
+  stepTitle('s3',t);
+  const C=X.s3||{com:2.2,clic:4.2};
+  const cars=document.querySelectorAll('#s3car .car');const idx=Math.floor(t/0.7)%cars.length;
+  cars.forEach((c,i)=>{c.style.opacity=i===idx?1:0;c.style.transform=`scale(${1.08-((t%0.7)/0.7)*.05})`;});
+  popIn(document.querySelectorAll('#s3 .c3')[0],t,C.com,{dy:30});popIn(document.querySelectorAll('#s3 .c3')[1],t,C.clic,{dy:30});
+  const ph=$('s3ph');st(ph,{y:(1-eo(P(t,.1,.6)))*700});
+  const b=P(t,C.com-.3,.3),c=P(t,C.clic-.4,.3);
+  $('s3imgA').style.opacity=1-b;$('s3imgB').style.opacity=b*(1-c);$('s3imgC').style.opacity=c;
+  if(c>0)focus($('s3imgC'),$('s3ring'),[50,318,340,377],1,P(t,C.clic,.25));
+  else if(b>0)focus($('s3imgB'),$('s3ring'),[40,265,350,303],1,P(t,C.com,.25));
+  else focus($('s3imgA'),$('s3ring'),[40,140,350,259],1,P(t,.9,.25));
+}
+function S4(t){
+  vid('v4',3.5+t);st('v4',{s:lerp(1.1,1.0,eo(P(t,0,4)))});
+  stepTitle('s4',t);
+  const C=X.s4||{gain:2.6,ret:3.6,plus:[2.8,3.2,3.6,4.0]};
+  popIn(document.querySelectorAll('#s4 .c4')[0],t,C.gain,{dy:30});popIn(document.querySelectorAll('#s4 .c4')[1],t,C.ret,{dy:30});
+  PL.forEach((p,i)=>{const u=P(t,C.plus[i],1.0);p.style.opacity=u>0&&u<1?1-u*u:0;p.style.transform=`translateY(${-u*150}px) scale(${lerp(.6,1.1,eo(P(t,C.plus[i],.25)))})`;});
+}
+function S5(t){
+  stepTitle('s5',t);
+  const C=X.s5||{phone:2.0,msg:2.4,rep:4.2};
+  vid('v5',2.0+t);
+  const ph=$('s5ph');const pin=eo(P(t,C.phone,.5));st(ph,{y:(1-pin)*1400});
+  $('s5shade').style.opacity=1;$('v5').style.opacity=1-P(t,C.phone,.5)*.7;
+  const m=P(t,C.msg,.35);$('s5msg').style.opacity=m;$('s5msg').style.transform=`translateY(${(1-eo(m))*40}px) scale(${lerp(.9,1,eo(m))})`;
+  const r=P(t,C.rep,.35);$('s5rep').style.opacity=r;$('s5rep').style.transform=`translateY(${(1-eo(r))*40}px)`;
+  popIn($('s5lbl'),t,C.msg+.3,{dy:-20});$('s5lbl').style.transform+=' translateX(-50%)';
+}
+function S6(t){
+  const C=X.s6||[.3,1.9,3.3];
+  ['s6a','s6b','s6c'].forEach((id,i)=>{const k=P(t,C[i],.45);st(id,{o:cl(k*2.5),x:(1-eo(k))*-200,s:lerp(.9,1,back(k))});});
+}
+function S7(t){
+  const C=X.s7||[.2,1.6,3.0,4.0];
+  ['st1','st2','st3'].forEach((id,i)=>{const k=P(t,C[i]-.2,.4);$(id).style.opacity=k;$(id).style.transform=`translateY(${(1-eo(k))*120}px)`;});
+  vid('v7a',5.0+t*.8);vid('v7b',4.5+t*.8);vid('v7c',2.0+t*.8);
+  document.querySelectorAll('.g7').forEach((g,i)=>popIn(g,t,C[i],{dy:40}));
+  const w=P(t,C[3],.5);st('s7win',{o:cl(w*3),s:lerp(.5,1,back(w))});
+}
+function S8(t){
+  const C=X.s8||{url:.4,type:.55,b1:1.6,b2:1.9,free:2.4,tap:3.6};
+  const l=P(t,.1,.5);st('s8logo',{o:cl(l*3),s:lerp(.3,1,back(l))});popIn($('s8word'),t,.3,{dy:30});
+  popIn($('s8url'),t,C.url,{dy:40});
+  const txt='pubwek.com';const nch=Math.floor(cl((t-C.type)/0.9)*txt.length+.0001);$('s8typed').textContent=txt.slice(0,nch);
+  $('s8cur').style.opacity=(Math.floor(t*2.5)%2)?1:.1;
+  const p1=t>C.b1+.6?1+.03*Math.sin((t-C.b1)*6):1;
+  popIn($('s8b1'),t,C.b1,{dy:40});$('s8b1').style.transform+=` scale(${p1})`;
+  popIn($('s8b2'),t,C.b2,{dy:40});$('s8b2').style.transform+=` scale(${t>C.b2+.6?1+.03*Math.sin((t-C.b2)*6+1.5):1})`;
+  popIn($('s8free'),t,C.free,{dy:20});
+  tap($('s8tap'),t,C.tap,975,1145);
+}
+
+// ---------- transitions entre scènes ----------
+function sceneWrap(id,t){
+  if(!T[id]){$(id).style.display='none';return null;}
+  const [a,b]=T[id],el=$(id);
+  if(t<a-0.0001||(t>b+TR&&id!==LAST)){el.style.display='none';return null;}
+  el.style.display='block';
+  let x=0,o=1,s=1,blur=0;
+  if(id!=='s1'){const k=eo(P(t,a,TR));x=(1-k)*1080;}
+  if(t>b&&id!==LAST){const e=eio(P(t,b,TR));x=-e*380;o=1-e*.6;s=1-e*.06;blur=e*8;}
+  el.style.opacity=o;el.style.transform=`translateX(${x}px) scale(${s})`;el.style.filter=blur?`blur(${blur}px)`:'none';
+  el.style.zIndex=t>b?1:2;
+  return t-a;
+}
+
+
+function stepTitle(sc,t){const h=document.querySelector(`#${sc} .steptitle`);const k=P(t,.1,.45);st(h,{o:cl(k*2),x:(1-eo(k))*-80});
+  const b=document.querySelector(`#${sc} .badge`);st(b,{s:lerp(.3,1,back(P(t,.1,.5))),r:(1-eo(P(t,.1,.5)))*-90});}
+
+function mkTap(sc){const d=document.createElement('div');d.className='tap';d.id=sc+'tap';$(sc).appendChild(d);return d;}
+
+// ---------- sous-titres ----------
+window.SUBS=window.SUBS||[]; // [[début,fin,"texte"],...]
+function SUB(t){const s=SUBS.find(s=>t>=s[0]&&t<s[1]);const box=$('sub');if(!s||!SUBS.length){box.style.display='none';return}
+  box.style.display='block';$('subt').textContent=s[2];const k=P(t,s[0],.12);box.style.opacity=k;box.style.transform=`translateY(${(1-k)*10}px)`;}
+
+
+const FN={};for(const k of Object.keys(T)){FN[k]=window['S'+k.slice(1)]||eval('S'+k.slice(1));}
+window.render=function(t){SEEKS=[];for(const id in FN){const lt=sceneWrap(id,t);if(lt!==null)FN[id](lt);}SUB(t);return Promise.all(SEEKS).then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));};
+window.DUR=DUR;
+render(0);
+</script></body></html>

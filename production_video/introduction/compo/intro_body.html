@@ -1,0 +1,128 @@
+<!-- ============ S1 : ACCROCHE ============ -->
+<section class="scene" id="s1">
+ <div class="bg bg-dark"></div>
+ <div id="s1wall" style="position:absolute;left:-180px;top:-260px;width:1440px;height:2600px;transform:rotate(-8deg);display:grid;grid-template-columns:repeat(4,330px);gap:26px;opacity:0"></div>
+ <div id="s1veil" style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,11,20,.95) 0%,rgba(5,11,20,.55) 35%,rgba(5,11,20,.35) 60%,rgba(5,11,20,.85) 100%)"></div>
+ <div class="title" id="s1t0" style="opacity:0;z-index:10;-webkit-text-stroke:12px #050B14;paint-order:stroke fill">Tous les jours, tu regardes des <span class="bl">statuts WhatsApp</span>…</div>
+ <div class="title" id="s1t1" style="opacity:0;z-index:10;-webkit-text-stroke:12px #050B14;paint-order:stroke fill">Et si ces statuts devenaient <span class="hl">de l'argent</span>&nbsp;?</div>
+ <div id="s1hey" style="position:absolute;left:0;right:0;top:640px;text-align:center;font:800 210px/0.95 'Plus Jakarta Sans';letter-spacing:-8px;color:#FBBF24;text-shadow:0 14px 50px rgba(0,0,0,.7);z-index:11">HÉ,<br>TOI&nbsp;!</div>
+ <div id="s1notes" style="position:absolute;inset:0;z-index:9;perspective:1400px"></div>
+</section>
+
+<!-- ============ S2 : VOICI PUBWEK ============ -->
+<section class="scene" id="s2">
+ <div class="bg bg-blue"></div><div class="dots"></div>
+ <div id="s2glow" style="position:absolute;left:540px;top:760px;width:1000px;height:1000px;margin:-500px 0 0 -500px;border-radius:50%;background:radial-gradient(circle,rgba(125,211,252,.4),rgba(125,211,252,0) 62%)"></div>
+ <div id="s2logo" style="position:absolute;left:540px;top:760px;width:300px;height:300px;margin:-150px 0 0 -150px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(0,0,0,.45);z-index:5;opacity:0"><img src="emblem.png" style="width:245px"></div>
+ <div id="s2word" style="position:absolute;left:0;right:0;top:230px;text-align:center;opacity:0"><div style="font:800 120px 'Plus Jakarta Sans';letter-spacing:14px">PUBWEK</div><div style="font:700 40px Inter;color:#7DD3FC;margin-top:6px">Payé au clic réel</div></div>
+ <svg id="s2lines" style="position:absolute;left:0;top:0;z-index:3" width="1080" height="1920" viewBox="0 0 1080 1920">
+   <defs><marker id="ah" markerWidth="10" markerHeight="10" refX="6" refY="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#FBBF24"/></marker></defs>
+   <path id="l1" d="M300 600 Q540 470 780 600" stroke="#FBBF24" stroke-width="10" fill="none" stroke-linecap="round" marker-end="url(#ah)" stroke-dasharray="600" stroke-dashoffset="600"/>
+   <path id="l2" d="M820 900 Q800 1150 640 1250" stroke="#FBBF24" stroke-width="10" fill="none" stroke-linecap="round" marker-end="url(#ah)" stroke-dasharray="600" stroke-dashoffset="600"/>
+   <path id="l3" d="M440 1250 Q280 1150 260 900" stroke="#FBBF24" stroke-width="10" fill="none" stroke-linecap="round" marker-end="url(#ah)" stroke-dasharray="600" stroke-dashoffset="600"/>
+ </svg>
+ <div class="node" id="n1" style="position:absolute;left:240px;top:760px;margin:-150px 0 0 -150px;width:300px;text-align:center;opacity:0;z-index:4">
+   <div style="width:220px;height:220px;margin:0 auto;border-radius:50%;overflow:hidden;border:8px solid #fff;box-shadow:0 20px 50px rgba(0,0,0,.45)"><img src="img_adjara.jpg" style="width:100%;height:100%;object-fit:cover"></div>
+   <div class="pill" style="background:#fff;color:#0F172A;margin-top:14px;font-size:38px">Commerces</div></div>
+ <div class="node" id="n2" style="position:absolute;left:840px;top:760px;margin:-150px 0 0 -150px;width:300px;text-align:center;opacity:0;z-index:4">
+   <div style="width:220px;height:220px;margin:0 auto;border-radius:50%;overflow:hidden;border:8px solid #fff;box-shadow:0 20px 50px rgba(0,0,0,.45);background:#000"><video id="v2n" src="clip2.webm" muted preload="auto" style="width:100%;height:100%;object-fit:cover"></video></div>
+   <div class="pill" style="background:#FBBF24;color:#0F172A;margin-top:14px;font-size:38px">Partageurs</div></div>
+ <div class="node" id="n3" style="position:absolute;left:540px;top:1330px;margin:-150px 0 0 -150px;width:300px;text-align:center;opacity:0;z-index:4">
+   <div style="width:220px;height:220px;margin:0 auto;border-radius:50%;overflow:hidden;border:8px solid #fff;box-shadow:0 20px 50px rgba(0,0,0,.45);background:#000"><video id="v2c" src="clip3.webm" muted preload="auto" style="width:100%;height:100%;object-fit:cover;object-position:50% 25%"></video></div>
+   <div class="pill" style="background:#22C55E;color:#fff;margin-top:14px;font-size:38px">Clients</div></div>
+</section>
+
+<!-- ============ S3 : LES COMMERCES ============ -->
+<section class="scene" id="s3">
+ <div class="bg" style="background:#000"></div>
+ <div id="s3car" style="position:absolute;inset:0"></div>
+ <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,11,20,.92) 0%,rgba(5,11,20,.55) 40%,rgba(5,11,20,.7) 100%)"></div>
+ <div class="steptitle"><div class="row"><div class="badge" style="background:#fff"><svg width="80" height="80" viewBox="0 0 24 24"><path d="M3 9l1.5-5h15L21 9M3 9v11h18V9M3 9h18M9 20v-6h6v6" stroke="#066FA7" stroke-width="2" fill="none" stroke-linejoin="round"/></svg></div><h1>Les<br>commerces</h1></div></div>
+ <div id="s3chips" style="position:absolute;left:60px;right:60px;top:430px;display:flex;gap:16px;z-index:8">
+   <div class="chip c3" style="position:relative;flex:1;display:flex;align-items:center;gap:12px;font-size:32px;padding:16px 20px;opacity:0"><svg width="40" height="40" viewBox="0 0 24 24"><path d="M12 2a7 7 0 00-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 00-7-7z" fill="#DC2626"/><circle cx="12" cy="9" r="2.6" fill="#fff"/></svg>Ciblage par commune</div>
+   <div class="chip c3" style="position:relative;flex:1;display:flex;align-items:center;gap:12px;font-size:32px;padding:16px 20px;opacity:0;background:#FBBF24"><svg width="40" height="40" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#0F172A"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#FBBF24" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg>Payé au clic réel</div>
+ </div>
+ <div class="phone" id="s3ph" style="top:640px"><div class="island"></div><div class="screen"><div class="sbar"><span>09:03</span></div>
+   <div class="shot"><img id="s3imgA" src="a_style1.png"><img id="s3imgB" src="a_zones.png" style="opacity:0"><img id="s3imgC" src="a_budget.png" style="opacity:0"></div><div class="ring" id="s3ring"></div></div></div>
+</section>
+
+<!-- ============ S4 : LES PARTAGEURS ============ -->
+<section class="scene" id="s4">
+ <div class="bg" style="background:#000"></div>
+ <video class="vid" id="v4" src="clip2.webm" muted preload="auto"></video>
+ <div class="shade"></div><div class="shadeb" style="height:700px"></div>
+ <div class="steptitle" style="z-index:6"><div class="row"><div class="badge"><svg width="76" height="76" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3" stroke="#0F172A" stroke-width="2" fill="none"/><circle cx="12" cy="18" r="1.3" fill="#0F172A"/></svg></div><h1>Les<br>partageurs</h1></div></div>
+ <div id="s4chips" style="position:absolute;left:60px;right:60px;top:430px;display:flex;gap:16px;z-index:8">
+   <div class="chip c4" style="position:relative;flex:1;padding:16px 20px;opacity:0;background:#FBBF24"><div style="font-size:28px">Gain par clic (vidéo)</div><div style="font-size:52px">10 F</div></div>
+   <div class="chip c4" style="position:relative;flex:1;padding:16px 20px;opacity:0"><div style="font-size:28px">Retrait Mobile Money</div><div style="font-size:52px">dès 500 F</div></div>
+ </div>
+ <div id="s4fx" style="position:absolute;inset:0;z-index:9"></div>
+</section>
+
+<!-- ============ S5 : LES CLIENTS ============ -->
+<section class="scene" id="s5">
+ <div class="bg bg-blue"></div><div class="dots"></div>
+ <video class="vid" id="v5" src="clip3.webm" muted preload="auto"></video>
+ <div class="shade" id="s5shade"></div>
+ <div class="steptitle" style="z-index:6"><div class="row"><div class="badge" style="background:#22C55E"><svg width="76" height="76" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="#fff"/><path d="M4 21c1-5 15-5 16 0" fill="#fff"/></svg></div><h1>Les<br>clients</h1></div></div>
+ <div class="phone" id="s5ph"><div class="island"></div><div class="screen" style="background:#ECE5DD">
+   <div id="s5chat" style="position:absolute;inset:0;background:#ECE5DD;overflow:hidden">
+     <div class="sbar" style="background:#075E54;color:#fff"><span>10:15</span></div>
+     <div style="position:absolute;left:0;right:0;top:48px;height:96px;background:#075E54;display:flex;align-items:center;gap:14px;padding:0 18px;color:#fff">
+       <svg width="36" height="36" viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z" fill="#fff"/></svg>
+       <div style="width:62px;height:62px;border-radius:50%;overflow:hidden"><img src="img_lea.jpg" style="width:100%;height:100%;object-fit:cover"></div>
+       <div style="flex:1"><div style="font:700 28px Inter">Chez Léa Traiteur</div><div style="font:400 21px Inter;opacity:.85">en ligne</div></div></div>
+     <div style="position:absolute;left:50%;top:170px;transform:translateX(-50%);background:#E1F2FB;color:#475569;font:600 20px Inter;padding:6px 16px;border-radius:10px">AUJOURD'HUI</div>
+     <div id="s5msg" style="position:absolute;right:22px;left:70px;top:220px;background:#DCF8C6;border-radius:22px 0 22px 22px;padding:18px 20px 34px;color:#111;font:400 25px/1.38 Inter;box-shadow:0 2px 2px rgba(0,0,0,.12);opacity:0">
+       Bonjour,<br>Je vous contacte suite à votre publicité vue sur Pubwek.<br><br>Campagne : n°12<br>Produit / service : Chez Léa Traiteur<br><b>Partageur : Awa_ctn</b><br><br>Je suis intéressé(e), pouvez-vous me donner plus d'informations ?
+       <span style="position:absolute;right:16px;bottom:8px;font:400 18px Inter;color:#64748B">10:15 ✓✓</span></div>
+     <div id="s5rep" style="position:absolute;left:22px;right:150px;top:770px;background:#fff;border-radius:0 22px 22px 22px;padding:16px 20px 30px;color:#111;font:400 25px/1.38 Inter;box-shadow:0 2px 2px rgba(0,0,0,.12);opacity:0">
+       Bonjour ! Bien sûr, voici notre menu du jour.<span style="position:absolute;right:16px;bottom:6px;font:400 18px Inter;color:#94A3B8">10:16</span></div>
+     <div style="position:absolute;left:14px;right:14px;top:1090px;display:flex;gap:12px;align-items:center"><div style="flex:1;height:76px;border-radius:38px;background:#fff;color:#94A3B8;font:400 26px Inter;display:flex;align-items:center;padding:0 26px">Message</div><div style="width:76px;height:76px;border-radius:50%;background:#00A884"></div></div>
+   </div></div></div>
+ <div class="chip" id="s5lbl" style="left:50%;top:470px;transform:translateX(-50%);opacity:0;z-index:12;font-size:38px;white-space:nowrap">Message direct au commerce</div>
+</section>
+
+<!-- ============ S6 : CONFIANCE ============ -->
+<section class="scene" id="s6">
+ <div class="bg bg-dark"></div><div class="dots"></div>
+ <div id="s6a" class="chip" style="left:70px;right:70px;top:330px;padding:40px 36px;display:flex;align-items:center;gap:30px;opacity:0">
+   <svg width="150" height="150" viewBox="0 0 24 24" style="flex:none"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z" fill="#066FA7"/><path d="M8 12l3 3 5-6" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+   <div><div style="font:800 58px/1.1 'Plus Jakarta Sans'">Chaque pub vérifiée</div><div style="font:600 36px Inter;color:#475569;margin-top:8px">avant sa diffusion</div></div></div>
+ <div id="s6b" class="chip" style="left:70px;right:70px;top:700px;padding:40px 36px;display:flex;align-items:center;gap:30px;opacity:0">
+   <svg width="150" height="150" viewBox="0 0 24 24" style="flex:none"><circle cx="12" cy="12" r="11" fill="#DC2626"/><path d="M8 8l8 8M16 8l-8 8" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>
+   <div><div style="font:800 58px/1.1 'Plus Jakarta Sans'">Faux clics écartés</div><div style="font:600 36px Inter;color:#475569;margin-top:8px">ni payés, ni facturés</div></div></div>
+ <div id="s6c" class="chip" style="left:70px;right:70px;top:1070px;padding:40px 36px;display:flex;align-items:center;gap:30px;opacity:0">
+   <svg width="150" height="150" viewBox="0 0 24 24" style="flex:none"><circle cx="12" cy="12" r="11" fill="#16A34A"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>
+   <div><div style="font:800 58px/1.1 'Plus Jakarta Sans'">Inscription gratuite</div><div style="font:600 36px Inter;color:#475569;margin-top:8px">sans abonnement</div></div></div>
+</section>
+
+<!-- ============ S7 : TOUT LE MONDE Y GAGNE ============ -->
+<section class="scene" id="s7">
+ <div class="bg" style="background:#000"></div>
+ <div class="strip" id="st1" style="position:absolute;left:0;top:0;width:360px;height:1920px;overflow:hidden;opacity:0"><video id="v7a" src="clip1.webm" muted preload="auto" style="position:absolute;left:-360px;top:0;width:1080px;height:1920px;object-fit:cover"></video></div>
+ <div class="strip" id="st2" style="position:absolute;left:360px;top:0;width:360px;height:1920px;overflow:hidden;opacity:0"><video id="v7b" src="clip2.webm" muted preload="auto" style="position:absolute;left:-360px;top:0;width:1080px;height:1920px;object-fit:cover"></video></div>
+ <div class="strip" id="st3" style="position:absolute;left:720px;top:0;width:360px;height:1920px;overflow:hidden;opacity:0"><video id="v7c" src="clip3.webm" muted preload="auto" style="position:absolute;left:-360px;top:0;width:1080px;height:1920px;object-fit:cover"></video></div>
+ <div style="position:absolute;left:358px;top:0;width:4px;height:1920px;background:#fff;z-index:2"></div><div style="position:absolute;left:718px;top:0;width:4px;height:1920px;background:#fff;z-index:2"></div>
+ <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,11,20,.2) 0%,rgba(5,11,20,0) 40%,rgba(5,11,20,.75) 100%)"></div>
+ <div class="g7" style="position:absolute;left:0;width:360px;top:1180px;text-align:center;opacity:0;z-index:4"><div class="pill" style="background:#fff;color:#0F172A;font-size:30px;padding:12px 20px">Le commerce</div><div style="font:800 46px/1.1 'Plus Jakarta Sans';margin-top:12px;text-shadow:0 4px 16px #000">des clients</div></div>
+ <div class="g7" style="position:absolute;left:360px;width:360px;top:1180px;text-align:center;opacity:0;z-index:4"><div class="pill" style="background:#FBBF24;color:#0F172A;font-size:30px;padding:12px 20px">Le partageur</div><div style="font:800 46px/1.1 'Plus Jakarta Sans';margin-top:12px;text-shadow:0 4px 16px #000">de l'argent</div></div>
+ <div class="g7" style="position:absolute;left:720px;width:360px;top:1180px;text-align:center;opacity:0;z-index:4"><div class="pill" style="background:#22C55E;color:#fff;font-size:30px;padding:12px 20px">Le client</div><div style="font:800 46px/1.1 'Plus Jakarta Sans';margin-top:12px;text-shadow:0 4px 16px #000">la bonne offre</div></div>
+ <div id="s7win" style="position:absolute;left:60px;right:60px;top:200px;text-align:center;opacity:0;z-index:5"><span class="pill" style="background:#FBBF24;color:#0F172A;font-size:74px;padding:18px 40px;box-shadow:0 20px 50px rgba(0,0,0,.5)">Tout le monde y gagne</span></div>
+</section>
+
+<!-- ============ S8 : APPEL À L'ACTION ============ -->
+<section class="scene" id="s8">
+ <div class="bg" style="background:#050B14"></div>
+ <div id="s8wall" style="position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,360px);grid-auto-rows:640px"></div>
+ <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,72,110,.6),rgba(5,20,40,.85) 45%,rgba(5,11,20,.92))"></div>
+ <div id="s8logo" style="position:absolute;left:540px;top:380px;width:300px;height:300px;margin:-150px 0 0 -150px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(0,0,0,.45);opacity:0"><img src="emblem.png" style="width:245px"></div>
+ <div id="s8word" style="position:absolute;left:0;right:0;top:565px;text-align:center;opacity:0"><div style="font:800 92px 'Plus Jakarta Sans';letter-spacing:12px">PUBWEK</div></div>
+ <div id="s8url" style="position:absolute;left:80px;right:80px;top:720px;height:150px;border-radius:999px;background:#fff;color:#0F172A;display:flex;align-items:center;gap:24px;padding:0 50px;box-shadow:0 24px 60px rgba(0,0,0,.4);opacity:0">
+   <svg width="60" height="60" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2" fill="#066FA7"/><path d="M8 10V7a4 4 0 018 0v3" stroke="#066FA7" stroke-width="2.4" fill="none"/></svg>
+   <span id="s8typed" style="font:800 80px 'Plus Jakarta Sans';letter-spacing:-1px"></span><span id="s8cur" style="width:6px;height:80px;background:#066FA7"></span></div>
+ <div id="s8b1" style="position:absolute;left:80px;right:80px;top:920px;height:130px;border-radius:999px;background:#066FA7;color:#fff;display:flex;align-items:center;justify-content:center;gap:18px;font:800 50px 'Plus Jakarta Sans';box-shadow:0 20px 50px rgba(6,111,167,.5);opacity:0">Je suis commerçant</div>
+ <div id="s8b2" style="position:absolute;left:80px;right:80px;top:1080px;height:130px;border-radius:999px;background:#FBBF24;color:#0F172A;display:flex;align-items:center;justify-content:center;gap:18px;font:800 50px 'Plus Jakarta Sans';box-shadow:0 20px 50px rgba(251,191,36,.45);opacity:0">Je veux gagner de l'argent</div>
+ <div id="s8free" style="position:absolute;left:0;right:0;top:1250px;text-align:center;font:700 40px Inter;color:#A7F3D0;opacity:0">Inscription gratuite · Sans abonnement</div>
+ <div class="tap" id="s8tap"></div>
+</section>

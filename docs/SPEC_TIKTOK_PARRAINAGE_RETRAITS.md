@@ -215,10 +215,10 @@ C'est une exigence du fondateur : **chaque clic doit indiquer sa source**.
 
 ### 6.2 Les deux récompenses du parrain (partageur → partageur)
 
-**A. Prime d'activation.** Quand le filleul obtient son **premier clic réel** sur une campagne qu'il a partagée, le parrain reçoit une commission.
-- Montant réglable : `parrainage_prime_activation`.
-- Nombre de clics réels requis, réglable : `parrainage_seuil_clics`, 1 par défaut.
-- ⚠️ **À confirmer par le fondateur.** On peut comprendre la demande de deux façons : une **prime unique** au premier clic réel, ou une **commission sur chaque clic réel** du filleul. La spécification retient la prime unique, plus simple et moins coûteuse. Le mode « commission par clic » peut être prévu comme option admin : `parrainage_mode = prime_unique | par_clic`, avec un pourcentage réglable.
+**A. Prime d'activation (décision du fondateur : prime unique).** Quand le filleul obtient son **premier clic réel** (validé par l'anti-fraude) sur une campagne qu'il a partagée, le parrain reçoit **une prime, une seule fois par filleul**.
+- **Montant défini par l'admin** : `parrainage_prime_activation`. Il n'a pas de valeur codée en dur. Tant que l'admin ne l'a pas fixé, la prime vaut 0 et aucun versement n'a lieu.
+- Il n'y a **pas** de commission sur les clics suivants du filleul.
+- La prime n'est versée qu'**une fois par filleul**, même si celui-ci obtient ensuite des milliers de clics. Le développeur doit l'enregistrer avec une date (`prime_activation_versee_le`) pour empêcher tout double versement.
 
 **B. Bonus de régularité, sur le premier retrait du filleul.**
 - Si le filleul est **régulier**, le parrain reçoit **10 % du montant du premier retrait** du filleul. Le taux est réglable : `parrainage_bonus_retrait_pct`.
@@ -299,9 +299,7 @@ Aujourd'hui, le message dit « Elle sera traitée sous peu », et la page d'accu
 | `tiktok_gain_attente_heures` | Délai avant qu'un gain TikTok soit retirable | 24 |
 | `vitrine_campagnes_max` | Nombre maximum de campagnes sur une vitrine | 10 |
 | `rappel_tiktok_jours` | Délai avant de réafficher « Plus tard » | 7 |
-| `parrainage_mode` | `prime_unique` ou `par_clic` | prime_unique |
-| `parrainage_prime_activation` | Montant de la prime au premier clic réel | à fixer |
-| `parrainage_seuil_clics` | Clics réels requis pour la prime | 1 |
+| `parrainage_prime_activation` | Montant de la prime unique, versée au premier clic réel du filleul | défini par l'admin (0 tant qu'il n'est pas fixé) |
 | `parrainage_bonus_retrait_pct` | Bonus sur le premier retrait, payé par Pubwek | 10 % |
 | `parrainage_jours_actifs_min` / `parrainage_fenetre_jours` | Définition de « régulier » | 10 / 14 |
 | `parrainage_plafond_mensuel` | Récompenses maximum par parrain et par mois | à fixer |
@@ -365,7 +363,7 @@ Aujourd'hui, le message dit « Elle sera traitée sous peu », et la page d'accu
 
 ## 13. Questions à trancher par le fondateur
 
-1. **Prime d'activation du parrainage** : une prime unique au premier clic réel, ou une commission sur chaque clic réel du filleul ? Et quel montant ou pourcentage ?
+1. ~~Prime d'activation du parrainage~~ — **Tranché** : une prime unique au premier clic réel, dont le montant est défini par l'admin.
 2. **Supplément TikTok** : même prix que WhatsApp au lancement (recommandé), ou un tarif différent dès le départ ?
 3. **Le délai de 48 h** s'applique-t-il aussi aux remboursements annonceurs ? Ce délai existe déjà pour eux.
 4. **Le seuil de 1 000 abonnés** est-il le même pour les comptes professionnels et personnels ? Cela dépend des règles de TikTok à vérifier pour le Bénin (section 1).

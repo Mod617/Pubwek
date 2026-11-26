@@ -20,13 +20,22 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:#050B14}
 .steptitle{position:absolute;left:66px;right:60px;top:200px}
 .steptitle h1{font-size:82px;font-weight:800;line-height:1.02;letter-spacing:-2px}
 .pill{display:inline-flex;align-items:center;gap:14px;border-radius:999px;padding:14px 28px;font-weight:800;font-size:40px}
-.phone{position:absolute;left:240px;top:560px;width:600px;height:1262px;border-radius:84px;background:#0B0F19;padding:16px;box-shadow:0 50px 140px rgba(0,0,0,.6),inset 0 0 0 3px #2B3446,0 0 0 2px #000;transform-origin:50% 40%}
-.screen{position:relative;width:568px;height:1230px;border-radius:68px;overflow:hidden;background:#fff}
-.screen .shot{position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden}
-.screen .shot img{position:absolute;left:0;top:44px;width:568px;transform-origin:0 0}
-.sbar{position:absolute;left:0;right:0;top:0;height:44px;background:#fff;color:#0F172A;font:700 22px Inter;display:flex;align-items:center;justify-content:space-between;padding:6px 52px 0;z-index:3}
+.phone{position:absolute;left:240px;top:560px;width:600px;height:1262px;border-radius:86px;padding:16px;transform-origin:50% 40%;
+ background:linear-gradient(135deg,#6b717b 0%,#2a2e35 12%,#1b1e23 40%,#2d3138 75%,#787f8a 100%);
+ box-shadow:0 70px 140px rgba(0,0,0,.55),0 25px 45px rgba(0,0,0,.35),0 0 0 1.5px #0a0b0d,inset 0 0 0 1.5px rgba(255,255,255,.35),inset 0 0 0 4px #101114,inset 0 0 0 12px #050506}
+.phone::before{content:"";position:absolute;inset:3px;border-radius:83px;border:1px solid rgba(255,255,255,.08);pointer-events:none}
+.pbtn{position:absolute;width:7px;border-radius:3px;background:linear-gradient(90deg,#1c1f24,#7b828c 55%,#2a2e35)}
+.screen{position:relative;width:568px;height:1230px;border-radius:70px;overflow:hidden;background:#fff;box-shadow:0 0 0 2px #000}
+.screen .shot{position:absolute;left:0;top:128px;width:568px;height:1102px;overflow:hidden;background:#F8FAFC}
+.screen .shot img{position:absolute;left:0;top:0;width:568px;transform-origin:0 0}
+.chrome{position:absolute;left:0;right:0;top:48px;height:80px;background:#fff;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;gap:16px;padding:0 20px;z-index:3}
+.chrome .url{flex:1;height:54px;border-radius:27px;background:#F1F3F4;display:flex;align-items:center;gap:10px;padding:0 18px;font:500 24px Inter;color:#202124}
+.gbar{position:absolute;left:50%;bottom:12px;width:150px;height:6px;margin-left:-75px;border-radius:3px;background:rgba(0,0,0,.6);z-index:40}
+.gbar.light{background:rgba(255,255,255,.85)}
+.glare{position:absolute;inset:0;border-radius:70px;background:linear-gradient(118deg,rgba(255,255,255,.13) 0%,rgba(255,255,255,.04) 22%,rgba(255,255,255,0) 38%,rgba(255,255,255,0) 80%,rgba(255,255,255,.05) 100%);pointer-events:none;z-index:45}
+.sbar{position:absolute;left:0;right:0;top:0;height:48px;background:#fff;color:#111;font:600 23px Inter;display:flex;align-items:center;justify-content:space-between;padding:4px 40px 0 44px;z-index:6}
 .sbar.dark{background:transparent;color:#fff}
-.island{position:absolute;left:50%;top:12px;width:150px;height:40px;margin-left:-75px;border-radius:30px;background:#000;z-index:5}
+.island{position:absolute;left:50%;top:27px;width:32px;height:32px;margin-left:-16px;border-radius:50%;z-index:50;background:radial-gradient(circle at 42% 40%,#3b5168 0,#121a24 28%,#05070a 55%,#000 70%);box-shadow:0 0 0 3px #0c0d10,inset 0 0 4px rgba(120,160,200,.35)}
 .ring{position:absolute;border:7px solid #FBBF24;border-radius:24px;box-shadow:0 0 0 9999px rgba(15,23,42,.0),0 0 34px rgba(251,191,36,.9);z-index:4;opacity:0}
 .tap{position:absolute;width:96px;height:96px;margin:-48px 0 0 -48px;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 6px 24px rgba(0,0,0,.45);z-index:20;opacity:0}
 .tap::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:6px solid #fff;opacity:var(--r,0);transform:scale(var(--rs,1))}
@@ -58,7 +67,7 @@ svg{display:block}
   <div class="screen" style="background:linear-gradient(160deg,#6D4AE0,#4527A0)">
    <div class="sbar dark"><span>08:15</span><span>▮▮▮ 4G</span></div>
    <div style="position:absolute;left:28px;right:28px;top:62px;height:6px;border-radius:3px;background:rgba(255,255,255,.35)"><div id="s1prog" style="height:100%;width:30%;background:#fff;border-radius:3px"></div></div>
-   <div style="position:absolute;left:28px;top:96px;display:flex;align-items:center;gap:18px">
+   <svg style="position:absolute;left:18px;top:114px" width="40" height="40" viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z" fill="#fff"/></svg><svg style="position:absolute;right:18px;top:114px" width="40" height="40" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2" fill="#fff"/><circle cx="12" cy="12" r="2" fill="#fff"/><circle cx="12" cy="19" r="2" fill="#fff"/></svg><div style="position:absolute;left:70px;top:96px;display:flex;align-items:center;gap:18px">
      <div style="width:76px;height:76px;border-radius:50%;background:#FBBF24;color:#0F172A;font:800 36px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center">M</div>
      <div><div style="font:800 32px 'Plus Jakarta Sans'">Mon statut</div><div style="font:500 24px Inter;opacity:.8">il y a 2 h</div></div>
    </div>
@@ -142,23 +151,32 @@ svg{display:block}
  </div>
  <div class="phone" id="s5ph"><div class="island"></div><div class="screen" id="s5scr"><div class="sbar"><span>08:18</span><span>▮▮▮ 4G</span></div>
    <div class="shot" id="s5shot"><img id="s5img" src="instr_v1.png"></div><div class="ring" id="s5ring"></div>
-   <div id="s5ed" style="position:absolute;inset:0;opacity:0;background:#000;z-index:4;overflow:hidden">
+   <div id="s5ed" style="position:absolute;inset:0;opacity:0;background:#000;z-index:8;overflow:hidden">
      <video id="v5a" src="promo.webm" muted preload="auto" style="position:absolute;left:0;top:0;width:568px;height:1230px;object-fit:cover"></video>
      <div style="position:absolute;left:0;right:0;top:0;height:120px;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0))"></div>
-     <div style="position:absolute;left:30px;top:62px;color:#fff;font:800 34px Inter">✕</div>
-     <div id="s5bar" style="position:absolute;left:20px;right:96px;top:740px;min-height:84px;border-radius:42px;background:rgba(30,36,40,.92);color:#E5E7EB;font:500 25px/1.3 Inter;padding:16px 26px;display:flex;align-items:center">
+     <div class="sbar dark" style="background:transparent"><span>08:19</span></div>
+     <svg style="position:absolute;left:22px;top:66px" width="42" height="42" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+     <div style="position:absolute;right:20px;top:62px;display:flex;gap:26px">
+       <svg width="42" height="42" viewBox="0 0 24 24"><path d="M6 2v16h16M2 6h16v16" stroke="#fff" stroke-width="2" fill="none"/></svg>
+       <svg width="42" height="42" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="2" fill="none"/><circle cx="9" cy="10" r="1.3" fill="#fff"/><circle cx="15" cy="10" r="1.3" fill="#fff"/><path d="M8 14.5q4 3.5 8 0" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+       <div style="font:600 36px Georgia,serif;color:#fff;line-height:42px">T</div>
+       <svg width="42" height="42" viewBox="0 0 24 24"><path d="M4 20l4-1 11-11-3-3L5 16z" stroke="#fff" stroke-width="2" fill="none" stroke-linejoin="round"/></svg>
+     </div>
+     <div id="s5bar" style="position:absolute;left:20px;right:20px;top:636px;min-height:84px;border-radius:42px;background:rgba(30,36,40,.92);color:#E5E7EB;font:500 25px/1.3 Inter;padding:16px 26px 16px 74px;display:flex;align-items:center"><svg style="position:absolute;left:22px;top:22px" width="38" height="38" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="#9CA3AF" stroke-width="2" fill="none"/><circle cx="9" cy="10" r="1.3" fill="#9CA3AF"/><circle cx="15" cy="10" r="1.3" fill="#9CA3AF"/><path d="M8 14.5q4 3.5 8 0" stroke="#9CA3AF" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
        <span id="s5ph1" style="color:#9CA3AF">Ajouter une légende…</span>
        <span id="s5txt" style="display:none">Gâteaux d'anniversaire sur commande, livrés partout à Cotonou.<br><span style="color:#7DD3FC;text-decoration:underline">pubwek.com/t/k7Pq2/whatsapp</span></span></div>
-     <div id="s5send" style="position:absolute;right:16px;top:750px;width:70px;height:70px;border-radius:50%;background:#22C55E;display:flex;align-items:center;justify-content:center"><svg width="34" height="34" viewBox="0 0 24 24"><path d="M3 20l18-8L3 4v6l12 2-12 2z" fill="#fff"/></svg></div>
+     <div style="position:absolute;left:20px;top:832px;height:50px;border-radius:25px;background:rgba(30,36,40,.92);color:#E5E7EB;font:600 22px Inter;display:flex;align-items:center;gap:8px;padding:0 20px"><svg width="26" height="26" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="#E5E7EB" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="3.5" fill="#E5E7EB"/></svg>Statut (Contacts)</div>
+     <div id="s5send" style="position:absolute;right:16px;top:820px;width:70px;height:70px;border-radius:50%;background:#22C55E;display:flex;align-items:center;justify-content:center"><svg width="34" height="34" viewBox="0 0 24 24"><path d="M3 20l18-8L3 4v6l12 2-12 2z" fill="#fff"/></svg></div>
    </div>
-   <div id="s5st" style="position:absolute;inset:0;opacity:0;background:#000;z-index:5;overflow:hidden">
+   <div id="s5st" style="position:absolute;inset:0;opacity:0;background:#000;z-index:9;overflow:hidden">
      <video id="v5b" src="promo.webm" muted preload="auto" style="position:absolute;left:0;top:0;width:568px;height:1230px;object-fit:cover"></video>
      <div style="position:absolute;left:0;right:0;top:0;height:170px;background:linear-gradient(180deg,rgba(0,0,0,.6),rgba(0,0,0,0))"></div>
      <div style="position:absolute;left:28px;right:28px;top:56px;height:6px;border-radius:3px;background:rgba(255,255,255,.35)"><div id="s5prog" style="height:100%;width:10%;background:#fff;border-radius:3px"></div></div>
-     <div style="position:absolute;left:28px;top:84px;display:flex;align-items:center;gap:16px;color:#fff">
+     <div class="sbar dark" style="background:transparent"><span>08:19</span></div><svg style="position:absolute;left:18px;top:100px" width="40" height="40" viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z" fill="#fff"/></svg><svg style="position:absolute;right:18px;top:100px" width="40" height="40" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2" fill="#fff"/><circle cx="12" cy="12" r="2" fill="#fff"/><circle cx="12" cy="19" r="2" fill="#fff"/></svg><div style="position:absolute;left:70px;top:84px;display:flex;align-items:center;gap:16px;color:#fff">
        <div style="width:66px;height:66px;border-radius:50%;background:#FBBF24;color:#0F172A;font:800 32px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center">M</div>
        <div><div style="font:800 28px 'Plus Jakarta Sans'">Mon statut</div><div style="font:500 22px Inter;opacity:.85">à l'instant</div></div></div>
      <div style="position:absolute;left:0;right:0;top:640px;height:300px;background:linear-gradient(0deg,rgba(0,0,0,.75),rgba(0,0,0,0))"></div>
+     <div style="position:absolute;left:0;right:0;top:1110px;display:flex;justify-content:center;align-items:center;gap:10px;color:#fff;font:700 26px Inter"><svg width="34" height="34" viewBox="0 0 24 24"><path d="M12 5C6 5 2 12 2 12s4 7 10 7 10-7 10-7-4-7-10-7z" fill="none" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="3.2" fill="#fff"/></svg><span id="s5views">0</span></div>
      <div style="position:absolute;left:30px;right:30px;top:735px;color:#fff;font:600 27px/1.32 Inter;text-align:center">Gâteaux d'anniversaire sur commande, livrés partout à Cotonou.<br><span id="s5link" style="color:#7DD3FC;text-decoration:underline;font-weight:700">pubwek.com/t/k7Pq2/whatsapp</span></div>
    </div>
  </div></div>
@@ -297,20 +315,20 @@ const DUR=T.s9[1];
 const TR=.34; // durée des transitions
 
 // Écran de téléphone : zoom sur un rectangle (coordonnées CSS de la page, 390 px de large)
-const K=568/390, SH=1230-44;
+const K=568/390, TOPB=128, SH=1230-128;
 function focus(img,ring,rect,z,ringO){
   // rect = [x1,y1,x2,y2] ; z = zoom
   const cx=(rect[0]+rect[2])/2*K, cy=(rect[1]+rect[3])/2*K;
   let tx=568/2-cx*z, ty=SH*0.42-cy*z;
   tx=cl(tx,568-568*z,0); ty=cl(ty,SH-844*K*z,0);
   img.style.transform=`translate(${tx}px,${ty}px) scale(${z})`;
-  if(ring){const pad=10;ring.style.left=(tx+rect[0]*K*z-pad)+'px';ring.style.top=(44+ty+rect[1]*K*z-pad)+'px';
+  if(ring){const pad=10;ring.style.left=(tx+rect[0]*K*z-pad)+'px';ring.style.top=(TOPB+ty+rect[1]*K*z-pad)+'px';
     ring.style.width=((rect[2]-rect[0])*K*z+pad*2)+'px';ring.style.height=((rect[3]-rect[1])*K*z+pad*2)+'px';ring.style.opacity=ringO;}
   return {tx,ty,z};
 }
 function lerpRect(a,b,k){return a.map((v,i)=>lerp(v,b[i],k));}
 // position à l'écran (stage) d'un point de la page dans un téléphone
-function phonePt(ph,f,px,py,phoneTop){const left=240+16, top=(phoneTop)+16+44;return [left+f.tx+px*K*f.z, top+f.ty+py*K*f.z];}
+function phonePt(ph,f,px,py,phoneTop){const left=240+16, top=(phoneTop)+16+TOPB;return [left+f.tx+px*K*f.z, top+f.ty+py*K*f.z];}
 function tap(el,t,a,x,y){const k=P(t,a-.35,.35),u=P(t,a,.5);const o=t<a-.35?0:(t<a+.5?1:1-P(t,a+.5,.25));
   el.style.left=x+'px';el.style.top=y+'px';const press=t>=a&&t<a+.15?.82:1;
   el.style.opacity=o;el.style.transform=`translate(${(1-eo(k))*60}px,${(1-eo(k))*80}px) scale(${press})`;
@@ -322,6 +340,26 @@ function vid(id,time,rate=1){const v=$(id);const d=(v.duration||10)-0.05;const t
   if(Math.abs(v.currentTime-tt)>0.004){SEEKS.push(new Promise(r=>v.addEventListener('seeked',r,{once:true})));v.currentTime=tt;}}
 window.videosReady=()=>[...document.querySelectorAll('video')].every(v=>v.readyState>=2);
 // ---------- préparation ----------
+function sbarHTML(time,dark){const c=dark?'#fff':'#111';
+ return `<span>${time}</span><span style="display:flex;align-items:center;gap:10px">
+ <svg width="30" height="22" viewBox="0 0 30 22"><rect x="0" y="15" width="5" height="7" rx="1" fill="${c}"/><rect x="8" y="10" width="5" height="12" rx="1" fill="${c}"/><rect x="16" y="5" width="5" height="17" rx="1" fill="${c}"/><rect x="24" y="0" width="5" height="22" rx="1" fill="${c}" opacity=".35"/></svg>
+ <span style="font:700 17px Inter;margin-left:-4px">4G</span>
+ <svg width="28" height="22" viewBox="0 0 24 18"><path d="M12 17.5l3.4-4.2a5.4 5.4 0 00-6.8 0z" fill="${c}"/><path d="M5.6 9.8a10 10 0 0112.8 0l-2 2.5a6.8 6.8 0 00-8.8 0z" fill="${c}"/><path d="M2.4 6a15 15 0 0119.2 0l-2 2.4a12 12 0 00-15.2 0z" fill="${c}" opacity=".9"/></svg>
+ <span style="display:flex;align-items:center;gap:6px;font:700 19px Inter">78
+ <svg width="40" height="22" viewBox="0 0 40 22"><rect x="1" y="2" width="34" height="18" rx="5" fill="none" stroke="${c}" stroke-width="2" opacity=".55"/><rect x="4" y="5" width="22" height="12" rx="2.5" fill="${c}"/><rect x="36.5" y="8" width="3" height="6" rx="1.5" fill="${c}" opacity=".55"/></svg></span></span>`;}
+const CHROME=`<svg width="34" height="34" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1z" fill="none" stroke="#5f6368" stroke-width="2" stroke-linejoin="round"/></svg>
+ <div class="url"><svg width="26" height="26" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2" fill="#5f6368"/><path d="M8 10V7a4 4 0 018 0v3" stroke="#5f6368" stroke-width="2.2" fill="none"/></svg>pubwek.com</div>
+ <div style="width:36px;height:36px;border:3px solid #5f6368;border-radius:8px;display:flex;align-items:center;justify-content:center;font:700 17px Inter;color:#5f6368">3</div>
+ <svg width="12" height="36" viewBox="0 0 6 24"><circle cx="3" cy="4" r="2.6" fill="#5f6368"/><circle cx="3" cy="12" r="2.6" fill="#5f6368"/><circle cx="3" cy="20" r="2.6" fill="#5f6368"/></svg>`;
+document.querySelectorAll('.sbar').forEach(b=>{const tm=(b.querySelector('span')||{}).textContent||'08:16';b.innerHTML=sbarHTML(tm,b.classList.contains('dark'));});
+document.querySelectorAll('.phone').forEach(ph=>{
+  ph.insertAdjacentHTML('beforeend','<div class="pbtn" style="right:-6px;top:250px;height:110px"></div><div class="pbtn" style="right:-6px;top:395px;height:70px"></div>');
+  const sc=ph.querySelector('.screen');
+  if(sc.querySelector('.shot')){const c=document.createElement('div');c.className='chrome';c.innerHTML=CHROME;sc.appendChild(c);}
+  const dark=!sc.querySelector('.shot');
+  sc.insertAdjacentHTML('beforeend',`<div class="gbar${dark?' light':''}"></div><div class="glare"></div>`);
+});
+
 const NAMES=[['Awa','#E11D48'],['Koffi','#2563EB'],['Mariam','#16A34A'],['Éric','#D97706'],['Judith','#7C3AED'],['Habib','#0891B2'],['Prisca','#DB2777'],['Sika','#65A30D']];
 $('s1list').innerHTML=NAMES.slice(0,5).map(([n,c],i)=>`<div class="s1li" style="display:flex;align-items:center;gap:20px;opacity:0"><div style="width:72px;height:72px;border-radius:50%;background:${c};color:#fff;font:800 34px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center">${n[0]}</div><div><div style="font:800 32px 'Plus Jakarta Sans'">${n}</div><div style="font:500 22px Inter;color:#64748B">à l'instant</div></div></div>`).join('');
 // pièces S2
@@ -433,7 +471,7 @@ function S5(t){
   const tapEl=$('s5tap')||mkTap('s5');
   if(t<1.9)tap(tapEl,t,1.5,x,y);
   else if(t<2.8)tap(tapEl,t,2.35,x,y);
-  else tap(tapEl,t,4.55,256+523,576+785);
+  else tap(tapEl,t,4.55,256+517,576+855);
   const to=P(t,1.65,.25);$('s5toast').style.opacity=t>2.2?1-P(t,2.2,.2):to;$('s5toast').style.transform=`translateX(-50%) scale(${lerp(.7,1,back(to))})`;
   // 3) écran de publication du statut : la vidéo + la légende avec le lien
   const ed=P(t,2.6,.35);$('s5ed').style.opacity=ed;$('s5ed').style.transform=`translateY(${(1-eo(ed))*120}px)`;
@@ -442,7 +480,7 @@ function S5(t){
   $('s5bar').style.boxShadow=t>3.35&&t<4.45?'0 0 0 6px #FBBF24, 0 0 30px rgba(251,191,36,.8)':'none';
   $('s5send').style.transform=`scale(${t>4.5&&t<4.7?.85:1})`;
   // 4) statut publié : les contacts voient la pub et cliquent sur le lien
-  const sp=P(t,4.75,.3);$('s5st').style.opacity=sp;
+  const sp=P(t,4.75,.3);document.querySelector('#s5scr .gbar').classList.toggle('light',t>2.7);$('s5views').textContent=Math.floor(24*eo(P(t,4.9,3.5)));$('s5st').style.opacity=sp;
   if(t>4.6)vid('v5b',1.0+(t-4.75));
   $('s5prog').style.width=(10+P(t,4.75,4)*60)+'%';
   const times=[6.3,6.6,6.9,7.5,7.8];let cnt=0;

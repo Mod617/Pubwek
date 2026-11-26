@@ -182,17 +182,17 @@ for sc in [k for k in ["s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9"] if k in T
 # S1 : compteur + tampon 0 F
 for k in range(14):
     add(sfx, tick(), at("s1", .5 + 2.2 * (1 - (1 - k / 14) ** 0.5) * .99), .5)
-add(sfx, bonk(), at("s1", 3.1), .9)
+add(sfx, bonk(), at("s1", 4.1), .9)
 # S2 : vibration, notification, pièces
 add(sfx, buzz(.9), at("s2", .55), .55)
 add(sfx, ding2(), at("s2", 1.0), .8)
 for i in range(9): add(sfx, coin(2200 + (i * 173) % 900), at("s2", 1.25 + i * .07), .5, (-1) ** i * .4)
 # S3
-add(sfx, pop(), at("s3", .15), .6); add(sfx, pop(), at("s3", 1.9), .7); add(sfx, pop(), at("s3", 2.4), .5)
+add(sfx, pop(), at("s3", .15), .6); add(sfx, pop(), at("s3", 3.1), .7); add(sfx, pop(), at("s3", 1.95), .5)
 # S4
 add(sfx, pop(), at("s4", .15), .6)
-for i in range(3): add(sfx, pop(), at("s4", .55 + i * .22), .55)
-add(sfx, click(), at("s4", 4.3), .9); add(sfx, success(), at("s4", 4.55), .6)
+for i in range(3): add(sfx, pop(), at("s4", 2.15 + i * .2), .55)
+add(sfx, click(), at("s4", 3.5), .9); add(sfx, success(), at("s4", 3.7), .6)
 # S5
 add(sfx, pop(), at("s5", .15), .6)
 add(sfx, click(), at("s5", 2.05), .9); add(sfx, pop(), at("s5", 2.2), .5)
@@ -207,16 +207,16 @@ if "s6" in T:
     add(sfx, pop(), at("s6", 3.25), .4)
 # S7
 add(sfx, pop(), at("s7", .15), .6)
-for i in range(4): add(sfx, pop(), at("s7", .45 + i * .16), .5, (-1) ** i * .3)
-add(sfx, pop(), at("s7", 1.15), .7)
-add(sfx, click(), at("s7", 2.95), .9)
-add(sfx, buzz(.6), at("s7", 3.2), .45); add(sfx, ding2(), at("s7", 3.25), .6)
-add(sfx, success(), at("s7", 4.0), .45)
+for i, tt in enumerate((3.7, 4.25, 4.6, 5.0)): add(sfx, pop(), at("s7", tt), .6, (-1) ** i * .3)
+add(sfx, pop(), at("s7", .45), .7)
+add(sfx, click(), at("s7", 2.4), .9)
+add(sfx, buzz(.6), at("s7", 2.6), .45); add(sfx, ding2(), at("s7", 2.65), .6)
+add(sfx, whoosh(.3), at("s7", 3.2), .3)
 # S8
 add(sfx, whoosh(.25), at("s8", .85), .3)
 add(sfx, pop(), at("s8", 1.35), .6)
-for tt in (2.2, 2.9, 3.9): add(sfx, pop(), at("s8", tt), .5)
-for tt in (2.75, 3.75): add(sfx, whoosh(.22), at("s8", tt - .1), .3)
+for tt in (2.55, 3.1, 3.8): add(sfx, pop(), at("s8", tt), .5)
+for tt in (3.05, 3.75): add(sfx, whoosh(.22), at("s8", tt - .1), .3)
 # S9
 add(sfx, pop(), at("s9", .1), .7)
 for i in range(10): add(sfx, type_k(), at("s9", 1.0 + i * .1), .7)

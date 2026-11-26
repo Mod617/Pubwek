@@ -190,9 +190,9 @@ svg{display:block}
 <section class="scene" id="s7">
  <div class="bg bg-blue"></div><div class="dots"></div>
  <div class="steptitle"><div class="row"><div class="badge">4</div><h1>Retire<br>ton argent</h1></div></div>
- <div id="s7min" style="position:absolute;left:870px;top:300px;width:250px;height:250px;margin:-125px 0 0 -125px;border-radius:50%;background:#FBBF24;color:#0F172A;border:9px solid #fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 20px 50px rgba(0,0,0,.45);opacity:0;z-index:9;transform:rotate(8deg)">
+ <div id="s7min" style="position:absolute;left:870px;top:300px;width:250px;height:250px;margin:-125px 0 0 -125px;border-radius:50%;background:#FBBF24;color:#0F172A;border:9px solid #fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 20px 50px rgba(0,0,0,.45);opacity:0;z-index:12;transform:rotate(8deg)">
    <div style="font:800 34px 'Plus Jakarta Sans'">dès</div><div style="font:800 82px/1 'Plus Jakarta Sans';letter-spacing:-2px">500 F</div></div>
- <div id="s7ops" style="position:absolute;left:60px;right:60px;top:450px;display:grid;grid-template-columns:1fr 1fr;gap:18px;z-index:8">
+ <div id="s7ops" style="position:absolute;left:60px;right:60px;top:1150px;display:grid;grid-template-columns:1fr 1fr;gap:18px;z-index:12">
    <div class="op" style="background:#FFCC00;color:#111">MTN MoMo</div>
    <div class="op" style="background:#0A5BB5;color:#fff">Moov Money</div>
    <div class="op" style="background:#00A859;color:#fff">Celtiis Cash</div>
@@ -261,8 +261,8 @@ svg{display:block}
 </section>
 
 <!-- sous-titres (remplis quand la voix off sera là) -->
-<div id="sub" style="position:absolute;left:60px;right:60px;top:1330px;text-align:center;z-index:50;display:none">
-  <span id="subt" style="display:inline;background:rgba(5,11,20,.82);color:#fff;font:800 50px/1.32 'Plus Jakarta Sans';padding:8px 22px;border-radius:18px;-webkit-box-decoration-break:clone;box-decoration-break:clone"></span></div>
+<div id="sub" style="position:absolute;left:50px;right:50px;top:1462px;text-align:center;z-index:50;display:none">
+  <span id="subt" style="display:inline;background:rgba(5,11,20,.82);color:#fff;font:800 46px/1.36 'Plus Jakarta Sans';padding:8px 22px;border-radius:18px;-webkit-box-decoration-break:clone;box-decoration-break:clone"></span></div>
 </div>
 
 <script>
@@ -345,7 +345,7 @@ function S1(t){
   const sw=P(t,2.45,.35);
   st('s1t1',{o:1-sw,y:-sw*40});st('s1t2',{o:sw,y:(1-eo(sw))*40});
   // tampon 0 F
-  const z=P(t,3.05,.42);const shake=t>3.3&&t<3.75?Math.sin(t*90)*10*(1-P(t,3.3,.45)):0;
+  const z=P(t,4.05,.42);const shake=t>4.3&&t<4.75?Math.sin(t*90)*10*(1-P(t,4.3,.45)):0;
   st('s1zero',{o:z>0?1:0,s:lerp(2.6,1,eo(z)),r:-12});
   ph.style.marginLeft=shake+'px';
 }
@@ -367,27 +367,27 @@ function S3(t){
   const ph=$('s3ph');st(ph,{y:(1-eo(P(t,.15,.6)))*700});
   const k=eio(P(t,1.1,.8));
   focus($('s3img'),$('s3ring'),lerpRect([0,0,390,844],[30,96,360,258],k),lerp(1,1.15,k),P(t,1.6,.3));
-  popIn($('s3zero'),t,1.9,{dy:0});
-  popIn($('s3url'),t,2.4,{dy:30});
+  popIn($('s3zero'),t,3.1,{dy:0});
+  popIn($('s3url'),t,1.95,{dy:30});
 }
 let s4f={tx:0,ty:0,z:1};
 function S4(t){
   stepTitle('s4',t);
-  document.querySelectorAll('#s4 .c4').forEach((c,i)=>popIn(c,t,.55+i*.22,{dy:30}));
+  document.querySelectorAll('#s4 .c4').forEach((c,i)=>popIn(c,t,2.15+i*.2,{dy:30}));
   const ph=$('s4ph');st(ph,{y:(1-eo(P(t,.1,.6)))*700});
-  const sw=P(t,1.5,.45);
+  const sw=P(t,0.9,.4);
   $('s4imgA').style.opacity=1-sw;$('s4imgB').style.opacity=sw;
   const ya=-sw*260;
   $('s4imgA').style.transform=`translateY(${ya}px)`;
   if(sw<1){ $('s4imgB').style.transform=`translateY(${(1-sw)*260}px)`; $('s4ring').style.opacity=0; }
   else{
-    const k=eio(P(t,2.1,.7));
-    s4f=focus($('s4imgB'),$('s4ring'),lerpRect([0,0,390,844],[32,138,358,342],k),lerp(1,1.22,k),P(t,2.75,.25));
-    if(t>3.6){const k2=eio(P(t,3.6,.4));s4f=focus($('s4imgB'),$('s4ring'),lerpRect([32,138,358,342],[40,288,350,337],k2),1.22,1);}
+    const k=eio(P(t,1.4,.6));
+    s4f=focus($('s4imgB'),$('s4ring'),lerpRect([0,0,390,844],[32,138,358,342],k),lerp(1,1.22,k),P(t,2.0,.25));
+    if(t>3.0){const k2=eio(P(t,3.0,.4));s4f=focus($('s4imgB'),$('s4ring'),lerpRect([32,138,358,342],[40,288,350,337],k2),1.22,1);}
   }
   const [x,y]=phonePt(ph,s4f,195,312,640);
-  tap($('s4tap'),t,4.3,x,y);
-  const to=P(t,4.55,.3);$('s4toast').style.opacity=t>5.3?1-P(t,5.3,.2):to;$('s4toast').style.transform=`translateX(-50%) scale(${lerp(.7,1,back(to))})`;
+  tap($('s4tap'),t,3.5,x,y);
+  const to=P(t,3.7,.3);$('s4toast').style.opacity=to;$('s4toast').style.transform=`translateX(-50%) scale(${lerp(.7,1,back(to))})`;
 }
 function S5(t){
   stepTitle('s5',t);
@@ -433,21 +433,20 @@ function S6(t){
 }
 function S7(t){
   stepTitle('s7',t);
-  document.querySelectorAll('#s7 .op').forEach((o,i)=>popIn(o,t,.45+i*.16,{dy:30}));
-  const m=P(t,1.15,.45);st('s7min',{o:cl(m*3),s:lerp(2,1,eo(m)),r:8});
+  document.querySelectorAll('#s7 .op').forEach((o,i)=>popIn(o,t,[3.7,4.25,4.6,5.0][i],{dy:30}));
+  const m=P(t,.45,.45);st('s7min',{o:cl(m*3),s:lerp(2,1,eo(m)),r:8});
   const ph=$('s7ph');st(ph,{y:(1-eo(P(t,.1,.6)))*700});
   let f;
-  if(t<2.4){const k=eio(P(t,1.3,.6));f=focus($('s7img'),$('s7ring'),lerpRect([0,0,390,844],[38,464,352,524],k),lerp(1,1.12,k),P(t,1.6,.25));}
-  else{const k=eio(P(t,2.4,.4));f=focus($('s7img'),$('s7ring'),lerpRect([38,464,352,524],[38,604,310,655],k),1.12,1);}
+  if(t<1.9){const k=eio(P(t,.8,.6));f=focus($('s7img'),$('s7ring'),lerpRect([0,0,390,844],[38,464,352,524],k),lerp(1,1.12,k),P(t,1.1,.25));}
+  else{const k=eio(P(t,1.9,.4));f=focus($('s7img'),$('s7ring'),lerpRect([38,464,352,524],[38,604,310,655],k),1.12,1);}
   const [x,y]=phonePt(ph,f,174,629,720);
-  tap($('s7tap'),t,2.95,x,y);
-  const n=P(t,3.2,.5);st('s7n',{o:cl(n*3),y:(1-back(n))*-120});
-  if(t>3.2&&t<3.9)ph.style.marginLeft=Math.sin(t*95)*6+'px';else ph.style.marginLeft='0px';
-  const zv=P(t,3.85,.3);$('s7v').style.opacity=zv;if(zv>0){vid('v7',4.3+(t-3.85));st('v7',{s:lerp(1.08,1.0,eo(P(t,3.85,2)))});}
-  popIn($('s7ex'),t,4.15,{dy:60});
+  tap($('s7tap'),t,2.4,x,y);
+  const n=P(t,2.6,.5);st('s7n',{o:cl(n*3),y:(1-back(n))*-120});
+  if(t>2.6&&t<3.3)ph.style.marginLeft=Math.sin(t*95)*6+'px';else ph.style.marginLeft='0px';
+  const zv=P(t,3.3,.3);$('s7v').style.opacity=zv;if(zv>0){vid('v7',4.3+(t-3.3));st('v7',{s:lerp(1.08,1.0,eo(P(t,3.3,2.6)))});}
 }
 function S8(t){
-  const A=2.75,B=3.75;
+  const A=3.05,B=3.75;
   if(t<A+.2)vid('v8a',1.2+t);
   if(t>A-.1&&t<B+.2)vid('v8b',2.6+(t-A));
   if(t>B-.1)vid('v8c',5.0+(t-B));
@@ -457,7 +456,7 @@ function S8(t){
   const k=P(t,.1,.45);st('s8a',{o:cl(k*2),y:(1-eo(k))*40});
   $('s8strike').style.transform=`scaleX(${eo(P(t,.85,.35))})`;
   popIn($('s8b'),t,1.35,{dy:30});
-  const ts=[2.2,A+.15,B+.15];
+  const ts=[2.55,A+.05,B+.05];
   document.querySelectorAll('.s8c').forEach((c,i)=>popIn(c,t,ts[i],{dy:50}));
 }
 function S9(t){

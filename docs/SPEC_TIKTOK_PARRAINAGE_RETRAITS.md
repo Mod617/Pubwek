@@ -39,6 +39,7 @@ Annonceur → coche « TikTok » sur sa campagne (vidéo ou images)
 **Pourquoi 1 000 abonnés minimum.**
 - En dessous, l'audience est trop faible pour qu'un annonceur y gagne.
 - C'est aussi, dans de nombreux pays, le seuil à partir duquel TikTok autorise un lien cliquable dans la bio d'un compte personnel. Les comptes professionnels peuvent avoir ce lien plus tôt selon les régions. **Le développeur doit vérifier la règle actuelle de TikTok pour le Bénin**, car elle détermine si le parcours est possible.
+- **Décision du fondateur : le seuil est le même pour les comptes TikTok professionnels et personnels.**
 - Le seuil reste réglable par l'admin (`tiktok_abonnes_min`, 1 000 par défaut).
 
 ---
@@ -74,7 +75,8 @@ Trois champs au maximum, sur un ton professionnel :
 ### 2.3 Prix et budget
 
 - **Pas de nouveau calcul compliqué.** L'objectif de clics reste **unique**, tous réseaux confondus. Un clic venu de TikTok compte comme un clic venu de WhatsApp.
-- L'admin peut définir un **supplément TikTok** : `tiktok_supplement_cout_pct` pour l'annonceur et `tiktok_bonus_gain_pct` pour le partageur, tous deux à **0 % par défaut**. Ainsi, au lancement, le prix est identique et rien ne change pour l'annonceur.
+- **Décision du fondateur : au lancement, TikTok coûte le même prix que WhatsApp.** L'annonceur paie le même tarif par clic, et le partageur gagne le même montant par clic.
+- Pour garder de la souplesse plus tard, l'admin dispose d'un **supplément TikTok** : `tiktok_supplement_cout_pct` pour l'annonceur et `tiktok_bonus_gain_pct` pour le partageur, **réglés à 0 % au lancement**.
 - Si un supplément est défini plus tard, le budget affiché est calculé au tarif le plus élevé des réseaux choisis. Pubwek garantit ainsi de ne jamais manquer de budget. La différence non consommée suit les règles de remboursement existantes.
 
 ### 2.4 Validation par l'équipe
@@ -124,7 +126,7 @@ Les statuts possibles sont : **En attente → Validé → (Suspendu / Refusé)**
 
 | Condition | Valeur par défaut |
 |---|---|
-| Abonnés minimum | 1 000 |
+| Abonnés minimum (même seuil pour les comptes professionnels et personnels) | 1 000 |
 | Compte public, actif, avec au moins N vidéos publiées | N = 5 |
 | Engagement minimum : vues moyennes ≥ X % des abonnés, pour repérer les abonnés achetés | X = 3 % (indicatif, l'admin juge) |
 | Revérification périodique | tous les 60 jours |
@@ -261,16 +263,18 @@ Les fraudes augmentent. Chaque mesure ci-dessous doit être **paramétrable** et
 
 ---
 
-## 8. Retraits : délai de traitement de 48 h maximum
+## 8. Retraits des partageurs et remboursements des annonceurs : délai de 48 h maximum
 
 Aujourd'hui, le message dit « Elle sera traitée sous peu », et la page d'accueil annonce des « retraits instantanés ». Les deux sont flous ou faux.
 
-- Nouveau paramètre `delai_traitement_retrait_heures`, **48 par défaut**, réglable par l'admin.
+- **Décision du fondateur : le même délai s'applique aux retraits des partageurs et aux remboursements des annonceurs.**
+- Nouveau paramètre unique `delai_traitement_paiements_heures`, **48 par défaut**, réglable par l'admin. Il remplace le « 48 h » aujourd'hui écrit en dur dans les messages de remboursement (`main.py`, `mes_campagnes.html`, page d'accueil) et le « sous peu » des retraits.
 - L'utiliser **partout** :
   - message après la demande : *« Votre demande de retrait de X FCFA a été envoyée. Elle sera traitée sous 48 heures maximum. »* ;
   - page « Mes retraits » : statut et heure limite, par exemple « Traitement avant le 28/11 à 14 h 30 » ;
   - page d'accueil, FAQ et page partageurs : **remplacer « Retraits instantanés »** par « Retraits traités sous 48 h maximum ».
-- Côté admin : file des retraits **triée par ancienneté**, avec un compte à rebours. Un retrait proche des 48 h apparaît en orange, un retrait qui les dépasse en rouge. Une alerte est envoyée à l'admin et aux sous-admins chargés des retraits quand il reste moins de 6 h (réglable).
+- Remboursements annonceurs : mêmes affichages (« Le virement sera effectué sous 48 heures maximum », date et heure limites sur la campagne).
+- Côté admin : files des retraits **et des remboursements**, **triées par ancienneté**, avec un compte à rebours. Un retrait proche des 48 h apparaît en orange, un retrait qui les dépasse en rouge. Une alerte est envoyée à l'admin et aux sous-admins chargés des retraits ou des remboursements quand il reste moins de 6 h (réglable).
 
 ---
 
@@ -294,7 +298,7 @@ Aujourd'hui, le message dit « Elle sera traitée sous peu », et la page d'accu
 | `tiktok_videos_min` | Vidéos publiées minimum | 5 |
 | `tiktok_engagement_min_pct` | Vues moyennes / abonnés (indicatif) | 3 % |
 | `tiktok_reverification_jours` | Revérification du compte | 60 |
-| `tiktok_supplement_cout_pct` | Supplément facturé à l'annonceur pour TikTok | 0 % |
+| `tiktok_supplement_cout_pct` | Supplément facturé à l'annonceur pour TikTok | 0 % (même prix que WhatsApp au lancement) |
 | `tiktok_bonus_gain_pct` | Bonus de gain du partageur sur TikTok | 0 % |
 | `tiktok_gain_attente_heures` | Délai avant qu'un gain TikTok soit retirable | 24 |
 | `vitrine_campagnes_max` | Nombre maximum de campagnes sur une vitrine | 10 |
@@ -303,7 +307,7 @@ Aujourd'hui, le message dit « Elle sera traitée sous peu », et la page d'accu
 | `parrainage_bonus_retrait_pct` | Bonus sur le premier retrait, payé par Pubwek | 10 % |
 | `parrainage_jours_actifs_min` / `parrainage_fenetre_jours` | Définition de « régulier » | 10 / 14 |
 | `parrainage_plafond_mensuel` | Récompenses maximum par parrain et par mois | à fixer |
-| `delai_traitement_retrait_heures` | Délai affiché et suivi des retraits | 48 |
+| `delai_traitement_paiements_heures` | Délai affiché et suivi des retraits **et** des remboursements | 48 |
 | `alerte_retrait_heures_restantes` | Seuil d'alerte admin | 6 |
 | Seuils anti-fraude (pics, notations « Aucun contact »…) | Voir section 7 | à fixer |
 
@@ -361,9 +365,9 @@ Aujourd'hui, le message dit « Elle sera traitée sous peu », et la page d'accu
 
 ---
 
-## 13. Questions à trancher par le fondateur
+## 13. Décisions du fondateur
 
-1. ~~Prime d'activation du parrainage~~ — **Tranché** : une prime unique au premier clic réel, dont le montant est défini par l'admin.
-2. **Supplément TikTok** : même prix que WhatsApp au lancement (recommandé), ou un tarif différent dès le départ ?
-3. **Le délai de 48 h** s'applique-t-il aussi aux remboursements annonceurs ? Ce délai existe déjà pour eux.
-4. **Le seuil de 1 000 abonnés** est-il le même pour les comptes professionnels et personnels ? Cela dépend des règles de TikTok à vérifier pour le Bénin (section 1).
+1. **Parrainage** : une prime unique au premier clic réel du filleul, dont le montant est défini par l'admin.
+2. **Prix TikTok** : le même prix que WhatsApp au lancement (supplément TikTok réglé à 0 %).
+3. **Délai de 48 h** : il s'applique aux retraits des partageurs **et** aux remboursements des annonceurs, avec un seul paramètre réglable.
+4. **Seuil d'abonnés** : 1 000 abonnés pour les comptes TikTok professionnels **et** personnels. Le développeur doit tout de même vérifier que TikTok permet un lien cliquable dans la bio à ce niveau au Bénin (section 1), car tout le parcours en dépend.

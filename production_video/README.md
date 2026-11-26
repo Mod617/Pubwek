@@ -14,3 +14,5 @@ Rendu :
 
     node render.js compo/compo.html timeline.json video_raw.mp4
     python3 audio.py timeline.json music.wav sfx.wav
+
+Les clips des personnages (clip1.webm à clip5.webm, préparés depuis les vidéos envoyées) ne sont pas versionnés à cause de leur poids. Ils doivent être placés dans compo/ avant le rendu.

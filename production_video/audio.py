@@ -214,7 +214,8 @@ add(sfx, success(), at("s7", 4.0), .45)
 # S8
 add(sfx, whoosh(.25), at("s8", .85), .3)
 add(sfx, pop(), at("s8", 1.35), .6)
-for i in range(3): add(sfx, pop(), at("s8", 2.2 + i * .38), .5)
+for tt in (2.2, 2.9, 3.9): add(sfx, pop(), at("s8", tt), .5)
+for tt in (2.75, 3.75): add(sfx, whoosh(.22), at("s8", tt - .1), .3)
 # S9
 add(sfx, pop(), at("s9", .1), .7)
 for i in range(10): add(sfx, type_k(), at("s9", 1.0 + i * .1), .7)
